@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "Citizen": {
+      "title": "Citizen",
+      "description": "A registered citizen of the Global State",
+      "type": "object",
+      "properties": {
+        "surname": { "type": "string", "description": "Family name" },
+        "firstName": { "type": "string", "description": "Given name" },
+        "gender": { "type": "string", "enum": ["M", "F", "O"], "description": "Gender identity" },
+        "birthDate": { "type": "string", "format": "date", "description": "Date of birth" },
+        "birthPlace": { "type": "string", "description": "City/Town of birth" },
+        "birthCountry": { "type": "string", "description": "Country of birth" },
+        "citizenship": { "type": "string", "description": "Current citizenship" },
+        "maritalStatus": { "type": "string", "description": "Marital status" },
+        "residenceAddress": { "type": "string", "description": "Street address" },
+        "residenceNumber": { "type": "string", "description": "House/Building number" },
+        "residenceZip": { "type": "string", "description": "Zip/Postal code" },
+        "residenceCity": { "type": "string", "description": "City of residence" },
+        "residenceProvince": { "type": "string", "description": "Province/State code" },
+        "residenceCountry": { "type": "string", "description": "Country of residence" },
+        "plusCode": { "type": "string", "description": "Open Location Code" },
+        "latitude": { "type": "number", "description": "GPS Latitude" },
+        "longitude": { "type": "number", "description": "GPS Longitude" },
+        "email": { "type": "string", "format": "email", "description": "Contact email" },
+        "phonePrefix": { "type": "string", "description": "International dialing prefix" },
+        "phoneNumber": { "type": "string", "description": "Phone number without prefix" },
+        "documentType": { "type": "string", "description": "Type of ID document" },
+        "documentFrontUrl": { "type": "string", "description": "URL of the front side of ID" },
+        "documentBackUrl": { "type": "string", "description": "URL of the back side of ID" },
+        "status": { "type": "string", "enum": ["pending", "active", "rejected"], "description": "Application status" },
+        "isAmbassador": { "type": "boolean", "description": "Candidate for ambassador role" },
+        "isPeacekeeper": { "type": "boolean", "description": "Candidate for peacekeeper role" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["surname", "firstName", "birthDate", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/citizens/{citizenId}": {
+      "schema": "Citizen",
+      "description": "Collection of registered citizens"
+    }
+  }
+}
