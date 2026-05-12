@@ -42,9 +42,13 @@ Se vedi questo errore nella dashboard di Cloudflare, significa che Cloudflare no
 3. Una volta completata, Cloudflare "sbloccherà" la sezione Variables sotto **Settings > Functions**.
 4. Inserisci i tuoi segreti e **avvia un nuovo deploy** (le variabili vengono iniettate solo durante la fase di build).
 
+### Errore: "Specify the path to the directory of assets"
+Questo errore accade quando Wrangler non trova i file statici nel nuovo formato di configurazione.
+- Abbiamo aggiunto il blocco `assets` con `"directory": "./dist"` in `wrangler.jsonc`.
+- Abbiamo abilitato `"not_found_handling": "single-page-application"` per gestire correttamente le rotte di React.
+
 ### Errore: "The name 'ASSETS' is reserved"
-Questo errore accade quando si prova a configurare manualmente il binding degli asset in un progetto che Cloudflare riconosce già come Pages.
-- Abbiamo risolto semplificando `wrangler.jsonc` e usando un file `_redirects` nella cartella `public/` per gestire il routing SPA.
+Risolto rimuovendo il binding manuale `ASSETS`. Cloudflare lo gestisce internamente.
 
 ### Errore: "Unsupported platform for tapable (win32)"
 Se vedi questo errore durante la build:
