@@ -450,11 +450,23 @@ export default function RegisterForm() {
     const province = address.province || address.county || '';
     const country = address.country || '';
 
-    // If house number is missing, attempt to extract it from the street name or display name
+    // Advanced extraction: if suggestion has no house number, look into the manual search string
+    if (!houseNumber) {
+      const searchTerms = formData.residenceAddress.toUpperCase().split(' ');
+      // Look for a numeric term that isn't the ZIP code (if ZIP is present in search)
+      // Usually house numbers are shorter than ZIPs or in specific positions
+      const potentialNumber = searchTerms.find(term => 
+        /^\d+[A-Z\/]?\d*[A-Z]?$/.test(term) && term !== zip.toUpperCase() && term.length < 5
+      );
+      if (potentialNumber) {
+        houseNumber = potentialNumber;
+      }
+    }
+
+    // fallback extraction from street if still empty
     if (!houseNumber && street) {
       const streetParts = street.split(' ');
       const lastPart = streetParts[streetParts.length - 1];
-      // Regex for standard house numbers like "10", "12/A", "142B"
       if (/^\d+[A-Z\/]?\d*[A-Z]?$/.test(lastPart)) {
         houseNumber = lastPart;
         street = streetParts.slice(0, -1).join(' ');
@@ -487,13 +499,14 @@ export default function RegisterForm() {
       longitude: parseFloat(lon),
       plusCode
     }));
+    
     setAddressSuggestions([]);
     setIsVerifyingAddress(true);
     
     // Scroll to address section for verification
     setTimeout(() => {
       addressSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
+    }, 150);
   };
 
   const [isManualDateEntry, setIsManualDateEntry] = useState(true);
@@ -761,7 +774,7 @@ export default function RegisterForm() {
   const stepsCount = 5;
 
   return (
-    <div ref={formTopRef} className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-brand-blue/10 overflow-hidden mt-24 mb-12 relative">
+    <div ref={formTopRef} className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-brand-blue/10 overflow-hidden mt-24 mb-12 relative scroll-mt-24">
       {/* Success Message Overlay */}
       <AnimatePresence>
         {isSuccess && (
