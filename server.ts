@@ -53,51 +53,83 @@ async function startServer() {
         await client.query(`
           CREATE TABLE citizens (
             id SERIAL PRIMARY KEY,
-            surname TEXT NOT NULL,
-            firstName TEXT NOT NULL,
-            gender CHAR(1) NOT NULL,
-            birthDate DATE NOT NULL,
-            birthPlace TEXT NOT NULL,
-            birthCountry TEXT NOT NULL,
-            citizenship TEXT NOT NULL,
-            maritalStatus TEXT NOT NULL,
-            residenceAddress TEXT,
-            residenceNumber TEXT,
-            residenceZip VARCHAR(10),
-            residenceCity TEXT,
-            residenceProvince VARCHAR(5),
-            residenceCountry TEXT,
-            registrationDate DATE,
+            surname TEXT,
+            firstname TEXT,
+            gender CHAR(1),
+            birthdate DATE,
+            birthplace TEXT,
+            birthcountry TEXT,
+            citizenship TEXT,
+            maritalstatus TEXT,
+            residenceaddress TEXT,
+            residencenumber TEXT,
+            residencezip VARCHAR(20),
+            residencecity TEXT,
+            residenceprovince VARCHAR(10),
+            residencecountry TEXT,
+            registrationdate DATE,
             email TEXT UNIQUE,
-            phonePrefix TEXT,
-            phoneNumber TEXT,
+            phoneprefix TEXT,
+            phonenumber TEXT,
             username TEXT UNIQUE,
             password TEXT,
             document_hash TEXT UNIQUE,
-            documentType TEXT NOT NULL,
-            documentFront TEXT,
-            documentBack TEXT,
-            plusCode TEXT,
-            locationDescription TEXT,
+            documenttype TEXT,
+            pluscode TEXT,
+            locationdescription TEXT,
             location GEOMETRY(Point, 4326),
-            isAmbassador BOOLEAN DEFAULT FALSE,
-            isPeacekeeper BOOLEAN DEFAULT FALSE,
+            isambassador BOOLEAN DEFAULT FALSE,
+            ispeacekeeper BOOLEAN DEFAULT FALSE,
             status VARCHAR(20) DEFAULT 'pending',
-            createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            createdat TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
           );
         `);
         console.log('✅ DATABASE SCHEMA: Tabella "citizens" creata.');
       } else {
-        // Just verify/update columns if needed (simplified for now)
-        // Ensure residenceNumber column exists (added in recent version)
-        await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS residenceNumber TEXT;`);
-        await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS phonePrefix TEXT;`);
-        await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS phoneNumber TEXT;`);
-        await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS username TEXT;`);
-        await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS password TEXT;`);
-        await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS document_hash TEXT;`);
+        // Heal schema: ensure all columns exist
+        const columnsToEnsure = [
+          ['surname', 'TEXT'],
+          ['firstname', 'TEXT'],
+          ['gender', 'CHAR(1)'],
+          ['birthdate', 'DATE'],
+          ['birthplace', 'TEXT'],
+          ['birthcountry', 'TEXT'],
+          ['citizenship', 'TEXT'],
+          ['maritalstatus', 'TEXT'],
+          ['residenceaddress', 'TEXT'],
+          ['residencenumber', 'TEXT'],
+          ['residencezip', 'VARCHAR(20)'],
+          ['residencecity', 'TEXT'],
+          ['residenceprovince', 'VARCHAR(10)'],
+          ['residencecountry', 'TEXT'],
+          ['registrationdate', 'DATE'],
+          ['phoneprefix', 'TEXT'],
+          ['phonenumber', 'TEXT'],
+          ['username', 'TEXT'],
+          ['password', 'TEXT'],
+          ['document_hash', 'TEXT'],
+          ['documenttype', 'TEXT'],
+          ['pluscode', 'TEXT'],
+          ['locationdescription', 'TEXT'],
+          ['isambassador', 'BOOLEAN DEFAULT FALSE'],
+          ['ispeacekeeper', 'BOOLEAN DEFAULT FALSE'],
+          ['status', 'VARCHAR(20) DEFAULT \'pending\''],
+          ['createdat', 'TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP']
+        ];
+
+        for (const [col, type] of columnsToEnsure) {
+          await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS ${col} ${type};`);
+        }
+        
+        // Special case: location column (requires separate care due to GEOMETRY type)
+        try {
+          await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS location GEOMETRY(Point, 4326);`);
+        } catch (e) {
+          console.warn('Could not add location column (might already exist or PostGIS missing)');
+        }
+
         await client.query(`ALTER TABLE citizens ALTER COLUMN email DROP NOT NULL;`);
-        console.log('✅ DATABASE SCHEMA: Tabella "citizens" verificata.');
+        console.log('✅ DATABASE SCHEMA: Tabella "citizens" verificata e aggiornata.');
       }
     } catch (err: any) {
       console.error('--- ERRORE CONNESSIONE DB ---');
@@ -123,22 +155,6 @@ async function startServer() {
     }
   });
 
-  /**
-   * REQUISITO SQL PER NEON (PostgreSQL):
-   * Esegui questa query nel SQL Editor di Neon per creare la tabella:
-   * 
-   * CREATE TABLE IF NOT EXISTS citizens (
-   *   id SERIAL PRIMARY KEY,
-   *   fullName TEXT NOT NULL,
-   *   email TEXT UNIQUE NOT NULL,
-   *   birthDate DATE,
-   *   nationality VARCHAR(10),
-   *   isAmbassador BOOLEAN DEFAULT FALSE,
-   *   isPeacekeeper BOOLEAN DEFAULT FALSE,
-   *   status VARCHAR(20) DEFAULT 'pending',
-   *   createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-   * );
-   */
   // Proxy for Nominatim location lookup to avoid CORS/User-Agent issues in browser
   app.get('/api/lookup/location', async (req, res) => {
     const { q, type, lat, lon } = req.query;
@@ -220,7 +236,7 @@ async function startServer() {
         WHERE (email IS NOT NULL AND email = $1)
         OR (username IS NOT NULL AND username = $2)
         OR (document_hash IS NOT NULL AND document_hash = $3)
-        OR (surname = $4 AND firstName = $5 AND birthDate = $6)
+        OR (surname = $4 AND firstname = $5 AND birthdate = $6)
       `;
       const duplicateValues = [
         email || null, 
@@ -244,12 +260,12 @@ async function startServer() {
       console.log('Tentativo di inserimento nel DB...');
       const query = `
         INSERT INTO citizens (
-          surname, firstName, gender, birthDate, birthPlace, birthCountry,
-          citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
-          residenceCity, residenceProvince, residenceCountry, registrationDate, email, phonePrefix, phoneNumber,
+          surname, firstname, gender, birthdate, birthplace, birthcountry,
+          citizenship, maritalstatus, residenceaddress, residencenumber, residencezip, 
+          residencecity, residenceprovince, residencecountry, registrationdate, email, phoneprefix, phonenumber,
           username, password, document_hash,
-          documentType, plusCode, locationDescription, location,
-          isAmbassador, isPeacekeeper, status, createdAt
+          documenttype, pluscode, locationdescription, location,
+          isambassador, ispeacekeeper, status, createdat
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, ST_SetSRID(ST_MakePoint($25, $26), 4326), $27, $28, $29, $30)
         RETURNING id
@@ -277,8 +293,8 @@ async function startServer() {
       res.status(500).json({ 
         success: false, 
         message: error.code === '23505' // Unique violation in Postgres
-          ? 'Indirizzo email già registrato.' 
-          : 'Errore interno del server durante la registrazione.' 
+          ? 'Dati già registrati (Email, Username o Documento).' 
+          : `Errore database: ${error.message}` 
       });
     }
   });
