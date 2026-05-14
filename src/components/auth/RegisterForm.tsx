@@ -374,8 +374,7 @@ export default function RegisterForm() {
     searchTimeoutRef.current = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const API_BASE = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev';
-        let url = `${API_BASE}/api/lookup/location?q=${encodeURIComponent(query)}`;
+        let url = `/api/lookup/location?q=${encodeURIComponent(query)}`;
         
         if (type === 'birthCountry' || type === 'citizenship') url += '&type=country';
         if (type === 'birthPlace') url += '&type=city';
@@ -749,7 +748,7 @@ export default function RegisterForm() {
       
       console.log('Invio dati di registrazione...', serializableData);
 
-      const API_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/register';
+      const API_URL = '/api/register';
       
       const response = await fetch(API_URL, {
         method: 'POST',

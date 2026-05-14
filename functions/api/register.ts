@@ -31,7 +31,7 @@ export const onRequestPost = async (context: any) => {
       WHERE (email IS NOT NULL AND email = ${email || null})
       OR (username IS NOT NULL AND username = ${normalizedUsername})
       OR (document_hash IS NOT NULL AND document_hash = ${documentHash || null})
-      OR (surname = ${surname} AND firstName = ${firstName} AND birthDate = ${birthDate})
+      OR (surname = ${surname} AND firstname = ${firstName} AND birthdate = ${birthDate})
     `;
 
     if (duplicates.length > 0) {
@@ -44,12 +44,12 @@ export const onRequestPost = async (context: any) => {
     // 2. Insert
     const result = await sql`
       INSERT INTO citizens (
-        surname, firstName, gender, birthDate, birthPlace, birthCountry,
-        citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
-        residenceCity, residenceProvince, residenceCountry, registrationDate, email, phonePrefix, phoneNumber,
+        surname, firstname, gender, birthdate, birthplace, birthcountry,
+        citizenship, maritalstatus, residenceaddress, residencenumber, residencezip, 
+        residencecity, residenceprovince, residencecountry, registrationdate, email, phoneprefix, phonenumber,
         username, password, document_hash,
-        documentType, plusCode, locationDescription, location,
-        isAmbassador, isPeacekeeper, status, createdAt
+        documenttype, pluscode, locationdescription, location,
+        isambassador, ispeacekeeper, status, createdat
       )
       VALUES (
         ${surname}, ${firstName}, ${gender}, ${birthDate || null}, ${birthPlace}, ${birthCountry},
