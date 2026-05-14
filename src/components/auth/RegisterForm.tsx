@@ -467,7 +467,7 @@ export default function RegisterForm() {
     setIsVerifyingAddress(true);
   };
 
-  const [isManualDateEntry, setIsManualDateEntry] = useState(false);
+  const [isManualDateEntry, setIsManualDateEntry] = useState(true);
   const [manualDate, setManualDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
