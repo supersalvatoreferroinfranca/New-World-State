@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Calendar, Flag, FileText, Globe, Shield, UserCheck, ChevronRight, ChevronLeft, Upload, AlertCircle, MapPin, Navigation, Search } from 'lucide-react';
+import { User, Mail, Calendar, Flag, FileText, Globe, Shield, UserCheck, ChevronRight, ChevronLeft, Upload, AlertCircle, MapPin, Navigation, Search, Sparkles, Wand2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { OpenLocationCode } from 'open-location-code';
+import { enhanceLocationDescription, getFormAssistantTips } from '../../services/geminiService';
 
 // Fix Leaflet marker icon issue
 const DefaultIcon = L.icon({
@@ -466,10 +467,56 @@ export default function RegisterForm() {
     setIsVerifyingAddress(true);
   };
 
+  const [isManualDateEntry, setIsManualDateEntry] = useState(false);
+  const [manualDate, setManualDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+  const [aiTip, setAiTip] = useState<string | null>(null);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+
+  useEffect(() => {
+    const fetchTip = async () => {
+      const tip = await getFormAssistantTips(step, formData);
+      setAiTip(tip);
+    };
+    fetchTip();
+  }, [step]);
+
+  useEffect(() => {
+    if (formData.birthDate && !isManualDateEntry) {
+      const [y, m, d] = formData.birthDate.split('-');
+      if (y && m && d) setManualDate(`${d}/${m}/${y}`);
+    }
+  }, [formData.birthDate, isManualDateEntry]);
+
+  const handleManualDateChange = (val: string) => {
+    // Remove non-numeric
+    const clean = val.replace(/\D/g, '').slice(0, 8);
+    let formatted = clean;
+    if (clean.length > 2) formatted = clean.slice(0, 2) + '/' + clean.slice(2);
+    if (clean.length > 4) formatted = formatted.slice(0, 5) + '/' + formatted.slice(5, 9);
+    
+    setManualDate(formatted);
+    
+    // If we have 8 digits, try to extract parts and update birthDate (YYYY-MM-DD)
+    if (clean.length === 8) {
+      const day = clean.slice(0, 2);
+      const month = clean.slice(2, 4);
+      const year = clean.slice(4, 8);
+      const isoDate = `${year}-${month}-${day}`;
+      
+      // Simple date validation
+      const d = parseInt(day, 10);
+      const m = parseInt(month, 10);
+      const y = parseInt(year, 10);
+      
+      if (m >= 1 && m <= 12 && d >= 1 && d <= 31 && y > 1900 && y < 2100) {
+        setFormData(prev => ({ ...prev, birthDate: isoDate }));
+      }
+    }
+  };
 
   const validateStep = (currentStep: number) => {
     setError(null);
@@ -710,13 +757,28 @@ export default function RegisterForm() {
       </AnimatePresence>
 
       {/* Progress Bar */}
-      <div className="h-1 bg-gray-100 w-full relative">
+      <div className="h-1.5 bg-gray-100 w-full relative">
         <motion.div 
-          className="absolute top-0 left-0 h-full bg-brand-blue"
+          className="absolute top-0 left-0 h-full bg-brand-blue shadow-[0_0_10px_rgba(10,28,62,0.3)]"
           initial={{ width: '20%' }}
           animate={{ width: `${(step / stepsCount) * 100}%` }}
         />
       </div>
+
+      {/* AI Assistant Bubble */}
+      <AnimatePresence>
+        {aiTip && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="px-6 py-3 bg-brand-blue text-white flex items-center gap-3 border-b border-white/10"
+          >
+            <Sparkles className="w-4 h-4 text-brand-gold shrink-0 animate-pulse" />
+            <p className="text-[11px] font-medium italic leading-tight">{aiTip}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="p-8 md:p-12">
         <AnimatePresence mode="wait">
@@ -770,13 +832,34 @@ export default function RegisterForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('birthDate')}</label>
-                  <input 
-                    type="date"
-                    className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.birthDate ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
-                    value={formData.birthDate}
-                    onChange={e => setFormData({ ...formData, birthDate: e.target.value })}
-                  />
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('birthDate')}</label>
+                    <button 
+                      type="button"
+                      onClick={() => setIsManualDateEntry(!isManualDateEntry)}
+                      className="text-[9px] uppercase font-bold text-brand-blue flex items-center gap-1 hover:text-brand-gold transition-colors"
+                    >
+                      <Calendar className="w-3 h-3" />
+                      {isManualDateEntry ? 'Usa Calendario' : 'Inserimento Manuale'}
+                    </button>
+                  </div>
+                  {isManualDateEntry ? (
+                    <input 
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="GG/MM/AAAA"
+                      className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.birthDate ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
+                      value={manualDate}
+                      onChange={e => handleManualDateChange(e.target.value)}
+                    />
+                  ) : (
+                    <input 
+                      type="date"
+                      className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.birthDate ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
+                      value={formData.birthDate}
+                      onChange={e => setFormData({ ...formData, birthDate: e.target.value })}
+                    />
+                  )}
                 </div>
                 <div className="space-y-1 relative">
                   <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('birthPlace')}</label>
@@ -1152,7 +1235,24 @@ export default function RegisterForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold text-muted ml-1">Punti di Riferimento / Descrizione (Max 500 car.)</label>
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] uppercase font-bold text-muted ml-1">Punti di Riferimento / Descrizione (Max 500 car.)</label>
+                      {formData.locationDescription.length > 10 && (
+                        <button 
+                          onClick={async () => {
+                            setIsEnhancing(true);
+                            const enhanced = await enhanceLocationDescription(formData.locationDescription, `${formData.residenceAddress} ${formData.residenceCity}`);
+                            setFormData(prev => ({ ...prev, locationDescription: enhanced }));
+                            setIsEnhancing(false);
+                          }}
+                          disabled={isEnhancing}
+                          className="flex items-center gap-1 text-[9px] font-bold text-brand-gold uppercase hover:text-brand-blue transition-colors disabled:opacity-50"
+                        >
+                          <Wand2 className={`w-3 h-3 ${isEnhancing ? 'animate-spin' : ''}`} />
+                          {isEnhancing ? 'Miglioramento...' : 'Migliora con AI'}
+                        </button>
+                      )}
+                    </div>
                     <textarea 
                       maxLength={500}
                       rows={2}

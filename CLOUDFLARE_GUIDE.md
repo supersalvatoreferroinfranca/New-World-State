@@ -75,25 +75,27 @@ export default {
     try {
       if (!env.DATABASE_URL) throw new Error('DATABASE_URL non configurata');
       
-      // Funzione helper per query via HTTP (converte postgres:// in https://)
+      // Funzione helper per query via HTTP
       const queryDb = async (sqlQuery, params = []) => {
         const rawUrl = env.DATABASE_URL.trim();
+        // Rimuoviamo parametri extra che possono disturbare l'header HTTP di Neon
+        const cleanUrl = rawUrl.split('?')[0];
         const urlObj = new URL(rawUrl.replace('postgresql://', 'http://'));
-        const host = urlObj.host;
-        const password = urlObj.password;
-        const neonHttpUrl = `https://${host}/sql`;
+        const neonHttpUrl = `https://${urlObj.host}/sql`;
 
         const response = await fetch(neonHttpUrl, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${password}`
+            'Neon-Connection-String': cleanUrl
           },
           body: JSON.stringify({ query: sqlQuery, params })
         });
         
         const result = await response.json();
-        if (!response.ok) throw new Error(result.message || 'Errore database Neon');
+        if (!response.ok) {
+          throw new Error(result.message || JSON.stringify(result));
+        }
         return result.rows || [];
       };
 
@@ -116,7 +118,7 @@ export default {
       if (url.pathname === '/api/register' && request.method === 'POST') {
         const body = await request.json();
         
-        // Estrazione di tutti i campi dal body
+        // Mapping completo di tutti i campi secondo la struttura citizens
         const { 
           surname, firstName, gender, birthDate, birthPlace, birthCountry,
           citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
@@ -130,12 +132,12 @@ export default {
 
         const sql = `
           INSERT INTO citizens (
-            surname, firstName, gender, birth_date, birth_place, birth_country,
-            citizenship, marital_status, residence_address, residence_number, residence_zip, 
-            residence_city, residence_province, residence_country, email, phone_prefix, phone_number,
-            username, password, document_hash, document_type,
-            plus_code, location_description, location,
-            is_ambassador, is_peacekeeper, status, createdAt
+            surname, "firstName", gender, "birthDate", "birthPlace", "birthCountry",
+            citizenship, "maritalStatus", "residenceAddress", "residenceNumber", "residenceZip", 
+            "residenceCity", "residenceProvince", "residenceCountry", email, "phonePrefix", "phoneNumber",
+            username, password, "documentHash", "documentType",
+            "plusCode", "locationDescription", location,
+            "isAmbassador", "isPeacekeeper", status, "createdAt"
           )
           VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, 
@@ -145,17 +147,21 @@ export default {
           RETURNING id
         `;
         
-        const params = [
+        const dbParams = [
           surname, firstName, gender, birthDate || null, birthPlace, birthCountry,
           citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
           residenceCity, residenceProvince, residenceCountry, email || null, phonePrefix, phoneNumber,
           normalizedUsername, password, documentHash, documentType,
-          plusCode, locationDescription, longitude || 0, latitude || 0,
+          plusCode, locationDescription, 
+          parseFloat(longitude) || 0, parseFloat(latitude) || 0,
           !!isAmbassador, !!isPeacekeeper
         ];
 
-        const rows = await queryDb(sql, params);
-        return new Response(JSON.stringify({ success: true, id: rows[0].id }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const rows = await queryDb(sql, dbParams);
+        return new Response(JSON.stringify({ success: true, id: rows[0].id }), { 
+          status: 201, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        });
       }
 
       return new Response('Not Found', { status: 404, headers: corsHeaders });
