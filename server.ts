@@ -276,7 +276,8 @@ async function startServer() {
         residenceCity || null, residenceProvince || null, residenceCountry || null, new Date(), email || null, phonePrefix || null, phoneNumber || null,
         normalizedUsername, password || null, documentHash || null,
         documentType, plusCode || null, locationDescription || null,
-        longitude || null, latitude || null,
+        longitude ? parseFloat(longitude as string) : null, 
+        latitude ? parseFloat(latitude as string) : null,
         !!isAmbassador, !!isPeacekeeper, 'pending', new Date()
       ];
 

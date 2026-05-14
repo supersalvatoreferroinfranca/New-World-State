@@ -336,8 +336,25 @@ export default function RegisterForm() {
   }, []);
 
   useEffect(() => {
+    // When step changes, scroll to form top and focus first input
+    const timer = setTimeout(() => {
+      if (formTopRef.current) {
+        const topOffset = 80; // Approximate header height
+        const elementPosition = formTopRef.current.getBoundingClientRect().top + window.pageYOffset;
+        window.scrollTo({
+          top: elementPosition - topOffset,
+          behavior: 'smooth'
+        });
+      }
+      
+      // Auto-focus first input of the step
+      const firstInput = formTopRef.current?.querySelector('input, select, textarea') as HTMLElement;
+      if (firstInput && step > 1) {
+        firstInput.focus();
+      }
+    }, 100);
+
     if (step === 3) {
-      window.scrollTo(0, 0);
       // Attempt to get location silently to bias address search if not already set
       if (!formData.latitude && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -353,7 +370,9 @@ export default function RegisterForm() {
         );
       }
     }
-  }, [step, formData.latitude]);
+    
+    return () => clearTimeout(timer);
+  }, [step]);
 
   const searchLocation = async (query: string, type: 'address' | 'birthPlace' | 'birthCountry' | 'citizenship') => {
     // Clear existing timeout
@@ -737,6 +756,21 @@ export default function RegisterForm() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      // Don't advance if in a textarea or if suggestions are open
+      if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
+      if (addressSuggestions.length > 0 || birthPlaceSuggestions.length > 0 || birthCountrySuggestions.length > 0 || citizenshipSuggestions.length > 0) return;
+      
+      e.preventDefault();
+      if (step < stepsCount) {
+        nextStep();
+      } else {
+        handleRegister();
+      }
+    }
+  };
+
   const handleRegister = async () => {
     if (!validateStep(5)) return;
     setIsSubmitting(true);
@@ -759,12 +793,17 @@ export default function RegisterForm() {
       const data = await response.json();
       if (data.success) {
         setIsSuccess(true);
+        // Ensure scroll to top to see success message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setError(data.message || 'Errore durante la registrazione.');
+        // Scroll to error
+        formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration Error:', error);
-      setError('Errore di connessione al server. Riprova più tardi.');
+      setError(`Errore: ${error.message || 'Connessione al server fallita.'} Riprova più tardi.`);
+      formTopRef.current?.scrollIntoView({ behavior: 'smooth' });
     } finally {
       setIsSubmitting(false);
     }
@@ -773,7 +812,11 @@ export default function RegisterForm() {
   const stepsCount = 5;
 
   return (
-    <div ref={formTopRef} className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-brand-blue/10 overflow-hidden mt-24 mb-12 relative scroll-mt-24">
+    <div 
+      ref={formTopRef} 
+      onKeyDown={handleKeyDown}
+      className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-brand-blue/10 overflow-hidden mt-24 mb-12 relative scroll-mt-24 focus-within:ring-1 focus-within:ring-brand-blue/5"
+    >
       {/* Success Message Overlay */}
       <AnimatePresence>
         {isSuccess && (
