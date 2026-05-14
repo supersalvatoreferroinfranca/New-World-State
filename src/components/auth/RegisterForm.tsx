@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Mail, Calendar, Flag, FileText, Globe, Shield, UserCheck, ChevronRight, ChevronLeft, Upload, AlertCircle, MapPin, Navigation, Search, Sparkles, Wand2 } from 'lucide-react';
@@ -301,6 +301,8 @@ export default function RegisterForm() {
   const [prefixSearch, setPrefixSearch] = useState('');
   const [showPrefixSuggestions, setShowPrefixSuggestions] = useState(false);
   const [isVerifyingAddress, setIsVerifyingAddress] = useState(false);
+  const formTopRef = useRef<HTMLDivElement>(null);
+  const addressSectionRef = useRef<HTMLDivElement>(null);
   const [previews, setPreviews] = useState<{ front: string | null, back: string | null }>({ front: null, back: null });
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -440,13 +442,35 @@ export default function RegisterForm() {
   };
 
   const selectAddress = (suggestion: any) => {
-    const { address, lat, lon } = suggestion;
-    const street = address.road || '';
-    const houseNumber = address.house_number || '';
+    const { address, lat, lon, display_name } = suggestion;
+    let street = address.road || '';
+    let houseNumber = address.house_number || '';
     const city = address.city || address.town || address.village || '';
     const zip = address.postcode || '';
     const province = address.province || address.county || '';
     const country = address.country || '';
+
+    // If house number is missing, attempt to extract it from the street name or display name
+    if (!houseNumber && street) {
+      const streetParts = street.split(' ');
+      const lastPart = streetParts[streetParts.length - 1];
+      // Regex for standard house numbers like "10", "12/A", "142B"
+      if (/^\d+[A-Z\/]?\d*[A-Z]?$/.test(lastPart)) {
+        houseNumber = lastPart;
+        street = streetParts.slice(0, -1).join(' ');
+      }
+    }
+
+    // fallback extraction from display_name if still empty
+    if (!houseNumber && display_name) {
+      const parts = display_name.split(',');
+      if (parts.length > 1) {
+        const potentialNumber = parts[0].trim().split(' ').pop() || '';
+        if (/^\d+[A-Z\/]?\d*[A-Z]?$/.test(potentialNumber)) {
+          houseNumber = potentialNumber;
+        }
+      }
+    }
 
     const olc = new OpenLocationCode();
     const plusCode = olc.encode(parseFloat(lat), parseFloat(lon));
@@ -465,6 +489,11 @@ export default function RegisterForm() {
     }));
     setAddressSuggestions([]);
     setIsVerifyingAddress(true);
+    
+    // Scroll to address section for verification
+    setTimeout(() => {
+      addressSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   };
 
   const [isManualDateEntry, setIsManualDateEntry] = useState(true);
@@ -609,11 +638,13 @@ export default function RegisterForm() {
     if (validateStep(step)) {
       setStep(s => s + 1);
       setError(null);
+      formTopRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   };
   const prevStep = () => {
     setStep(s => s - 1);
     setError(null);
+    formTopRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const useGetCurrentLocation = () => {
@@ -730,7 +761,7 @@ export default function RegisterForm() {
   const stepsCount = 5;
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-brand-blue/10 overflow-hidden mt-24 mb-12 relative">
+    <div ref={formTopRef} className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-brand-blue/10 overflow-hidden mt-24 mb-12 relative">
       {/* Success Message Overlay */}
       <AnimatePresence>
         {isSuccess && (
@@ -1093,7 +1124,7 @@ export default function RegisterForm() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div ref={addressSectionRef} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="md:col-span-3 relative">
                     <div className="space-y-1">
                       <label className="text-[10px] uppercase font-bold text-muted ml-1 italic">{t('address')} (Inizia a scrivere per i suggerimenti)</label>
