@@ -42,30 +42,24 @@ Se vedi questo errore nella dashboard di Cloudflare, significa che Cloudflare no
 3. Una volta completata, Cloudflare "sbloccherà" la sezione Variables sotto **Settings > Functions**.
 4. Inserisci i tuoi segreti e **avvia un nuovo deploy** (le variabili vengono iniettate solo durante la fase di build).
 
-### Errore: "Infinite loop detected in _redirects"
-Questo accade perché abbiamo abilitato il supporto SPA direttamente in `wrangler.jsonc`.
-- Abbiamo rimosso il file `public/_redirects`.
-- Il routing è ora gestito dall'opzione `"not_found_handling": "single-page-application"` in `wrangler.jsonc`.
+### Errore: "invalid header: neon-connection-string"
+Questo errore accade quando la stringa di connessione DATABASE_URL contiene caratteri non validi o spazi.
+- Nel codice del Worker, abbiamo aggiunto `.trim()` alla variabile `env.DATABASE_URL`.
+- Assicurati che su Cloudflare la variabile non inizi con apici o spazi.
 
-### Errore: "Specify the path to the directory of assets"
-Questo errore accade quando Wrangler non trova i file statici nel nuovo formato di configurazione.
-- Abbiamo aggiunto il blocco `assets` con `"directory": "./dist"` in `wrangler.jsonc`.
-- Abbiamo abilitato `"not_found_handling": "single-page-application"` per gestire correttamente le rotte di React.
+### Errore: "No such module"
+Questo accade perché la dashboard di Cloudflare non risolve automaticamente gli import `npm` se il Worker non è caricato tramite Wrangler.
+- **Soluzione:** Abbiamo riscritto il Worker per usare l'**API HTTP nativa di Neon** tramite `fetch`.
+- In questo modo il file è autonomo e **non richiede installazioni o moduli esterni**.
 
-### Errore: "The name 'ASSETS' is reserved"
-Risolto rimuovendo il binding manuale `ASSETS`. Cloudflare lo gestisce internamente.
-
-### Errore: "Unsupported platform for tapable (win32)"
-Se vedi questo errore durante la build:
-1. Ho eliminato il file `package-lock.json`. 
-2. Al prossimo commit su GitHub, Cloudflare genererà un nuovo lock file compatibile con l'ambiente Linux del server di build.
-
-## Configurazione Standalone Worker (API)
-
-Se hai creato un Worker separato (es. `nws-wk`), ecco il codice `worker.js` da incollare nell'editor di Cloudflare. Questo codice gestisce la connessione a Neon usando il driver HTTP ottimizzato.
+## Codice Worker "Zero-Dependencies" (worker.js)
+Copia questo codice integrale nella dashboard di Cloudflare. Funziona senza bisogno di `npm` o `wrangler`.
 
 ```javascript
-import { neon } from 'https://esm.sh/@neondatabase/serverless@0.10.4';
+/* 
+  WORKER STANDALONE (worker.js)
+  Utilizza fetch() invece del driver Neon per massima compatibilità dashboard.
+*/
 
 export default {
   async fetch(request, env) {
@@ -80,38 +74,49 @@ export default {
 
     try {
       if (!env.DATABASE_URL) throw new Error('DATABASE_URL non configurata');
-      const sql = neon(env.DATABASE_URL);
+      
+      // Funzione helper per query via HTTP (nessun modulo richiesto)
+      const queryDb = async (sql, params = []) => {
+        // Neon accetta query SQL via POST su /sql o direttamente sull'URL di connessione
+        // Usiamo il driver HTTP interno di Neon tramite fetch
+        const response = await fetch(`${env.DATABASE_URL.trim()}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: sql, params })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Errore database Neon');
+        return result.rows || [];
+      };
+
+      // Rotta: Health Check
+      if (url.pathname === '/api/db-status') {
+        await queryDb('SELECT 1');
+        return new Response(JSON.stringify({ status: 'connected' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
 
       // Rotta: Lookup Location
       if (url.pathname === '/api/lookup/location') {
         const q = url.searchParams.get('q');
-        const type = url.searchParams.get('type');
         const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=5`;
-        const response = await fetch(nominatimUrl, { headers: { 'User-Agent': 'WorldRegistrationApp/1.0' } });
-        const data = await response.json();
+        const res = await fetch(nominatimUrl, { headers: { 'User-Agent': 'WorldRegistrationApp/1.0' } });
+        const data = await res.json();
         return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Rotta: Registrazione
+      // Rotta: Register
       if (url.pathname === '/api/register' && request.method === 'POST') {
         const body = await request.json();
         const { surname, firstName, gender, birthDate, email, username, longitude, latitude } = body;
         const normalizedUsername = username ? username.toLowerCase().replace(/\s/g, '') : null;
-        
-        // Esempio query (espandere con tutti i campi del form)
-        const result = await sql`
-          INSERT INTO citizens (surname, firstName, gender, birthDate, email, username, location, status)
-          VALUES (${surname}, ${firstName}, ${gender}, ${birthDate}, ${email}, ${normalizedUsername}, 
-          ST_SetSRID(ST_MakePoint(${longitude || 0}, ${latitude || 0}), 4326), 'pending')
+
+        const sql = `
+          INSERT INTO citizens (surname, firstName, gender, birthDate, email, username, location, status, createdAt)
+          VALUES ($1, $2, $3, $4, $5, $6, ST_SetSRID(ST_MakePoint($7, $8), 4326), 'pending', NOW())
           RETURNING id
         `;
-        return new Response(JSON.stringify({ success: true, id: result[0].id }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-
-      // Rotta: Health Check
-      if (url.pathname === '/api/db-status' || url.pathname === '/api/db-check') {
-        await sql`SELECT 1`;
-        return new Response(JSON.stringify({ status: 'connected' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const rows = await queryDb(sql, [surname, firstName, gender, birthDate || null, email || null, normalizedUsername, longitude || 0, latitude || 0]);
+        return new Response(JSON.stringify({ success: true, id: rows[0].id }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
       return new Response('Not Found', { status: 404, headers: corsHeaders });
@@ -121,5 +126,18 @@ export default {
   }
 };
 ```
+
+
+---
+
+## Deploy tramite Wrangler (Metodo Suggerito)
+Se ricevi errori di moduli mancanti nella dashboard, usa questo metodo per caricare il Worker:
+
+1. Crea una cartella locale: `mkdir nws-api && cd nws-api`
+2. Inizializza: `npm init -y`
+3. Installa driver: `npm install @neondatabase/serverless`
+4. Crea `index.js` col codice sopra.
+5. Deploy: `npx wrangler deploy index.js --name nws-wk`
+
 
 **Nota:** Ricordati di eseguire `CREATE EXTENSION IF NOT EXISTS postgis;` nella console SQL di Neon se ricevi errori sulla funzione `ST_MakePoint`.
