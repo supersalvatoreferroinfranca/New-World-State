@@ -42,6 +42,11 @@ Se vedi questo errore nella dashboard di Cloudflare, significa che Cloudflare no
 3. Una volta completata, Cloudflare "sbloccherà" la sezione Variables sotto **Settings > Functions**.
 4. Inserisci i tuoi segreti e **avvia un nuovo deploy** (le variabili vengono iniettate solo durante la fase di build).
 
+### Errore: "Infinite loop detected in _redirects"
+Questo accade perché abbiamo abilitato il supporto SPA direttamente in `wrangler.jsonc`.
+- Abbiamo rimosso il file `public/_redirects`.
+- Il routing è ora gestito dall'opzione `"not_found_handling": "single-page-application"` in `wrangler.jsonc`.
+
 ### Errore: "Specify the path to the directory of assets"
 Questo errore accade quando Wrangler non trova i file statici nel nuovo formato di configurazione.
 - Abbiamo aggiunto il blocco `assets` con `"directory": "./dist"` in `wrangler.jsonc`.

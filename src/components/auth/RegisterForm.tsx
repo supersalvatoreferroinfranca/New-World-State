@@ -658,7 +658,9 @@ export default function RegisterForm() {
       
       console.log('Invio dati di registrazione...', serializableData);
 
-      const response = await fetch('/api/register', {
+      const API_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/register';
+      
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(serializableData),
