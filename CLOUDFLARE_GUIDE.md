@@ -59,3 +59,67 @@ Risolto rimuovendo il binding manuale `ASSETS`. Cloudflare lo gestisce intername
 Se vedi questo errore durante la build:
 1. Ho eliminato il file `package-lock.json`. 
 2. Al prossimo commit su GitHub, Cloudflare genererà un nuovo lock file compatibile con l'ambiente Linux del server di build.
+
+## Configurazione Standalone Worker (API)
+
+Se hai creato un Worker separato (es. `nws-wk`), ecco il codice `worker.js` da incollare nell'editor di Cloudflare. Questo codice gestisce la connessione a Neon usando il driver HTTP ottimizzato.
+
+```javascript
+import { neon } from 'https://esm.sh/@neondatabase/serverless@0.10.4';
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+
+    if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+    try {
+      if (!env.DATABASE_URL) throw new Error('DATABASE_URL non configurata');
+      const sql = neon(env.DATABASE_URL);
+
+      // Rotta: Lookup Location
+      if (url.pathname === '/api/lookup/location') {
+        const q = url.searchParams.get('q');
+        const type = url.searchParams.get('type');
+        const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&limit=5`;
+        const response = await fetch(nominatimUrl, { headers: { 'User-Agent': 'WorldRegistrationApp/1.0' } });
+        const data = await response.json();
+        return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Rotta: Registrazione
+      if (url.pathname === '/api/register' && request.method === 'POST') {
+        const body = await request.json();
+        const { surname, firstName, gender, birthDate, email, username, longitude, latitude } = body;
+        const normalizedUsername = username ? username.toLowerCase().replace(/\s/g, '') : null;
+        
+        // Esempio query (espandere con tutti i campi del form)
+        const result = await sql`
+          INSERT INTO citizens (surname, firstName, gender, birthDate, email, username, location, status)
+          VALUES (${surname}, ${firstName}, ${gender}, ${birthDate}, ${email}, ${normalizedUsername}, 
+          ST_SetSRID(ST_MakePoint(${longitude || 0}, ${latitude || 0}), 4326), 'pending')
+          RETURNING id
+        `;
+        return new Response(JSON.stringify({ success: true, id: result[0].id }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Rotta: Health Check
+      if (url.pathname === '/api/db-status' || url.pathname === '/api/db-check') {
+        await sql`SELECT 1`;
+        return new Response(JSON.stringify({ status: 'connected' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      return new Response('Not Found', { status: 404, headers: corsHeaders });
+    } catch (err) {
+      return new Response(JSON.stringify({ status: 'error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+  }
+};
+```
+
+**Nota:** Ricordati di eseguire `CREATE EXTENSION IF NOT EXISTS postgis;` nella console SQL di Neon se ricevi errori sulla funzione `ST_MakePoint`.
