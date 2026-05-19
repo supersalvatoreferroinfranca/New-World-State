@@ -67,6 +67,53 @@ export const onRequestPost = async (context: any) => {
       RETURNING id
     `;
 
+    // 3. Send Email (Native Cloudflare Email)
+    if (email && env.EMAIL) {
+      try {
+        const welcomeHtml = `
+          <div style="font-family: serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+            <h1 style="color: #1a365d; text-align: center;">Benvenuto, Cittadino ${firstName || username || 'Cittadino'}!</h1>
+            <p>Siamo lieti di confermare che la tua richiesta di cittadinanza è stata registrata con successo nel Registro Anagrafico Mondiale.</p>
+            <p>La tua richiesta sarà ora validata da un cittadino incaricato incaricato della verifica dei dati.</p>
+            <p>Riceverai un'ulteriore email di conferma dell'inserimento definitivo al termine di questa procedura.</p>
+            <br>
+            <hr style="border: 0; border-top: 1px solid #eeeeee;">
+            <p style="font-size: 12px; color: #666666; text-align: center;">
+              New World State - Ufficio Anagrafe Mondiale<br>
+              <i>Uniti per un futuro globale.</i>
+            </p>
+          </div>
+        `;
+
+        await env.EMAIL.send({
+          from: "newuser@newworldstate.cloud",
+          to: email,
+          subject: "Benvenuto nel New World State!",
+          content: [
+            {
+              type: "text/html",
+              value: welcomeHtml
+            }
+          ]
+        });
+
+        // Send copy to info
+        await env.EMAIL.send({
+          from: "newuser@newworldstate.cloud",
+          to: "info@newworldstate.cloud",
+          subject: `[Copia] Nuova registrazione: ${firstName} ${surname}`,
+          content: [
+            {
+              type: "text/html",
+              value: `<p>Nuova registrazione ricevuta per <b>${email}</b>.</p>` + welcomeHtml
+            }
+          ]
+        });
+      } catch (e) {
+        console.error('Cloudflare Email Error:', e);
+      }
+    }
+
     return new Response(JSON.stringify({ 
       success: true, 
       message: 'Cittadino registrato con successo', 

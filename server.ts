@@ -4,6 +4,7 @@ import pg from 'pg';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+
 const { Pool } = pg;
 
 dotenv.config();
@@ -300,6 +301,7 @@ async function startServer() {
       }
       
       console.log('Inserimento completato con successo. ID:', result.rows[0].id);
+
       return res.status(201).json({ 
         success: true, 
         message: 'Cittadino registrato con successo', 
