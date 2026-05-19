@@ -49,6 +49,29 @@ async function startServer() {
       res.json({ status: 'ok', timestamp: new Date().toISOString(), message: 'Express server is responding' });
     });
 
+    apiRouter.get('/debug', (req, res) => {
+      const routes: string[] = [];
+      app._router.stack.forEach((middleware: any) => {
+        if (middleware.route) { // routes registered directly on the app
+          routes.push(`${Object.keys(middleware.route.methods).join(',').toUpperCase()} ${middleware.route.path}`);
+        } else if (middleware.name === 'router') { // router middleware
+          middleware.handle.stack.forEach((handler: any) => {
+            if (handler.route) {
+              const path = handler.route.path;
+              routes.push(`${Object.keys(handler.route.methods).join(',').toUpperCase()} /api${path}`);
+            }
+          });
+        }
+      });
+      res.json({
+        isProd,
+        nodeEnv: process.env.NODE_ENV,
+        cwd: process.cwd(),
+        distPath,
+        routes
+      });
+    });
+
     apiRouter.get('/db-status', async (req, res) => {
       console.log('[API] Processing /api/db-status');
       const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/db-status';

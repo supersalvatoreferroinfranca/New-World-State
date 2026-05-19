@@ -9,12 +9,20 @@ export default function DbStatus() {
     const check = async () => {
       try {
         const res = await fetch('/api/db-status');
-        const data = await res.json();
-        setStatus(data.status);
-        if (data.status === 'error') setErrorInfo(data.code || data.message || 'Errore sconosciuto');
-      } catch (e) {
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          setStatus(data.status);
+          if (data.status === 'error') setErrorInfo(data.code || data.message || 'Errore sconosciuto');
+        } else {
+          const text = await res.text();
+          console.error('Unexpected non-JSON response from /api/db-status:', text);
+          setStatus('error');
+          setErrorInfo('HTML Response received: ' + text.slice(0, 100));
+        }
+      } catch (e: any) {
         setStatus('error');
-        setErrorInfo('Server unreachable');
+        setErrorInfo(e.message || 'Server unreachable');
       }
     };
     check();

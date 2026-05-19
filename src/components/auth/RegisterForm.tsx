@@ -548,7 +548,8 @@ export default function RegisterForm() {
         if (!contentType || !contentType.includes('application/json')) {
           setSystemStatus('error');
           const text = await res.text();
-          setError(`Il server ha risposto con formato ${contentType || 'sconosciuto'}. Contenuto: ${text.slice(0, 50)}...`);
+          console.error('Unexpected response format:', contentType, text);
+          setError(`Il server ha risposto con formato ${contentType || 'sconosciuto'}. Pagina di errore rilevata (mostro anteprima): ${text.slice(0, 1000)}`);
           return;
         }
 
