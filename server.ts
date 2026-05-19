@@ -3,50 +3,58 @@ import { createServer as createViteServer } from 'vite';
 import pg from 'pg';
 import path from 'path';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+
 const { Pool } = pg;
 
 dotenv.config();
+
+// Standard ESM shims for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function startServer() {
   try {
     const app = express();
     const PORT = 3000;
+    const isProd = process.env.NODE_ENV === 'production';
 
     // Logging middleware
     app.use((req, res, next) => {
-      console.log(`[REQUEST] ${req.method} ${req.url}`);
+      console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
       next();
     });
 
     app.use(express.json({ limit: '10mb' }));
 
-    // API Routes (defined early to ensure they are hit)
+    // API Routes (defined early to ensure they are hit before static fallback)
     app.get('/api/ping', (req, res) => {
       res.json({ status: 'ok', timestamp: new Date().toISOString(), message: 'Express server is responding' });
     });
 
     app.get('/api/db-status', async (req, res) => {
-      console.log('[API] Processing /api/db-status');
-      const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/';
+      console.log('[API] GET /api/db-status');
+      const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/db-status';
       try {
         const workerRes = await fetch(WORKER_URL);
         console.log(`[API] Worker responded with status: ${workerRes.status}`);
         
-        if (workerRes.ok || workerRes.status === 404) {
+        if (workerRes.ok) {
+          const data = await workerRes.json();
           return res.json({ 
             status: 'connected', 
             message: 'Connesso al Database Worker (NWS-WK).',
-            worker_status: workerRes.status 
+            worker_data: data
           });
         } else {
-          return res.json({ 
+          return res.status(workerRes.status).json({ 
             status: 'error', 
             message: `Il Worker Database ha risposto con codice ${workerRes.status}.` 
           });
         }
       } catch (err: any) {
-        console.error('[API] Error reaching worker:', err.message);
-        return res.json({ 
+        console.error('[API] Error reaching worker status:', err.message);
+        return res.status(502).json({ 
           status: 'error', 
           message: 'Impossibile raggiungere il Worker Database (NWS-WK).', 
           details: err.message 
@@ -186,26 +194,39 @@ async function startServer() {
   });
 
   app.post('/api/register', async (req, res) => {
-    const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/';
+    const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/register';
     console.log('--- PROXYING REGISTRAZIONE AL WORKER ---');
     try {
       const workerRes = await fetch(WORKER_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(req.body),
       });
 
       const contentType = workerRes.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await workerRes.json();
-        res.status(workerRes.status).json(data);
+        console.log(`[API] Worker registration reply: ${workerRes.status}`);
+        return res.status(workerRes.status).json(data);
       } else {
         const text = await workerRes.text();
-        res.status(workerRes.status).json({ success: false, message: 'Risposta worker non valida (non JSON)', details: text });
+        console.error(`[API] Worker registration returned non-JSON: ${text.slice(0, 200)}`);
+        return res.status(workerRes.status).json({ 
+          success: false, 
+          message: 'Risposta worker non valida (non JSON)', 
+          details: text.slice(0, 100) 
+        });
       }
     } catch (error: any) {
-      console.error('Registration Proxy Error:', error);
-      res.status(500).json({ success: false, message: 'Errore durante la comunicazione con il Database Worker.' });
+      console.error('Registration Proxy Error:', error.message);
+      return res.status(502).json({ 
+        success: false, 
+        message: 'Errore durante la comunicazione con il Database Worker.',
+        details: error.message
+      });
     }
   });
 
@@ -230,23 +251,33 @@ async function startServer() {
     }
   });
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
+    // Static file serving logic
+    if (!isProd) {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } else {
+      // In production, esbuild bundle is usually in dist/ and assets are there too
+      // path.resolve(process.cwd(), 'dist') is safe
+      const distPath = path.resolve(process.cwd(), 'dist');
+      console.log(`[SERVER] Serving static files from: ${distPath}`);
+      
+      app.use(express.static(distPath));
+      
+      // SPA Fallback: handle all non-API routes
+      app.get('*', (req, res, next) => {
+        // Skip API routes if they weren't matched above
+        if (req.url.startsWith('/api/')) {
+          return next();
+        }
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    }
 
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Server running on http://0.0.0.0:${PORT} (Production: ${isProd})`);
     });
 
   } catch (err: any) {
