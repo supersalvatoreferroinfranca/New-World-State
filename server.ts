@@ -3,15 +3,9 @@ import { createServer as createViteServer } from 'vite';
 import pg from 'pg';
 import path from 'path';
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-
 const { Pool } = pg;
 
 dotenv.config();
-
-// Standard ESM shims for __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function startServer() {
   try {
@@ -98,34 +92,34 @@ async function startServer() {
           CREATE TABLE citizens (
             id SERIAL PRIMARY KEY,
             surname TEXT,
-            firstname TEXT,
+            "firstName" TEXT,
             gender CHAR(1),
-            birthdate DATE,
-            birthplace TEXT,
-            birthcountry TEXT,
+            "birthDate" DATE,
+            "birthPlace" TEXT,
+            "birthCountry" TEXT,
             citizenship TEXT,
-            maritalstatus TEXT,
-            residenceaddress TEXT,
-            residencenumber TEXT,
-            residencezip VARCHAR(20),
-            residencecity TEXT,
-            residenceprovince VARCHAR(10),
-            residencecountry TEXT,
-            registrationdate DATE,
+            "maritalStatus" TEXT,
+            "residenceAddress" TEXT,
+            "residenceNumber" TEXT,
+            "residenceZip" VARCHAR(20),
+            "residenceCity" TEXT,
+            "residenceProvince" VARCHAR(10),
+            "residenceCountry" TEXT,
+            "registrationDate" DATE,
             email TEXT UNIQUE,
-            phoneprefix TEXT,
-            phonenumber TEXT,
+            "phonePrefix" TEXT,
+            "phoneNumber" TEXT,
             username TEXT UNIQUE,
             password TEXT,
-            document_hash TEXT UNIQUE,
-            documenttype TEXT,
-            pluscode TEXT,
-            locationdescription TEXT,
+            "documentHash" TEXT UNIQUE,
+            "documentType" TEXT,
+            "plusCode" TEXT,
+            "locationDescription" TEXT,
             location GEOMETRY(Point, 4326),
-            isambassador BOOLEAN DEFAULT FALSE,
-            ispeacekeeper BOOLEAN DEFAULT FALSE,
+            "isAmbassador" BOOLEAN DEFAULT FALSE,
+            "isPeacekeeper" BOOLEAN DEFAULT FALSE,
             status VARCHAR(20) DEFAULT 'pending',
-            createdat TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
           );
         `);
         console.log('✅ DATABASE SCHEMA: Tabella "citizens" creata.');
@@ -230,16 +224,6 @@ async function startServer() {
     }
   });
 
-  // Catch-all for unmatched API routes
-  app.all('/api/*', (req, res) => {
-    console.warn(`[API] Unmatched route: ${req.method} ${req.url}`);
-    res.status(404).json({ 
-      error: 'Not Found', 
-      message: `The API endpoint ${req.url} was not found on this server.`,
-      available_routes: ['/api/db-status', '/api/ping', '/api/lookup/location', '/api/register']
-    });
-  });
-
   // Health check/DB check
   app.get('/api/db-check', async (req, res) => {
     if (!pool) return res.status(503).json({ status: 'error', message: 'Database not configured' });
@@ -249,6 +233,16 @@ async function startServer() {
     } catch (error) {
       res.status(500).json({ status: 'error', message: 'Database connection failed' });
     }
+  });
+
+  // Catch-all for unmatched API routes
+  app.all('/api/*', (req, res) => {
+    console.warn(`[API] Unmatched route: ${req.method} ${req.url}`);
+    res.status(404).json({ 
+      error: 'Not Found', 
+      message: `The API endpoint ${req.url} was not found on this server.`,
+      available_routes: ['/api/db-status', '/api/ping', '/api/lookup/location', '/api/register', '/api/db-check']
+    });
   });
 
     // Static file serving logic
