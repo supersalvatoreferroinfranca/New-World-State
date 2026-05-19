@@ -8,11 +8,10 @@ export default function DbStatus() {
   useEffect(() => {
     const check = async () => {
       try {
-        const API_BASE = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev';
-        const res = await fetch(`${API_BASE}/api/db-status`);
+        const res = await fetch('/api/db-status');
         const data = await res.json();
         setStatus(data.status);
-        if (data.status === 'error') setErrorInfo(data.code || data.message);
+        if (data.status === 'error') setErrorInfo(data.code || data.message || 'Errore sconosciuto');
       } catch (e) {
         setStatus('error');
         setErrorInfo('Server unreachable');

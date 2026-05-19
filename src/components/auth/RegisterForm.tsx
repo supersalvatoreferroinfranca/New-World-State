@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Calendar, Flag, FileText, Globe, Shield, UserCheck, ChevronRight, ChevronLeft, Upload, AlertCircle, MapPin, Navigation, Search, Sparkles, Wand2 } from 'lucide-react';
+import { User, Mail, Calendar, Flag, FileText, Globe, Shield, UserCheck, ChevronRight, ChevronLeft, Upload, AlertCircle, MapPin, Navigation, Search, Sparkles, Wand2, Loader2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { OpenLocationCode } from 'open-location-code';
@@ -531,6 +531,26 @@ export default function RegisterForm() {
   const [manualDate, setManualDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [systemStatus, setSystemStatus] = useState<'loading' | 'ok' | 'error'>('loading');
+
+  useEffect(() => {
+    const checkSystem = async () => {
+      try {
+        const res = await fetch('/api/db-status');
+        const data = await res.json();
+        if (data.status === 'connected') {
+          setSystemStatus('ok');
+        } else {
+          setSystemStatus('error');
+          setError('Il sistema è in manutenzione (Database non connesso). Riprova tra poco.');
+        }
+      } catch (e) {
+        setSystemStatus('error');
+        setError('Impossibile comunicare con il server. Verifica la tua connessione.');
+      }
+    };
+    checkSystem();
+  }, []);
 
   const [error, setError] = useState<string | null>(null);
   const [aiTip, setAiTip] = useState<string | null>(null);
@@ -842,10 +862,17 @@ export default function RegisterForm() {
                 <UserCheck className="w-10 h-10" />
               </div>
               <h2 className="text-3xl font-serif text-brand-blue">Benvenuto, Cittadino!</h2>
-              <p className="text-muted">La tua richiesta è stata registrata con successo nel registro anagrafico mondiale.</p>
+              <div className="space-y-4">
+                <p className="text-muted">La tua richiesta è stata registrata con successo nel registro anagrafico mondiale.</p>
+                {formData.email && (
+                  <p className="text-sm text-brand-blue/80 bg-brand-blue/5 p-4 rounded-xl border border-brand-blue/10">
+                    Abbiamo ricevuto la tua email. La tua richiesta sarà validata da un cittadino incaricato e riceverai un'email di inserimento definitivo al termine della procedura.
+                  </p>
+                )}
+              </div>
               <button 
                 onClick={() => window.location.reload()}
-                className="px-8 py-3 bg-brand-blue text-white rounded-xl"
+                className="px-8 py-3 bg-brand-blue text-white rounded-xl shadow-lg hover:bg-brand-blue/90 transition-all font-medium"
               >
                 Torna alla Home
               </button>
@@ -879,8 +906,33 @@ export default function RegisterForm() {
       </AnimatePresence>
 
       <div className="p-8 md:p-12">
-        <AnimatePresence mode="wait">
-          {step === 1 && (
+        {systemStatus === 'loading' ? (
+          <div className="py-20 flex flex-col items-center justify-center space-y-6">
+            <Loader2 className="w-12 h-12 text-brand-blue animate-spin" />
+            <div className="text-center">
+              <h3 className="text-xl font-serif text-brand-blue">Verifica Sistemi...</h3>
+              <p className="text-muted text-sm mt-2">Stiamo verificando la connessione al registro mondiale.</p>
+            </div>
+          </div>
+        ) : systemStatus === 'error' ? (
+          <div className="py-20 flex flex-col items-center justify-center space-y-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+              <AlertCircle className="w-10 h-10" />
+            </div>
+            <div className="text-center max-w-sm">
+              <h3 className="text-xl font-serif text-brand-blue">Sistema non pronto</h3>
+              <p className="text-red-600 text-sm mt-2">{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-6 px-6 py-2 bg-brand-blue text-white rounded-xl text-sm font-medium"
+              >
+                Riprova
+              </button>
+            </div>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            {step === 1 && (
             <motion.div 
               key="step1"
               initial={{ opacity: 0, x: 20 }}
@@ -1841,6 +1893,7 @@ export default function RegisterForm() {
             </motion.div>
           )}
         </AnimatePresence>
+      )}
       </div>
     </div>
   );
