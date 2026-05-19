@@ -13,16 +13,17 @@ export default function DbStatus() {
         if (contentType && contentType.includes('application/json')) {
           const data = await res.json();
           setStatus(data.status);
-          if (data.status === 'error') setErrorInfo(data.code || data.message || 'Errore sconosciuto');
+          if (data.status === 'error') {
+            setErrorInfo(data.message || 'Database non configurato correttamente');
+          }
         } else {
           const text = await res.text();
-          console.error('Unexpected non-JSON response from /api/db-status:', text);
           setStatus('error');
-          setErrorInfo('HTML Response received: ' + text.slice(0, 100));
+          setErrorInfo(`Risposta non valida (${res.status}): ${text.slice(0, 100)}...`);
         }
       } catch (e: any) {
         setStatus('error');
-        setErrorInfo(e.message || 'Server unreachable');
+        setErrorInfo(`Errore di rete: ${e.message}`);
       }
     };
     check();

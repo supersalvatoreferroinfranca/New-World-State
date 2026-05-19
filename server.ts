@@ -215,8 +215,9 @@ async function startServer() {
       }));
       
       app.get('*', (req, res, next) => {
-        // Skip API routes - they should have been handled by apiRouter
-        if (req.url.startsWith('/api/')) {
+        // Skip API routes properly
+        if (req.path.startsWith('/api')) {
+          console.warn(`[SERVER] API route reached SPA fallback: ${req.method} ${req.path}`);
           return next();
         }
         
@@ -230,11 +231,15 @@ async function startServer() {
       });
     }
 
-    // Final catch-all
+    // Final catch-all for anything else
     app.use((req, res) => {
       console.warn(`[SERVER] Final catch-all hit: ${req.method} ${req.url}`);
-      if (req.url.startsWith('/api/')) {
-        res.status(404).json({ error: 'Not Found', path: req.url });
+      if (req.path.startsWith('/api')) {
+        res.status(404).json({ 
+          error: 'Not Found', 
+          message: `Endpoint ${req.path} non trovato.`,
+          path: req.path 
+        });
       } else {
         res.status(404).send('Not Found');
       }
