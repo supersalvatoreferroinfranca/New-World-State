@@ -2,15 +2,10 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import pg from 'pg';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-
 const { Pool } = pg;
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function startServer() {
   try {
