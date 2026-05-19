@@ -537,6 +537,13 @@ export default function RegisterForm() {
     const checkSystem = async () => {
       try {
         const res = await fetch('/api/db-status');
+        
+        if (!res.ok) {
+          setSystemStatus('error');
+          setError(`Errore di comunicazione: ${res.status} ${res.statusText}`);
+          return;
+        }
+
         const data = await res.json();
         if (data.status === 'connected') {
           setSystemStatus('ok');
@@ -544,9 +551,10 @@ export default function RegisterForm() {
           setSystemStatus('error');
           setError(data.message || 'Il sistema è in manutenzione (Database non connesso). Riprova tra poco.');
         }
-      } catch (e) {
+      } catch (e: any) {
         setSystemStatus('error');
-        setError('Impossibile comunicare con il server. Verifica la tua connessione.');
+        setError(`Impossibile comunicare con il server: ${e.message || 'Errore di rete'}. Verifica la tua connessione.`);
+        console.error('System check failed:', e);
       }
     };
     checkSystem();
