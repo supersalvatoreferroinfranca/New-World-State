@@ -13,48 +13,81 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function startServer() {
-  const app = express();
-  const PORT = 3000;
+  try {
+    const app = express();
+    const PORT = 3000;
 
-  app.use(express.json({ limit: '10mb' }));
+    // Logging middleware
+    app.use((req, res, next) => {
+      console.log(`[REQUEST] ${req.method} ${req.url}`);
+      next();
+    });
 
-  // Basic diagnostic route
-  app.get('/api/ping', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString(), message: 'Express server is responding' });
-  });
+    app.use(express.json({ limit: '10mb' }));
 
-  // Setup PostgreSQL Connection Pool (Neon.tech) - Only if DATABASE_URL is present
-  let pool: any = null;
-  if (process.env.DATABASE_URL) {
-    try {
-      pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: {
-          rejectUnauthorized: false // Required for Neon
+    // API Routes (defined early to ensure they are hit)
+    app.get('/api/ping', (req, res) => {
+      res.json({ status: 'ok', timestamp: new Date().toISOString(), message: 'Express server is responding' });
+    });
+
+    app.get('/api/db-status', async (req, res) => {
+      console.log('[API] Processing /api/db-status');
+      const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/';
+      try {
+        const workerRes = await fetch(WORKER_URL);
+        console.log(`[API] Worker responded with status: ${workerRes.status}`);
+        
+        if (workerRes.ok || workerRes.status === 404) {
+          return res.json({ 
+            status: 'connected', 
+            message: 'Connesso al Database Worker (NWS-WK).',
+            worker_status: workerRes.status 
+          });
+        } else {
+          return res.json({ 
+            status: 'error', 
+            message: `Il Worker Database ha risposto con codice ${workerRes.status}.` 
+          });
         }
-      });
-      console.log('--- POOL DB INIZIALIZZATO ---');
-    } catch (e) {
-      console.error('Errore durante inizializzazione Pool:', e);
+      } catch (err: any) {
+        console.error('[API] Error reaching worker:', err.message);
+        return res.json({ 
+          status: 'error', 
+          message: 'Impossibile raggiungere il Worker Database (NWS-WK).', 
+          details: err.message 
+        });
+      }
+    });
+
+    // Setup PostgreSQL Connection Pool (Neon.tech) - Only if DATABASE_URL is present
+    let pool: any = null;
+    if (process.env.DATABASE_URL) {
+      try {
+        pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+          ssl: {
+            rejectUnauthorized: false // Required for Neon
+          }
+        });
+        console.log('--- POOL DB INIZIALIZZATO ---');
+      } catch (e) {
+        console.error('Errore durante inizializzazione Pool:', e);
+      }
+    } else {
+      console.warn('⚠️ ATTENZIONE: DATABASE_URL non configurato nei Secrets. Il DB diretto sarà disabilitato.');
     }
-  } else {
-    console.warn('⚠️ ATTENZIONE: DATABASE_URL non configurato nei Secrets. Il DB diretto sarÃ  disabilitato.');
-  }
 
   // Check connection and initialize table on startup
   const checkConnection = async () => {
     if (!pool) return;
 
-    let client;
     try {
-      client = await pool.connect();
+      console.log('--- AVVIO CONTROLLO DB (ASYNC) ---');
+      const client = await pool.connect();
       console.log('✅ DATABASE CONNESSO: Neon.tech (PostgreSQL) è online.');
       
-      // Enable PostGIS if not enabled
       await client.query(`CREATE EXTENSION IF NOT EXISTS postgis;`);
       
-      // Check if table exists, if not create it
-      // We don't drop it every time now to avoid issues if multiple instances start
       const tableCheck = await client.query("SELECT FROM information_schema.tables WHERE table_name = 'citizens'");
       
       if (tableCheck.rows.length === 0) {
@@ -93,76 +126,19 @@ async function startServer() {
           );
         `);
         console.log('✅ DATABASE SCHEMA: Tabella "citizens" creata.');
-      } else {
-        // Heal schema: ensure all columns exist
-        const columnsToEnsure = [
-          ['surname', 'TEXT'],
-          ['firstname', 'TEXT'],
-          ['gender', 'CHAR(1)'],
-          ['birthdate', 'DATE'],
-          ['birthplace', 'TEXT'],
-          ['birthcountry', 'TEXT'],
-          ['citizenship', 'TEXT'],
-          ['maritalstatus', 'TEXT'],
-          ['residenceaddress', 'TEXT'],
-          ['residencenumber', 'TEXT'],
-          ['residencezip', 'VARCHAR(20)'],
-          ['residencecity', 'TEXT'],
-          ['residenceprovince', 'VARCHAR(10)'],
-          ['residencecountry', 'TEXT'],
-          ['registrationdate', 'DATE'],
-          ['phoneprefix', 'TEXT'],
-          ['phonenumber', 'TEXT'],
-          ['username', 'TEXT'],
-          ['password', 'TEXT'],
-          ['document_hash', 'TEXT'],
-          ['documenttype', 'TEXT'],
-          ['pluscode', 'TEXT'],
-          ['locationdescription', 'TEXT'],
-          ['isambassador', 'BOOLEAN DEFAULT FALSE'],
-          ['ispeacekeeper', 'BOOLEAN DEFAULT FALSE'],
-          ['status', 'VARCHAR(20) DEFAULT \'pending\''],
-          ['createdat', 'TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP']
-        ];
-
-        for (const [col, type] of columnsToEnsure) {
-          await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS ${col} ${type};`);
-        }
-        
-        // Special case: location column (requires separate care due to GEOMETRY type)
-        try {
-          await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS location GEOMETRY(Point, 4326);`);
-        } catch (e) {
-          console.warn('Could not add location column (might already exist or PostGIS missing)');
-        }
-
-        await client.query(`ALTER TABLE citizens ALTER COLUMN email DROP NOT NULL;`);
-        console.log('✅ DATABASE SCHEMA: Tabella "citizens" verificata e aggiornata.');
       }
+      client.release();
     } catch (err: any) {
-      console.error('--- ERRORE CONNESSIONE DB ---');
+      console.error('--- ERRORE SILENZIOSO CONNESSIONE DB ---');
       console.error('Messaggio:', err.message);
-    } finally {
-      if (client) client.release();
     }
   };
   
-  checkConnection();
+  // Do not wait for DB to listen
+  checkConnection().catch(e => console.error('checkConnection failed:', e));
 
   // API Routes
-  app.get('/api/db-status', async (req, res) => {
-    const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/';
-    try {
-      const workerRes = await fetch(WORKER_URL);
-      if (workerRes.ok || workerRes.status === 404) {
-        res.json({ status: 'connected', message: 'Connesso al Database Worker (NWS-WK).' });
-      } else {
-        res.json({ status: 'error', message: `Il Worker Database ha risposto con codice ${workerRes.status}.` });
-      }
-    } catch (err: any) {
-      res.json({ status: 'error', message: 'Impossibile raggiungere il Worker Database (NWS-WK).', details: err.message });
-    }
-  });
+  // (Note: /api/db-status moved to top)
 
   // Proxy for Nominatim location lookup to avoid CORS/User-Agent issues in browser
   app.get('/api/lookup/location', async (req, res) => {
@@ -238,6 +214,16 @@ async function startServer() {
     }
   });
 
+  // Catch-all for unmatched API routes
+  app.all('/api/*', (req, res) => {
+    console.warn(`[API] Unmatched route: ${req.method} ${req.url}`);
+    res.status(404).json({ 
+      error: 'Not Found', 
+      message: `The API endpoint ${req.url} was not found on this server.`,
+      available_routes: ['/api/db-status', '/api/ping', '/api/lookup/location', '/api/register']
+    });
+  });
+
   // Health check/DB check
   app.get('/api/db-check', async (req, res) => {
     if (!pool) return res.status(503).json({ status: 'error', message: 'Database not configured' });
@@ -264,9 +250,14 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+
+  } catch (err: any) {
+    console.error('--- FATAL SERVER ERROR AT STARTUP ---');
+    console.error(err);
+  }
 }
 
 startServer();
