@@ -547,7 +547,8 @@ export default function RegisterForm() {
         const contentType = res.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
           setSystemStatus('error');
-          setError('Il server ha risposto con un formato non valido (non JSON).');
+          const text = await res.text();
+          setError(`Il server ha risposto con formato ${contentType || 'sconosciuto'}. Contenuto: ${text.slice(0, 50)}...`);
           return;
         }
 
