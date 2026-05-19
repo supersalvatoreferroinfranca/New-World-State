@@ -18,25 +18,32 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
 
-  // Setup PostgreSQL Connection Pool (Neon.tech)
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false // Required for Neon
-    }
+  // Basic diagnostic route
+  app.get('/api/ping', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), message: 'Express server is responding' });
   });
 
-  console.log('--- TENTATIVO DI CONNESSIONE DB (NEON.TECH) ---');
-  if (!process.env.DATABASE_URL) {
-    console.warn('⚠️ ATTENZIONE: DATABASE_URL non configurato nei Secrets di AI Studio.');
+  // Setup PostgreSQL Connection Pool (Neon.tech) - Only if DATABASE_URL is present
+  let pool: any = null;
+  if (process.env.DATABASE_URL) {
+    try {
+      pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false // Required for Neon
+        }
+      });
+      console.log('--- POOL DB INIZIALIZZATO ---');
+    } catch (e) {
+      console.error('Errore durante inizializzazione Pool:', e);
+    }
+  } else {
+    console.warn('⚠️ ATTENZIONE: DATABASE_URL non configurato nei Secrets. Il DB diretto sarÃ  disabilitato.');
   }
 
   // Check connection and initialize table on startup
   const checkConnection = async () => {
-    if (!process.env.DATABASE_URL) {
-      console.warn('⚠️ ATTENZIONE: DATABASE_URL non configurato.');
-      return;
-    }
+    if (!pool) return;
 
     let client;
     try {
@@ -233,6 +240,7 @@ async function startServer() {
 
   // Health check/DB check
   app.get('/api/db-check', async (req, res) => {
+    if (!pool) return res.status(503).json({ status: 'error', message: 'Database not configured' });
     try {
       await pool.query('SELECT 1');
       res.json({ status: 'ok', database: 'connected' });
