@@ -15,7 +15,7 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: '10mb' }));
 
   // Setup PostgreSQL Connection Pool (Neon.tech)
   const pool = new Pool({
@@ -158,18 +158,21 @@ async function startServer() {
   // Proxy for Nominatim location lookup to avoid CORS/User-Agent issues in browser
   app.get('/api/lookup/location', async (req, res) => {
     const { q, type, lat, lon } = req.query;
-    if (!q) return res.status(400).json({ error: 'Query parameter q is required' });
+    if (!q && (!lat || !lon)) return res.status(400).json({ error: 'Query parameter q or (lat and lon) is required' });
 
     try {
-      let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q as string)}&addressdetails=1&limit=5`;
-      
-      // Bias results towards user location if provided
-      if (lat && lon) {
-        url += `&viewbox=${Number(lon)-0.5},${Number(lat)+0.5},${Number(lon)+0.5},${Number(lat)-0.5}`;
+      let url: string;
+      if (q) {
+        url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q as string)}&addressdetails=1&limit=5`;
+        // Bias results towards user location if provided
+        if (lat && lon) {
+          url += `&viewbox=${Number(lon)-0.5},${Number(lat)+0.5},${Number(lon)+0.5},${Number(lat)-0.5}`;
+        }
+        if (type === 'country') url += '&featuretype=country';
+        if (type === 'city') url += '&featuretype=city';
+      } else {
+        url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
       }
-
-      if (type === 'country') url += '&featuretype=country';
-      if (type === 'city') url += '&featuretype=city';
 
       const response = await fetch(url, {
         headers: {
@@ -208,6 +211,7 @@ async function startServer() {
   app.post('/api/register', async (req, res) => {
     console.log('--- NUOVA RICHIESTA DI REGISTRAZIONE ---');
     try {
+      const body = req.body;
       const { 
         surname, firstName, gender, birthDate, birthPlace, birthCountry,
         citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
@@ -215,11 +219,9 @@ async function startServer() {
         username, password, documentHash,
         documentType, plusCode, locationDescription, latitude, longitude,
         isAmbassador, isPeacekeeper 
-      } = req.body;
+      } = body;
       
-      const normalizedUsername = username ? username.toLowerCase().replace(/\s/g, '') : null;
-      
-      console.log('Dati ricevuti per:', email || normalizedUsername);
+      console.log('Dati ricevuti per:', email || username || 'anonimo');
       
       if (!process.env.DATABASE_URL) {
         console.error('ERRORE: DATABASE_URL non configurato');
@@ -229,8 +231,8 @@ async function startServer() {
         });
       }
 
-      // 1. Unified checks for security and duplicates
-      // Check for duplicates by Email, Username, Document Hash, or Persona (Surname+FirstName+BirthDate)
+      // 1. Check for duplicates
+      console.log('Controllo duplicati...');
       const duplicateQuery = `
         SELECT id FROM citizens 
         WHERE (email IS NOT NULL AND email = $1)
@@ -240,11 +242,11 @@ async function startServer() {
       `;
       const duplicateValues = [
         email || null, 
-        normalizedUsername, 
+        username ? username.toLowerCase().replace(/\s/g, '') : null, 
         documentHash || null, 
-        surname, 
-        firstName, 
-        birthDate
+        surname || '', 
+        firstName || '', 
+        birthDate || null
       ];
       
       const dupCheck = await pool.query(duplicateQuery, duplicateValues);
@@ -253,7 +255,7 @@ async function startServer() {
         console.warn('REGISTRAZIONE NEGATA: Rilevato duplicato');
         return res.status(400).json({ 
           success: false, 
-          message: 'Spiacenti, esiste già un cittadino registrato con questi dati, questo account o questo documento.' 
+          message: 'Spiacenti, esiste già un cittadino registrato con questi dati o documento.' 
         });
       }
 
@@ -267,35 +269,47 @@ async function startServer() {
           documenttype, pluscode, locationdescription, location,
           isambassador, ispeacekeeper, status, createdat
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, ST_SetSRID(ST_MakePoint($25, $26), 4326), $27, $28, $29, $30)
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, 
+          (CASE WHEN $25::float IS NOT NULL AND $26::float IS NOT NULL THEN ST_SetSRID(ST_MakePoint($25::float, $26::float), 4326) ELSE NULL END), 
+          $27, $28, $29, $30
+        )
         RETURNING id
       `;
+      
+      const lat = (latitude !== null && latitude !== undefined && latitude !== '') ? parseFloat(latitude as string) : null;
+      const lon = (longitude !== null && longitude !== undefined && longitude !== '') ? parseFloat(longitude as string) : null;
+
       const values = [
         surname, firstName, gender, birthDate || null, birthPlace, birthCountry,
         citizenship, maritalStatus, residenceAddress || null, residenceNumber || null, residenceZip || null,
         residenceCity || null, residenceProvince || null, residenceCountry || null, new Date(), email || null, phonePrefix || null, phoneNumber || null,
-        normalizedUsername, password || null, documentHash || null,
+        username ? username.toLowerCase().replace(/\s/g, '') : null, 
+        password || null, documentHash || null,
         documentType, plusCode || null, locationDescription || null,
-        longitude ? parseFloat(longitude as string) : null, 
-        latitude ? parseFloat(latitude as string) : null,
+        lon, lat,
         !!isAmbassador, !!isPeacekeeper, 'pending', new Date()
       ];
 
       const result = await pool.query(query, values);
-      console.log('Inserimento completato. ID:', result.rows[0].id);
+      console.log('Query completata.');
 
-      res.status(201).json({ 
+      if (!result || !result.rows || result.rows.length === 0) {
+        console.error('DATABASE ERROR: No rows returned from INSERT');
+        return res.status(500).json({ success: false, message: 'Database error: No ID returned' });
+      }
+      
+      console.log('Inserimento completato con successo. ID:', result.rows[0].id);
+      return res.status(201).json({ 
         success: true, 
         message: 'Cittadino registrato con successo', 
         id: result.rows[0].id 
       });
     } catch (error: any) {
-      console.error('Registration Error:', error);
-      res.status(500).json({ 
+      console.error('Registration Error Exception:', error);
+      return res.status(500).json({ 
         success: false, 
-        message: error.code === '23505' // Unique violation in Postgres
-          ? 'Dati già registrati (Email, Username o Documento).' 
-          : `Errore database: ${error.message}` 
+        message: `Errore server: ${error.message || 'Errore sconosciuto'}`
       });
     }
   });

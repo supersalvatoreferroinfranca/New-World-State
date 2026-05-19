@@ -31,15 +31,18 @@ export const onRequestPost = async (context: any) => {
       WHERE (email IS NOT NULL AND email = ${email || null})
       OR (username IS NOT NULL AND username = ${normalizedUsername})
       OR (document_hash IS NOT NULL AND document_hash = ${documentHash || null})
-      OR (surname = ${surname} AND firstname = ${firstName} AND birthdate = ${birthDate})
+      OR (surname = ${surname || ''} AND firstname = ${firstName || ''} AND birthdate = ${birthDate || null})
     `;
 
     if (duplicates.length > 0) {
       return new Response(JSON.stringify({ 
         success: false, 
-        message: 'Spiacenti, esiste già un cittadino registrato con questi dati.' 
+        message: 'Spiacenti, esiste già un cittadino registrato con questi dati o documento.' 
       }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
+
+    const lat = (latitude !== null && latitude !== undefined && latitude !== '') ? parseFloat(latitude as string) : null;
+    const lon = (longitude !== null && longitude !== undefined && longitude !== '') ? parseFloat(longitude as string) : null;
 
     // 2. Insert
     const result = await sql`
@@ -54,12 +57,12 @@ export const onRequestPost = async (context: any) => {
       VALUES (
         ${surname}, ${firstName}, ${gender}, ${birthDate || null}, ${birthPlace}, ${birthCountry},
         ${citizenship}, ${maritalStatus}, ${residenceAddress || null}, ${residenceNumber || null}, ${residenceZip || null},
-        ${residenceCity || null}, ${residenceProvince || null}, ${residenceCountry || null}, ${new Date().toISOString().split('T')[0]}, 
+        ${residenceCity || null}, ${residenceProvince || null}, ${residenceCountry || null}, ${new Date()}, 
         ${email || null}, ${phonePrefix || null}, ${phoneNumber || null},
         ${normalizedUsername}, ${password || null}, ${documentHash || null},
         ${documentType}, ${plusCode || null}, ${locationDescription || null},
-        ST_SetSRID(ST_MakePoint(${longitude || 0}, ${latitude || 0}), 4326),
-        ${!!isAmbassador}, ${!!isPeacekeeper}, 'pending', ${new Date().toISOString()}
+        ${(lat !== null && lon !== null) ? sql`ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)` : null},
+        ${!!isAmbassador}, ${!!isPeacekeeper}, 'pending', ${new Date()}
       )
       RETURNING id
     `;

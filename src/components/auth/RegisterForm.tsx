@@ -319,7 +319,7 @@ export default function RegisterForm() {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(async (position) => {
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&addressdetails=1`);
+          const res = await fetch(`/api/lookup/location?lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
           const data = await res.json();
           if (data.address && data.address.country_code) {
             const countryCode = data.address.country_code.toUpperCase();
@@ -692,7 +692,7 @@ export default function RegisterForm() {
         
         // Reverse geocode to get address details
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
+          const res = await fetch(`/api/lookup/location?lat=${latitude}&lon=${longitude}`);
           const data = await res.json();
           if (data && data.address) {
             const { road, house_number, city, town, village, postcode, province, county, country } = data.address;
@@ -736,7 +736,7 @@ export default function RegisterForm() {
 
     // Reverse geocode to get address details
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
+      const res = await fetch(`/api/lookup/location?lat=${lat}&lon=${lng}`);
       const data = await res.json();
       if (data && data.address) {
         const { road, house_number, city, town, village, postcode, province, county, country } = data.address;
@@ -790,7 +790,19 @@ export default function RegisterForm() {
         body: JSON.stringify(serializableData),
       });
       
-      const data = await response.json();
+      let data;
+      const responseText = await response.text();
+      try {
+        if (!responseText) {
+          throw new Error(`Risposta del server vuota. Status: ${response.status}`);
+        }
+        data = JSON.parse(responseText);
+      } catch (e: any) {
+        console.error('Failed to parse server response:', responseText);
+        const snippet = responseText.slice(0, 100);
+        throw new Error(`Risposta del server non valida. Status: ${response.status}. Contenuto: ${snippet}...`);
+      }
+
       if (data.success) {
         setIsSuccess(true);
         // Ensure scroll to top to see success message
