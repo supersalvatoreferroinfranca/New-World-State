@@ -7,15 +7,26 @@ const { Pool } = pg;
 
 dotenv.config();
 
+console.log('[SERVER] Starting initialization...');
+console.log('[SERVER] NODE_ENV:', process.env.NODE_ENV);
+
 async function startServer() {
   try {
     const app = express();
     const PORT = 3000;
     const isProd = process.env.NODE_ENV === 'production';
+    const distPath = path.resolve(process.cwd(), 'dist');
+
+    console.log(`[SERVER] Mode: ${isProd ? 'Production' : 'Development'}`);
+    console.log(`[SERVER] Static assets path: ${distPath}`);
 
     // Logging middleware
     app.use((req, res, next) => {
-      console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+      const start = Date.now();
+      res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - ${res.statusCode} (${duration}ms)`);
+      });
       next();
     });
 
@@ -27,10 +38,16 @@ async function startServer() {
     });
 
     app.get('/api/db-status', async (req, res) => {
-      console.log('[API] GET /api/db-status');
+      console.log('[API] Processing /api/db-status');
       const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/db-status';
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
       try {
-        const workerRes = await fetch(WORKER_URL);
+        const workerRes = await fetch(WORKER_URL, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
         console.log(`[API] Worker responded with status: ${workerRes.status}`);
         
         if (workerRes.ok) {
@@ -47,10 +64,11 @@ async function startServer() {
           });
         }
       } catch (err: any) {
-        console.error('[API] Error reaching worker status:', err.message);
+        clearTimeout(timeoutId);
+        console.error('[API] Error reaching worker status:', err.name === 'AbortError' ? 'Timeout' : err.message);
         return res.status(502).json({ 
           status: 'error', 
-          message: 'Impossibile raggiungere il Worker Database (NWS-WK).', 
+          message: err.name === 'AbortError' ? 'Timeout comunicazione worker' : 'Impossibile raggiungere il Worker Database (NWS-WK).', 
           details: err.message 
         });
       }
@@ -247,28 +265,46 @@ async function startServer() {
 
     // Static file serving logic
     if (!isProd) {
+      console.log('[SERVER] Starting Vite in middleware mode...');
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: 'spa',
       });
       app.use(vite.middlewares);
     } else {
-      // In production, esbuild bundle is usually in dist/ and assets are there too
-      // path.resolve(process.cwd(), 'dist') is safe
-      const distPath = path.resolve(process.cwd(), 'dist');
       console.log(`[SERVER] Serving static files from: ${distPath}`);
       
-      app.use(express.static(distPath));
+      app.use(express.static(distPath, {
+        index: false // Don't serve index.html for root, let the SPA fallback handle it
+      }));
       
       // SPA Fallback: handle all non-API routes
       app.get('*', (req, res, next) => {
-        // Skip API routes if they weren't matched above
+        // Skip API routes - they should have been handled by /api/* catch-all if missed
         if (req.url.startsWith('/api/')) {
+          console.warn(`[SERVER] API route fallthrough to SPA fallback: ${req.url}`);
           return next();
         }
-        res.sendFile(path.join(distPath, 'index.html'));
+        
+        const indexPath = path.join(distPath, 'index.html');
+        res.sendFile(indexPath, (err) => {
+          if (err) {
+            console.error(`[SERVER] Error sending index.html: ${err.message}`);
+            res.status(500).send('Errore nel caricamento dell\'applicazione.');
+          }
+        });
       });
     }
+
+    // Final catch-all for anything else (should be empty if SPA fallback works)
+    app.use((req, res) => {
+      console.warn(`[SERVER] Unhandled request: ${req.method} ${req.url}`);
+      if (req.url.startsWith('/api/')) {
+        res.status(404).json({ error: 'Not Found', path: req.url });
+      } else {
+        res.status(404).send('Not Found');
+      }
+    });
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on http://0.0.0.0:${PORT} (Production: ${isProd})`);
