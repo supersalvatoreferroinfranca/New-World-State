@@ -542,7 +542,7 @@ export default function RegisterForm() {
           setSystemStatus('ok');
         } else {
           setSystemStatus('error');
-          setError('Il sistema è in manutenzione (Database non connesso). Riprova tra poco.');
+          setError(data.message || 'Il sistema è in manutenzione (Database non connesso). Riprova tra poco.');
         }
       } catch (e) {
         setSystemStatus('error');
