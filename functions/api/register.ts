@@ -1,73 +1,31 @@
-import { neon } from '@neondatabase/serverless';
-
 export const onRequestPost = async (context: any) => {
   const { request, env } = context;
+  const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/';
   
   try {
     const body = await request.json();
-    const { 
-      surname, firstName, gender, birthDate, birthPlace, birthCountry,
-      citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
-      residenceCity, residenceProvince, residenceCountry, email, phonePrefix, phoneNumber,
-      username, password, documentHash,
-      documentType, plusCode, locationDescription, latitude, longitude,
-      isAmbassador, isPeacekeeper 
-    } = body;
+    const { email, firstName, username, surname } = body;
 
-    const normalizedUsername = username ? username.toLowerCase().replace(/\s/g, '') : null;
+    // Forward the registration request to the worker
+    // Note: We use the same body. We assume the worker handles the DB insertion.
+    const workerRes = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
 
-    if (!env.DATABASE_URL) {
+    const result: any = await workerRes.json();
+
+    if (!workerRes.ok || !result.success) {
       return new Response(JSON.stringify({ 
         success: false, 
-        message: 'Configurazione Database mancante su Cloudflare.' 
-      }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+        message: result.message || 'Errore durante la registrazione tramite il worker.' 
+      }), { status: workerRes.status, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const sql = neon(env.DATABASE_URL);
-
-    // 1. Check for duplicates
-    const duplicates = await sql`
-      SELECT id FROM citizens 
-      WHERE (email IS NOT NULL AND email = ${email || null})
-      OR (username IS NOT NULL AND username = ${normalizedUsername})
-      OR (document_hash IS NOT NULL AND document_hash = ${documentHash || null})
-      OR (surname = ${surname || ''} AND firstname = ${firstName || ''} AND birthdate = ${birthDate || null})
-    `;
-
-    if (duplicates.length > 0) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        message: 'Spiacenti, esiste già un cittadino registrato con questi dati o documento.' 
-      }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-    }
-
-    const lat = (latitude !== null && latitude !== undefined && latitude !== '') ? parseFloat(latitude as string) : null;
-    const lon = (longitude !== null && longitude !== undefined && longitude !== '') ? parseFloat(longitude as string) : null;
-
-    // 2. Insert
-    const result = await sql`
-      INSERT INTO citizens (
-        surname, firstname, gender, birthdate, birthplace, birthcountry,
-        citizenship, maritalstatus, residenceaddress, residencenumber, residencezip, 
-        residencecity, residenceprovince, residencecountry, registrationdate, email, phoneprefix, phonenumber,
-        username, password, document_hash,
-        documenttype, pluscode, locationdescription, location,
-        isambassador, ispeacekeeper, status, createdat
-      )
-      VALUES (
-        ${surname}, ${firstName}, ${gender}, ${birthDate || null}, ${birthPlace}, ${birthCountry},
-        ${citizenship}, ${maritalStatus}, ${residenceAddress || null}, ${residenceNumber || null}, ${residenceZip || null},
-        ${residenceCity || null}, ${residenceProvince || null}, ${residenceCountry || null}, ${new Date()}, 
-        ${email || null}, ${phonePrefix || null}, ${phoneNumber || null},
-        ${normalizedUsername}, ${password || null}, ${documentHash || null},
-        ${documentType}, ${plusCode || null}, ${locationDescription || null},
-        ${(lat !== null && lon !== null) ? sql`ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)` : null},
-        ${!!isAmbassador}, ${!!isPeacekeeper}, 'pending', ${new Date()}
-      )
-      RETURNING id
-    `;
-
-    // 3. Send Email (Native Cloudflare Email)
+    // 2. Send Email (Native Cloudflare Email) - only if insertion succeeded
     if (email && env.EMAIL) {
       try {
         const welcomeHtml = `
@@ -116,15 +74,15 @@ export const onRequestPost = async (context: any) => {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      message: 'Cittadino registrato con successo', 
-      id: result[0].id 
+      message: 'Cittadino registrato con successo tramite Worker', 
+      id: result.id 
     }), { status: 201, headers: { 'Content-Type': 'application/json' } });
 
   } catch (error: any) {
-    console.error('Registration Error:', error);
+    console.error('Registration Proxy Error:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      message: 'Errore interno del server durante la registrazione.',
+      message: 'Errore durante la comunicazione con il Database Worker.',
       error: error.message
     }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }

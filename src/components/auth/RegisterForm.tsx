@@ -544,6 +544,13 @@ export default function RegisterForm() {
           return;
         }
 
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          setSystemStatus('error');
+          setError('Il server ha risposto con un formato non valido (non JSON).');
+          return;
+        }
+
         const data = await res.json();
         if (data.status === 'connected') {
           setSystemStatus('ok');

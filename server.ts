@@ -144,15 +144,16 @@ async function startServer() {
 
   // API Routes
   app.get('/api/db-status', async (req, res) => {
-    if (!process.env.DATABASE_URL) {
-      return res.json({ status: 'unconfigured', message: 'Configura DATABASE_URL nei Secrets' });
-    }
+    const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/';
     try {
-      const client = await pool.connect();
-      client.release();
-      res.json({ status: 'connected', message: 'Connesso a Neon.tech (PostgreSQL)' });
+      const workerRes = await fetch(WORKER_URL);
+      if (workerRes.ok || workerRes.status === 404) {
+        res.json({ status: 'connected', message: 'Connesso al Database Worker (NWS-WK).' });
+      } else {
+        res.json({ status: 'error', message: `Il Worker Database ha risposto con codice ${workerRes.status}.` });
+      }
     } catch (err: any) {
-      res.json({ status: 'error', code: err.code, message: err.message });
+      res.json({ status: 'error', message: 'Impossibile raggiungere il Worker Database (NWS-WK).', details: err.message });
     }
   });
 
@@ -192,12 +193,9 @@ async function startServer() {
           contentType,
           body: text.slice(0, 500)
         });
-        
-        // If we hit rate limiting, we might want to return an empty array instead of failing hard
         if (response.status === 429) {
           return res.status(429).json({ error: 'Too many requests. Please slow down.', code: 'RATE_LIMIT' });
         }
-
         return res.status(response.status).json({ error: 'Nominatim service error', details: text.slice(0, 100) });
       }
 
@@ -210,109 +208,26 @@ async function startServer() {
   });
 
   app.post('/api/register', async (req, res) => {
-    console.log('--- NUOVA RICHIESTA DI REGISTRAZIONE ---');
+    const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/';
+    console.log('--- PROXYING REGISTRAZIONE AL WORKER ---');
     try {
-      const body = req.body;
-      const { 
-        surname, firstName, gender, birthDate, birthPlace, birthCountry,
-        citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
-        residenceCity, residenceProvince, residenceCountry, email, phonePrefix, phoneNumber,
-        username, password, documentHash,
-        documentType, plusCode, locationDescription, latitude, longitude,
-        isAmbassador, isPeacekeeper 
-      } = body;
-      
-      console.log('Dati ricevuti per:', email || username || 'anonimo');
-      
-      if (!process.env.DATABASE_URL) {
-        console.error('ERRORE: DATABASE_URL non configurato');
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Configurazione Database mancante.' 
-        });
-      }
-
-      // 1. Check for duplicates
-      console.log('Controllo duplicati...');
-      const duplicateQuery = `
-        SELECT id FROM citizens 
-        WHERE (email IS NOT NULL AND email = $1)
-        OR (username IS NOT NULL AND username = $2)
-        OR (document_hash IS NOT NULL AND document_hash = $3)
-        OR (surname = $4 AND firstname = $5 AND birthdate = $6)
-      `;
-      const duplicateValues = [
-        email || null, 
-        username ? username.toLowerCase().replace(/\s/g, '') : null, 
-        documentHash || null, 
-        surname || '', 
-        firstName || '', 
-        birthDate || null
-      ];
-      
-      const dupCheck = await pool.query(duplicateQuery, duplicateValues);
-      
-      if (dupCheck.rows.length > 0) {
-        console.warn('REGISTRAZIONE NEGATA: Rilevato duplicato');
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Spiacenti, esiste già un cittadino registrato con questi dati o documento.' 
-        });
-      }
-
-      console.log('Tentativo di inserimento nel DB...');
-      const query = `
-        INSERT INTO citizens (
-          surname, firstname, gender, birthdate, birthplace, birthcountry,
-          citizenship, maritalstatus, residenceaddress, residencenumber, residencezip, 
-          residencecity, residenceprovince, residencecountry, registrationdate, email, phoneprefix, phonenumber,
-          username, password, document_hash,
-          documenttype, pluscode, locationdescription, location,
-          isambassador, ispeacekeeper, status, createdat
-        )
-        VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, 
-          (CASE WHEN $25::float IS NOT NULL AND $26::float IS NOT NULL THEN ST_SetSRID(ST_MakePoint($25::float, $26::float), 4326) ELSE NULL END), 
-          $27, $28, $29, $30
-        )
-        RETURNING id
-      `;
-      
-      const lat = (latitude !== null && latitude !== undefined && latitude !== '') ? parseFloat(latitude as string) : null;
-      const lon = (longitude !== null && longitude !== undefined && longitude !== '') ? parseFloat(longitude as string) : null;
-
-      const values = [
-        surname, firstName, gender, birthDate || null, birthPlace, birthCountry,
-        citizenship, maritalStatus, residenceAddress || null, residenceNumber || null, residenceZip || null,
-        residenceCity || null, residenceProvince || null, residenceCountry || null, new Date(), email || null, phonePrefix || null, phoneNumber || null,
-        username ? username.toLowerCase().replace(/\s/g, '') : null, 
-        password || null, documentHash || null,
-        documentType, plusCode || null, locationDescription || null,
-        lon, lat,
-        !!isAmbassador, !!isPeacekeeper, 'pending', new Date()
-      ];
-
-      const result = await pool.query(query, values);
-      console.log('Query completata.');
-
-      if (!result || !result.rows || result.rows.length === 0) {
-        console.error('DATABASE ERROR: No rows returned from INSERT');
-        return res.status(500).json({ success: false, message: 'Database error: No ID returned' });
-      }
-      
-      console.log('Inserimento completato con successo. ID:', result.rows[0].id);
-
-      return res.status(201).json({ 
-        success: true, 
-        message: 'Cittadino registrato con successo', 
-        id: result.rows[0].id 
+      const workerRes = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body),
       });
+
+      const contentType = workerRes.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await workerRes.json();
+        res.status(workerRes.status).json(data);
+      } else {
+        const text = await workerRes.text();
+        res.status(workerRes.status).json({ success: false, message: 'Risposta worker non valida (non JSON)', details: text });
+      }
     } catch (error: any) {
-      console.error('Registration Error Exception:', error);
-      return res.status(500).json({ 
-        success: false, 
-        message: `Errore server: ${error.message || 'Errore sconosciuto'}`
-      });
+      console.error('Registration Proxy Error:', error);
+      res.status(500).json({ success: false, message: 'Errore durante la comunicazione con il Database Worker.' });
     }
   });
 

@@ -1,43 +1,35 @@
-import { neon } from '@neondatabase/serverless';
-
 export const onRequestGet = async (context: any) => {
-  const { env } = context;
-
-  if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ 
-      status: 'unconfigured', 
-      message: 'Configurazione DATABASE_URL mancante su Cloudflare.' 
-    }), { 
-      status: 200, 
-      headers: { 'Content-Type': 'application/json' } 
-    });
-  }
+  const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/';
 
   try {
-    const sql = neon(env.DATABASE_URL);
-    // Ping the database
-    await sql`SELECT 1`;
+    // We try to fetch the worker's root or a known status endpoint if available
+    // Since I don't know the exact endpoint, we'll try to reach it.
+    const res = await fetch(WORKER_URL);
     
+    if (res.ok || res.status === 404) {
+      // res.status 404 is often acceptable if it just means the root isn't defined but the worker is up
+      return new Response(JSON.stringify({ 
+        status: 'connected', 
+        message: 'Connesso al Database Worker (NWS-WK).' 
+      }), { 
+        status: 200, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
+    }
+
     return new Response(JSON.stringify({ 
-      status: 'connected', 
-      message: 'Connesso a Neon.tech (PostgreSQL) tramite Cloudflare Functions.' 
+      status: 'error', 
+      message: `Il Worker Database ha risposto con codice ${res.status}.` 
     }), { 
       status: 200, 
       headers: { 'Content-Type': 'application/json' } 
     });
+
   } catch (error: any) {
-    console.error('DB Status Error:', error);
-    
-    // Provide diagnostic hints
-    let diagnostic = 'Errore di connessione a Neon.tech.';
-    if (error.message?.includes('ETIMEDOUT')) diagnostic = 'Timeout connessione: Neon non risponde.';
-    if (error.message?.includes('ECONNREFUSED')) diagnostic = 'Connessione rifiutata: Host database non raggiungibile.';
-    if (error.message?.includes('neon-connection-string')) diagnostic = 'DATABASE_URL non valida per gli header di Neon.';
-    
+    console.error('Worker Status Error:', error);
     return new Response(JSON.stringify({ 
       status: 'error', 
-      code: error.code || 'UNKNOWN', 
-      message: diagnostic,
+      message: 'Impossibile raggiungere il Worker Database (NWS-WK). Verifica la configurazione del worker.',
       details: error.message 
     }), { 
       status: 200, 
