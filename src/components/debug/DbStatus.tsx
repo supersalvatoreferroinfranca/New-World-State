@@ -49,6 +49,14 @@ export default function DbStatus() {
         <>
           <AlertCircle className="w-3 h-3 text-red-500" />
           <span className="text-red-600">Database Neon: {errorInfo}</span>
+          <a 
+            href="https://nws-wk.supersalvatoreferroinfranca.workers.dev/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="ml-2.5 px-2 py-0.5 rounded bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-[8px] normal-case tracking-normal transition-colors"
+          >
+            Apri Test Diagnostico Worker &rarr;
+          </a>
         </>
       )}
       {status === 'unconfigured' && (
