@@ -2,30 +2,33 @@ const WORKER_BASE = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev';
 
 /**
  * A wrapper around fetch that automatically detects whether api endpoints returning
- * HTML fallbacks (or failing with 404/network errors) should be redirected directly
+ * HTML fallbacks (or failing with 404/405 and network errors) should be redirected directly
  * to the CORS-enabled production Cloudflare Worker.
  */
 export async function safeFetch(url: string, options?: RequestInit): Promise<Response> {
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
 
-  // If we are already running on a domain we know has no server backend like newworldstate.cloud,
-  // we can skip the local proxy attempt entirely for a faster experience.
-  const isKnownStaticHost = 
+  // Check if we are running in the development preview (local or AI Studio domains)
+  const isDevOrStudio = 
     typeof window !== 'undefined' && 
-    (window.location.hostname.endsWith('newworldstate.cloud') || 
-     window.location.hostname.endsWith('github.io') ||
-     window.location.hostname.endsWith('pages.dev'));
+    (window.location.hostname === 'localhost' || 
+     window.location.hostname.includes('127.0.0.1') ||
+     window.location.hostname.includes('ais-dev-') ||
+     window.location.hostname.includes('ais-pre-'));
 
-  if (isKnownStaticHost && cleanPath.startsWith('/api/')) {
+  const isProductionStaticDomain = !isDevOrStudio;
+
+  if (isProductionStaticDomain && cleanPath.startsWith('/api/')) {
     const directUrl = `${WORKER_BASE}${cleanPath}`;
-    console.log(`[API] Static Host detected. Routing directly to Cloudflare Worker: ${directUrl}`);
+    console.log(`[API] Production Static Host detected (${window.location.hostname}). Routing directly to Cloudflare Worker: ${directUrl}`);
     try {
       const res = await fetch(directUrl, options);
+      // If the worker responded successfully or with a valid client/server error, return it
       if (res.ok || res.status < 500) {
         return res;
       }
     } catch (err) {
-      console.error(`[API] Failed direct worker fetch for ${directUrl}:`, err);
+      console.error(`[API] Direct worker fetch failed for ${directUrl}:`, err);
     }
   }
 
@@ -33,11 +36,17 @@ export async function safeFetch(url: string, options?: RequestInit): Promise<Res
     const primaryRes = await fetch(cleanPath, options);
     
     // Check if the response was redirected to the SPA HTML index page (content-type includes 'text/html')
+    // or if the HTTP status indicates a Method Not Allowed (405) or Not Found (404) on the local server
     const contentType = primaryRes.headers.get('content-type') || '';
     
-    if (cleanPath.startsWith('/api/') && (contentType.includes('text/html') || primaryRes.status === 404)) {
+    const isErrorOrHtml = 
+      primaryRes.status === 404 || 
+      primaryRes.status === 405 || 
+      contentType.includes('text/html');
+
+    if (cleanPath.startsWith('/api/') && isErrorOrHtml) {
       const directUrl = `${WORKER_BASE}${cleanPath}`;
-      console.warn(`[API] HTML Fallback or 404 handled on ${cleanPath}. Auto-redirecting to Worker: ${directUrl}`);
+      console.warn(`[API] HTML Fallback or status ${primaryRes.status} handled on ${cleanPath}. Auto-redirecting to Worker: ${directUrl}`);
       return await fetch(directUrl, options);
     }
     
@@ -49,7 +58,6 @@ export async function safeFetch(url: string, options?: RequestInit): Promise<Res
       try {
         return await fetch(directUrl, options);
       } catch (retryErr) {
-        // If the retry also fails, throw the original error or the retry error
         throw retryErr;
       }
     }
