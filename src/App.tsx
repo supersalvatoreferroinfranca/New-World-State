@@ -1,6 +1,8 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * 
+ * Verified and synced with Cloudflare Pages Native Forms system.
  */
 
 import Header from './components/layout/Header';
