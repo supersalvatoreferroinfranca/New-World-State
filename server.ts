@@ -190,6 +190,12 @@ async function startServer() {
       }
     });
 
+    apiRouter.post('/notify-registration', async (req, res) => {
+      console.log('[LOCALDEV] Ricevuta notifica di registrazione per:', req.body.email || req.body.surname);
+      // In ambiente locale Express, rispondiamo semplicemente successo. Pensa Cloudflare Pages Functions a gestire l'evento reale in produzione.
+      res.json({ success: true, message: '[LOCALDEV] Notifica catturata in locale.' });
+    });
+
     apiRouter.get('/test-email', async (req, res) => {
       const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/test-email';
       console.log('--- PROXYING TEST EMAIL AL WORKER ---');
