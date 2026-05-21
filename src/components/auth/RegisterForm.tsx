@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { OpenLocationCode } from 'open-location-code';
 import { enhanceLocationDescription, getFormAssistantTips } from '../../services/geminiService';
+import { safeFetch } from '../../services/api';
 
 // Fix Leaflet marker icon issue
 const DefaultIcon = L.icon({
@@ -319,7 +320,7 @@ export default function RegisterForm() {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(async (position) => {
         try {
-          const res = await fetch(`/api/lookup/location?lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+          const res = await safeFetch(`/api/lookup/location?lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
           const data = await res.json();
           if (data.address && data.address.country_code) {
             const countryCode = data.address.country_code.toUpperCase();
@@ -403,7 +404,7 @@ export default function RegisterForm() {
           url += `&lat=${formData.latitude}&lon=${formData.longitude}`;
         }
 
-        const response = await fetch(url);
+        const response = await safeFetch(url);
         if (!response.ok) {
           // If the proxy returns an error (403, 429), we just clear suggestions
           // and stop searching without throwing an error that might be disruptive
@@ -536,7 +537,7 @@ export default function RegisterForm() {
   useEffect(() => {
     const checkSystem = async () => {
       try {
-        const res = await fetch('/api/db-status');
+        const res = await safeFetch('/api/db-status');
         
         if (!res.ok) {
           setSystemStatus('error');
@@ -729,7 +730,7 @@ export default function RegisterForm() {
         
         // Reverse geocode to get address details
         try {
-          const res = await fetch(`/api/lookup/location?lat=${latitude}&lon=${longitude}`);
+          const res = await safeFetch(`/api/lookup/location?lat=${latitude}&lon=${longitude}`);
           const data = await res.json();
           if (data && data.address) {
             const { road, house_number, city, town, village, postcode, province, county, country } = data.address;
@@ -773,7 +774,7 @@ export default function RegisterForm() {
 
     // Reverse geocode to get address details
     try {
-      const res = await fetch(`/api/lookup/location?lat=${lat}&lon=${lng}`);
+      const res = await safeFetch(`/api/lookup/location?lat=${lat}&lon=${lng}`);
       const data = await res.json();
       if (data && data.address) {
         const { road, house_number, city, town, village, postcode, province, county, country } = data.address;
@@ -821,7 +822,7 @@ export default function RegisterForm() {
 
       const API_URL = '/api/register';
       
-      const response = await fetch(API_URL, {
+      const response = await safeFetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(serializableData),

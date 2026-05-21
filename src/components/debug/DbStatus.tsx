@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Database, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { safeFetch } from '../../services/api';
 
 export default function DbStatus() {
   const [status, setStatus] = useState<'loading' | 'connected' | 'error' | 'unconfigured'>('loading');
@@ -8,7 +9,7 @@ export default function DbStatus() {
   useEffect(() => {
     const check = async () => {
       try {
-        const res = await fetch('/api/db-status');
+        const res = await safeFetch('/api/db-status');
         const contentType = res.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           const data = await res.json();
