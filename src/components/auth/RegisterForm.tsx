@@ -842,6 +842,43 @@ export default function RegisterForm() {
       }
 
       if (data.success) {
+        // Invio silenzioso del form in formato url-encoded a "/" per abilitare l'intercettazione
+        // automatica del plugin "Static Forms" di Cloudflare Pages se configurato sul server.
+        try {
+          const bodyParams = new URLSearchParams();
+          bodyParams.append('static-form-name', 'richiesta-cittadinanza');
+          bodyParams.append('surname', formData.surname || '');
+          bodyParams.append('firstName', formData.firstName || '');
+          bodyParams.append('gender', formData.gender || '');
+          bodyParams.append('birthDate', formData.birthDate || '');
+          bodyParams.append('birthPlace', formData.birthPlace || '');
+          bodyParams.append('birthCountry', formData.birthCountry || '');
+          bodyParams.append('citizenship', formData.citizenship || '');
+          bodyParams.append('maritalStatus', formData.maritalStatus || '');
+          bodyParams.append('residenceAddress', formData.residenceAddress || '');
+          bodyParams.append('residenceNumber', formData.residenceNumber || '');
+          bodyParams.append('residenceZip', formData.residenceZip || '');
+          bodyParams.append('residenceCity', formData.residenceCity || '');
+          bodyParams.append('residenceProvince', formData.residenceProvince || '');
+          bodyParams.append('residenceCountry', formData.residenceCountry || '');
+          bodyParams.append('email', formData.email || '');
+          bodyParams.append('phonePrefix', formData.phonePrefix || '');
+          bodyParams.append('phoneNumber', formData.phoneNumber || '');
+          bodyParams.append('plusCode', formData.plusCode || '');
+          bodyParams.append('locationDescription', formData.locationDescription || '');
+          bodyParams.append('isAmbassador', formData.isAmbassador ? 'SÌ' : 'NO');
+          bodyParams.append('isPeacekeeper', formData.isPeacekeeper ? 'SÌ' : 'NO');
+
+          await fetch('/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: bodyParams.toString()
+          });
+          console.log('[CLOUDFLARE] Static Form inviato correttamente in background.');
+        } catch (staticFormErr) {
+          console.warn('[CLOUDFLARE] Errore nell\'invio di fallback della static-form:', staticFormErr);
+        }
+
         setIsSuccess(true);
         // Ensure scroll to top to see success message
         window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -190,6 +190,29 @@ async function startServer() {
       }
     });
 
+    apiRouter.get('/test-email', async (req, res) => {
+      const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/test-email';
+      console.log('--- PROXYING TEST EMAIL AL WORKER ---');
+      try {
+        const workerRes = await fetch(WORKER_URL);
+        const contentType = workerRes.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await workerRes.json();
+          return res.status(workerRes.status).json(data);
+        } else {
+          const text = await workerRes.text();
+          return res.status(workerRes.status).json({ success: false, message: text });
+        }
+      } catch (error: any) {
+        console.error('Test Email Proxy Error:', error.message);
+        return res.status(502).json({ 
+          success: false, 
+          message: 'Errore durante la comunicazione con il Database Worker per email di test.',
+          details: error.message
+        });
+      }
+    });
+
     // Catch-all for unknown API routes
     apiRouter.all('*', (req, res) => {
       console.warn(`[API] Unmatched route: ${req.method} ${req.url}`);
