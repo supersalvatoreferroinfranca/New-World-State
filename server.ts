@@ -465,6 +465,78 @@ Ufficio dell'Anagrafe Federale del New World State
       }
     });
 
+    apiRouter.get('/test-aruba', async (req, res) => {
+      const uploaderUrl = process.env.ARUBA_UPLOADER_URL;
+      const uploaderKey = process.env.ARUBA_UPLOADER_KEY;
+
+      if (!uploaderUrl) {
+        // Se non configurato localmente, proviamo a inoltrare al Worker per vedere se è configurato lì!
+        const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/test-aruba';
+        console.log('--- PROXYING TEST ARUBA AL WORKER ---');
+        try {
+          const workerRes = await fetch(WORKER_URL);
+          const contentType = workerRes.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await workerRes.json();
+            return res.status(workerRes.status).json(data);
+          } else {
+            const text = await workerRes.text();
+            return res.status(workerRes.status).json({ 
+              success: false, 
+              message: 'Nessun URL Aruba configurato nel file .env locale dell\'app del browser, e la chiamata inoltrata al Cloudflare Worker ha restituito una risposta non JSON.',
+              details: text.slice(0, 150)
+            });
+          }
+        } catch (error: any) {
+          return res.status(502).json({
+            success: false,
+            message: 'Variabile d\'ambiente ARUBA_UPLOADER_URL non definita localmente e la connessione al Cloudflare Worker è fallita.',
+            details: error.message
+          });
+        }
+      }
+
+      console.log(`[ARUBA-TEST] Test di connessione a Aruba: ${uploaderUrl}`);
+      try {
+        const uploaderRes = await fetch(uploaderUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${uploaderKey}`
+          },
+          body: JSON.stringify({
+            action: 'status',
+            key: uploaderKey
+          })
+        });
+
+        if (uploaderRes.ok) {
+          const data: any = await uploaderRes.json();
+          return res.json({
+            success: true,
+            source: 'Local Express Server',
+            message: 'Connessione al PHP Bridge Aruba riuscita!',
+            arubaResponse: data
+          });
+        } else {
+          const text = await uploaderRes.text();
+          return res.status(uploaderRes.status).json({
+            success: false,
+            source: 'Local Express Server',
+            message: `L'uploader di Aruba ha risposto con errore HTTP ${uploaderRes.status}`,
+            details: text.slice(0, 200)
+          });
+        }
+      } catch (err: any) {
+        return res.status(500).json({
+          success: false,
+          source: 'Local Express Server',
+          message: `Impossibile connettersi ad Aruba all'URL: ${uploaderUrl}`,
+          details: err.message
+        });
+      }
+    });
+
     apiRouter.get('/test-email', async (req, res) => {
       // In ambiente locale/Express, se abbiamo configurato Aruba SMTP, eseguiamo direttamente l'invio locale!
       if (process.env.SMTP_USER) {

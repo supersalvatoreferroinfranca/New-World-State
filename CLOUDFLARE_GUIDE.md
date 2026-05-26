@@ -1494,6 +1494,70 @@ async function sendNotificationEmails(env, detail) {
     console.error("Errore invio e-mail Mailchannels:", e.message);
   }
 }
+
+// 🩺 Endpoint di Diagnostica da inserire nel tuo Cloudflare Worker per testare Aruba
+async function handleTestArubaRequest(request, env) {
+  const uploaderUrl = env.ARUBA_UPLOADER_URL;
+  const uploaderKey = env.ARUBA_UPLOADER_KEY;
+
+  if (!uploaderUrl) {
+    return new Response(JSON.stringify({
+      success: false,
+      message: "La variabile d'ambiente ARUBA_UPLOADER_URL non è impostata sul tuo Worker Cloudflare."
+    }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  try {
+    // Chiama il PHP Bridge di Aruba in modalità 'status'
+    const arubaResponse = await fetch(uploaderUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${uploaderKey}`
+      },
+      body: JSON.stringify({
+        action: "status",
+        key: uploaderKey
+      })
+    });
+
+    if (arubaResponse.ok) {
+      const arubaData = await arubaResponse.json();
+      return new Response(JSON.stringify({
+        success: true,
+        source: "Cloudflare Worker Diagnostics",
+        message: "Il tuo Cloudflare Worker comunica correttamente con il Bridge PHP di Aruba!",
+        arubaStatus: arubaData
+      }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    } else {
+      const text = await arubaResponse.text();
+      return new Response(JSON.stringify({
+        success: false,
+        source: "Cloudflare Worker Diagnostics",
+        message: `Aruba ha restituito uno stato di errore HTTP: ${arubaResponse.status}`,
+        details: text.slice(0, 200)
+      }), {
+        status: arubaResponse.status,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  } catch (err) {
+    return new Response(JSON.stringify({
+      success: false,
+      source: "Cloudflare Worker Diagnostics",
+      message: `Impossibile connettersi a ${uploaderUrl} dal Cloudflare Worker`,
+      details: err.message
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
 ```
 
 
