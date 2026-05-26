@@ -824,7 +824,7 @@ CREATE TABLE citizens (
               details: text.slice(0, 200)
             }), { status: arubaResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
-        } catch (err: any) {
+        } catch (err) {
           return new Response(JSON.stringify({
             success: false,
             source: 'Cloudflare Worker Diagnostics',
