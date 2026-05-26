@@ -62,6 +62,8 @@ Copia questo codice integrale nella dashboard di Cloudflare. Funziona senza biso
   per identificare errori di configurazione, connettività ed estensioni spaziali (PostGIS).
 */
 
+import { connect } from 'cloudflare:sockets';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -85,10 +87,10 @@ export default {
           schemaTest: { ok: false, count: null, error: null },
           postGisTest: { ok: false, error: null },
           latestEntries: [],
-          emailProvider: env.RESEND_API_KEY ? 'Resend' : (env.BREVO_API_KEY ? 'Brevo' : 'Nessuno'),
-          emailApiKeyConfigured: !!(env.RESEND_API_KEY || env.BREVO_API_KEY),
+          emailProvider: env.SMTP_USER ? 'Aruba SMTP' : (env.RESEND_API_KEY ? 'Resend' : (env.BREVO_API_KEY ? 'Brevo' : 'Nessuno')),
+          emailApiKeyConfigured: !!(env.SMTP_USER || env.RESEND_API_KEY || env.BREVO_API_KEY),
           adminEmail: env.ADMIN_EMAIL || 'supersalvatoreferroinfranca@gmail.com',
-          fromEmail: env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || 'onboarding@resend.dev'
+          fromEmail: env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || 'onboarding@resend.dev'
         };
 
         if (env.DATABASE_URL) {
@@ -399,24 +401,23 @@ CREATE TABLE citizens (
                 <div class="flex gap-4 p-4 rounded-2xl border bg-slate-950/50 ${dbStatus.emailApiKeyConfigured ? 'border-emerald-500/10' : 'border-yellow-500/10'}">
                     <div class="text-2xl select-none">${dbStatus.emailApiKeyConfigured ? '🟢' : '🟡'}</div>
                     <div class="space-y-1 flex-grow">
-                        <h3 class="text-sm font-semibold text-white">2.5 Configurazione Invio Email (Resend / Brevo)</h3>
+                        <h3 class="text-sm font-semibold text-white">2.5 Configurazione Invio Email (Aruba SMTP / Resend / Brevo)</h3>
                         <p class="text-xs text-slate-400 font-sans">Gestisce l'invio automatico delle notifiche email sia al nuovo cittadino che all'amministratore ad ogni registrazione.</p>
                         
                         <div class="bg-slate-950 text-xs font-mono p-3 rounded border border-slate-850 mt-2 space-y-1.5 text-slate-300">
-                            <div>Stato Server Email: <strong class="${dbStatus.emailApiKeyConfigured ? 'text-emerald-400' : 'text-yellow-400'}">${dbStatus.emailApiKeyConfigured ? '✓ ATTIVO (' + dbStatus.emailProvider + ')' : '✗ DISATTIVATO (Nessuna chiave trovata)'}</strong></div>
+                            <div>Stato Server Email: <strong class="${dbStatus.emailApiKeyConfigured ? 'text-emerald-400' : 'text-yellow-400'}">${dbStatus.emailApiKeyConfigured ? '✓ ATTIVO (' + dbStatus.emailProvider + ')' : '✗ DISATTIVATO (Nessun canale configurato)'}</strong></div>
                             <div>Mittente Outbox: <code class="text-slate-400">${dbStatus.fromEmail}</code></div>
                             <div>Email Amministratore (Admin): <code class="text-slate-400">${dbStatus.adminEmail}</code></div>
                         </div>
 
                         ${!dbStatus.emailApiKeyConfigured ? `
-                        <div class="bg-amber-950/25 border border-amber-500/20 text-amber-300 rounded-xl p-3 text-xs mt-3 space-y-1 font-sans">
-                            <span class="block font-semibold">💡 Come abilitare le email automatiche:</span>
-                            <ol class="list-decimal list-inside space-y-1 text-slate-400 mt-1">
-                                <li>Registrati gratuitamente su <a href="https://resend.com" class="text-sky-400 hover:underline" target="_blank">Resend.com</a>.</li>
-                                <li>Crea una API Key ed aggiungila nelle variabili d'ambiente di Cloudflare Pages / Worker con il nome <code>RESEND_API_KEY</code>.</li>
-                                <li>(Opzionale) Aggiungi <code>RESEND_FROM_EMAIL</code> col tuo mittente o mantieni l'onboarding di default.</li>
-                                <li>(Opzionale) Personalizza il destinatario amministratore impostando la variabile <code>ADMIN_EMAIL</code>.</li>
-                            </ol>
+                        <div class="bg-amber-950/25 border border-amber-500/20 text-amber-300 rounded-xl p-3 text-xs mt-3 space-y-2 font-sans text-left">
+                            <span class="block font-semibold">💡 Come abilitare le email automatiche (Aruba SMTP, Resend o Brevo):</span>
+                            <p class="text-[11px] text-slate-400 my-0.5">Inserisci le variabili d'ambiente nella Dashboard Cloudflare del tuo Worker:</p>
+                            <ul class="list-disc list-inside space-y-1 text-slate-400 text-[11px] mt-1 pl-1">
+                                <li><strong>Opzione SMTP Aruba (Consigliata):</strong> Imposta <code>SMTP_USER</code> (la tua email Aruba), <code>SMTP_PASS</code> (la tua password), <code>SMTP_HOST</code> (es. <code>smtps.aruba.it</code>), <code>SMTP_PORT</code> (es. <code>465</code>), <code>SMTP_FROM</code> (mittente, solitamente coincide con SMTP_USER), e <code>SMTP_FROM_NAME</code> (es. <code>Anagrafe New World State</code>).</li>
+                                <li><strong>Opzione Resend:</strong> Imposta <code>RESEND_API_KEY</code>, <code>RESEND_FROM_EMAIL</code> e <code>ADMIN_EMAIL</code>.</li>
+                            </ul>
                         </div>
                         ` : `
                         <div class="mt-3 flex items-center gap-4">
@@ -535,12 +536,148 @@ CREATE TABLE citizens (
         return result.rows || [];
       };
 
-      // Funzione helper per l'invio delle email (Resend / Brevo)
+      // Funzione helper per leggere una risposta SMTP completa in tempo reale riga per riga su Cloudflare Workers
+      const readSMTPResponse = async (reader, accumulated = '') => {
+        const decoder = new TextDecoder();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout durante la lettura della risposta dal server SMTP di Aruba (10s)')), 10000));
+        
+        const readPromise = (async () => {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            accumulated += decoder.decode(value, { stream: true });
+            const lines = accumulated.split('\r\n');
+            const lastLineIndex = accumulated.endsWith('\r\n') ? lines.length - 2 : lines.length - 1;
+            if (lastLineIndex >= 0) {
+              const lastLine = lines[lastLineIndex];
+              if (/^\d{3} /.test(lastLine)) {
+                return { text: accumulated, lastLine, code: parseInt(lastLine.substring(0, 3), 10) };
+              }
+            }
+          }
+          throw new Error('Socket SMTP chiuso prematuramente o timeout dell\'infrastruttura di Aruba.');
+        })();
+
+        return await Promise.race([readPromise, timeoutPromise]);
+      };
+
+      // Funzione helper per comunicare pacchetti di controllo con il server SMTP
+      const sendSMTPCommand = async (writer, reader, cmd) => {
+        const encoder = new TextEncoder();
+        await writer.write(encoder.encode(cmd));
+        return await readSMTPResponse(reader);
+      };
+
+      // Spedizione dei dati tramite connessione socket protetta nativa (cloudflare:sockets)
+      const sendSmtpSocketEmail = async (to, subject, html, env) => {
+        const host = env.SMTP_HOST || 'smtps.aruba.it';
+        const port = parseInt(env.SMTP_PORT || '465', 10);
+        const user = env.SMTP_USER;
+        const pass = env.SMTP_PASS;
+        const from = env.SMTP_FROM || user;
+        const fromName = env.SMTP_FROM_NAME || 'Anagrafe New World State';
+
+        console.log(`[SMTP-SOCKET] Negoziazione con ${host}:${port} tramite cloudflare:sockets (SSL/TLS)...`);
+        
+        let socket;
+        try {
+          socket = connect({ hostname: host, port }, { secureTransport: 'on' });
+        } catch (connErr) {
+          console.error('[SMTP-SOCKET] Impossibile stabilire una connessione TCP protetta:', connErr);
+          throw connErr;
+        }
+
+        const writer = socket.writable.getWriter();
+        const reader = socket.readable.getReader();
+        const encoder = new TextEncoder();
+
+        try {
+          // 1. Lettura Banner Principale (220)
+          let res = await readSMTPResponse(reader);
+          console.log('[SMTP-SOCKET] Banner di Benvenuto Ricevuto:', res.text.trim());
+          if (res.code !== 220) throw new Error(`Codice di benvenuto non valido: ${res.text}`);
+
+          // 2. Comunicazione HELO/EHLO
+          res = await sendSMTPCommand(writer, reader, `EHLO nws-wk.workers.dev\r\n`);
+          if (res.code !== 250) throw new Error(`EHLO Negato: ${res.text}`);
+
+          // 3. Avvio Autenticazione (AUTH LOGIN)
+          res = await sendSMTPCommand(writer, reader, `AUTH LOGIN\r\n`);
+          if (res.code !== 334) throw new Error(`AUTH LOGIN non supportato o fallito: ${res.text}`);
+
+          // 4. Invio Username Base64
+          res = await sendSMTPCommand(writer, reader, `${btoa(user)}\r\n`);
+          if (res.code !== 334) throw new Error(`Username rifiutato: ${res.text}`);
+
+          // 5. Invio Password Base64
+          res = await sendSMTPCommand(writer, reader, `${btoa(pass)}\r\n`);
+          if (res.code !== 235) throw new Error(`Credenziali errate su Aruba SMTP (Autenticazione Fallita): ${res.text}`);
+
+          // 6. Configurazione Mittente (MAIL FROM)
+          res = await sendSMTPCommand(writer, reader, `MAIL FROM:<${from}>\r\n`);
+          if (res.code !== 250) throw new Error(`Mittente rifiutato dal server Aruba: ${res.text}`);
+
+          // 7. Configurazione Destinatario (RCPT TO)
+          res = await sendSMTPCommand(writer, reader, `RCPT TO:<${to}>\r\n`);
+          if (res.code !== 250) throw new Error(`Destinatario rifiutato dal server Aruba: ${res.text}`);
+
+          // 8. Apertura Canale Dati (DATA)
+          res = await sendSMTPCommand(writer, reader, `DATA\r\n`);
+          if (res.code !== 354) throw new Error(`Inizio trasmissione dati rifiutato: ${res.text}`);
+
+          // 9. Scrittura Intestazione Email RFC-compliant con codifica UTF-8 del Soggetto
+          const dateStr = new Date().toUTCString();
+          const base64Subject = btoa(unescape(encodeURIComponent(subject)));
+          const utf8Subject = `=?UTF-8?B?${base64Subject}?=`;
+
+          const headers = 
+            `From: "${fromName}" <${from}>\r\n` +
+            `To: <${to}>\r\n` +
+            `Subject: ${utf8Subject}\r\n` +
+            `Date: ${dateStr}\r\n` +
+            `MIME-Version: 1.0\r\n` +
+            `Content-Type: text/html; charset=utf-8\r\n` +
+            `Content-Transfer-Encoding: 7bit\r\n` +
+            `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.cloud>\r\n\r\n`;
+
+          const body = html.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n';
+
+          await writer.write(encoder.encode(headers + body));
+          res = await readSMTPResponse(reader);
+          if (res.code !== 250) throw new Error(`Errore durante l'invio fisico dei dati: ${res.text}`);
+
+          // 10. Chiusura Connessione (QUIT)
+          await writer.write(encoder.encode(`QUIT\r\n`));
+          console.log(`[SMTP-SOCKET] Email recapitata correttamente a ${to}`);
+          return true;
+        } catch (err) {
+          console.error('[SMTP-SOCKET] Errore di connessione o transazione:', err.message);
+          throw err;
+        } finally {
+          try {
+            writer.releaseLock();
+            reader.releaseLock();
+            await socket.close();
+          } catch (_) {}
+        }
+      };
+
+      // Funzione helper per l'invio delle email (SMTP Aruba / Resend / Brevo)
       const sendEmail = async (to, subject, html, env) => {
-        const fromEmail = env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || "onboarding@resend.dev";
+        const fromEmail = env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || "onboarding@resend.dev";
         const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
         
         console.log(`[EMAIL] Tentativo di invio a: ${to} (Oggetto: "${subject}")`);
+
+        // 0. Autodetect SMTP: Se configurato Aruba, proviamo sempre come prima opzione
+        if (env.SMTP_USER && env.SMTP_PASS) {
+          try {
+            const success = await sendSmtpSocketEmail(to, subject, html, env);
+            if (success) return true;
+          } catch (smtpErr) {
+            console.error('[EMAIL] Errore riscontrato con SMTP Direct Aruba. Proverò API alternative se presenti.', smtpErr);
+          }
+        }
         
         // 1. Resend API
         if (env.RESEND_API_KEY) {
@@ -590,7 +727,7 @@ CREATE TABLE citizens (
           }
         }
         
-        console.warn('[EMAIL] Invio saltato. Configura RESEND_API_KEY o BREVO_API_KEY nelle variabili d\'ambiente del Cloudflare Worker.');
+        console.warn('[EMAIL] Configura SMTP_USER/SMTP_PASS, RESEND_API_KEY o BREVO_API_KEY nella dashboard di Cloudflare.');
         return false;
       };
 
@@ -603,40 +740,44 @@ CREATE TABLE citizens (
       // Rotta: Test Email Send
       if (url.pathname === '/api/test-email') {
         const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
+        const isSmtp = !!env.SMTP_USER;
         const isResend = !!env.RESEND_API_KEY;
         const isBrevo = !!env.BREVO_API_KEY;
         
-        if (!isResend && !isBrevo) {
+        if (!isSmtp && !isResend && !isBrevo) {
           return new Response(JSON.stringify({ 
             success: false, 
-            message: 'Nessuna chiave API per email configurata. Imposta RESEND_API_KEY o BREVO_API_KEY nelle impostazioni del Worker.' 
+            message: 'Nessun servizio email configurato nel Cloudflare Worker. Imposta i parametri SMTP o inserisci una chiave API per Resend/Brevo.' 
           }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
         
         const testHtml = `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-            <h1 style="color: #0a1c3e;">Test Invio Email New World State</h1>
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; line-height: 1.6;">
+            <h1 style="color: #0a1c3e; font-size: 20px; margin-top: 0;">Test Invio Email New World State</h1>
             <p>Questo è un messaggio di test per verificare che il server di invio email inserito funzioni correttamente.</p>
-            <p><strong>Configurazione Rilevata:</strong></p>
-            <ul>
-              <li><strong>Provider Attivo:</strong> ${isResend ? 'Resend' : 'Brevo'}</li>
-              <li><strong>Email Mittente:</strong> ${env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || 'onboarding@resend.dev'}</li>
-              <li><strong>Destinatario Amministratore (Admin):</strong> ${adminEmail}</li>
-            </ul>
-            <p style="color: #16a34a; font-weight: bold;">Se vedi questa email, la configurazione è corretta ed operativa!</p>
+            <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; font-size: 13px; margin: 15px 0;">
+              <strong style="display: block; margin-bottom: 5px; color: #0a1c3e;">Configurazione Rilevata sul Cloudflare Edge:</strong>
+              <ul style="margin: 0; padding-left: 20px; color: #475569;">
+                <li><strong>Canale Principale:</strong> ${isSmtp ? 'SMTP Aruba Direct' : (isResend ? 'Resend' : 'Brevo')}</li>
+                <li><strong>Email Mittente:</strong> ${env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || 'onboarding@resend.dev'}</li>
+                <li><strong>Destinatario Amministratore:</strong> ${adminEmail}</li>
+              </ul>
+            </div>
+            <p style="color: #16a34a; font-weight: bold; margin-bottom: 0;">Se vedi questa email, la configurazione è corretta ed operativa!</p>
           </div>
         `;
         
         const ok = await sendEmail(adminEmail, "Test Invio Email - New World State Status", testHtml, env);
         if (ok) {
+          const activeChannel = isSmtp ? 'SMTP Aruba Direct' : (isResend ? 'Resend' : 'Brevo');
           return new Response(JSON.stringify({ 
             success: true, 
-            message: `Email di test spedita con successo a ${adminEmail} usando ${isResend ? 'Resend' : 'Brevo'}.` 
+            message: `Email di test recapitata correttamente a ${adminEmail} via ${activeChannel}!` 
           }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } else {
           return new Response(JSON.stringify({ 
             success: false, 
-            message: 'Il server ha tentato l\'invio ma il provider (Resend/Brevo) ha restituito un errore. Verifica che la chiave sia attiva e che l\'email del mittente sia autorizzata.' 
+            message: 'Il server ha avviato l\'invio dell\'email ma ha riscontrato un errore nel canale. Controlla il log di Cloudflare per i dettagli.' 
           }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
       }

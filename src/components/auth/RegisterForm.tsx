@@ -531,6 +531,7 @@ export default function RegisterForm() {
   const [isManualDateEntry, setIsManualDateEntry] = useState(true);
   const [manualDate, setManualDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [systemStatus, setSystemStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
@@ -722,6 +723,7 @@ export default function RegisterForm() {
       return;
     }
 
+    setIsDetectingLocation(true);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
@@ -731,31 +733,51 @@ export default function RegisterForm() {
         // Reverse geocode to get address details
         try {
           const res = await safeFetch(`/api/lookup/location?lat=${latitude}&lon=${longitude}`);
-          const data = await res.json();
-          if (data && data.address) {
-            const { road, house_number, city, town, village, postcode, province, county, country } = data.address;
-            setFormData(prev => ({
-              ...prev,
-              latitude,
-              longitude,
-              plusCode,
-              residenceAddress: (road || '').toUpperCase(),
-              residenceNumber: (house_number || '').toUpperCase(),
-              residenceCity: (city || town || village || '').toUpperCase(),
-              residenceZip: (postcode || '').toUpperCase(),
-              residenceProvince: (province || county || '').slice(0, 2).toUpperCase(),
-              residenceCountry: (country || '').toUpperCase(),
-            }));
-            setIsVerifyingAddress(true);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.address) {
+              const { road, house_number, city, town, village, postcode, province, county, country } = data.address;
+              setFormData(prev => ({
+                ...prev,
+                latitude,
+                longitude,
+                plusCode,
+                residenceAddress: (road || '').toUpperCase(),
+                residenceNumber: (house_number || '').toUpperCase(),
+                residenceCity: (city || town || village || '').toUpperCase(),
+                residenceZip: (postcode || '').toUpperCase(),
+                residenceProvince: (province || county || '').slice(0, 2).toUpperCase(),
+                residenceCountry: (country || '').toUpperCase(),
+              }));
+              setIsVerifyingAddress(true);
+            } else {
+              setFormData(prev => ({ ...prev, latitude, longitude, plusCode }));
+            }
+          } else {
+            setFormData(prev => ({ ...prev, latitude, longitude, plusCode }));
           }
         } catch (err) {
           console.error("Reverse geocoding error:", err);
           setFormData(prev => ({ ...prev, latitude, longitude, plusCode }));
+        } finally {
+          setIsDetectingLocation(false);
         }
       },
       (error) => {
-        alert('Errore nel recupero della posizione: ' + error.message);
-      }
+        setIsDetectingLocation(false);
+        let msg = 'Impossibile accedere alla tua posizione GPS.';
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = 'Permesso per la posizione negato o bloccato dal browser o dall\'iframe. Puoi comunque impostarla manualmente trascinando il Pin sulla mappa.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          msg = 'Informazioni sulla posizione non disponibili sul dispositivo corrente. Puoi selezionarla direttamente sulla mappa.';
+        } else if (error.code === error.TIMEOUT) {
+          msg = 'Tempo scaduto per il rilevamento GPS. Riprova o usa la mappa manuale.';
+        } else {
+          msg += ` (${error.message})`;
+        }
+        alert(msg);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
   };
 
@@ -867,63 +889,62 @@ export default function RegisterForm() {
       onKeyDown={handleKeyDown}
       className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-brand-blue/10 overflow-hidden mt-24 mb-12 relative scroll-mt-24 focus-within:ring-1 focus-within:ring-brand-blue/5"
     >
-      {/* Success Message Overlay */}
-      <AnimatePresence>
-        {isSuccess && (
+      {isSuccess ? (
+        <div className="py-20 px-8 md:px-12 text-center space-y-6 max-w-lg mx-auto">
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 z-50 bg-white flex items-center justify-center p-12 text-center"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 100, damping: 12 }}
+            className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto"
           >
-            <div className="space-y-6">
-              <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
-                <UserCheck className="w-10 h-10" />
-              </div>
-              <h2 className="text-3xl font-serif text-brand-blue">Benvenuto, Cittadino!</h2>
-              <div className="space-y-4">
-                <p className="text-muted">La tua richiesta è stata registrata con successo nel registro anagrafico mondiale.</p>
-                {formData.email && (
-                  <p className="text-sm text-brand-blue/80 bg-brand-blue/5 p-4 rounded-xl border border-brand-blue/10">
-                    Abbiamo ricevuto la tua email. La tua richiesta sarà validata da un cittadino incaricato e riceverai un'email di inserimento definitivo al termine della procedura.
-                  </p>
-                )}
-              </div>
-              <button 
-                onClick={() => window.location.reload()}
-                className="px-8 py-3 bg-brand-blue text-white rounded-xl shadow-lg hover:bg-brand-blue/90 transition-all font-medium"
+            <UserCheck className="w-10 h-10" />
+          </motion.div>
+          <h2 className="text-3xl font-serif text-brand-blue">Benvenuto, Cittadino!</h2>
+          <div className="space-y-4">
+            <p className="text-muted text-sm leading-relaxed">La tua richiesta è stata registrata con successo nel registro anagrafico mondiale.</p>
+            {formData.email && (
+              <p className="text-xs text-brand-blue/80 bg-brand-blue/5 p-4 rounded-xl border border-brand-blue/10 text-left leading-relaxed">
+                Abbiamo ricevuto la tua email. La tua richiesta sarà validata da un cittadino incaricato e riceverai un'email di inserimento definitivo al termine della procedura.
+              </p>
+            )}
+          </div>
+          <div className="pt-4">
+            <button 
+              type="button"
+              onClick={() => window.location.reload()}
+              className="px-8 py-3 bg-brand-blue text-white rounded-xl shadow-lg hover:bg-brand-blue/90 transition-all font-medium text-sm"
+            >
+              Torna alla Home
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Progress Bar */}
+          <div className="h-1.5 bg-gray-100 w-full relative">
+            <motion.div 
+              className="absolute top-0 left-0 h-full bg-brand-blue shadow-[0_0_10px_rgba(10,28,62,0.3)]"
+              initial={{ width: '20%' }}
+              animate={{ width: `${(step / stepsCount) * 100}%` }}
+            />
+          </div>
+
+          {/* AI Assistant Bubble */}
+          <AnimatePresence>
+            {aiTip && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="px-6 py-3 bg-brand-blue text-white flex items-center gap-3 border-b border-white/10"
               >
-                Torna alla Home
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <Sparkles className="w-4 h-4 text-brand-gold shrink-0 animate-pulse" />
+                <p className="text-[11px] font-medium italic leading-tight">{aiTip}</p>
+              </motion.div>
+            )}
+          </  AnimatePresence>
 
-      {/* Progress Bar */}
-      <div className="h-1.5 bg-gray-100 w-full relative">
-        <motion.div 
-          className="absolute top-0 left-0 h-full bg-brand-blue shadow-[0_0_10px_rgba(10,28,62,0.3)]"
-          initial={{ width: '20%' }}
-          animate={{ width: `${(step / stepsCount) * 100}%` }}
-        />
-      </div>
-
-      {/* AI Assistant Bubble */}
-      <AnimatePresence>
-        {aiTip && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="px-6 py-3 bg-brand-blue text-white flex items-center gap-3 border-b border-white/10"
-          >
-            <Sparkles className="w-4 h-4 text-brand-gold shrink-0 animate-pulse" />
-            <p className="text-[11px] font-medium italic leading-tight">{aiTip}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="p-8 md:p-12">
+          <div className="p-8 md:p-12">
         {systemStatus === 'loading' ? (
           <div className="py-20 flex flex-col items-center justify-center space-y-6">
             <Loader2 className="w-12 h-12 text-brand-blue animate-spin" />
@@ -1392,12 +1413,23 @@ export default function RegisterForm() {
                         value={formData.plusCode}
                       />
                       <button 
-                        onClick={useGetCurrentLocation}
-                        className="px-4 py-3 bg-brand-blue/5 text-brand-blue rounded-xl hover:bg-brand-blue/10 transition-colors flex items-center gap-2"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          useGetCurrentLocation();
+                        }}
+                        disabled={isDetectingLocation}
+                        className="px-4 py-3 bg-brand-blue/5 text-brand-blue rounded-xl hover:bg-brand-blue/10 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-wait"
                         title="Rileva posizione attuale"
                       >
-                        <Navigation className="w-4 h-4" />
-                        <span className="text-[10px] font-bold uppercase hidden md:inline">Usa la mia posizione</span>
+                        {isDetectingLocation ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Navigation className="w-4 h-4" />
+                        )}
+                        <span className="text-[10px] font-bold uppercase hidden md:inline">
+                          {isDetectingLocation ? 'Rilevamento...' : 'Usa la mia posizione'}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -1407,7 +1439,9 @@ export default function RegisterForm() {
                       <label className="text-[10px] uppercase font-bold text-muted ml-1">Punti di Riferimento / Descrizione (Max 500 car.)</label>
                       {formData.locationDescription.length > 10 && (
                         <button 
-                          onClick={async () => {
+                          type="button"
+                          onClick={async (e) => {
+                            e.preventDefault();
                             setIsEnhancing(true);
                             const enhanced = await enhanceLocationDescription(formData.locationDescription, `${formData.residenceAddress} ${formData.residenceCity}`);
                             setFormData(prev => ({ ...prev, locationDescription: enhanced }));
@@ -1913,6 +1947,8 @@ export default function RegisterForm() {
         </AnimatePresence>
       )}
       </div>
+      </>
+      )}
     </div>
   );
 }
