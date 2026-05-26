@@ -536,6 +536,23 @@ export default function RegisterForm() {
   const [systemStatus, setSystemStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
   useEffect(() => {
+    if (isSuccess) {
+      const timer = setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (formTopRef.current) {
+          const topOffset = 80;
+          const elementPosition = formTopRef.current.getBoundingClientRect().top + window.pageYOffset;
+          window.scrollTo({
+            top: elementPosition - topOffset,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess]);
+
+  useEffect(() => {
     const checkSystem = async () => {
       try {
         const res = await safeFetch('/api/db-status');
@@ -664,8 +681,16 @@ export default function RegisterForm() {
         }
         return true;
       case 4:
+        if (emailSelection === null) {
+          setError('Indica se possiedi o meno un indirizzo email (Sì o No).');
+          return false;
+        }
         if (emailSelection === true && (!formData.email || !formData.email.includes('@'))) {
           setError('Inserisci un indirizzo email valido.');
+          return false;
+        }
+        if (phoneSelection === null) {
+          setError('Indica se possiedi o meno un numero di telefono (Sì o No).');
           return false;
         }
         if (phoneSelection === true && !formData.phoneNumber) {
@@ -865,8 +890,6 @@ export default function RegisterForm() {
 
       if (data.success) {
         setIsSuccess(true);
-        // Ensure scroll to top to see success message
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setError(data.message || 'Errore durante la registrazione.');
         // Scroll to error

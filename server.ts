@@ -44,13 +44,14 @@ async function startServer() {
     app.use(express.json({ limit: '10mb' }));
 
     // Helper per inviare email tramite SMTP (es. Aruba)
-    async function sendLocalSmtpEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+    async function sendLocalSmtpEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
       const host = process.env.SMTP_HOST || 'smtps.aruba.it';
       const port = parseInt(process.env.SMTP_PORT || '465', 10);
       const secure = process.env.SMTP_SECURE !== 'false'; // di default true per la porta 465
       const user = process.env.SMTP_USER;
       const pass = process.env.SMTP_PASS;
-      const from = process.env.SMTP_FROM || user || 'anagrafe@newworldstate.cloud';
+      // For SPF/DKIM alignment with Aruba servers, we default the From address strictly to the SMTP authenticated user
+      const from = process.env.SMTP_FROM || user;
       const fromName = process.env.SMTP_FROM_NAME || 'Anagrafe New World State';
 
       if (!user || !pass) {
@@ -72,11 +73,24 @@ async function startServer() {
         }
       });
 
+      // Genera una versione in testo semplice pulito se non fornita per bypassare i filtri antispam (SPF/DKIM/MIME check)
+      const plainTextFallback = text || html
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
       const mailOptions = {
         from: `"${fromName}" <${from}>`,
         to,
         subject,
         html,
+        text: plainTextFallback,
+        headers: {
+          'List-Unsubscribe': `<mailto:${from}?subject=unsubscribe>`,
+          'Precedence': 'bulk',
+          'X-Auto-Response-Suppress': 'OOF, AutoReply',
+        }
       };
 
       const info = await transporter.sendMail(mailOptions);
@@ -322,6 +336,27 @@ async function startServer() {
                 </div>
               `;
 
+              const citizenText = `
+Caro/a ${firstName || ''} ${surname || ''},
+
+Siamo felici di comunicarti che la tua richiesta per ottenere la cittadinanza del New World State è stata correttamente acquisita dal nostro sistema anagrafico.
+
+=== PROSSIMO PASSO: VALIDAZIONE ===
+Un cittadino incaricato (Validatore NWS) verificherà la conformità delle informazioni fornite e l'hash di firma del documento di identità da te registrato.
+
+RIEPILOGO DATI REGISTRATI:
+- Plus Code Posizione: ${plusCode || '-'}
+- Luogo e Nazione di Nascita: ${birthPlace || ''} (${birthCountry || ''})
+- Stato Cittadinanza Richiesta: ${citizenship || ''}
+- Indirizzo Residenza: ${residenceAddress || ''}, ${residenceNumber || ''} - ${residenceCity || ''}
+- Tipologia Documento Fornito: ${documentType || '-'}
+
+Al termine della procedura di verifica dei dati, riceverai una seconda comunicazione email di inserimento definitivo nel registro, contenente il link per scaricare il tuo Certificato di Cittadinanza Digitale.
+
+"Uniti nello spazio, legati per diritto."
+Ufficio dell'Anagrafe Federale del New World State
+`;
+
               // Invio simultaneo delle email
               const emailPromises = [];
               
@@ -340,7 +375,8 @@ async function startServer() {
                   sendLocalSmtpEmail({
                     to: email.trim(),
                     subject: 'Registrazione ricevuta - New World State',
-                    html: citizenHtml
+                    html: citizenHtml,
+                    text: citizenText
                   })
                 );
               }
