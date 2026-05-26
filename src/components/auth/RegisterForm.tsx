@@ -842,18 +842,6 @@ export default function RegisterForm() {
       }
 
       if (data.success) {
-        // Invio silenzioso dei dati di registrazione per abilitare notifiche e welcome email via Cloudflare Functions
-        try {
-          await fetch('/api/notify-registration', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(serializableData)
-          });
-          console.log('[CLOUDFLARE] Notifica di registrazione inviata correttamente in background.');
-        } catch (staticFormErr) {
-          console.warn('[CLOUDFLARE] Errore nell\'invio di fallback della notifica di registrazione:', staticFormErr);
-        }
-
         setIsSuccess(true);
         // Ensure scroll to top to see success message
         window.scrollTo({ top: 0, behavior: 'smooth' });
