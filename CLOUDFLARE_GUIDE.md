@@ -782,6 +782,58 @@ CREATE TABLE citizens (
         }
       }
 
+      // Rotta: Test Aruba PHP Bridge
+      if (url.pathname === '/api/test-aruba') {
+        const uploaderUrl = env.ARUBA_UPLOADER_URL;
+        const uploaderKey = env.ARUBA_UPLOADER_KEY;
+
+        if (!uploaderUrl) {
+          return new Response(JSON.stringify({ 
+            success: false, 
+            message: 'La variabile d\'ambiente ARUBA_UPLOADER_URL non è impostata sul tuo Worker Cloudflare.' 
+          }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        try {
+          const arubaResponse = await fetch(uploaderUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${uploaderKey}`
+            },
+            body: JSON.stringify({
+              action: 'status',
+              key: uploaderKey
+            })
+          });
+
+          if (arubaResponse.ok) {
+            const arubaData = await arubaResponse.json();
+            return new Response(JSON.stringify({
+              success: true,
+              source: 'Cloudflare Worker Diagnostics',
+              message: 'Il tuo Cloudflare Worker comunica correttamente con il Bridge PHP di Aruba!',
+              arubaStatus: arubaData
+            }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          } else {
+            const text = await arubaResponse.text();
+            return new Response(JSON.stringify({
+              success: false,
+              source: 'Cloudflare Worker Diagnostics',
+              message: `Aruba ha risposto con errore HTTP: ${arubaResponse.status}`,
+              details: text.slice(0, 200)
+            }), { status: arubaResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        } catch (err: any) {
+          return new Response(JSON.stringify({
+            success: false,
+            source: 'Cloudflare Worker Diagnostics',
+            message: 'Errore di connessione a ' + uploaderUrl,
+            details: err.message
+          }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
       // Rotta: Lookup Location
       if (url.pathname === '/api/lookup/location') {
         const q = url.searchParams.get('q');
@@ -795,17 +847,56 @@ CREATE TABLE citizens (
       if (url.pathname === '/api/register' && request.method === 'POST') {
         const body = await request.json();
         
-        // Mapping completo di tutti i campi secondo la struttura citizens
+        // Mapping completo di tutti i campi secondo la struttura citizens, incluse le immagini Base64 dei carichi dei documenti
         const { 
           surname, firstName, gender, birthDate, birthPlace, birthCountry,
           citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
           residenceCity, residenceProvince, residenceCountry, email, phonePrefix, phoneNumber,
           username, password, documentHash, documentType,
           plusCode, locationDescription, latitude, longitude,
-          isAmbassador, isPeacekeeper 
+          isAmbassador, isPeacekeeper,
+          documentFrontData, documentFrontName, documentBackData, documentBackName
         } = body;
 
         const normalizedUsername = username ? username.toLowerCase().replace(/\s/g, '') : null;
+
+        // --- CARICAMENTO DOCUMENTI SU SPAZIO ARUBA VIA BRIDGE PHP ---
+        let arubaFrontUrl = '';
+        let arubaBackUrl = '';
+
+        if (env.ARUBA_UPLOADER_URL && env.ARUBA_UPLOADER_KEY && documentFrontData) {
+          console.log('[ARUBA-UPLOADER] Tentativo di caricamento su Aruba...');
+          try {
+            const uploaderRes = await fetch(env.ARUBA_UPLOADER_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${env.ARUBA_UPLOADER_KEY}`
+              },
+              body: JSON.stringify({
+                key: env.ARUBA_UPLOADER_KEY,
+                username: normalizedUsername || 'anonymous',
+                documentFrontData,
+                documentFrontName,
+                documentBackData,
+                documentBackName
+              })
+            });
+
+            if (uploaderRes.ok) {
+              const uploaderData = await uploaderRes.json();
+              if (uploaderData.success && uploaderData.files) {
+                arubaFrontUrl = uploaderData.files.front || '';
+                arubaBackUrl = uploaderData.files.back || '';
+                console.log('[ARUBA-UPLOADER] Documenti memorizzati correttamente su Aruba:', uploaderData.files);
+              }
+            } else {
+              console.error('[ARUBA-UPLOADER] Errore HTTP: ' + uploaderRes.status);
+            }
+          } catch (upErr) {
+            console.error('[ARUBA-UPLOADER] Eccezione: ' + upErr.message);
+          }
+        }
 
         // 1. Interroghiamo lo schema del database in tempo reale per scoprire i nomi effettivi delle colonne.
         // In questo modo, che il database sia stato creato con colonne case-sensitive (es. "firstName")
@@ -939,6 +1030,11 @@ CREATE TABLE citizens (
                   <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Username:</strong></td><td style="padding: 6px 0; font-family: monospace;">${normalizedUsername || 'Registrato con email/tel'}</td></tr>
                   <tr><td style="padding: 6px 0; color: #64748b;"><strong>Hash Documento:</strong></td><td style="padding: 6px 0; font-family: monospace; font-size: 11px; word-break: break-all;">${documentHash || ''}</td></tr>
                   <tr><td style="padding: 6px 0; color: #64748b;"><strong>Tipo Documento:</strong></td><td style="padding: 6px 0;">${documentType || ''}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>File Fisici su Aruba:</strong></td><td style="padding: 6px 0;">
+                    ${arubaFrontUrl ? `<a href="${arubaFrontUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline; margin-right: 12px;">Visualizza Fronte</a>` : ''}
+                    ${arubaBackUrl ? `<a href="${arubaBackUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline;">Visualizza Retro</a>` : ''}
+                    ${!arubaFrontUrl && !arubaBackUrl ? '<span style="color: #94a3b8; font-style: italic;">Nessuno (Uploader non configurato o disabilitato nel Worker)</span>' : ''}
+                  </td></tr>
                   <tr><td style="padding: 6px 0; color: #64748b;"><strong>Candidato Ambasciatore:</strong></td><td style="padding: 6px 0; font-weight: 600; color: ${isAmbassador ? '#15803d' : '#64748b'};">${isAmbassador ? 'SÌ' : 'NO'}</td></tr>
                   <tr><td style="padding: 6px 0; color: #64748b;"><strong>Candidato Peacekeeper:</strong></td><td style="padding: 6px 0; font-weight: 600; color: ${isPeacekeeper ? '#15803d' : '#64748b'};">${isPeacekeeper ? 'SÌ' : 'NO'}</td></tr>
                 </table>
