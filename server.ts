@@ -227,72 +227,126 @@ async function startServer() {
           const data = await workerRes.json();
           console.log(`[API] Worker registration reply: ${workerRes.status}`);
 
-          // Se la registrazione sul Worker ha successo e l'utente ha configurato le credenziali SMTP locali,
-          // procediamo all'invio diretto tramite la mailer SMTP di Aruba!
-          if (data.success && process.env.SMTP_USER) {
-            console.log('[SMTP] Registro inserito. Avvio spedizione email via SMTP...');
-            try {
-              const citizenId = data.id || 'N/A';
-              const { 
-                surname, firstName, gender, birthDate, birthPlace, birthCountry,
-                citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
-                residenceCity, residenceProvince, residenceCountry, email, phonePrefix, phoneNumber,
-                username, password, documentHash, documentType,
-                plusCode, locationDescription, latitude, longitude,
-                isAmbassador, isPeacekeeper 
-              } = req.body;
+          // Se la registrazione sul Worker ha successo e l'ambiente locale ha anch'esso SMTP/Uploader,
+          // eseguiamo un backup locale, altrimenti il Worker gestirà il flusso primario.
+          if (data.success) {
+            const {
+              documentFrontData,
+              documentFrontName,
+              documentBackData,
+              documentBackName,
+              ...serializablePayload
+            } = req.body;
 
-              const adminEmail = process.env.ADMIN_EMAIL || 'supersalvatoreferroinfranca@gmail.com';
-              const brandColor = '#0a1c3e';
-              const lightBg = '#f8fafc';
-              const normalizedUsername = username ? username.toLowerCase().replace(/\s/g, '') : 'Registrato con email/tel';
+            let arubaFrontUrl = '';
+            let arubaBackUrl = '';
 
-              const adminHtml = `
-                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: ${lightBg}; border-radius: 16px;">
-                  <div style="background-color: ${brandColor}; padding: 30px; border-radius: 12px; text-align: center; color: white;">
-                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: white;">Nuovo Cittadino Registrato</h1>
-                    <p style="margin: 5px 0 0 0; color: #93c5fd; font-size: 14px;">Richiesta id #${citizenId} (Aruba SMTP Direct)</p>
-                  </div>
-                  
-                  <div style="padding: 24px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-                    <h2 style="font-size: 18px; color: ${brandColor}; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-top: 0;">Anagrafica Richiedente</h2>
+            // Se l'uploader di Aruba è configurato, carichiamo i file fisici dello spazio infinito tramite il bridge PHP
+            if (process.env.ARUBA_UPLOADER_URL && process.env.ARUBA_UPLOADER_KEY && documentFrontData) {
+              console.log('[ARUBA-UPLOADER] Tentativo di caricamento file sul server fisico Aruba tramite bridge...');
+              try {
+                const uploaderRes = await fetch(process.env.ARUBA_UPLOADER_URL, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.ARUBA_UPLOADER_KEY}`
+                  },
+                  body: JSON.stringify({
+                    key: process.env.ARUBA_UPLOADER_KEY,
+                    username: serializablePayload.username || 'unknown',
+                    documentFrontData,
+                    documentFrontName,
+                    documentBackData,
+                    documentBackName
+                  })
+                });
+
+                if (uploaderRes.ok) {
+                  const uploaderData: any = await uploaderRes.json();
+                  if (uploaderData.success && uploaderData.files) {
+                    arubaFrontUrl = uploaderData.files.front || '';
+                    arubaBackUrl = uploaderData.files.back || '';
+                    console.log('[ARUBA-UPLOADER] Documenti memorizzati correttamente su Aruba:', uploaderData.files);
+                  } else {
+                    console.error('[ARUBA-UPLOADER] Errore risposta bridge PHP:', uploaderData.message);
+                  }
+                } else {
+                  console.error('[ARUBA-UPLOADER] Errore di comunicazione HTTP:', uploaderRes.status, await uploaderRes.text());
+                }
+              } catch (upErr: any) {
+                console.error('[ARUBA-UPLOADER] Eccezione riscontrata durante il caricamento:', upErr.message);
+              }
+            }
+
+            if (process.env.SMTP_USER) {
+              console.log('[SMTP] Registro inserito. Avvio spedizione email via SMTP...');
+              try {
+                const citizenId = data.id || 'N/A';
+                const { 
+                  surname, firstName, gender, birthDate, birthPlace, birthCountry,
+                  citizenship, maritalStatus, residenceAddress, residenceNumber, residenceZip, 
+                  residenceCity, residenceProvince, residenceCountry, email, phonePrefix, phoneNumber,
+                  username, password, documentHash, documentType,
+                  plusCode, locationDescription, latitude, longitude,
+                  isAmbassador, isPeacekeeper 
+                } = serializablePayload;
+
+                const adminEmail = process.env.ADMIN_EMAIL || 'supersalvatoreferroinfranca@gmail.com';
+                const brandColor = '#0a1c3e';
+                const lightBg = '#f8fafc';
+                const normalizedUsername = username ? username.toLowerCase().replace(/\s/g, '') : 'Registrato con email/tel';
+
+                const adminHtml = `
+                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: ${lightBg}; border-radius: 16px;">
+                    <div style="background-color: ${brandColor}; padding: 30px; border-radius: 12px; text-align: center; color: white;">
+                      <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: white;">Nuovo Cittadino Registrato</h1>
+                      <p style="margin: 5px 0 0 0; color: #93c5fd; font-size: 14px;">Richiesta id #${citizenId} (Aruba SMTP Direct)</p>
+                    </div>
                     
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; line-height: 1.8;">
-                      <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Cognome e Nome:</strong></td><td style="padding: 6px 0; font-weight: 600;">${surname || ''} ${firstName || ''}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Sesso:</strong></td><td style="padding: 6px 0;">${gender || ''}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Data di Nascita:</strong></td><td style="padding: 6px 0;">${birthDate || 'Non fornito'}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Luogo di Nascita:</strong></td><td style="padding: 6px 0;">${birthPlace || ''} (${birthCountry || ''})</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Cittadinanza Attuale:</strong></td><td style="padding: 6px 0;">${citizenship || ''}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Stato Civile:</strong></td><td style="padding: 6px 0;">${maritalStatus || ''}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Email del Cittadino:</strong></td><td style="padding: 6px 0; font-weight: 600; color: #2563eb;"><a href="mailto:${email || ''}">${email || 'Nessuna'}</a></td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Telefono:</strong></td><td style="padding: 6px 0;">${phonePrefix || ''} ${phoneNumber || 'Nessuno'}</td></tr>
-                    </table>
-
-                    <h2 style="font-size: 18px; color: ${brandColor}; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-top: 24px;">Localizzazione Geografica</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; line-height: 1.8;">
-                      <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Indirizzo Residenza:</strong></td><td style="padding: 6px 0;">${residenceAddress || ''}, ${residenceNumber || ''}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>CAP / Città:</strong></td><td style="padding: 6px 0;">${residenceZip || ''} - ${residenceCity || ''} (${residenceProvince || ''})</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Stato Residenza:</strong></td><td style="padding: 6px 0;">${residenceCountry || ''}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Coordinate:</strong></td><td style="padding: 6px 0; font-family: monospace; font-size: 13px;">lat: ${latitude || 0}, lon: ${longitude || 0}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Plus Code:</strong></td><td style="padding: 6px 0; font-family: monospace; color: #0f766e; font-weight: 600;">${plusCode || ''}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Descrizione Luogo:</strong></td><td style="padding: 6px 0; font-style: italic;">"${locationDescription || ''}"</td></tr>
-                    </table>
-
-                    <h2 style="font-size: 18px; color: ${brandColor}; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-top: 24px;">Credenziali ed Opzioni</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; line-height: 1.8;">
-                      <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Username:</strong></td><td style="padding: 6px 0; font-family: monospace;">${normalizedUsername}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Hash Documento:</strong></td><td style="padding: 6px 0; font-family: monospace; font-size: 11px; word-break: break-all;">${documentHash || ''}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Tipo Documento:</strong></td><td style="padding: 6px 0;">${documentType || ''}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Candidato Ambasciatore:</strong></td><td style="padding: 6px 0; font-weight: 600; color: ${isAmbassador ? '#15803d' : '#64748b'};">${isAmbassador ? 'SÌ' : 'NO'}</td></tr>
-                      <tr><td style="padding: 6px 0; color: #64748b;"><strong>Candidato Peacekeeper:</strong></td><td style="padding: 6px 0; font-weight: 600; color: ${isPeacekeeper ? '#15803d' : '#64748b'};">${isPeacekeeper ? 'SÌ' : 'NO'}</td></tr>
-                    </table>
+                    <div style="padding: 24px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                      <h2 style="font-size: 18px; color: ${brandColor}; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-top: 0;">Anagrafica Richiedente</h2>
+                      
+                      <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; line-height: 1.8;">
+                        <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Cognome e Nome:</strong></td><td style="padding: 6px 0; font-weight: 600;">${surname || ''} ${firstName || ''}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Sesso:</strong></td><td style="padding: 6px 0;">${gender || ''}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Data di Nascita:</strong></td><td style="padding: 6px 0;">${birthDate || 'Non fornito'}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Luogo di Nascita:</strong></td><td style="padding: 6px 0;">${birthPlace || ''} (${birthCountry || ''})</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Cittadinanza Attuale:</strong></td><td style="padding: 6px 0;">${citizenship || ''}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Stato Civile:</strong></td><td style="padding: 6px 0;">${maritalStatus || ''}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Email del Cittadino:</strong></td><td style="padding: 6px 0; font-weight: 600; color: #2563eb;"><a href="mailto:${email || ''}">${email || 'Nessuna'}</a></td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Telefono:</strong></td><td style="padding: 6px 0;">${phonePrefix || ''} ${phoneNumber || 'Nessuno'}</td></tr>
+                      </table>
+  
+                      <h2 style="font-size: 18px; color: ${brandColor}; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-top: 24px;">Localizzazione Geografica</h2>
+                      <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; line-height: 1.8;">
+                        <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Indirizzo Residenza:</strong></td><td style="padding: 6px 0;">${residenceAddress || ''}, ${residenceNumber || ''}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>CAP / Città:</strong></td><td style="padding: 6px 0;">${residenceZip || ''} - ${residenceCity || ''} (${residenceProvince || ''})</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Stato Residenza:</strong></td><td style="padding: 6px 0;">${residenceCountry || ''}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Coordinate:</strong></td><td style="padding: 6px 0; font-family: monospace; font-size: 13px;">lat: ${latitude || 0}, lon: ${longitude || 0}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Plus Code:</strong></td><td style="padding: 6px 0; font-family: monospace; color: #0f766e; font-weight: 600;">${plusCode || ''}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Descrizione Luogo:</strong></td><td style="padding: 6px 0; font-style: italic;">"${locationDescription || ''}"</td></tr>
+                      </table>
+  
+                      <h2 style="font-size: 18px; color: ${brandColor}; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-top: 24px;">Credenziali ed Opzioni</h2>
+                      <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; line-height: 1.8;">
+                        <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Username:</strong></td><td style="padding: 6px 0; font-family: monospace;">${normalizedUsername}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Hash Documento:</strong></td><td style="padding: 6px 0; font-family: monospace; font-size: 11px; word-break: break-all;">${documentHash || ''}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Tipo Documento:</strong></td><td style="padding: 6px 0;">${documentType || ''}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>File Fisici su Aruba:</strong></td><td style="padding: 6px 0;">
+                          ${arubaFrontUrl ? `<a href="${arubaFrontUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline; margin-right: 12px;">Visualizza Fronte</a>` : ''}
+                          ${arubaBackUrl ? `<a href="${arubaBackUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline;">Visualizza Retro</a>` : ''}
+                          ${!arubaFrontUrl && !arubaBackUrl ? '<span style="color: #94a3b8; font-style: italic;">Nessuno (Uploader non config.)</span>' : ''}
+                        </td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Candidato Ambasciatore:</strong></td><td style="padding: 6px 0; font-weight: 600; color: ${isAmbassador ? '#15803d' : '#64748b'};">${isAmbassador ? 'SÌ' : 'NO'}</td></tr>
+                        <tr><td style="padding: 6px 0; color: #64748b;"><strong>Candidato Peacekeeper:</strong></td><td style="padding: 6px 0; font-weight: 600; color: ${isPeacekeeper ? '#15803d' : '#64748b'};">${isPeacekeeper ? 'SÌ' : 'NO'}</td></tr>
+                      </table>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8;">
+                      Questo è un messaggio automatico generato dal server di New World State.
+                    </div>
                   </div>
-                  
-                  <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8;">
-                    Questo è un messaggio automatico generato dal server di New World State.
-                  </div>
-                </div>
-              `;
+                `;
 
               const citizenHtml = `
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: ${lightBg}; border-radius: 16px;">
@@ -388,6 +442,8 @@ Ufficio dell'Anagrafe Federale del New World State
               // Non blocchiamo la risposta HTTP se l'email fallisce, poiché l'utente si è registrato con successo nel database
             }
           }
+
+          } // Chiusura di if (data.success)
 
           return res.status(workerRes.status).json(data);
         } else {

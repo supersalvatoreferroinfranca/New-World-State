@@ -1151,3 +1151,350 @@ export const onRequest = [
 #### Passo 3: Esegui il Deploy su Cloudflare Pages
 Una volta salvato il file `_middleware.js` nella tua cartella `functions/` sul tuo repository Git, effettua il push. Cloudflare Pages rileverà automaticamente la directory `functions/`, configurerà il plugin static forms integrato e invierà l'email in modo del tutto autonomo ad ogni nuova registrazione!
 
+
+## 🚀 Archiviazione Fisica dei Documenti su Spazio Aruba (Illimitato)
+
+Per archiviare i documenti caricati sul portale direttamente nello spazio illimitato del tuo hosting **Aruba** mantenendo l'infrastruttura di visualizzazione e calcolo su **Cloudflare**, abbiamo creato un sistema di **Bridge PHP**.
+
+Il portale converte i documenti in formato Base64 al momento della registrazione e li trasmette al server Express (o direttamente a Cloudflare). Il server contatta l'uploader Aruba protetto che crea una cartella separata per ogni utente e vi deposita i file fronte e retro. I link diretti generati vengono poi trasmessi all'amministratore via email!
+
+### 1. Codice del Bridge PHP (`nws-uploader.php`)
+
+Crea un file di testo denominato `nws-uploader.php`, incolla il codice seguente e caricalo tramite **FTP / SFTP** sul tuo spazio Aruba (nella cartella principale o in una sottocartella, ad esempio `https://iltuodominio.it/nws-uploader.php`):
+
+```php
+<?php
+/**
+ * NWS Document Uploader Bridge - Spazio Aruba
+ * 
+ * Permette di caricare in modo sicuro i documenti di identità dei richiedenti
+ * nello spazio illimitato di Aruba, invocato direttamente da Cloudflare/Express.
+ */
+
+// Imposta gli header di sicurezza e CORS
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+// Gestione dei pacchetti PREFLIGHT di CORS
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
+// Lettura delle credenziali di sicurezza inserite nella richiesta (Header o POST)
+$headers = apache_request_headers();
+$authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
+$postKey = isset($_POST['key']) ? $_POST['key'] : '';
+
+$inputRaw = file_get_contents('php://input');
+$inputData = json_decode($inputRaw, true);
+
+if (is_array($inputData)) {
+    if (empty($postKey) && isset($inputData['key'])) {
+        $postKey = $inputData['key'];
+    }
+}
+
+// ⚠️ MODIFICA QUESTO TOKEN: Inserisci una password segreta molto complessa!
+// Questa chiave deve coincidere esattamente con la variabile d'ambiente ARUBA_UPLOADER_KEY
+define('SECURE_TOKEN', 'INSERISCI_UNA_PASSWORD_MOLTO_SICURA_E_LUNGA_QUI'); 
+
+// Estrazione e riscontro del token
+$receivedToken = '';
+if (preg_match('/Bearer\s+(\S+)/', $authHeader, $matches)) {
+    $receivedToken = $matches[1];
+} else if (!empty($postKey)) {
+    $receivedToken = $postKey;
+}
+
+if (empty($receivedToken) || $receivedToken !== SECURE_TOKEN) {
+    http_response_code(401);
+    echo json_encode(array(
+        'success' => false,
+        'message' => 'Errore di autorizzazione: Chiave di sicurezza non valida o non fornita.'
+    ));
+    exit;
+}
+
+// Status Check
+if (isset($inputData['action']) && $inputData['action'] === 'status') {
+    echo json_encode(array(
+        'success' => true,
+        'message' => 'Il bridge di caricamento Aruba è attivo ed operativo!',
+        'writeable' => is_writable('.')
+    ));
+    exit;
+}
+
+// Estrazione dei dati dell'utente
+$username = isset($inputData['username']) ? preg_replace('/[^a-zA-Z0-9_\.-]/', '', $inputData['username']) : 'anonymous';
+$username = strtolower($username);
+
+if (empty($username)) {
+    $username = 'anonymous_' . time();
+}
+
+// Directory di destinazione
+$baseDir = 'documents/' . $username;
+
+if (!file_exists($baseDir)) {
+    if (!mkdir($baseDir, 0755, true)) {
+        http_response_code(500);
+        echo json_encode(array(
+            'success' => false,
+            'message' => 'Impossibile creare la cartella del richiedente su Aruba. Verifica i permessi di scrittura PHP.'
+        ));
+        exit;
+    }
+}
+
+$uploadedFiles = array();
+
+// Funzione di decodifica e salvataggio file
+function saveBase64File($base64Data, $originalName, $targetDir, $filePrefix) {
+    if (empty($base64Data)) return null;
+    
+    // Rimuove l'intestazione Data URI (es. "data:image/png;base64,") se presente
+    if (strpos($base64Data, ',') !== false) {
+        $parts = explode(',', $base64Data);
+        $base64Data = $parts[1];
+    }
+    
+    $decoded = base64_decode($base64Data);
+    if ($decoded === false) return null;
+    
+    $ext = pathinfo($originalName, PATHINFO_EXTENSION);
+    if (empty($ext)) $ext = 'png'; 
+    $ext = strtolower($ext);
+    
+    // Validazione estensioni consentite per motivi di sicurezza
+    if (!in_array($ext, array('png', 'jpg', 'jpeg', 'pdf'))) {
+        return null;
+    }
+    
+    $fileName = $filePrefix . '.' . $ext;
+    $filePath = $targetDir . '/' . $fileName;
+    
+    if (file_put_contents($filePath, $decoded) !== false) {
+        // Composizione del link pubblico per il visualizzatore
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
+        $scriptPath = ($scriptPath === '/' || $scriptPath === '\\') ? '' : $scriptPath;
+        
+        return $protocol . $host . $scriptPath . '/' . $filePath;
+    }
+    
+    return null;
+}
+
+// Salvataggio dei file dei documenti
+if (!empty($inputData['documentFrontData']) && !empty($inputData['documentFrontName'])) {
+    $frontUrl = saveBase64File($inputData['documentFrontData'], $inputData['documentFrontName'], $baseDir, 'fronte');
+    if ($frontUrl) {
+        $uploadedFiles['front'] = $frontUrl;
+    }
+}
+
+if (!empty($inputData['documentBackData']) && !empty($inputData['documentBackName'])) {
+    $backUrl = saveBase64File($inputData['documentBackData'], $inputData['documentBackName'], $baseDir, 'retro');
+    if ($backUrl) {
+        $uploadedFiles['back'] = $backUrl;
+    }
+}
+
+if (!empty($uploadedFiles)) {
+    echo json_encode(array(
+        'success' => true,
+        'message' => 'Documenti posizionati nello spazio Aruba con successo!',
+        'username' => $username,
+        'files' => $uploadedFiles
+    ));
+} else {
+    http_response_code(400);
+    echo json_encode(array(
+        'success' => false,
+        'message' => 'Nessun file decodificato. Assicurati che il formato dell\'immagine sia valido.'
+    ));
+}
+```
+
+### 2. Configura le Variabili d'Ambiente su Cloud Run / Cloudflare
+
+Per attivare questo canale, imposta le seguenti variabili d'ambiente (nella dashboard di Cloud Run e nelle Impostazioni delle Funzioni di Cloudflare):
+
+1. **`ARUBA_UPLOADER_URL`**: L'indirizzo URL del file PHP appena caricato (es. `https://iltuodominio.it/nws-uploader.php`).
+2. **`ARUBA_UPLOADER_KEY`**: La password segreta che hai inserito all'interno della costante `SECURE_TOKEN` nel file PHP (es. `INSERISCI_UNA_PASSWORD_MOLTO_SICURA_E_LUNGA_QUI`).
+
+### 3. Vantaggi e Risultato
+- **Spazio Illimitato**: Aruba gestisce l'intero peso statico dei database/cartelle dei documenti, senza limiti di quota.
+- **Sicurezza Integrata**: Nessuno può caricare file sul tuo hosting Aruba senza conoscere la chiave segreta `ARUBA_UPLOADER_KEY`.
+- **E-Mail Istantanee**: L'Amministratore riceverà immediatamente i pulsanti diretti della documentazione (Fronte/Retro) dell'utente per eseguire l'approvazione con un solo click!
+
+
+## ⚡ Integrazione e Codice per il Cloudflare Worker (`nws-wk.supersalvatoreferroinfranca.workers.dev`)
+
+Per far sì che l'archiviazione fisica su **Aruba** e l'invio delle e-mail avvengano direttamente tramite il tuo **Cloudflare Worker** (dove hai accesso diretto al salvataggio nel database e a tutte le variabili d'ambiente protette), implementa la seguente logica nel codice del tuo Worker.
+
+### 1. Variabili d'Ambiente da salvare sul Pannello di Controllo di Cloudflare
+Nel pannello di controllo della tua Cloudflare Worker (`nws-wk`), entra in **Settings (Impostazioni) -> Variables (Variabili d'ambiente)** e aggiungi i seguenti segreti:
+- `ARUBA_UPLOADER_URL`: `https://iltuodominio.it/nws-uploader.php` (l'indirizzo del file PHP caricato su Aruba)
+- `ARUBA_UPLOADER_KEY`: `INSERISCI_UNA_PASSWORD_MOLTO_SICURA_E_LUNGA_QUI` (la stessa chiave inserita in `nws-uploader.php`)
+- `ADMIN_EMAIL`: `supersalvatoreferroinfranca@gmail.com`
+- `SMTP_USER` / `SMTP_PASS` / `SMTP_HOST` / `SMTP_PORT` (se usi servizi SMTP come Mailchannels, Resend, Sendgrid o Aruba SMTP stesso tramite Worker sockets)
+
+---
+
+### 2. Codice di Esempio di Categoria Industriale per il tuo Worker
+
+Incolla o unisci la parte seguente all'interno dell'endpoint POST `/api/register` del tuo Cloudflare Worker:
+
+```javascript
+// Esempio di gestione all'interno dell'event listener "fetch" del Cloudflare Worker
+async function handleRegisterRequest(request, env) {
+  try {
+    const payload = await request.json();
+    
+    // 1. Estrazione dati dei documenti e anagrafica
+    const {
+      documentFrontData,
+      documentFrontName,
+      documentBackData,
+      documentBackName,
+      username,
+      email,
+      firstName,
+      surname,
+      ...otherData
+    } = payload;
+
+    let arubaFrontUrl = "";
+    let arubaBackUrl = "";
+
+    // 2. Invio dei file Base64 al Bridge PHP di Aruba per memorizzazione fisica
+    if (env.ARUBA_UPLOADER_URL && env.ARUBA_UPLOADER_KEY && documentFrontData) {
+      console.log("Inoltro documenti ad Aruba...");
+      try {
+        const arubaResponse = await fetch(env.ARUBA_UPLOADER_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${env.ARUBA_UPLOADER_KEY}`
+          },
+          body: JSON.stringify({
+            key: env.ARUBA_UPLOADER_KEY,
+            username: username || "anonymous_user",
+            documentFrontData,
+            documentFrontName,
+            documentBackData,
+            documentBackName
+          })
+        });
+
+        if (arubaResponse.ok) {
+          const arubaResult = await arubaResponse.json();
+          if (arubaResult.success && arubaResult.files) {
+            arubaFrontUrl = arubaResult.files.front || "";
+            arubaBackUrl = arubaResult.files.back || "";
+            console.log("Documenti salvati su Aruba con successo:", arubaResult.files);
+          }
+        }
+      } catch (arubaErr) {
+        console.error("Errore bridge Aruba PHP:", arubaErr.message);
+      }
+    }
+
+    // 3. Salvataggio nel Database (D1 o KV)
+    // Memorizza i dati anagrafici e include i link diretti 'arubaFrontUrl' e 'arubaBackUrl'
+    const dbResult = await saveCitizenToYourDatabase(env, {
+      username,
+      email,
+      firstName,
+      surname,
+      arubaFrontUrl,
+      arubaBackUrl,
+      ...otherData
+    });
+
+    const newCitizenId = dbResult.id || Date.now();
+
+    // 4. Invio automatico E-mail (es. tramite integrazione Mailchannels integrata in Cloudflare o SMTP API)
+    if (email && email.includes("@")) {
+      await sendNotificationEmails(env, {
+        citizenId: newCitizenId,
+        username,
+        email,
+        firstName,
+        surname,
+        arubaFrontUrl,
+        arubaBackUrl,
+        ...otherData
+      });
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      id: newCitizenId,
+      message: "Registrazione completata e documenti archiviati fisicamente su Aruba!"
+    }), {
+      headers: { "Content-Type": "application/json" }
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      message: "Errore interno del Worker: " + error.message
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
+
+// Funzione delegata per invio mail su Cloudflare Worker (esempio Mailchannels integrato)
+async function sendNotificationEmails(env, detail) {
+  const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
+  
+  // Invio e-mail tramite Mailchannels (Servizio Gratuito per Cloudflare Workers)
+  const mailPayload = {
+    personalizations: [
+      {
+        to: [{ email: adminEmail, name: "Amministratore NWS" }]
+      }
+    ],
+    from: { email: "anagrafe@newworldstate.cloud", name: "Anagrafe NWS" },
+    subject: `[NWS-ANAGRAFE] Nuova iscrizione cittadino: ${detail.surname} ${detail.firstName}`,
+    content: [
+      {
+        type: "text/html",
+        value: `
+          <h3>Nuova Registrazione Anagrafica</h3>
+          <p><strong>Cittadino:</strong> ${detail.firstName} ${detail.surname}</p>
+          <p><strong>Username:</strong> ${detail.username}</p>
+          <p><strong>Email:</strong> ${detail.email}</p>
+          <p><strong>Documenti Memorizzati Fisicamente su Aruba:</strong></p>
+          <ul>
+            <li><a href="${detail.arubaFrontUrl}">Vedi Fronte Documento</a></li>
+            <li><a href="${detail.arubaBackUrl}">Vedi Retro Documento</a></li>
+          </ul>
+        `
+      }
+    ]
+  };
+
+  try {
+    await fetch("https://api.mailchannels.net/tx/v1/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(mailPayload)
+    });
+    console.log("Email amministratore inoltrata con successo!");
+  } catch (e) {
+    console.error("Errore invio e-mail Mailchannels:", e.message);
+  }
+}
+```
+
+
+

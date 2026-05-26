@@ -315,6 +315,15 @@ export default function RegisterForm() {
     return hashHex;
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   useEffect(() => {
     // Attempt to detect country prefix via geolocation
     if ("geolocation" in navigator) {
@@ -862,17 +871,39 @@ export default function RegisterForm() {
     setError('');
     
     try {
-      // Prepare the payload by removing non-serializable File objects
+      // Converte i file dei documenti in stringhe Base64 per la memorizzazione fisica su Aruba
+      let documentFrontData = '';
+      let documentFrontName = '';
+      let documentBackData = '';
+      let documentBackName = '';
+
+      if (formData.documentFront) {
+        documentFrontData = await fileToBase64(formData.documentFront);
+        documentFrontName = formData.documentFront.name;
+      }
+      if (formData.documentBack) {
+        documentBackData = await fileToBase64(formData.documentBack);
+        documentBackName = formData.documentBack.name;
+      }
+
+      // Prepare the payload by removing non-serializable File objects and adding Base64 representations
       const { documentFront, documentBack, ...serializableData } = formData;
+      const fullPayload = {
+        ...serializableData,
+        documentFrontData,
+        documentFrontName,
+        documentBackData,
+        documentBackName
+      };
       
-      console.log('Invio dati di registrazione...', serializableData);
+      console.log('Invio dati di registrazione...', serializableData.username);
 
       const API_URL = '/api/register';
       
       const response = await safeFetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(serializableData),
+        body: JSON.stringify(fullPayload),
       });
       
       let data;
