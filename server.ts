@@ -252,6 +252,9 @@ async function startServer() {
             // Se l'uploader di Aruba è configurato, carichiamo i file fisici dello spazio infinito tramite il bridge PHP
             if (uploaderUrl && uploaderKey && documentFrontData) {
               console.log('[ARUBA-UPLOADER] Tentativo di caricamento file sul server fisico Aruba tramite bridge...');
+              console.log(`[ARUBA-UPLOADER] File fronte presente: ${documentFrontName || 'N/D'} (${documentFrontData ? documentFrontData.length : 0} chars)`);
+              console.log(`[ARUBA-UPLOADER] File retro presente: ${documentBackName || 'N/D'} (${documentBackData ? documentBackData.length : 0} chars)`);
+              console.log(`[ARUBA-UPLOADER] Foto tessera presente: ${documentPhotoName || 'N/D'} (${documentPhotoData ? documentPhotoData.length : 0} chars)`);
               try {
                 const separator = uploaderUrl.includes('?') ? '&' : '?';
                 const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;

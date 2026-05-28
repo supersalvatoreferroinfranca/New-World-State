@@ -1643,6 +1643,12 @@ if (empty($inputData['documentBackData']) && !empty($_POST['documentBackData']))
 if (empty($inputData['documentBackName']) && !empty($_POST['documentBackName'])) {
     $inputData['documentBackName'] = $_POST['documentBackName'];
 }
+if (empty($inputData['documentPhotoData']) && !empty($_POST['documentPhotoData'])) {
+    $inputData['documentPhotoData'] = $_POST['documentPhotoData'];
+}
+if (empty($inputData['documentPhotoName']) && !empty($_POST['documentPhotoName'])) {
+    $inputData['documentPhotoName'] = $_POST['documentPhotoName'];
+}
 if (empty($inputData['username']) && !empty($_POST['username'])) {
     $inputData['username'] = $_POST['username'];
 }
