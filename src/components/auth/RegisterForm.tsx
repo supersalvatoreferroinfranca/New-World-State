@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Calendar, Flag, FileText, Globe, Shield, UserCheck, ChevronRight, ChevronLeft, Upload, AlertCircle, MapPin, Navigation, Search, Sparkles, Wand2, Loader2 } from 'lucide-react';
+import { User, Mail, Calendar, Flag, FileText, Globe, Shield, UserCheck, ChevronRight, ChevronLeft, Upload, AlertCircle, MapPin, Navigation, Search, Sparkles, Wand2, Loader2, Camera, CameraOff, RefreshCw } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { OpenLocationCode } from 'open-location-code';
@@ -288,6 +288,7 @@ export default function RegisterForm() {
     documentType: 'ID_CARD',
     documentFront: null as File | null,
     documentBack: null as File | null,
+    documentPhoto: null as File | null,
     documentHash: '',
     isAmbassador: false,
     isPeacekeeper: false,
@@ -304,7 +305,82 @@ export default function RegisterForm() {
   const [isVerifyingAddress, setIsVerifyingAddress] = useState(false);
   const formTopRef = useRef<HTMLDivElement>(null);
   const addressSectionRef = useRef<HTMLDivElement>(null);
-  const [previews, setPreviews] = useState<{ front: string | null, back: string | null }>({ front: null, back: null });
+  const [previews, setPreviews] = useState<{ front: string | null, back: string | null, photo: string | null }>({ front: null, back: null, photo: null });
+  
+  const [photoMode, setPhotoMode] = useState<'camera' | 'upload'>('camera');
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  useEffect(() => {
+    if (step !== 5) {
+      stopCamera();
+    }
+  }, [step]);
+
+  const startCamera = async () => {
+    setCameraError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'user',
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        } 
+      });
+      setCameraStream(stream);
+      setIsCameraActive(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err: any) {
+      console.error('Errore avvio fotocamera:', err);
+      setCameraError('Impossibile accedere alla fotocamera. Verifica i permessi o carica un file.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setIsCameraActive(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const dataUrl = canvas.toDataURL('image/png');
+        setPreviews(prev => ({ ...prev, photo: dataUrl }));
+        setFormData(prev => ({ ...prev, documentPhoto: null })); 
+        stopCamera();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isCameraActive && cameraStream && videoRef.current) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [isCameraActive, cameraStream]);
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const calculateFileHash = async (file: File): Promise<string> => {
@@ -732,6 +808,10 @@ export default function RegisterForm() {
           setError('Per questo tipo di documento è richiesto anche il caricamento del retro.');
           return false;
         }
+        if (!formData.documentPhoto && !previews.photo) {
+          setError('È necessario fornire una foto per la tessera identificativa (scatta un autoscatto o carica un file).');
+          return false;
+        }
         return true;
       default:
         return true;
@@ -876,6 +956,8 @@ export default function RegisterForm() {
       let documentFrontName = '';
       let documentBackData = '';
       let documentBackName = '';
+      let documentPhotoData = '';
+      let documentPhotoName = '';
 
       if (formData.documentFront) {
         documentFrontData = await fileToBase64(formData.documentFront);
@@ -885,15 +967,24 @@ export default function RegisterForm() {
         documentBackData = await fileToBase64(formData.documentBack);
         documentBackName = formData.documentBack.name;
       }
+      if (formData.documentPhoto) {
+        documentPhotoData = await fileToBase64(formData.documentPhoto);
+        documentPhotoName = formData.documentPhoto.name;
+      } else if (previews.photo) {
+        documentPhotoData = previews.photo;
+        documentPhotoName = 'autoscatto.png';
+      }
 
       // Prepare the payload by removing non-serializable File objects and adding Base64 representations
-      const { documentFront, documentBack, ...serializableData } = formData;
+      const { documentFront, documentBack, documentPhoto, ...serializableData } = formData;
       const fullPayload = {
         ...serializableData,
         documentFrontData,
         documentFrontName,
         documentBackData,
-        documentBackName
+        documentBackName,
+        documentPhotoData,
+        documentPhotoName
       };
       
       console.log('Invio dati di registrazione...', serializableData.username);
@@ -1961,6 +2052,172 @@ export default function RegisterForm() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Foto Tessera Identificativa */}
+              <div className="border border-brand-gold/15 bg-slate-50/50 p-6 rounded-2xl space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-brand-blue block">
+                    Foto Tessera per Documenti (Carta di Identità + Passaporto NWS)
+                  </label>
+                  <p className="text-xs text-muted">
+                    Scatta un autoscatto (selfie) in tempo reale oppure carica una foto formale dal tuo dispositivo. La foto verrà posizionata nella stessa cartella dei documenti.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => { setPhotoMode('camera'); stopCamera(); }}
+                    className={`flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${
+                      photoMode === 'camera'
+                        ? 'bg-brand-blue text-white shadow-sm'
+                        : 'text-brand-blue/60 hover:text-brand-blue hover:bg-gray-200'
+                    }`}
+                  >
+                    <Camera className="w-4 h-4" />
+                    Autoscatto Camera
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPhotoMode('upload'); stopCamera(); }}
+                    className={`flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${
+                      photoMode === 'upload'
+                        ? 'bg-brand-blue text-white shadow-sm'
+                        : 'text-brand-blue/60 hover:text-brand-blue hover:bg-gray-200'
+                    }`}
+                  >
+                    <Upload className="w-4 h-4" />
+                    Carica File Foto
+                  </button>
+                </div>
+
+                {photoMode === 'camera' && (
+                  <div className="space-y-4">
+                    <div className="relative aspect-[3/4] max-w-[280px] mx-auto bg-slate-100 rounded-2xl overflow-hidden border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center">
+                      {previews.photo ? (
+                        <div className="relative w-full h-full">
+                          <img
+                            src={previews.photo}
+                            alt="Foto tessera acquisita"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviews(prev => ({ ...prev, photo: null }));
+                              startCamera();
+                            }}
+                            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-2 bg-brand-blue text-white text-xs font-bold rounded-xl shadow-lg hover:bg-brand-blue/90"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Riprova Scatto
+                          </button>
+                        </div>
+                      ) : isCameraActive ? (
+                        <div className="relative w-full h-full bg-black">
+                          <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover scale-x-[-1]"
+                          />
+                          <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={capturePhoto}
+                              className="px-5 py-2.5 bg-brand-gold text-brand-blue text-xs font-bold rounded-xl shadow-lg hover:bg-brand-gold/90 flex items-center gap-1.5 animate-pulse"
+                            >
+                              <Camera className="w-4 h-4" />
+                              Scatta Ora
+                            </button>
+                            <button
+                              type="button"
+                              onClick={stopCamera}
+                              className="px-4 py-2.5 bg-gray-800/80 text-white text-xs font-medium rounded-xl shadow-lg hover:bg-gray-800"
+                            >
+                              Annulla
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-6 space-y-4">
+                          <div className="w-16 h-16 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto text-brand-blue">
+                            <Camera className="w-8 h-8" />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs font-semibold text-brand-blue">Fotocamera Inattiva</p>
+                            <p className="text-[10px] text-muted max-w-[200px] leading-normal">
+                              Clicca sotto per abilitare la webcam ed eseguire il tuo autoscatto.
+                            </p>
+                          </div>
+                          {cameraError && (
+                            <p className="text-[10px] text-red-500 font-medium px-2">{cameraError}</p>
+                          )}
+                          <button
+                            type="button"
+                            onClick={startCamera}
+                            className="px-4 py-2 bg-brand-gold text-brand-blue text-xs font-bold rounded-xl shadow-sm hover:bg-brand-gold/90 inline-flex items-center gap-1.5"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            Attiva Fotocamera
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {photoMode === 'upload' && (
+                  <div className="space-y-2">
+                    <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && !formData.documentPhoto && !previews.photo ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
+                      <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
+                        <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-brand-blue truncate px-2">
+                          {formData.documentPhoto ? formData.documentPhoto.name : "Seleziona Foto Tessera"}
+                        </p>
+                        <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, JPEG</p>
+                      </div>
+                      <input 
+                        type="file" 
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        accept=".jpg,.jpeg,.png"
+                        onChange={e => {
+                          const file = e.target.files?.[0] || null;
+                          if (file) {
+                            setFormData({ ...formData, documentPhoto: file });
+                            setPreviews(prev => ({ ...prev, photo: URL.createObjectURL(file) }));
+                          } else {
+                            setFormData({ ...formData, documentPhoto: null });
+                            setPreviews(prev => ({ ...prev, photo: null }));
+                          }
+                        }}
+                      />
+                      {previews.photo && !formData.documentPhoto && previews.photo.startsWith('data:') && (
+                        <p className="text-[10px] text-green-600 font-medium">Scatto webcam caricato in memoria</p>
+                      )}
+                      {previews.photo && (
+                        <div className="mt-2 relative h-48 w-36 mx-auto rounded-lg overflow-hidden border border-brand-gold/20">
+                          <img src={previews.photo} alt="Anteprima Foto Tessera" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <button 
+                            type="button"
+                            className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 hover:scale-105 transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviews(prev => ({ ...prev, photo: null }));
+                              setFormData(prev => ({ ...prev, documentPhoto: null }));
+                            }}
+                          >
+                            <AlertCircle className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="p-4 bg-brand-parchment/50 rounded-xl border border-brand-gold/20 text-[11px] text-brand-blue/70">

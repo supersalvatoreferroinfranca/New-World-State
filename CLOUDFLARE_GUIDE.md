@@ -1151,7 +1151,8 @@ CREATE TABLE citizens (
           username, password, documentHash, documentType,
           plusCode, locationDescription, latitude, longitude,
           isAmbassador, isPeacekeeper,
-          documentFrontData, documentFrontName, documentBackData, documentBackName
+          documentFrontData, documentFrontName, documentBackData, documentBackName,
+          documentPhotoData, documentPhotoName
         } = body;
 
         const normalizedUsername = username ? username.toLowerCase().replace(/\s/g, '') : null;
@@ -1159,6 +1160,7 @@ CREATE TABLE citizens (
         // --- INIZIALIZZAZIONE VARIABILI DOCUMENTI ---
         let arubaFrontUrl = '';
         let arubaBackUrl = '';
+        let arubaPhotoUrl = '';
 
         // 1. Interroghiamo lo schema del database in tempo reale per scoprire i nomi effettivi delle colonne.
         // In questo modo, che il database sia stato creato con colonne case-sensitive (es. "firstName")
@@ -1273,7 +1275,9 @@ CREATE TABLE citizens (
                 documentFrontData,
                 documentFrontName,
                 documentBackData,
-                documentBackName
+                documentBackName,
+                documentPhotoData,
+                documentPhotoName
               })
             });
 
@@ -1282,7 +1286,8 @@ CREATE TABLE citizens (
               if (uploaderData.success && uploaderData.files) {
                 arubaFrontUrl = uploaderData.files.front || '';
                 arubaBackUrl = uploaderData.files.back || '';
-                console.log('[ARUBA-UPLOADER] Documenti memorizzati correttamente su Aruba per record #' + citizenId, uploaderData.files);
+                arubaPhotoUrl = uploaderData.files.photo || '';
+                console.log('[ARUBA-UPLOADER] Documenti e foto memorizzati correttamente su Aruba per record #' + citizenId, uploaderData.files);
               }
             } else {
               console.error('[ARUBA-UPLOADER] Errore HTTP: ' + uploaderRes.status);
@@ -1336,8 +1341,9 @@ CREATE TABLE citizens (
                   <tr><td style="padding: 6px 0; color: #64748b;"><strong>Tipo Documento:</strong></td><td style="padding: 6px 0;">${documentType || ''}</td></tr>
                   <tr><td style="padding: 6px 0; color: #64748b;"><strong>File Fisici su Aruba:</strong></td><td style="padding: 6px 0;">
                     ${arubaFrontUrl ? `<a href="${arubaFrontUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline; margin-right: 12px;">Visualizza Fronte</a>` : ''}
-                    ${arubaBackUrl ? `<a href="${arubaBackUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline;">Visualizza Retro</a>` : ''}
-                    ${!arubaFrontUrl && !arubaBackUrl ? '<span style="color: #94a3b8; font-style: italic;">Nessuno (Uploader non configurato o disabilitato nel Worker)</span>' : ''}
+                    ${arubaBackUrl ? `<a href="${arubaBackUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline; margin-right: 12px;">Visualizza Retro</a>` : ''}
+                    ${arubaPhotoUrl ? `<a href="${arubaPhotoUrl}" target="_blank" style="color: #10b981; font-weight: bold; text-decoration: underline;">Visualizza Foto Tessera</a>` : ''}
+                    ${!arubaFrontUrl && !arubaBackUrl && !arubaPhotoUrl ? '<span style="color: #94a3b8; font-style: italic;">Nessuno (Uploader non configurato o disabilitato nel Worker)</span>' : ''}
                   </td></tr>
                   <tr><td style="padding: 6px 0; color: #64748b;"><strong>Candidato Ambasciatore:</strong></td><td style="padding: 6px 0; font-weight: 600; color: ${isAmbassador ? '#15803d' : '#64748b'};">${isAmbassador ? 'SÌ' : 'NO'}</td></tr>
                   <tr><td style="padding: 6px 0; color: #64748b;"><strong>Candidato Peacekeeper:</strong></td><td style="padding: 6px 0; font-weight: 600; color: ${isPeacekeeper ? '#15803d' : '#64748b'};">${isPeacekeeper ? 'SÌ' : 'NO'}</td></tr>
@@ -1807,6 +1813,16 @@ if (!empty($inputData['documentBackData']) && !empty($inputData['documentBackNam
         $uploadedFiles['back'] = $backUrl;
     } else {
         $saveErrors['back'] = $backError;
+    }
+}
+
+$photoError = '';
+if (!empty($inputData['documentPhotoData']) && !empty($inputData['documentPhotoName'])) {
+    $photoUrl = saveBase64File($inputData['documentPhotoData'], $inputData['documentPhotoName'], $baseDir, 'foto', $photoError);
+    if ($photoUrl) {
+        $uploadedFiles['photo'] = $photoUrl;
+    } else {
+        $saveErrors['photo'] = $photoError;
     }
 }
 
