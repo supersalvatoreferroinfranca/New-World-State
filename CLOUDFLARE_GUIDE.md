@@ -1006,6 +1006,17 @@ CREATE TABLE citizens (
           }
 
           // 2. Test di Scrittura Attiva (Caricamento di un mini file di test PNG Base64)
+          let writeData;
+          let usedFallback = false;
+
+          if (arubaResponse.redirected) {
+            return new Response(JSON.stringify({
+              success: false,
+              source: 'Cloudflare Worker Diagnostics',
+              message: `Reindirizzamento rilevato (HTTP Redirect)! Il server Aruba ha reindirizzato da ${targetUrlWithKey} a ${arubaResponse.url}. Questo rimuove il corpo POST. Per favore aggiorna la variabile ARUBA_UPLOADER_URL sul tuo Worker impostando esattamente l'URL finale reindirizzato: ${arubaResponse.url}`,
+            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
           const writeResponse = await fetch(targetUrlWithKey, {
             method: 'POST',
             headers: {
@@ -1021,23 +1032,69 @@ CREATE TABLE citizens (
             })
           });
 
-          if (!writeResponse.ok) {
-            const text = await writeResponse.text();
+          if (writeResponse.redirected) {
             return new Response(JSON.stringify({
               success: false,
               source: 'Cloudflare Worker Diagnostics',
-              message: `La scrittura di test su Aruba è fallita (HTTP ${writeResponse.status})`,
-              details: text.slice(0, 200)
-            }), { status: writeResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              message: `Reindirizzamento rilevato durante la scrittura! Il server Aruba ha reindirizzato a ${writeResponse.url}. Corpo POST rimosso. Aggiorna la variabile ARUBA_UPLOADER_URL impostando l'URL finale reindirizzato: ${writeResponse.url}`,
+            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
 
-          const writeData = await writeResponse.json();
-          if (!writeData.success || !writeData.files || !writeData.files.front) {
+          if (!writeResponse.ok) {
+            const text = await writeResponse.text();
+            let parsed = null;
+            try { parsed = JSON.parse(text); } catch (e) {}
+
+            const looksLikeEmptyRawInput = writeResponse.status === 400 && (!parsed || (parsed.debug && parsed.debug.raw_input_empty) || text.includes('decodificato'));
+
+            if (looksLikeEmptyRawInput) {
+              console.log('[ARUBA-TEST] Tentativo JSON fallito con body vuoto. Eseguo fallback su form-urlencoded...');
+              const urlEncodedBody = new URLSearchParams();
+              urlEncodedBody.append('key', uploaderKey);
+              urlEncodedBody.append('username', 'diagnostics_test_user');
+              urlEncodedBody.append('documentFrontData', 'data:image/png;base64,iVBOR0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+              urlEncodedBody.append('documentFrontName', 'test_write.png');
+
+              const fallbackResponse = await fetch(targetUrlWithKey, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'Authorization': `Bearer ${uploaderKey}`,
+                  'X-Aruba-Key': uploaderKey
+                },
+                body: urlEncodedBody
+              });
+
+              if (!fallbackResponse.ok) {
+                const fallbackText = await fallbackResponse.text();
+                return new Response(JSON.stringify({
+                  success: false,
+                  source: 'Cloudflare Worker Diagnostics (Fallback x-www-form-urlencoded)',
+                  message: `La scrittura di test su Aruba è fallita anche tramite form-urlencoded (HTTP ${fallbackResponse.status})`,
+                  details: fallbackText.slice(0, 1000)
+                }), { status: fallbackResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              }
+
+              writeData = await fallbackResponse.json();
+              usedFallback = true;
+            } else {
+              return new Response(JSON.stringify({
+                success: false,
+                source: 'Cloudflare Worker Diagnostics',
+                message: `La scrittura di test su Aruba è fallita (HTTP ${writeResponse.status})`,
+                details: text.slice(0, 1000)
+              }), { status: writeResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          } else {
+            writeData = await writeResponse.json();
+          }
+
+          if (!writeData || !writeData.success || !writeData.files || !writeData.files.front) {
             return new Response(JSON.stringify({
               success: false,
               source: 'Cloudflare Worker Diagnostics',
               message: 'La scrittura di test su Aruba è fallita o non ha generato link.',
-              details: writeData.message || 'Controlla i permessi di scrittura PHP sul server Aruba.'
+              details: writeData ? (writeData.message || JSON.stringify(writeData)) : 'Controlla i permessi di scrittura PHP sul server Aruba.'
             }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
 
@@ -1099,50 +1156,9 @@ CREATE TABLE citizens (
 
         const normalizedUsername = username ? username.toLowerCase().replace(/\s/g, '') : null;
 
-        // --- CARICAMENTO DOCUMENTI SU SPAZIO ARUBA VIA BRIDGE PHP ---
+        // --- INIZIALIZZAZIONE VARIABILI DOCUMENTI ---
         let arubaFrontUrl = '';
         let arubaBackUrl = '';
-
-        const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
-        const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
-
-        if (uploaderUrl && uploaderKey && documentFrontData) {
-          console.log('[ARUBA-UPLOADER] Tentativo di caricamento su Aruba...');
-          try {
-            const separator = uploaderUrl.includes('?') ? '&' : '?';
-            const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
-
-            const uploaderRes = await fetch(targetUrlWithKey, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${uploaderKey}`,
-                'X-Aruba-Key': uploaderKey
-              },
-              body: JSON.stringify({
-                key: uploaderKey,
-                username: normalizedUsername || 'anonymous',
-                documentFrontData,
-                documentFrontName,
-                documentBackData,
-                documentBackName
-              })
-            });
-
-            if (uploaderRes.ok) {
-              const uploaderData = await uploaderRes.json();
-              if (uploaderData.success && uploaderData.files) {
-                arubaFrontUrl = uploaderData.files.front || '';
-                arubaBackUrl = uploaderData.files.back || '';
-                console.log('[ARUBA-UPLOADER] Documenti memorizzati correttamente su Aruba:', uploaderData.files);
-              }
-            } else {
-              console.error('[ARUBA-UPLOADER] Errore HTTP: ' + uploaderRes.status);
-            }
-          } catch (upErr) {
-            console.error('[ARUBA-UPLOADER] Eccezione: ' + upErr.message);
-          }
-        }
 
         // 1. Interroghiamo lo schema del database in tempo reale per scoprire i nomi effettivi delle colonne.
         // In questo modo, che il database sia stato creato con colonne case-sensitive (es. "firstName")
@@ -1233,6 +1249,48 @@ CREATE TABLE citizens (
 
         const rows = await queryDb(sql, dbParams);
         const citizenId = rows[0]?.id;
+
+        // --- CARICAMENTO DOCUMENTI SU SPAZIO ARUBA VIA BRIDGE PHP (CON RECORD ID DI POSTGRES) ---
+        const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
+        const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
+
+        if (uploaderUrl && uploaderKey && documentFrontData && citizenId) {
+          console.log('[ARUBA-UPLOADER] Tentativo di caricamento su Aruba con record ID #' + citizenId);
+          try {
+            const separator = uploaderUrl.includes('?') ? '&' : '?';
+            const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+
+            const uploaderRes = await fetch(targetUrlWithKey, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${uploaderKey}`,
+                'X-Aruba-Key': uploaderKey
+              },
+              body: JSON.stringify({
+                key: uploaderKey,
+                username: String(citizenId),
+                documentFrontData,
+                documentFrontName,
+                documentBackData,
+                documentBackName
+              })
+            });
+
+            if (uploaderRes.ok) {
+              const uploaderData = await uploaderRes.json();
+              if (uploaderData.success && uploaderData.files) {
+                arubaFrontUrl = uploaderData.files.front || '';
+                arubaBackUrl = uploaderData.files.back || '';
+                console.log('[ARUBA-UPLOADER] Documenti memorizzati correttamente su Aruba per record #' + citizenId, uploaderData.files);
+              }
+            } else {
+              console.error('[ARUBA-UPLOADER] Errore HTTP: ' + uploaderRes.status);
+            }
+          } catch (upErr) {
+            console.error('[ARUBA-UPLOADER] Eccezione: ' + upErr.message);
+          }
+        }
 
         // --- INVIO EMAIL DI NOTIFICA E CONFERMA ---
         try {
@@ -1562,10 +1620,41 @@ $getKey = isset($_GET['key']) ? $_GET['key'] : '';
 $inputRaw = file_get_contents('php://input');
 $inputData = json_decode($inputRaw, true);
 
-if (is_array($inputData)) {
-    if (empty($postKey) && isset($inputData['key'])) {
-        $postKey = $inputData['key'];
-    }
+if (!is_array($inputData)) {
+    $inputData = array();
+}
+
+// Fallback su parametri POST tradizionali se non è stato inviato JSON o se non è decodificato
+if (empty($inputData['documentFrontData']) && !empty($_POST['documentFrontData'])) {
+    $inputData['documentFrontData'] = $_POST['documentFrontData'];
+}
+if (empty($inputData['documentFrontName']) && !empty($_POST['documentFrontName'])) {
+    $inputData['documentFrontName'] = $_POST['documentFrontName'];
+}
+if (empty($inputData['documentBackData']) && !empty($_POST['documentBackData'])) {
+    $inputData['documentBackData'] = $_POST['documentBackData'];
+}
+if (empty($inputData['documentBackName']) && !empty($_POST['documentBackName'])) {
+    $inputData['documentBackName'] = $_POST['documentBackName'];
+}
+if (empty($inputData['username']) && !empty($_POST['username'])) {
+    $inputData['username'] = $_POST['username'];
+}
+if (empty($inputData['action']) && !empty($_POST['action'])) {
+    $inputData['action'] = $_POST['action'];
+}
+if (empty($inputData['action']) && !empty($_GET['action'])) {
+    $inputData['action'] = $_GET['action'];
+}
+if (empty($inputData['key']) && !empty($_POST['key'])) {
+    $inputData['key'] = $_POST['key'];
+}
+if (empty($inputData['key']) && !empty($_GET['key'])) {
+    $inputData['key'] = $_GET['key'];
+}
+
+if (empty($postKey) && isset($inputData['key'])) {
+    $postKey = $inputData['key'];
 }
 
 // ⚠️ MODIFICA QUESTO TOKEN: Inserisci una password segreta molto complessa!
@@ -1631,17 +1720,21 @@ if (!file_exists($baseDir)) {
         http_response_code(500);
         echo json_encode(array(
             'success' => false,
-            'message' => 'Impossibile creare la cartella del richiedente su Aruba. Verifica i permessi di scrittura PHP.'
+            'message' => 'Impossibile creare la cartella del richiedente su Aruba. Verifica i permessi di scrittura PHP della cartella radice.'
         ));
         exit;
     }
 }
 
 $uploadedFiles = array();
+$saveErrors = array();
 
 // Funzione di decodifica e salvataggio file
-function saveBase64File($base64Data, $originalName, $targetDir, $filePrefix) {
-    if (empty($base64Data)) return null;
+function saveBase64File($base64Data, $originalName, $targetDir, $filePrefix, &$errorMsg) {
+    if (empty($base64Data)) {
+        $errorMsg = "Il dato Base64 è vuoto per " . $filePrefix;
+        return null;
+    }
     
     // Rimuove l'intestazione Data URI (es. "data:image/png;base64,") se presente
     if (strpos($base64Data, ',') !== false) {
@@ -1649,8 +1742,14 @@ function saveBase64File($base64Data, $originalName, $targetDir, $filePrefix) {
         $base64Data = $parts[1];
     }
     
+    // Ripristina i caratteri '+' che 'application/x-www-form-urlencoded' converte in spazi vuoti ' '
+    $base64Data = str_replace(' ', '+', $base64Data);
+    
     $decoded = base64_decode($base64Data);
-    if ($decoded === false) return null;
+    if ($decoded === false) {
+        $errorMsg = "La decodifica base64_decode ha restituito false per " . $filePrefix;
+        return null;
+    }
     
     $ext = pathinfo($originalName, PATHINFO_EXTENSION);
     if (empty($ext)) $ext = 'png'; 
@@ -1658,13 +1757,21 @@ function saveBase64File($base64Data, $originalName, $targetDir, $filePrefix) {
     
     // Validazione estensioni consentite per motivi di sicurezza
     if (!in_array($ext, array('png', 'jpg', 'jpeg', 'pdf'))) {
+        $errorMsg = "Estensione '" . $ext . "' non consentita per " . $filePrefix . ". Consentite: png, jpg, jpeg, pdf";
         return null;
     }
     
     $fileName = $filePrefix . '.' . $ext;
     $filePath = $targetDir . '/' . $fileName;
     
-    if (file_put_contents($filePath, $decoded) !== false) {
+    // Verifica writeability prima di scrivere
+    if (file_exists($targetDir) && !is_writable($targetDir)) {
+        $errorMsg = "La directory '" . $targetDir . "' non ha i permessi di scrittura (is_writable è false).";
+        return null;
+    }
+    
+    $resultSize = file_put_contents($filePath, $decoded);
+    if ($resultSize !== false) {
         // Composizione del link pubblico per il visualizzatore
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         $host = $_SERVER['HTTP_HOST'];
@@ -1672,23 +1779,34 @@ function saveBase64File($base64Data, $originalName, $targetDir, $filePrefix) {
         $scriptPath = ($scriptPath === '/' || $scriptPath === '\\') ? '' : $scriptPath;
         
         return $protocol . $host . $scriptPath . '/' . $filePath;
+    } else {
+        $lastError = error_get_last();
+        $errorMsg = "file_put_contents fallito per " . $filePrefix . ". Errore PHP: " . ($lastError ? $lastError['message'] : 'Sconosciuto');
+        return null;
     }
-    
-    return null;
 }
 
 // Salvataggio dei file dei documenti
+$frontError = '';
+$backError = '';
+
 if (!empty($inputData['documentFrontData']) && !empty($inputData['documentFrontName'])) {
-    $frontUrl = saveBase64File($inputData['documentFrontData'], $inputData['documentFrontName'], $baseDir, 'fronte');
+    $frontUrl = saveBase64File($inputData['documentFrontData'], $inputData['documentFrontName'], $baseDir, 'fronte', $frontError);
     if ($frontUrl) {
         $uploadedFiles['front'] = $frontUrl;
+    } else {
+        $saveErrors['front'] = $frontError;
     }
+} else {
+    $saveErrors['front'] = "Parametro 'documentFrontData' o 'documentFrontName' mancante o del tutto vuoto nella richiesta.";
 }
 
 if (!empty($inputData['documentBackData']) && !empty($inputData['documentBackName'])) {
-    $backUrl = saveBase64File($inputData['documentBackData'], $inputData['documentBackName'], $baseDir, 'retro');
+    $backUrl = saveBase64File($inputData['documentBackData'], $inputData['documentBackName'], $baseDir, 'retro', $backError);
     if ($backUrl) {
         $uploadedFiles['back'] = $backUrl;
+    } else {
+        $saveErrors['back'] = $backError;
     }
 }
 
@@ -1703,7 +1821,18 @@ if (!empty($uploadedFiles)) {
     http_response_code(400);
     echo json_encode(array(
         'success' => false,
-        'message' => 'Nessun file decodificato. Assicurati che il formato dell\'immagine sia valido.'
+        'message' => 'Nessun file decodificato. Assicurati che il formato dell\'immagine sia valido.',
+        'debug' => array(
+            'raw_input_empty' => empty($inputRaw),
+            'raw_input_length' => strlen($inputRaw),
+            'request_method' => $_SERVER['REQUEST_METHOD'],
+            'request_uri' => $_SERVER['REQUEST_URI'],
+            'json_decode_failed' => (empty($inputData) || count($inputData) === 0),
+            'json_error' => json_last_error_msg(),
+            'errors' => $saveErrors,
+            'is_base_dir_writable' => file_exists($baseDir) ? is_writable($baseDir) : "La directory non esiste ancora",
+            'base_dir_perms' => file_exists($baseDir) ? substr(sprintf('%o', fileperms($baseDir)), -4) : "N/D"
+        )
     ));
 }
 ```
@@ -1757,15 +1886,25 @@ async function handleRegisterRequest(request, env) {
       ...otherData
     } = payload;
 
+    // 2. Salvataggio preliminare nel Database (D1 o KV) per ottenere il Record ID univoco
+    const dbResult = await saveCitizenToYourDatabase(env, {
+      username,
+      email,
+      firstName,
+      surname,
+      ...otherData
+    });
+
+    const newCitizenId = dbResult.id || Date.now();
     let arubaFrontUrl = "";
     let arubaBackUrl = "";
 
-    // 2. Invio dei file Base64 al Bridge PHP di Aruba per memorizzazione fisica
+    // 3. Invio dei file Base64 al Bridge PHP di Aruba per memorizzazione fisica, usando il Record ID univoco as username
     const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
     const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
 
     if (uploaderUrl && uploaderKey && documentFrontData) {
-      console.log("Inoltro documenti ad Aruba...");
+      console.log(`Inoltro documenti ad Aruba sotto la cartella ID ${newCitizenId}...`);
       try {
         const arubaResponse = await fetch(uploaderUrl, {
           method: "POST",
@@ -1775,7 +1914,7 @@ async function handleRegisterRequest(request, env) {
           },
           body: JSON.stringify({
             key: uploaderKey,
-            username: username || "anonymous_user",
+            username: String(newCitizenId),
             documentFrontData,
             documentFrontName,
             documentBackData,
@@ -1788,27 +1927,16 @@ async function handleRegisterRequest(request, env) {
           if (arubaResult.success && arubaResult.files) {
             arubaFrontUrl = arubaResult.files.front || "";
             arubaBackUrl = arubaResult.files.back || "";
-            console.log("Documenti salvati su Aruba con successo:", arubaResult.files);
+            console.log("Documenti salvati su Aruba con successo con ID cartella:", newCitizenId);
+            
+            // Opzionale: Aggiorna il record appena inserito impostando gli URL fisici definitivi restituiti da Aruba!
+            await updateCitizenArubaUrlsInDatabase(env, newCitizenId, arubaFrontUrl, arubaBackUrl);
           }
         }
       } catch (arubaErr) {
         console.error("Errore bridge Aruba PHP:", arubaErr.message);
       }
     }
-
-    // 3. Salvataggio nel Database (D1 o KV)
-    // Memorizza i dati anagrafici e include i link diretti 'arubaFrontUrl' e 'arubaBackUrl'
-    const dbResult = await saveCitizenToYourDatabase(env, {
-      username,
-      email,
-      firstName,
-      surname,
-      arubaFrontUrl,
-      arubaBackUrl,
-      ...otherData
-    });
-
-    const newCitizenId = dbResult.id || Date.now();
 
     // 4. Invio automatico E-mail (es. tramite integrazione Mailchannels integrata in Cloudflare o SMTP API)
     if (email && email.includes("@")) {

@@ -244,13 +244,14 @@ async function startServer() {
             const uploaderUrl = process.env.ARUBA_UPLOADER_URL ? process.env.ARUBA_UPLOADER_URL.trim() : '';
             const uploaderKey = process.env.ARUBA_UPLOADER_KEY ? process.env.ARUBA_UPLOADER_KEY.trim() : '';
 
+            const arubaUsername = data.id ? String(data.id) : (serializablePayload.username || 'unknown');
+
             // Se l'uploader di Aruba è configurato, carichiamo i file fisici dello spazio infinito tramite il bridge PHP
             if (uploaderUrl && uploaderKey && documentFrontData) {
               console.log('[ARUBA-UPLOADER] Tentativo di caricamento file sul server fisico Aruba tramite bridge...');
               try {
                 const separator = uploaderUrl.includes('?') ? '&' : '?';
                 const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
-
                 const uploaderRes = await fetch(targetUrlWithKey, {
                   method: 'POST',
                   headers: {
@@ -260,7 +261,7 @@ async function startServer() {
                   },
                   body: JSON.stringify({
                     key: uploaderKey,
-                    username: serializablePayload.username || 'unknown',
+                    username: arubaUsername,
                     documentFrontData,
                     documentFrontName,
                     documentBackData,
@@ -278,7 +279,52 @@ async function startServer() {
                     console.error('[ARUBA-UPLOADER] Errore risposta bridge PHP:', uploaderData.message);
                   }
                 } else {
-                  console.error('[ARUBA-UPLOADER] Errore di comunicazione HTTP:', uploaderRes.status, await uploaderRes.text());
+                  const errText = await uploaderRes.text();
+                  console.error('[ARUBA-UPLOADER] Errore di comunicazione HTTP:', uploaderRes.status, errText);
+                  
+                  let parsedErr: any = null;
+                  try { parsedErr = JSON.parse(errText); } catch(e) {}
+                  
+                  const isRedirected = uploaderRes.redirected;
+                  const isBodyStripped = uploaderRes.status === 400 && (!parsedErr || (parsedErr.debug && parsedErr.debug.raw_input_empty) || errText.includes('decodificato'));
+                  
+                  if (isRedirected) {
+                    console.error(`[ARUBA-UPLOADER-WARN] Reindirizzamento rilevato! Aggiorna ARUBA_UPLOADER_URL con l'indirizzo finale: ${uploaderRes.url}`);
+                  } else if (isBodyStripped) {
+                    console.log('[ARUBA-UPLOADER] Errore 400/body vuoto rilevato durante l\'upload. Tento con x-www-form-urlencoded...');
+                    const urlEncodedBody = new URLSearchParams();
+                    urlEncodedBody.append('key', uploaderKey);
+                    urlEncodedBody.append('username', arubaUsername);
+                    urlEncodedBody.append('documentFrontData', documentFrontData);
+                    urlEncodedBody.append('documentFrontName', documentFrontName || 'front.png');
+                    if (documentBackData) {
+                      urlEncodedBody.append('documentBackData', documentBackData);
+                      urlEncodedBody.append('documentBackName', documentBackName || 'back.png');
+                    }
+                    
+                    const fallbackRes = await fetch(targetUrlWithKey, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': `Bearer ${uploaderKey}`,
+                        'X-Aruba-Key': uploaderKey
+                      },
+                      body: urlEncodedBody
+                    });
+                    
+                    if (fallbackRes.ok) {
+                      const uploaderData: any = await fallbackRes.json();
+                      if (uploaderData.success && uploaderData.files) {
+                        arubaFrontUrl = uploaderData.files.front || '';
+                        arubaBackUrl = uploaderData.files.back || '';
+                        console.log('[ARUBA-UPLOADER-SUCCESS] Salvataggio su Aruba completato correttamente tramite form-urlencoded!', uploaderData.files);
+                      } else {
+                        console.error('[ARUBA-UPLOADER-FALLBACK-ERR] Il bridge ha risposto negativamente anche con form-urlencoded:', uploaderData.message);
+                      }
+                    } else {
+                      console.error('[ARUBA-UPLOADER-FALLBACK-ERR] Errore HTTP anche con form-urlencoded:', fallbackRes.status);
+                    }
+                  }
                 }
               } catch (upErr: any) {
                 console.error('[ARUBA-UPLOADER] Eccezione riscontrata durante il caricamento:', upErr.message);
@@ -522,6 +568,14 @@ Ufficio dell'Anagrafe Federale del New World State
           })
         });
 
+        if (uploaderRes.redirected) {
+          return res.status(400).json({
+            success: false,
+            source: 'Local Express Server',
+            message: `Reindirizzamento rilevato (HTTP Redirect)! Il server Aruba ha reindirizzato da ${targetUrlWithKey} a ${uploaderRes.url}. Questo di solito rimuove il corpo POST. Per favore aggiorna la variabile d'ambiente ARUBA_UPLOADER_URL impostando l'URL finale esatto: ${uploaderRes.url}`,
+          });
+        }
+
         let statusResponse: any = { success: true, message: 'Attivo' };
         if (!uploaderRes.ok) {
           const text = await uploaderRes.text();
@@ -538,7 +592,7 @@ Ufficio dell'Anagrafe Federale del New World State
               success: false,
               source: 'Local Express Server',
               message: `L'uploader di Aruba ha risposto con errore HTTP ${uploaderRes.status} al controllo di stato.`,
-              details: text.slice(0, 200)
+              details: text.slice(0, 2000)
             });
           } else {
             console.log('[ARUBA-TEST] Rilevato file PHP precedente su Aruba (autorizzazione OK ma nessun supporto per status API). Procedo direttamente con test di scrittura.');
@@ -549,6 +603,9 @@ Ufficio dell'Anagrafe Federale del New World State
         }
 
         // 2. Test di Scrittura Attiva (Caricamento di un mini file di test PNG Base64)
+        let writeData: any = null;
+        let usedFallback = false;
+
         const writeRes = await fetch(targetUrlWithKey, {
           method: 'POST',
           headers: {
@@ -564,23 +621,71 @@ Ufficio dell'Anagrafe Federale del New World State
           })
         });
 
-        if (!writeRes.ok) {
-          const text = await writeRes.text();
-          return res.status(writeRes.status).json({
+        if (writeRes.redirected) {
+          return res.status(400).json({
             success: false,
             source: 'Local Express Server',
-            message: `La scrittura di test su Aruba è fallita (Errore HTTP ${writeRes.status})`,
-            details: text.slice(0, 200)
+            message: `Reindirizzamento rilevato (HTTP Redirect) durante la scrittura! Il server Aruba ha reindirizzato a ${writeRes.url}. Corpo POST rimosso. Aggiorna la variabile d'ambiente ARUBA_UPLOADER_URL impostando l'URL finale esatto: ${writeRes.url}`,
           });
         }
 
-        const writeData: any = await writeRes.json();
-        if (!writeData.success || !writeData.files || !writeData.files.front) {
+        if (!writeRes.ok) {
+          const text = await writeRes.text();
+          let parsed: any = null;
+          try {
+            parsed = JSON.parse(text);
+          } catch (e) {}
+
+          const looksLikeEmptyRawInput = writeRes.status === 400 && (!parsed || (parsed.debug && parsed.debug.raw_input_empty) || text.includes('decodificato'));
+
+          if (looksLikeEmptyRawInput) {
+            console.log('[ARUBA-TEST] Tentativo JSON fallito con body vuoto o errore. Eseguo fallback resiliente su form-urlencoded...');
+            const urlEncodedBody = new URLSearchParams();
+            urlEncodedBody.append('key', uploaderKey);
+            urlEncodedBody.append('username', 'diagnostics_test_user');
+            urlEncodedBody.append('documentFrontData', 'data:image/png;base64,iVBOR0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+            urlEncodedBody.append('documentFrontName', 'test_write.png');
+
+            const fallbackRes = await fetch(targetUrlWithKey, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Bearer ${uploaderKey}`,
+                'X-Aruba-Key': uploaderKey
+              },
+              body: urlEncodedBody
+            });
+
+            if (!fallbackRes.ok) {
+              const fallbackText = await fallbackRes.text();
+              return res.status(fallbackRes.status).json({
+                success: false,
+                source: 'Local Express Server (Fallback x-www-form-urlencoded)',
+                message: `La scrittura di test su Aruba è fallita anche tramite form-urlencoded (Errore HTTP ${fallbackRes.status})`,
+                details: fallbackText.slice(0, 2000)
+              });
+            }
+
+            writeData = await fallbackRes.json();
+            usedFallback = true;
+          } else {
+            return res.status(writeRes.status).json({
+              success: false,
+              source: 'Local Express Server',
+              message: `La scrittura di test su Aruba è fallita (Errore HTTP ${writeRes.status})`,
+              details: text.slice(0, 2000)
+            });
+          }
+        } else {
+          writeData = await writeRes.json();
+        }
+
+        if (!writeData || !writeData.success || !writeData.files || !writeData.files.front) {
           return res.status(400).json({
             success: false,
             source: 'Local Express Server',
             message: 'Il bridge Aruba non ha potuto salvare o restituire il link del file di test.',
-            details: writeData.message || 'Controlla i permessi di scrittura della directory documents/'
+            details: writeData ? (writeData.message || JSON.stringify(writeData)) : 'Controlla i permessi di scrittura della directory documents/'
           });
         }
 
