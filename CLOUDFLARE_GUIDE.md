@@ -90,7 +90,10 @@ export default {
           emailProvider: env.SMTP_USER ? 'Aruba SMTP' : (env.RESEND_API_KEY ? 'Resend' : (env.BREVO_API_KEY ? 'Brevo' : 'Nessuno')),
           emailApiKeyConfigured: !!(env.SMTP_USER || env.RESEND_API_KEY || env.BREVO_API_KEY),
           adminEmail: env.ADMIN_EMAIL || 'supersalvatoreferroinfranca@gmail.com',
-          fromEmail: env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || 'onboarding@resend.dev'
+          fromEmail: env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || 'onboarding@resend.dev',
+          arubaConfigured: !!env.ARUBA_UPLOADER_URL,
+          arubaUrl: env.ARUBA_UPLOADER_URL || 'Non configurata',
+          arubaTest: { ok: false, writeOk: false, readOk: false, message: 'Non avviato o non configurato', url: null, error: null }
         };
 
         if (env.DATABASE_URL) {
@@ -208,6 +211,70 @@ export default {
               dbStatus.latestEntries = entries || [];
             } catch (e) {
               // Ignore table content fetch errors
+            }
+          }
+
+          // Aruba PHP Bridge write & read diagnostics in background status
+          if (env.ARUBA_UPLOADER_URL) {
+            const uploaderUrl = env.ARUBA_UPLOADER_URL.trim();
+            const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
+            try {
+              // 1. Controllo di stato
+              const arubaResponse = await fetch(uploaderUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${uploaderKey}`
+                },
+                body: JSON.stringify({
+                  action: 'status',
+                  key: uploaderKey
+                })
+              });
+
+              if (arubaResponse.ok) {
+                // 2. Test di Scrittura
+                const writeResponse = await fetch(uploaderUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${uploaderKey}`
+                  },
+                  body: JSON.stringify({
+                    key: uploaderKey,
+                    username: 'diagnostics_test_user',
+                    documentFrontData: 'data:image/png;base64,iVBOR0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+                    documentFrontName: 'test_write.png'
+                  })
+                });
+
+                if (writeResponse.ok) {
+                  const writeData = await writeResponse.json();
+                  if (writeData.success && writeData.files && writeData.files.front) {
+                    dbStatus.arubaTest.writeOk = true;
+                    dbStatus.arubaTest.url = writeData.files.front;
+                    
+                    // 3. Test di Lettura
+                    const readResponse = await fetch(writeData.files.front);
+                    if (readResponse.ok) {
+                      dbStatus.arubaTest.readOk = true;
+                      dbStatus.arubaTest.ok = true;
+                      dbStatus.arubaTest.message = '✓ Connessione, Scrittura e Lettura superate con successo!';
+                    } else {
+                      dbStatus.arubaTest.message = `Scrittura OK, ma fallimento del download pubblico (HTTP ${readResponse.status})`;
+                    }
+                  } else {
+                    dbStatus.arubaTest.message = `Errore di scrittura: ${writeData.message || 'Chiave errata o non scrivibile'}`;
+                  }
+                } else {
+                  dbStatus.arubaTest.message = `La scrittura di test ha riportato errore (HTTP ${writeResponse.status})`;
+                }
+              } else {
+                dbStatus.arubaTest.message = `Errore autorizzazione token (HTTP ${arubaResponse.status})`;
+              }
+            } catch (err) {
+              dbStatus.arubaTest.error = err.message;
+              dbStatus.arubaTest.message = `Impossibile comunicare con Aruba: ${err.message}`;
             }
           }
         };
@@ -440,6 +507,81 @@ CREATE TABLE citizens (
                                     } else {
                                         statusEl.className = 'text-xs font-mono text-red-400';
                                         statusEl.textContent = '✗ Errore: ' + data.message;
+                                    }
+                                } catch(e) {
+                                    statusEl.className = 'text-xs font-mono text-red-500';
+                                    statusEl.textContent = '✗ Connessione fallita: ' + e.message;
+                                }
+                            }
+                        </script>
+                        `}
+                    </div>
+                </div>
+
+                <!-- check 6 (Aruba Storage Bridge) -->
+                <div class="flex gap-4 p-4 rounded-2xl border bg-slate-950/50 ${dbStatus.arubaTest.ok ? 'border-emerald-500/10' : (dbStatus.arubaConfigured ? 'border-amber-500/10' : 'border-rose-500/10')}">
+                    <div class="text-2xl select-none">${dbStatus.arubaTest.ok ? '🟢' : (dbStatus.arubaTest.writeOk ? '🟡' : '🔴')}</div>
+                    <div class="space-y-1 flex-grow">
+                        <h3 class="text-sm font-semibold text-white">2.6 Archiviazione e Documenti Aruba PHP Bridge</h3>
+                        <p class="text-xs text-slate-400">Verifica se il Worker è in grado di autenticarsi, scrivere file base64 dello spazio illimitato sul server fisico Aruba e leggerli pubblicamente.</p>
+                        
+                        <div class="bg-slate-950 text-xs font-mono p-3 rounded border border-slate-850 mt-2 space-y-1.5 text-slate-300">
+                            <div>Stato Configurazione Aruba: <strong class="${dbStatus.arubaConfigured ? 'text-emerald-400' : 'text-rose-400'}">${dbStatus.arubaConfigured ? '✓ Configurato' : '✗ Non Configurato'}</strong></div>
+                            <div>URL del Bridge Aruba: <code class="text-slate-450">${dbStatus.arubaUrl}</code></div>
+                            <div>Dettagli Test in Tempo Reale: <span class="text-slate-400 font-sans">${dbStatus.arubaTest.message}</span></div>
+                            
+                            ${dbStatus.arubaTest.url ? `
+                            <div class="mt-2 text-[10px]">
+                                <span class="text-slate-500 uppercase tracking-widest block mb-1">File Scritto & Letto con Successo:</span>
+                                <a href="${dbStatus.arubaTest.url}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:underline break-all inline-flex items-center gap-1 font-mono">
+                                    ${dbStatus.arubaTest.url} &rarr;
+                                </a>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        ${!dbStatus.arubaConfigured ? `
+                        <div class="bg-amber-950/25 border border-amber-500/20 text-amber-300 rounded-xl p-3 text-xs mt-3 space-y-2 font-sans text-left">
+                            <span class="block font-semibold">💡 Come abilitare lo spazio di archiviazione Aruba illimitato:</span>
+                            <p class="text-[11px] text-slate-400 my-0.5">La tua webapp permette di archiviare i documenti caricati in sicurezza nell'hosting Aruba tramite un bridge PHP.</p>
+                            <ol class="list-decimal list-inside space-y-1 text-slate-405 text-[11px] pl-1 font-mono">
+                                <li>Carica il file <code>nws-uploader.php</code> sul tuo hosting Aruba tramite FTP.</li>
+                                <li>Nelle impostazioni di Cloudflare del tuo Worker, aggiungi i parametri:</li>
+                                <ul class="list-disc list-inside pl-4 text-slate-400 text-[10px] space-y-0.5 font-sans">
+                                    <li><code>ARUBA_UPLOADER_URL</code> = L'URL pubblico di quel file PHP</li>
+                                    <li><code>ARUBA_UPLOADER_KEY</code> = La password segreta definita nel file PHP</li>
+                                </ul>
+                            </ol>
+                        </div>
+                        ` : `
+                        <div class="mt-3 flex items-center gap-4">
+                            <button onclick="testArubaRW()" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-semibold text-xs transition-all pointer-events-auto cursor-pointer">
+                                Esegui Test Scrittura/Lettura Aruba
+                            </button>
+                            <span id="test-aruba-status" class="text-xs font-mono text-slate-455 font-medium"></span>
+                        </div>
+                        <script>
+                            async function testArubaRW() {
+                                const statusEl = document.getElementById('test-aruba-status');
+                                statusEl.className = 'text-xs font-mono text-cyan-400 animate-pulse';
+                                statusEl.textContent = 'Test in corso (Scrittura -> Lettura)...';
+                                try {
+                                    const res = await fetch('/api/test-aruba');
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        statusEl.className = 'text-xs font-mono text-emerald-400 leading-relaxed';
+                                        statusEl.innerHTML = '✓ ' + data.message + '<br/><span class="text-[10px] text-slate-500">File scritto su Aruba e letto con successo.</span>';
+                                    } else {
+                                        statusEl.className = 'text-xs font-mono text-red-400 leading-relaxed';
+                                        let details = data.details || "";
+                                        if (data.statusCheck && !data.statusCheck.ok) {
+                                            details = "Impossibile contattare il bridge: " + data.statusCheck.error;
+                                        } else if (data.writeTest && !data.writeTest.ok) {
+                                            details = "Scrittura fallita: " + data.writeTest.error;
+                                        } else if (data.readTest && !data.readTest.ok) {
+                                            details = "Scrittura OK, ma Lettura fallita: " + data.readTest.error;
+                                        }
+                                        statusEl.textContent = '✗ Errore: ' + data.message + ' (' + details + ')';
                                     }
                                 } catch(e) {
                                     statusEl.className = 'text-xs font-mono text-red-500';
@@ -795,6 +937,7 @@ CREATE TABLE citizens (
         }
 
         try {
+          // 1. Controllo Stato / Connettività del Bridge
           const arubaResponse = await fetch(uploaderUrl, {
             method: 'POST',
             headers: {
@@ -807,28 +950,80 @@ CREATE TABLE citizens (
             })
           });
 
-          if (arubaResponse.ok) {
-            const arubaData = await arubaResponse.json();
-            return new Response(JSON.stringify({
-              success: true,
-              source: 'Cloudflare Worker Diagnostics',
-              message: 'Il tuo Cloudflare Worker comunica correttamente con il Bridge PHP di Aruba!',
-              arubaStatus: arubaData
-            }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-          } else {
+          if (!arubaResponse.ok) {
             const text = await arubaResponse.text();
             return new Response(JSON.stringify({
               success: false,
               source: 'Cloudflare Worker Diagnostics',
-              message: `Aruba ha risposto con errore HTTP: ${arubaResponse.status}`,
+              message: `Il bridge Aruba ha risposto con errore HTTP ${arubaResponse.status} alla richiesta di stato.`,
               details: text.slice(0, 200)
             }), { status: arubaResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
+
+          const statusData = await arubaResponse.json();
+
+          // 2. Test di Scrittura Attiva (Caricamento di un mini file di test PNG Base64)
+          const writeResponse = await fetch(uploaderUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${uploaderKey}`
+            },
+            body: JSON.stringify({
+              key: uploaderKey,
+              username: 'diagnostics_test_user',
+              documentFrontData: 'data:image/png;base64,iVBOR0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+              documentFrontName: 'test_write.png'
+            })
+          });
+
+          if (!writeResponse.ok) {
+            const text = await writeResponse.text();
+            return new Response(JSON.stringify({
+              success: false,
+              source: 'Cloudflare Worker Diagnostics',
+              message: `La scrittura di test su Aruba è fallita (HTTP ${writeResponse.status})`,
+              details: text.slice(0, 200)
+            }), { status: writeResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const writeData = await writeResponse.json();
+          if (!writeData.success || !writeData.files || !writeData.files.front) {
+            return new Response(JSON.stringify({
+              success: false,
+              source: 'Cloudflare Worker Diagnostics',
+              message: 'La scrittura di test su Aruba è fallita o non ha generato link.',
+              details: writeData.message || 'Controlla i permessi di scrittura PHP sul server Aruba.'
+            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const fileUrl = writeData.files.front;
+
+          // 3. Test di Lettura Attiva (I computer Cloudflare scaricano pubblicamente il file caricato)
+          const readResponse = await fetch(fileUrl);
+          if (!readResponse.ok) {
+            return new Response(JSON.stringify({
+              success: false,
+              source: 'Cloudflare Worker Diagnostics',
+              message: `Il file è stato scritto ma il ri-scaricamento pubblico è fallito (HTTP ${readResponse.status})`,
+              details: `Impossibile scaricare pubblicamente l'immagine da ${fileUrl}`
+            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            source: 'Cloudflare Worker Diagnostics',
+            message: 'Test di Scrittura e Lettura su Aruba effettuato con successo!',
+            statusCheck: statusData,
+            writeTest: { ok: true, fileName: 'test_write.png' },
+            readTest: { ok: true, url: fileUrl }
+          }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
         } catch (err) {
           return new Response(JSON.stringify({
             success: false,
             source: 'Cloudflare Worker Diagnostics',
-            message: 'Errore di connessione a ' + uploaderUrl,
+            message: 'Errore durante la connessione o l\'autenticazione con il bridge Aruba ' + uploaderUrl,
             details: err.message
           }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }

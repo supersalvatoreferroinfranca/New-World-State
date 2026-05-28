@@ -499,8 +499,9 @@ Ufficio dell'Anagrafe Federale del New World State
         }
       }
 
-      console.log(`[ARUBA-TEST] Test di connessione a Aruba: ${uploaderUrl}`);
+      console.log(`[ARUBA-TEST] Test completo di lettura/scrittura a Aruba: ${uploaderUrl}`);
       try {
+        // 1. Controllo di stato
         const uploaderRes = await fetch(uploaderUrl, {
           method: 'POST',
           headers: {
@@ -513,28 +514,80 @@ Ufficio dell'Anagrafe Federale del New World State
           })
         });
 
-        if (uploaderRes.ok) {
-          const data: any = await uploaderRes.json();
-          return res.json({
-            success: true,
-            source: 'Local Express Server',
-            message: 'Connessione al PHP Bridge Aruba riuscita!',
-            arubaResponse: data
-          });
-        } else {
+        if (!uploaderRes.ok) {
           const text = await uploaderRes.text();
           return res.status(uploaderRes.status).json({
             success: false,
             source: 'Local Express Server',
-            message: `L'uploader di Aruba ha risposto con errore HTTP ${uploaderRes.status}`,
+            message: `L'uploader di Aruba ha risposto con errore HTTP ${uploaderRes.status} al controllo di stato.`,
             details: text.slice(0, 200)
           });
         }
+
+        const statusResponse: any = await uploaderRes.json();
+
+        // 2. Test di Scrittura Attiva (Caricamento di un mini file di test PNG Base64)
+        const writeRes = await fetch(uploaderUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${uploaderKey}`
+          },
+          body: JSON.stringify({
+            key: uploaderKey,
+            username: 'diagnostics_test_user',
+            documentFrontData: 'data:image/png;base64,iVBOR0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+            documentFrontName: 'test_write.png'
+          })
+        });
+
+        if (!writeRes.ok) {
+          const text = await writeRes.text();
+          return res.status(writeRes.status).json({
+            success: false,
+            source: 'Local Express Server',
+            message: `La scrittura di test su Aruba è fallita (Errore HTTP ${writeRes.status})`,
+            details: text.slice(0, 200)
+          });
+        }
+
+        const writeData: any = await writeRes.json();
+        if (!writeData.success || !writeData.files || !writeData.files.front) {
+          return res.status(400).json({
+            success: false,
+            source: 'Local Express Server',
+            message: 'Il bridge Aruba non ha potuto salvare o restituire il link del file di test.',
+            details: writeData.message || 'Controlla i permessi di scrittura della directory documents/'
+          });
+        }
+
+        const fileUrl = writeData.files.front;
+
+        // 3. Test di Lettura Attiva
+        const readRes = await fetch(fileUrl);
+        if (!readRes.ok) {
+          return res.status(400).json({
+            success: false,
+            source: 'Local Express Server',
+            message: `Il file è stato scritto ma la lettura pubblica ha fallito con HTTP ${readRes.status}`,
+            details: `Non è possibile scaricare il documento tramite ${fileUrl}`
+          });
+        }
+
+        return res.json({
+          success: true,
+          source: 'Local Express Server',
+          message: 'Test di Lettura e Scrittura su Aruba completato correttamente!',
+          statusCheck: statusResponse,
+          writeTest: { ok: true, fileName: 'test_write.png' },
+          readTest: { ok: true, url: fileUrl }
+        });
+
       } catch (err: any) {
-        return res.status(500).json({
+        return res.status(550).json({
           success: false,
           source: 'Local Express Server',
-          message: `Impossibile connettersi ad Aruba all'URL: ${uploaderUrl}`,
+          message: `Impossibile completare il test ad Aruba all'URL: ${uploaderUrl}`,
           details: err.message
         });
       }
