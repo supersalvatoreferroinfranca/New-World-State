@@ -241,18 +241,21 @@ async function startServer() {
             let arubaFrontUrl = '';
             let arubaBackUrl = '';
 
+            const uploaderUrl = process.env.ARUBA_UPLOADER_URL ? process.env.ARUBA_UPLOADER_URL.trim() : '';
+            const uploaderKey = process.env.ARUBA_UPLOADER_KEY ? process.env.ARUBA_UPLOADER_KEY.trim() : '';
+
             // Se l'uploader di Aruba è configurato, carichiamo i file fisici dello spazio infinito tramite il bridge PHP
-            if (process.env.ARUBA_UPLOADER_URL && process.env.ARUBA_UPLOADER_KEY && documentFrontData) {
+            if (uploaderUrl && uploaderKey && documentFrontData) {
               console.log('[ARUBA-UPLOADER] Tentativo di caricamento file sul server fisico Aruba tramite bridge...');
               try {
-                const uploaderRes = await fetch(process.env.ARUBA_UPLOADER_URL, {
+                const uploaderRes = await fetch(uploaderUrl, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.ARUBA_UPLOADER_KEY}`
+                    'Authorization': `Bearer ${uploaderKey}`
                   },
                   body: JSON.stringify({
-                    key: process.env.ARUBA_UPLOADER_KEY,
+                    key: uploaderKey,
                     username: serializablePayload.username || 'unknown',
                     documentFrontData,
                     documentFrontName,
@@ -466,8 +469,8 @@ Ufficio dell'Anagrafe Federale del New World State
     });
 
     apiRouter.get('/test-aruba', async (req, res) => {
-      const uploaderUrl = process.env.ARUBA_UPLOADER_URL;
-      const uploaderKey = process.env.ARUBA_UPLOADER_KEY;
+      const uploaderUrl = process.env.ARUBA_UPLOADER_URL ? process.env.ARUBA_UPLOADER_URL.trim() : '';
+      const uploaderKey = process.env.ARUBA_UPLOADER_KEY ? process.env.ARUBA_UPLOADER_KEY.trim() : '';
 
       if (!uploaderUrl) {
         // Se non configurato localmente, proviamo a inoltrare al Worker per vedere se è configurato lì!

@@ -784,8 +784,8 @@ CREATE TABLE citizens (
 
       // Rotta: Test Aruba PHP Bridge
       if (url.pathname === '/api/test-aruba') {
-        const uploaderUrl = env.ARUBA_UPLOADER_URL;
-        const uploaderKey = env.ARUBA_UPLOADER_KEY;
+        const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
+        const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
 
         if (!uploaderUrl) {
           return new Response(JSON.stringify({ 
@@ -864,17 +864,20 @@ CREATE TABLE citizens (
         let arubaFrontUrl = '';
         let arubaBackUrl = '';
 
-        if (env.ARUBA_UPLOADER_URL && env.ARUBA_UPLOADER_KEY && documentFrontData) {
+        const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
+        const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
+
+        if (uploaderUrl && uploaderKey && documentFrontData) {
           console.log('[ARUBA-UPLOADER] Tentativo di caricamento su Aruba...');
           try {
-            const uploaderRes = await fetch(env.ARUBA_UPLOADER_URL, {
+            const uploaderRes = await fetch(uploaderUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${env.ARUBA_UPLOADER_KEY}`
+                'Authorization': `Bearer ${uploaderKey}`
               },
               body: JSON.stringify({
-                key: env.ARUBA_UPLOADER_KEY,
+                key: uploaderKey,
                 username: normalizedUsername || 'anonymous',
                 documentFrontData,
                 documentFrontName,
@@ -1278,9 +1281,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-// Lettura delle credenziali di sicurezza inserite nella richiesta (Header o POST)
-$headers = apache_request_headers();
-$authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : '';
+// Lettura delle credenziali di sicurezza inserite nella richiesta (Header, Server variables, o POST)
+$authHeader = '';
+if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+} elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+    $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+} else if (function_exists('apache_request_headers')) {
+    $headers = apache_request_headers();
+    foreach ($headers as $key => $val) {
+        if (strcasecmp($key, 'Authorization') === 0) {
+            $authHeader = $val;
+            break;
+        }
+    }
+}
+
 $postKey = isset($_POST['key']) ? $_POST['key'] : '';
 
 $inputRaw = file_get_contents('php://input');
@@ -1296,15 +1312,18 @@ if (is_array($inputData)) {
 // Questa chiave deve coincidere esattamente con la variabile d'ambiente ARUBA_UPLOADER_KEY
 define('SECURE_TOKEN', 'INSERISCI_UNA_PASSWORD_MOLTO_SICURA_E_LUNGA_QUI'); 
 
-// Estrazione e riscontro del token
+// Estrazione e riscontro del token con trim() di sicurezza per evitare spazi copia-incolla
 $receivedToken = '';
-if (preg_match('/Bearer\s+(\S+)/', $authHeader, $matches)) {
+if (preg_match('/Bearer\s+(\S+)/i', $authHeader, $matches)) {
     $receivedToken = $matches[1];
 } else if (!empty($postKey)) {
     $receivedToken = $postKey;
 }
 
-if (empty($receivedToken) || $receivedToken !== SECURE_TOKEN) {
+$receivedToken = trim($receivedToken);
+$secureToken = trim(SECURE_TOKEN);
+
+if (empty($receivedToken) || $receivedToken !== $secureToken) {
     http_response_code(401);
     echo json_encode(array(
         'success' => false,
@@ -1469,17 +1488,20 @@ async function handleRegisterRequest(request, env) {
     let arubaBackUrl = "";
 
     // 2. Invio dei file Base64 al Bridge PHP di Aruba per memorizzazione fisica
-    if (env.ARUBA_UPLOADER_URL && env.ARUBA_UPLOADER_KEY && documentFrontData) {
+    const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
+    const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
+
+    if (uploaderUrl && uploaderKey && documentFrontData) {
       console.log("Inoltro documenti ad Aruba...");
       try {
-        const arubaResponse = await fetch(env.ARUBA_UPLOADER_URL, {
+        const arubaResponse = await fetch(uploaderUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${env.ARUBA_UPLOADER_KEY}`
+            "Authorization": `Bearer ${uploaderKey}`
           },
           body: JSON.stringify({
-            key: env.ARUBA_UPLOADER_KEY,
+            key: uploaderKey,
             username: username || "anonymous_user",
             documentFrontData,
             documentFrontName,
@@ -1593,8 +1615,8 @@ async function sendNotificationEmails(env, detail) {
 
 // 🩺 Endpoint di Diagnostica da inserire nel tuo Cloudflare Worker per testare Aruba
 async function handleTestArubaRequest(request, env) {
-  const uploaderUrl = env.ARUBA_UPLOADER_URL;
-  const uploaderKey = env.ARUBA_UPLOADER_KEY;
+  const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
+  const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
 
   if (!uploaderUrl) {
     return new Response(JSON.stringify({
