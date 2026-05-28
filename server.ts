@@ -248,11 +248,15 @@ async function startServer() {
             if (uploaderUrl && uploaderKey && documentFrontData) {
               console.log('[ARUBA-UPLOADER] Tentativo di caricamento file sul server fisico Aruba tramite bridge...');
               try {
-                const uploaderRes = await fetch(uploaderUrl, {
+                const separator = uploaderUrl.includes('?') ? '&' : '?';
+                const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+
+                const uploaderRes = await fetch(targetUrlWithKey, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${uploaderKey}`
+                    'Authorization': `Bearer ${uploaderKey}`,
+                    'X-Aruba-Key': uploaderKey
                   },
                   body: JSON.stringify({
                     key: uploaderKey,
@@ -501,12 +505,16 @@ Ufficio dell'Anagrafe Federale del New World State
 
       console.log(`[ARUBA-TEST] Test completo di lettura/scrittura a Aruba: ${uploaderUrl}`);
       try {
+        const separator = uploaderUrl.includes('?') ? '&' : '?';
+        const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+
         // 1. Controllo di stato
-        const uploaderRes = await fetch(uploaderUrl, {
+        const uploaderRes = await fetch(targetUrlWithKey, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${uploaderKey}`
+            'Authorization': `Bearer ${uploaderKey}`,
+            'X-Aruba-Key': uploaderKey
           },
           body: JSON.stringify({
             action: 'status',
@@ -514,24 +522,39 @@ Ufficio dell'Anagrafe Federale del New World State
           })
         });
 
+        let statusResponse: any = { success: true, message: 'Attivo' };
         if (!uploaderRes.ok) {
           const text = await uploaderRes.text();
-          return res.status(uploaderRes.status).json({
-            success: false,
-            source: 'Local Express Server',
-            message: `L'uploader di Aruba ha risposto con errore HTTP ${uploaderRes.status} al controllo di stato.`,
-            details: text.slice(0, 200)
-          });
+          let isOldPhpWithoutStatus = false;
+          try {
+            const parsed = JSON.parse(text);
+            if (uploaderRes.status === 400 && parsed.message && parsed.message.includes('Nessun file decodificato')) {
+              isOldPhpWithoutStatus = true;
+            }
+          } catch (e) {}
+
+          if (!isOldPhpWithoutStatus) {
+            return res.status(uploaderRes.status).json({
+              success: false,
+              source: 'Local Express Server',
+              message: `L'uploader di Aruba ha risposto con errore HTTP ${uploaderRes.status} al controllo di stato.`,
+              details: text.slice(0, 200)
+            });
+          } else {
+            console.log('[ARUBA-TEST] Rilevato file PHP precedente su Aruba (autorizzazione OK ma nessun supporto per status API). Procedo direttamente con test di scrittura.');
+            statusResponse = { success: true, message: 'Attivo (File PHP precedente rilevato, procedo al test di scrittura)' };
+          }
+        } else {
+          statusResponse = await uploaderRes.json();
         }
 
-        const statusResponse: any = await uploaderRes.json();
-
         // 2. Test di Scrittura Attiva (Caricamento di un mini file di test PNG Base64)
-        const writeRes = await fetch(uploaderUrl, {
+        const writeRes = await fetch(targetUrlWithKey, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${uploaderKey}`
+            'Authorization': `Bearer ${uploaderKey}`,
+            'X-Aruba-Key': uploaderKey
           },
           body: JSON.stringify({
             key: uploaderKey,

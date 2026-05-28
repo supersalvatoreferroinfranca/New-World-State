@@ -219,12 +219,16 @@ export default {
             const uploaderUrl = env.ARUBA_UPLOADER_URL.trim();
             const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
             try {
+              const separator = uploaderUrl.includes('?') ? '&' : '?';
+              const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+
               // 1. Controllo di stato
-              const arubaResponse = await fetch(uploaderUrl, {
+              const arubaResponse = await fetch(targetUrlWithKey, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${uploaderKey}`
+                  'Authorization': `Bearer ${uploaderKey}`,
+                  'X-Aruba-Key': uploaderKey
                 },
                 body: JSON.stringify({
                   action: 'status',
@@ -232,13 +236,35 @@ export default {
                 })
               });
 
+              let performWriteTest = false;
+              let isOldPhpWithoutStatus = false;
+
               if (arubaResponse.ok) {
+                performWriteTest = true;
+              } else {
+                const text = await arubaResponse.text();
+                try {
+                  const parsed = JSON.parse(text);
+                  if (arubaResponse.status === 400 && parsed.message && parsed.message.includes('Nessun file decodificato')) {
+                    isOldPhpWithoutStatus = true;
+                    performWriteTest = true;
+                    dbStatus.arubaTest.message = 'Rilevato uploader precedente (Autenticazione OK). Verifico scrittura...';
+                  }
+                } catch (e) {}
+
+                if (!performWriteTest) {
+                  dbStatus.arubaTest.message = `Errore autorizzazione token (HTTP ${arubaResponse.status})`;
+                }
+              }
+
+              if (performWriteTest) {
                 // 2. Test di Scrittura
-                const writeResponse = await fetch(uploaderUrl, {
+                const writeResponse = await fetch(targetUrlWithKey, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${uploaderKey}`
+                    'Authorization': `Bearer ${uploaderKey}`,
+                    'X-Aruba-Key': uploaderKey
                   },
                   body: JSON.stringify({
                     key: uploaderKey,
@@ -259,7 +285,9 @@ export default {
                     if (readResponse.ok) {
                       dbStatus.arubaTest.readOk = true;
                       dbStatus.arubaTest.ok = true;
-                      dbStatus.arubaTest.message = '✓ Connessione, Scrittura e Lettura superate con successo!';
+                      dbStatus.arubaTest.message = isOldPhpWithoutStatus 
+                        ? '✓ Connessione, Scrittura e Lettura superate con successo! (Uploader precedente bypassato con successo)'
+                        : '✓ Connessione, Scrittura e Lettura superate con successo!';
                     } else {
                       dbStatus.arubaTest.message = `Scrittura OK, ma fallimento del download pubblico (HTTP ${readResponse.status})`;
                     }
@@ -269,8 +297,6 @@ export default {
                 } else {
                   dbStatus.arubaTest.message = `La scrittura di test ha riportato errore (HTTP ${writeResponse.status})`;
                 }
-              } else {
-                dbStatus.arubaTest.message = `Errore autorizzazione token (HTTP ${arubaResponse.status})`;
               }
             } catch (err) {
               dbStatus.arubaTest.error = err.message;
@@ -937,12 +963,16 @@ CREATE TABLE citizens (
         }
 
         try {
+          const separator = uploaderUrl.includes('?') ? '&' : '?';
+          const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+
           // 1. Controllo Stato / Connettività del Bridge
-          const arubaResponse = await fetch(uploaderUrl, {
+          const arubaResponse = await fetch(targetUrlWithKey, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${uploaderKey}`
+              'Authorization': `Bearer ${uploaderKey}`,
+              'X-Aruba-Key': uploaderKey
             },
             body: JSON.stringify({
               action: 'status',
@@ -950,24 +980,38 @@ CREATE TABLE citizens (
             })
           });
 
+          let statusData = { success: true, message: 'Attivo' };
+          let isOldPhpWithoutStatus = false;
+
           if (!arubaResponse.ok) {
             const text = await arubaResponse.text();
-            return new Response(JSON.stringify({
-              success: false,
-              source: 'Cloudflare Worker Diagnostics',
-              message: `Il bridge Aruba ha risposto con errore HTTP ${arubaResponse.status} alla richiesta di stato.`,
-              details: text.slice(0, 200)
-            }), { status: arubaResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            try {
+              const parsed = JSON.parse(text);
+              if (arubaResponse.status === 400 && parsed.message && parsed.message.includes('Nessun file decodificato')) {
+                isOldPhpWithoutStatus = true;
+                statusData = { success: true, message: 'Attivo (File PHP precedente rilevato, procedo al test di scrittura)' };
+              }
+            } catch (e) {}
+
+            if (!isOldPhpWithoutStatus) {
+              return new Response(JSON.stringify({
+                success: false,
+                source: 'Cloudflare Worker Diagnostics',
+                message: `Il bridge Aruba ha risposto con errore HTTP ${arubaResponse.status} alla richiesta di stato.`,
+                details: text.slice(0, 200)
+              }), { status: arubaResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          } else {
+            statusData = await arubaResponse.json();
           }
 
-          const statusData = await arubaResponse.json();
-
           // 2. Test di Scrittura Attiva (Caricamento di un mini file di test PNG Base64)
-          const writeResponse = await fetch(uploaderUrl, {
+          const writeResponse = await fetch(targetUrlWithKey, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${uploaderKey}`
+              'Authorization': `Bearer ${uploaderKey}`,
+              'X-Aruba-Key': uploaderKey
             },
             body: JSON.stringify({
               key: uploaderKey,
@@ -1065,11 +1109,15 @@ CREATE TABLE citizens (
         if (uploaderUrl && uploaderKey && documentFrontData) {
           console.log('[ARUBA-UPLOADER] Tentativo di caricamento su Aruba...');
           try {
-            const uploaderRes = await fetch(uploaderUrl, {
+            const separator = uploaderUrl.includes('?') ? '&' : '?';
+            const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+
+            const uploaderRes = await fetch(targetUrlWithKey, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${uploaderKey}`
+                'Authorization': `Bearer ${uploaderKey}`,
+                'X-Aruba-Key': uploaderKey
               },
               body: JSON.stringify({
                 key: uploaderKey,
@@ -1469,7 +1517,7 @@ Crea un file di testo denominato `nws-uploader.php`, incolla il codice seguente 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Aruba-Key');
 
 // Gestione dei pacchetti PREFLIGHT di CORS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -1492,7 +1540,24 @@ if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
     }
 }
 
+// Estrazione da header custom (infallibile per bypassare i filtri Apache che rimuovono Authorization)
+$customArubaKeyHeader = '';
+if (isset($_SERVER['HTTP_X_ARUBA_KEY'])) {
+    $customArubaKeyHeader = $_SERVER['HTTP_X_ARUBA_KEY'];
+} elseif (isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
+    $customArubaKeyHeader = $_SERVER['HTTP_X_AUTHORIZATION'];
+} else if (function_exists('apache_request_headers')) {
+    $headers = apache_request_headers();
+    foreach ($headers as $key => $val) {
+        if (strcasecmp($key, 'X-Aruba-Key') === 0) {
+            $customArubaKeyHeader = $val;
+            break;
+        }
+    }
+}
+
 $postKey = isset($_POST['key']) ? $_POST['key'] : '';
+$getKey = isset($_GET['key']) ? $_GET['key'] : '';
 
 $inputRaw = file_get_contents('php://input');
 $inputData = json_decode($inputRaw, true);
@@ -1511,7 +1576,20 @@ define('SECURE_TOKEN', 'INSERISCI_UNA_PASSWORD_MOLTO_SICURA_E_LUNGA_QUI');
 $receivedToken = '';
 if (preg_match('/Bearer\s+(\S+)/i', $authHeader, $matches)) {
     $receivedToken = $matches[1];
-} else if (!empty($postKey)) {
+}
+
+// Fallback su Header custom X-Aruba-Key (se Authorization è stato rimosso da FastCGI / PHP-FPM)
+if (empty($receivedToken) && !empty($customArubaKeyHeader)) {
+    $receivedToken = $customArubaKeyHeader;
+}
+
+// Fallback su Query String GET (?key=...)
+if (empty($receivedToken) && !empty($getKey)) {
+    $receivedToken = $getKey;
+}
+
+// Fallback su campo POST tradizionale o JSON
+if (empty($receivedToken) && !empty($postKey)) {
     $receivedToken = $postKey;
 }
 
