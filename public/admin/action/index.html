@@ -41,8 +41,8 @@
         let html = await res.text();
 
         // Sostituiamo gli endpoint API relativi con quelli assoluti sul Worker CORS-enabled
-        html = html.replaceAll("'/api/", `${WORKER_BASE}/api/`);
-        html = html.replaceAll('"/api/', `${WORKER_BASE}/api/`);
+        html = html.replaceAll("'/api/", `'${WORKER_BASE}/api/`);
+        html = html.replaceAll('"/api/', `"${WORKER_BASE}/api/`);
 
         // Scriviamo il codice html compilato sostituendo l'intero documento
         document.open();
