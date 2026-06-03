@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifica in corso • New World State</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-[#faf9f6] min-h-screen flex items-center justify-center p-6 text-slate-800">
+  <div id="loader" class="text-center space-y-4 max-w-sm w-full bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+    <div class="w-12 h-12 border-4 border-[#0a1c3e] border-t-transparent rounded-full animate-spin mx-auto"></div>
+    <h1 class="text-lg font-bold text-slate-900">Caricamento della pratica</h1>
+    <p class="text-slate-500 text-xs leading-relaxed">Connessione sicura col registro federale in corso. Attendere prego...</p>
+  </div>
+
+  <script>
+    (async () => {
+      try {
+        const id = new URLSearchParams(window.location.search).get('id');
+        if (!id) {
+          document.getElementById('loader').innerHTML = `
+            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold">!</div>
+            <h1 class="text-xl font-bold text-slate-900 mb-2">ID Cittadino Mancante</h1>
+            <p class="text-slate-500 text-sm leading-relaxed mb-6">Il link di validazione utilizzato non contiene un identificativo valido o la richiesta è nulla.</p>
+            <a href="/" class="inline-flex bg-[#0a1c3e] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-slate-800 transition">Torna alla Home</a>
+          `;
+          return;
+        }
+
+        const WORKER_BASE = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev';
+        const res = await fetch(`${WORKER_BASE}/admin/action?id=${id}`);
+        
+        if (!res.ok) {
+          throw new Error('Impossibile reperire la pratica dal registro remoto: status ' + res.status);
+        }
+
+        let html = await res.text();
+
+        // Sostituiamo gli endpoint API relativi con quelli assoluti sul Worker CORS-enabled
+        html = html.replaceAll("'/api/", `${WORKER_BASE}/api/`);
+        html = html.replaceAll('"/api/', `${WORKER_BASE}/api/`);
+
+        // Scriviamo il codice html compilato sostituendo l'intero documento
+        document.open();
+        document.write(html);
+        document.close();
+      } catch (err) {
+        document.getElementById('loader').innerHTML = `
+          <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold">!</div>
+          <h1 class="text-xl font-bold text-slate-900 mb-2">Errore di Caricamento</h1>
+          <p class="text-slate-500 text-sm leading-relaxed mb-6">${err.message}</p>
+          <button onclick="window.location.reload();" class="inline-flex bg-[#0a1c3e] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-slate-800 transition">Riprova</button>
+        `;
+      }
+    })();
+  </script>
+</body>
+</html>
