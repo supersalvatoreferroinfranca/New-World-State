@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { safeFetch } from '../../services/api';
 import { 
   Users, 
   CheckCircle, 
@@ -60,7 +61,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/citizens');
+      const res = await safeFetch('/api/admin/citizens');
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const result = await res.json();
       if (result.success) {
@@ -106,7 +107,7 @@ export default function AdminDashboard() {
     if (window.confirm('Sei sicuro di voler approvare questa domanda di cittadinanza? Verrà generata la ID card ufficiale e inviata via email.')) {
       setActionLoading(true);
       try {
-        const res = await fetch('/api/admin/approve', {
+        const res = await safeFetch('/api/admin/approve', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id })
@@ -140,7 +141,7 @@ export default function AdminDashboard() {
 
     setActionLoading(true);
     try {
-      const res = await fetch('/api/admin/reject', {
+      const res = await safeFetch('/api/admin/reject', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: selectedCitizen.id, reason: rejectionReason })
