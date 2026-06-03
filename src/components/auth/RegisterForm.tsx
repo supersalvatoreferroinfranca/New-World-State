@@ -257,6 +257,18 @@ function LocationMarker({ onPositionChange, position }: { onPositionChange: (pos
   );
 }
 
+const generateCitizenCode = (): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 16; i++) {
+    if (i > 0 && i % 4 === 0) {
+      result += '-';
+    }
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
+};
+
 export default function RegisterForm() {
   const { t } = useI18n();
   const [step, setStep] = useState(1);
@@ -292,6 +304,7 @@ export default function RegisterForm() {
     documentHash: '',
     isAmbassador: false,
     isPeacekeeper: false,
+    citizenCode: generateCitizenCode(),
   });
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
   const [birthPlaceSuggestions, setBirthPlaceSuggestions] = useState<any[]>([]);
@@ -1045,6 +1058,11 @@ export default function RegisterForm() {
             <UserCheck className="w-10 h-10" />
           </motion.div>
           <h2 className="text-3xl font-serif text-brand-blue">Benvenuto, Cittadino!</h2>
+          <div className="bg-brand-parchment/60 p-5 border border-brand-gold/30 rounded-2xl space-y-2 my-4 text-center shadow-inner">
+            <span className="text-[10px] uppercase font-bold text-brand-blue tracking-widest block">Codice Identificativo Unico NWS</span>
+            <p className="text-xl font-mono font-bold text-brand-gold select-all tracking-wider md:text-2xl">{formData.citizenCode}</p>
+            <span className="text-[9px] text-muted block leading-normal max-w-sm mx-auto">Conserva questo codice alfanumerico di 16 cifre. Identifica in modo univoco ed inviolabile la tua identità sovrana.</span>
+          </div>
           <div className="space-y-4">
             <p className="text-muted text-sm leading-relaxed">La tua richiesta è stata registrata con successo nel registro anagrafico mondiale.</p>
             {formData.email && (
@@ -1940,6 +1958,16 @@ export default function RegisterForm() {
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif text-brand-blue">{t('idDocument')}</h2>
                 <p className="text-muted text-sm italic">{t('uploadId')}</p>
+              </div>
+
+              <div className="p-4 bg-brand-blue/5 border border-brand-blue/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="space-y-1 text-center sm:text-left">
+                  <span className="text-[10px] uppercase font-bold text-brand-gold tracking-widest block">Codice Cittadino Riservato</span>
+                  <p className="text-[11px] text-muted leading-tight">Questo codice alfanumerico di 16 cifre identificherà in modo univoco il tuo certificato e ID.</p>
+                </div>
+                <div className="px-4 py-2 bg-white border border-brand-gold/25 rounded-xl text-center shadow-sm shrink-0">
+                  <span className="font-mono text-xs font-bold text-brand-blue tracking-wider select-all">{formData.citizenCode}</span>
+                </div>
               </div>
 
               <div className="space-y-4">
