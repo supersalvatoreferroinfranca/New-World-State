@@ -657,6 +657,9 @@ CREATE TABLE citizens (
                 <div><span class="text-indigo-400 font-semibold">GET</span> /api/lookup/location?q=... (Nominatim Proxy)</div>
                 <div><span class="text-sky-500 font-semibold">POST</span> /api/register (Registrazione cittadini)</div>
                 <div><span class="text-pink-400 font-semibold">GET</span> /api/test-email (Invio email di test)</div>
+                <div><span class="text-amber-500 font-semibold">GET</span> /api/admin/citizens (Lista cittadini iscritti)</div>
+                <div><span class="text-amber-500 font-semibold">POST</span> /api/admin/approve (Approvazione con ID Card)</div>
+                <div><span class="text-amber-500 font-semibold">POST</span> /api/admin/reject (Rifiuto con motivazione)</div>
             </div>
         </div>
 
@@ -1127,6 +1130,298 @@ CREATE TABLE citizens (
             message: 'Errore durante la connessione o l\'autenticazione con il bridge Aruba ' + uploaderUrl,
             details: err.message
           }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
+      // Rotta: Admin Citizens (Lista iscritti per Consolle Amministratore)
+      if (url.pathname === '/api/admin/citizens') {
+        try {
+          const rows = await queryDb('SELECT * FROM citizens ORDER BY id DESC');
+          return new Response(JSON.stringify({ success: true, count: rows.length, data: rows }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (dbErr) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore durante l\'interrogazione del database: ' + dbErr.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      // Rotta: Admin Approve (Approvazione cittadinanza con generazione ID Card)
+      if (url.pathname === '/api/admin/approve' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          const { id } = body;
+          if (!id) {
+            return new Response(JSON.stringify({ success: false, message: 'ID cittadino mancante.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const citizenRows = await queryDb('SELECT * FROM citizens WHERE id = $1', [id]);
+          if (citizenRows.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const citizen = citizenRows[0];
+
+          // Verifica dinamica delle colonne nello schema reali
+          const columnsQuery = `
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'citizens'
+          `;
+          const cols = await queryDb(columnsQuery);
+          const existingColsLower = cols.map(c => c.column_name.toLowerCase());
+
+          let updateSql = '';
+          let params = [];
+          if (existingColsLower.includes('rejectionreason')) {
+            updateSql = 'UPDATE citizens SET status = $1, "rejectionReason" = $2 WHERE id = $3 RETURNING *';
+            params = ['approved', null, id];
+          } else {
+            updateSql = 'UPDATE citizens SET status = $1 WHERE id = $2 RETURNING *';
+            params = ['approved', id];
+          }
+
+          const updatedRows = await queryDb(updateSql, params);
+          if (updatedRows.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Impossibile aggiornare lo stato di validazione.' }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const updated = updatedRows[0];
+
+          // Invio dell'email con la ID card ufficiale
+          const email = updated.email || citizen.email;
+          if (email && email.includes('@')) {
+            try {
+              const brandColor = '#0a1c3e';
+              const goldColor = '#c5a880';
+              const citizenCodeVal = updated.citizenCode || updated.citizencode || citizen.citizenCode || citizen.citizencode || 'N/A';
+              const firstNameVal = updated.firstName || updated.firstname || citizen.firstName || citizen.firstname || '';
+              const surnameVal = updated.surname || citizen.surname || '';
+              const birthDateVal = updated.birthDate || updated.birthdate || citizen.birthDate || citizen.birthdate || 'N/A';
+              const birthPlaceVal = updated.birthPlace || updated.birthplace || citizen.birthPlace || citizen.birthplace || '';
+              const birthCountryVal = updated.birthCountry || updated.birthcountry || citizen.birthCountry || citizen.birthcountry || '';
+              const photoUrlVal = updated.arubaPhotoUrl || updated.arubaphotourl || citizen.arubaPhotoUrl || citizen.arubaphotourl || '';
+              const hashVal = updated.documentHash || updated.documenthash || citizen.documentHash || citizen.documenthash || '';
+
+              const welcomeHtml = `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 16px;">
+                  <div style="background-color: ${brandColor}; padding: 40px 30px; border-radius: 12px; text-align: center; color: white; border-bottom: 4px solid ${goldColor};">
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: white;">Benvenuto, Cittadino!</h1>
+                    <p style="margin: 10px 0 0 0; color: ${goldColor}; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">Cittadinanza NWS Approvata</p>
+                  </div>
+                  
+                  <div style="padding: 30px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; line-height: 1.6;">
+                    <p style="font-size: 16px; margin-top: 0;">Gentile <strong>${firstNameVal} ${surnameVal}</strong>,</p>
+                    
+                    <p style="font-size: 15px;">Siamo onorati di darti il benvenuto ufficiale nel <strong>New World State</strong>. Il nostro comitato di validatori ha completato con successo la verifica della tua anagrafica e dei tuoi documenti.</p>
+                    
+                    <p style="font-size: 15px;">La tua registrazione è ora formalmente inserita nel Registro Fedele della Federazione Mondiale di NWS.</p>
+  
+                    <!-- TABELLA DOCUMENTO DI IDENTITA DIGITALE -->
+                    <div style="margin: 30px 0; background-color: ${brandColor}; color: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(10,28,62,0.25); border: 2px solid ${goldColor};">
+                      <div style="padding: 16px 20px; background-color: #071530; border-bottom: 1.5px solid ${goldColor};">
+                        <table style="width: 100%; border-collapse: collapse;">
+                          <tr>
+                            <td>
+                              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: ${goldColor};">NEW WORLD STATE</div>
+                              <div style="font-size: 8px; color: #94a3b8; text-transform: uppercase;">Sovereign Global Citizenship</div>
+                            </td>
+                            <td style="text-align: right; font-size: 18px; color: ${goldColor}; font-weight: bold;">ID CARD</td>
+                          </tr>
+                        </table>
+                      </div>
+                      
+                      <div style="padding: 24px 20px; background-color: ${brandColor}; position: relative;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                          <tr>
+                            <td style="width: 70%; vertical-align: top; font-size: 12px; font-family: sans-serif;">
+                              <table style="width: 100%;">
+                                  <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Cognome / Surname</td></tr>
+                                  <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 6px;">${surnameVal}</td></tr>
+                                  
+                                  <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Nome / Given Names</td></tr>
+                                  <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 6px;">${firstNameVal}</td></tr>
+                                  
+                                  <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Data e Luogo di Nascita / Date & Place of Birth</td></tr>
+                                  <tr><td style="color: white; font-size: 11px; padding-bottom: 6px;">${birthDateVal} - ${birthPlaceVal} (${birthCountryVal})</td></tr>
+                                  
+                                  <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Cittadinanza / Nationality</td></tr>
+                                  <tr><td style="color: ${goldColor}; font-weight: bold; font-size: 11px; padding-bottom: 6px; text-transform: uppercase;">NEW WORLD STATE ● SOVEREIGN</td></tr>
+                              </table>
+                            </td>
+                            <td style="width: 30%; vertical-align: middle; text-align: center;">
+                              <div style="border: 2px solid ${goldColor}; width: 85px; height: 105px; background-color: #071530; border-radius: 8px; overflow: hidden; display: inline-block;">
+                                ${photoUrlVal ? `<img src="${photoUrlVal}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto" />` : `<div style="padding-top: 35px; font-size: 9px; color: #475569; text-align: center;">FOTO<br/>VALIDA</div>`}
+                              </div>
+                            </td>
+                          </tr>
+                        </table>
+                        
+                        <div style="margin-top: 15px; border-top: 1px dashed rgba(197,168,128,0.3); padding-top: 15px;">
+                          <table style="width: 100%;">
+                            <tr>
+                              <td>
+                                <div style="color: #94a3b8; font-size: 8px; text-transform: uppercase;">Codice Cittadino / Citizen Code</div>
+                                <div style="font-family: monospace; font-size: 15px; font-weight: bold; color: ${goldColor}; letter-spacing: 1px; margin-top: 4px;">${citizenCodeVal}</div>
+                              </td>
+                              <td style="vertical-align: bottom; text-align: right;">
+                                <div style="font-family: monospace; font-size: 8px; color: #64748b; word-break: break-all;">NWS SIGNATURE HASH: ${hashVal ? hashVal.slice(0, 16).toUpperCase() : 'VALIDATED'}</div>
+                              </td>
+                            </tr>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+  
+                    <p style="font-size: 14px; margin-top: 24px;">Il documento digitale generato qui sopra rappresenta il tuo identificativo provvisorio valido ed idoneo per l'esercizio di tutti i diritti federati e per il futuro rilascio del passaporto fisico anagrafico.</p>
+                    
+                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+                    
+                    <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 0;">
+                      <em>"Uniti nello spazio, legati per diritto."</em><br/>
+                      <strong>Ufficio dell'Anagrafe Federale del New World State</strong>
+                    </p>
+                  </div>
+                  
+                  <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8;">
+                    Ricevi questa email perché la tua domanda di cittadinanza è stata accolta favorevolmente dal Comitato.
+                  </div>
+                </div>
+              `;
+              await sendEmail(email.trim(), 'CONGRATULAZIONI! La tua cittadinanza New World State è approvata', welcomeHtml, env);
+            } catch (smtpErr) {
+              console.error('[SMTP-APPROVE-ERR] Eccezione nell\'invio email approvazione dal Worker:', smtpErr);
+            }
+          }
+
+          return new Response(JSON.stringify({ success: true, message: 'Cittadino approvato con successo e ID card spedita via email!', citizen: updated }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (dbErr) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore durante l\'approvazione nel database: ' + dbErr.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      // Rotta: Admin Reject (Rifiuto domanda anagrafica con motivazione)
+      if (url.pathname === '/api/admin/reject' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          const { id, reason } = body;
+          if (!id) {
+            return new Response(JSON.stringify({ success: false, message: 'ID cittadino mancante.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          if (!reason) {
+            return new Response(JSON.stringify({ success: false, message: 'Fornire una motivazione per il rifiuto.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const citizenRows = await queryDb('SELECT * FROM citizens WHERE id = $1', [id]);
+          if (citizenRows.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const citizen = citizenRows[0];
+
+          const columnsQuery = `
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'citizens'
+          `;
+          const cols = await queryDb(columnsQuery);
+          const existingColsLower = cols.map(c => c.column_name.toLowerCase());
+
+          let updateSql = '';
+          let params = [];
+          if (existingColsLower.includes('rejectionreason')) {
+            updateSql = 'UPDATE citizens SET status = $1, "rejectionReason" = $2 WHERE id = $3 RETURNING *';
+            params = ['rejected', reason, id];
+          } else {
+            updateSql = 'UPDATE citizens SET status = $1 WHERE id = $2 RETURNING *';
+            params = ['rejected', id];
+          }
+
+          const updatedRows = await queryDb(updateSql, params);
+          if (updatedRows.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Impossibile aggiornare lo stato di validazione.' }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const updated = updatedRows[0];
+
+          // Invio dell'email di rifiuto
+          const email = updated.email || citizen.email;
+          if (email && email.includes('@')) {
+            try {
+              const firstNameVal = updated.firstName || updated.firstname || citizen.firstName || citizen.firstname || '';
+              const surnameVal = updated.surname || citizen.surname || '';
+
+              const textHtml = `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 16px;">
+                  <div style="background-color: #ef4444; padding: 30px; border-radius: 12px; text-align: center; color: white;">
+                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: white;">Aggiornamento Registrazione</h1>
+                    <p style="margin: 5px 0 0 0; color: #fee2e2; font-size: 15px;">Domanda di Cittadinanza Respinta</p>
+                  </div>
+                  
+                  <div style="padding: 30px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; line-height: 1.6;">
+                    <p style="font-size: 16px; margin-top: 0;">Gentile <strong>${firstNameVal} ${surnameVal}</strong>,</p>
+                    
+                    <p style="font-size: 15px;">Ti informiamo che, a seguito di un controllo attento da parte del comitato d'esame dell'Anagrafe del New World State, la tua richiesta di iscrizione <strong>non è stata accolta</strong>.</p>
+                    
+                    <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 18px; border-radius: 8px; margin: 24px 0;">
+                      <h4 style="margin: 0 0 5px 0; color: #991b1b; font-size: 13px; font-weight: bold; text-transform: uppercase;">MOTIVAZIONE DEL RIFIUTO / REJECTION REASONS</h4>
+                      <p style="margin: 0; color: #b91c1c; font-size: 14px; font-style: italic; white-space: pre-line;">"${reason}"</p>
+                    </div>
+  
+                    <p style="font-size: 14px;">La discrepanza riscontrata deve essere risolta affinché l'iscrizione possa procedere. Puoi ricompilare il modulo di registrazione sul portale correggendo le incongruenze evidenziate.</p>
+                    
+                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+                    
+                    <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 0;">
+                      <em>"Uniti nello spazio, legati per diritto."</em><br/>
+                      <strong>Ufficio dell'Anagrafe Federale del New World State</strong>
+                    </p>
+                  </div>
+                  
+                  <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8;">
+                    Ricevi questa email in conformità alle norme di revisione e trasparenza anagrafica di New World State.
+                  </div>
+                </div>
+              `;
+
+              await sendEmail(email.trim(), 'Stato domanda di cittadinanza New World State (Non accetta)', textHtml, env);
+            } catch (smtpErr) {
+              console.error('[SMTP-REJECT-ERR] Errore invio rifiuto:', smtpErr);
+            }
+          }
+
+          return new Response(JSON.stringify({ success: true, message: 'Pratica respinta con successo e spiegazione spedita via email.', citizen: updated }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (dbErr) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore durante il rifiuto nel database: ' + dbErr.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
         }
       }
 
