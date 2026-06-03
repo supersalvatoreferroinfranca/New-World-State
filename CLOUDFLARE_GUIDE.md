@@ -1592,6 +1592,21 @@ CREATE TABLE citizens (
           }
         }
 
+        // --- SALVATAGGIO DEI LINK FISICI ARUBA NEL DATABASE POSTGRESQL ---
+        if ((arubaFrontUrl || arubaBackUrl || arubaPhotoUrl) && citizenId) {
+          try {
+            await queryDb('UPDATE citizens SET "arubaFrontUrl" = $1, "arubaBackUrl" = $2, "arubaPhotoUrl" = $3 WHERE id = $4', [
+              arubaFrontUrl || null,
+              arubaBackUrl || null,
+              arubaPhotoUrl || null,
+              Number(citizenId)
+            ]);
+            console.log('[DB-UPDATE-ARUBA] Record aggiornato con i link fisici Aruba.');
+          } catch (dbUpErr) {
+            console.error('[DB-UPDATE-ARUBA-ERR] Errore nell\'aggiornamento del record con i link Aruba:', dbUpErr.message);
+          }
+        }
+
         // --- INVIO EMAIL DI NOTIFICA E CONFERMA ---
         try {
           const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";

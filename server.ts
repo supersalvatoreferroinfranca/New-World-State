@@ -51,6 +51,10 @@ async function runMigrations() {
       await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "rejectionReason" TEXT`);
       // Ensure status column exists
       await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending'`);
+      // Ensure aruba columns exist for persistent document links
+      await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "arubaFrontUrl" TEXT`);
+      await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "arubaBackUrl" TEXT`);
+      await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "arubaPhotoUrl" TEXT`);
       console.log('[MIGRATION] PostgreSQL Table checked and updated successfully.');
     } finally {
       client.release();
@@ -351,7 +355,8 @@ async function startServer() {
                     '"citizenship"', '"maritalStatus"', '"residenceAddress"', '"residenceNumber"', '"residenceZip"',
                     '"residenceCity"', '"residenceProvince"', '"residenceCountry"', '"email"', '"phonePrefix"',
                     '"phoneNumber"', '"username"', '"password"', '"documentHash"', '"documentType"',
-                    '"plusCode"', '"locationDescription"', '"isAmbassador"', '"isPeacekeeper"', 'status', '"citizenCode"'
+                    '"plusCode"', '"locationDescription"', '"isAmbassador"', '"isPeacekeeper"', 'status', '"citizenCode"',
+                    '"arubaFrontUrl"', '"arubaBackUrl"', '"arubaPhotoUrl"'
                   ];
                   
                   const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
@@ -382,7 +387,10 @@ async function startServer() {
                     !!serializablePayload.isAmbassador,
                     !!serializablePayload.isPeacekeeper,
                     'pending',
-                    citizenCode
+                    citizenCode,
+                    arubaFrontUrl || null,
+                    arubaBackUrl || null,
+                    arubaPhotoUrl || null
                   ];
                   
                   const qText = `INSERT INTO citizens (${columns.join(', ')}) VALUES (${placeholders}) RETURNING id`;
@@ -392,7 +400,29 @@ async function startServer() {
                     data.id = qRes.rows[0].id; // Usa ID locale per rintracciabilità
                   }
                 } catch (localDbErr: any) {
-                  console.error('[DB-LOCAL-SYNC-ERR] Eccezione nel salvataggio locale SQL:', localDbErr.message);
+                  console.error('[DB-LOCAL-SYNC-ERR] Eccezione nel salvataggio locale SQL (provo ad aggiornare):', localDbErr.message);
+                  try {
+                    // Se la riga esiste già (inserita nel worker), proviamo a salvare i link delle foto con un UPDATE
+                    const updateQuery = `
+                      UPDATE citizens SET
+                        "arubaFrontUrl" = COALESCE("arubaFrontUrl", $1),
+                        "arubaBackUrl" = COALESCE("arubaBackUrl", $2),
+                        "arubaPhotoUrl" = COALESCE("arubaPhotoUrl", $3),
+                        "citizenCode" = COALESCE("citizenCode", $4)
+                      WHERE "email" = $5 OR "documentHash" = $6
+                    `;
+                    await dbPool.query(updateQuery, [
+                      arubaFrontUrl || null,
+                      arubaBackUrl || null,
+                      arubaPhotoUrl || null,
+                      citizenCode,
+                      serializablePayload.email || '',
+                      serializablePayload.documentHash || ''
+                    ]);
+                    console.log('[DB-LOCAL-SYNC-UPDATE] Aggiornato con successo il record esistente con i link fisici Aruba.');
+                  } catch (upErr: any) {
+                    console.error('[DB-LOCAL-SYNC-UPDATE-ERR] Errore riscontrato durante l\'aggiornamento del record esistente:', upErr.message);
+                  }
                 }
               }
 
@@ -639,20 +669,57 @@ Ufficio dell'Anagrafe Federale del New World State
 
     // --- ENPOINTS DI AMMINISTRAZIONE LOCALE E VALIDAZIONE ---
     
+    // Helper to augment citizen data with self-healing Aruba URLs if missing from DB columns
+    function getCitizenWithArubaUrls(cit: any) {
+      if (!cit) return cit;
+      
+      const front = cit.arubaFrontUrl || cit.arubafronturl;
+      const back = cit.arubaBackUrl || cit.arubabackurl;
+      const photo = cit.arubaPhotoUrl || cit.arubaphotourl;
+      
+      let arubaBase = 'https://www.newworldstate.org/';
+      if (process.env.ARUBA_UPLOADER_URL) {
+        const cleanUrl = process.env.ARUBA_UPLOADER_URL.replace(/nws-uploader\.php.*/, '').replace(/uploader\.php.*/, '');
+        if (cleanUrl.includes('newworldstate.cloud')) {
+          arubaBase = 'https://www.newworldstate.org/';
+        } else {
+          arubaBase = cleanUrl;
+        }
+      }
+      if (!arubaBase.endsWith('/')) arubaBase += '/';
+
+      const citizenId = cit.id;
+      
+      const arubaFrontUrl = front || `${arubaBase}documents/${citizenId}/fronte.png`;
+      const arubaBackUrl = back || `${arubaBase}documents/${citizenId}/retro.png`;
+      const arubaPhotoUrl = photo || `${arubaBase}documents/${citizenId}/foto.png`;
+
+      return {
+        ...cit,
+        arubaFrontUrl,
+        arubaBackUrl,
+        arubaPhotoUrl,
+        arubafronturl: arubaFrontUrl,
+        arubabackurl: arubaBackUrl,
+        arubaphotourl: arubaPhotoUrl
+      };
+    }
+
     // Helper search function
     async function findCitizenById(id: string | number) {
       if (dbPool) {
         try {
           const qRes = await dbPool.query('SELECT * FROM citizens WHERE id = $1', [id]);
           if (qRes.rows.length > 0) {
-            return qRes.rows[0];
+            return getCitizenWithArubaUrls(qRes.rows[0]);
           }
         } catch (e: any) {
           console.error('[DB-LOCAL-GET-ERR] Fallback to memory search:', e.message);
         }
       }
       const parsedId = String(id);
-      return memoryCitizens.find(c => String(c.id) === parsedId) || null;
+      const found = memoryCitizens.find(c => String(c.id) === parsedId);
+      return found ? getCitizenWithArubaUrls(found) : null;
     }
 
     // Helper status update function
@@ -692,21 +759,23 @@ Ufficio dell'Anagrafe Federale del New World State
         }
       }
       
-      return updatedRecord;
+      return getCitizenWithArubaUrls(updatedRecord);
     }
 
     // List all registered citizens
     apiRouter.get('/admin/citizens', async (req, res) => {
-      console.log('[API] Processing /api/admin/citizens request');
+      console.log('[API] Processing /api/admin/citizens request - Augmenting with self-healing Aruba URLs');
       if (dbPool) {
         try {
           const qRes = await dbPool.query('SELECT * FROM citizens ORDER BY id DESC');
-          return res.json({ success: true, count: qRes.rows.length, data: qRes.rows });
+          const augmented = qRes.rows.map(row => getCitizenWithArubaUrls(row));
+          return res.json({ success: true, count: qRes.rows.length, data: augmented });
         } catch (dbErr: any) {
           console.error('[DB-LOCAL-LIST] SQL direct list error, using memory backup:', dbErr.message);
         }
       }
-      return res.json({ success: true, count: memoryCitizens.length, data: memoryCitizens });
+      const augmented = memoryCitizens.map(row => getCitizenWithArubaUrls(row));
+      return res.json({ success: true, count: memoryCitizens.length, data: augmented });
     });
 
     // Approve a citizen & send beautiful sovereign digital ID card via email
