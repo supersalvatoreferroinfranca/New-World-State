@@ -305,9 +305,8 @@ async function startServer() {
         text: plainTextFallback,
         messageId: cleanMessageId,
         headers: {
-          'List-Unsubscribe': `<mailto:${from}?subject=unsubscribe>`,
-          'Precedence': 'bulk',
-          'X-Auto-Response-Suppress': 'OOF, AutoReply',
+          'X-Priority': '3',
+          'X-Mailer': 'NWS-Federal-Mailer',
         },
         attachments: attachments || []
       };
@@ -1595,6 +1594,71 @@ Ufficio dell'Anagrafe Federale del New World State
                           status === 'rejected' ? 'RESPINTO' : 
                           'IN ATTESA DI VALIDAZIONE';
 
+      let decisionPanelHtml = '';
+      if (status === 'approved') {
+        const docHash = cit.documentHash || 'VALIDATED';
+        const cleanHash = docHash.slice(0, 16).toUpperCase();
+        decisionPanelHtml = `
+          <div class="space-y-4">
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-5 rounded-2xl text-center space-y-2">
+              <div class="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">✓</div>
+              <h4 class="font-bold text-sm tracking-wide">PRATICA GIÀ APPROVATA</h4>
+              <p class="text-xs text-emerald-600 leading-relaxed">Questa domanda di cittadinanza è stata accolta favorevolmente dal comitato anagrafico. La ID card ufficiale è stata generata e spedita via email.</p>
+            </div>
+            
+            <div class="bg-slate-50 border border-slate-100 p-4 rounded-xl space-y-3">
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-semibold">Codice Cittadino NWS</span>
+                <div class="font-mono text-base font-bold text-[#c5a880] select-all">${cit.citizenCode || 'N/D'}</div>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-semibold">Firma Digitale Federale</span>
+                <div class="font-mono text-[10px] text-slate-500 font-bold">NWS HASH: ${cleanHash}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (status === 'rejected') {
+        decisionPanelHtml = `
+          <div class="space-y-4">
+            <div class="bg-rose-50 border border-rose-200 text-rose-800 p-5 rounded-2xl text-center space-y-2">
+              <div class="w-12 h-12 bg-rose-500 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">✕</div>
+              <h4 class="font-bold text-sm tracking-wide">PRATICA RESPINTA</h4>
+              <p class="text-xs text-rose-600 leading-relaxed">Questa domanda è stata catalogata come respinta.</p>
+            </div>
+            
+            <div class="bg-slate-50 border border-slate-100 p-4 rounded-xl">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold block mb-1">Motivazione Formalizzata</span>
+              <p class="text-xs text-slate-700 italic bg-white p-3 rounded-lg border border-slate-100">
+                "${cit.rejectionReason || 'Nessuna motivazione specificata.'}"
+              </p>
+            </div>
+          </div>
+        `;
+      } else {
+        decisionPanelHtml = `
+          <div id="action-ui" class="space-y-4">
+            <p class="text-xs text-slate-500 leading-relaxed mb-4">In qualità di validatore del New World State, esamina lo stato formale dei requisiti anagrafici. Approvando, il cittadino riceverà un'email con il suo passaporto e il suo certificato. Rifiutando, verrà motivata la respinta via email.</p>
+            
+            <!-- INPUT REJECTION REASON -->
+            <div>
+              <label for="rejectReason" class="block text-xs font-semibold text-slate-600 mb-2">Motivazione Obbligatoria del Rifiuto (se applica)</label>
+              <textarea id="rejectReason" rows="4" placeholder="Inserisci qui i motivi specifici dell'eventuale respinta di questa richiesta..." class="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0a1c3e] transition text-slate-800 bg-slate-50/50 resize-none">${cit.rejectionReason || ''}</textarea>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="flex flex-col gap-3 pt-2">
+              <button id="btn-approve" onclick="submitDecision('approve')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition duration-150 active:scale-95 shadow-md shadow-emerald-600/10 flex items-center justify-center gap-2 text-sm select-none">
+                <span>✓</span> APPROVA REGISTRAZIONE
+              </button>
+              <button id="btn-reject" onclick="submitDecision('reject')" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3.5 px-4 rounded-xl transition duration-150 active:scale-95 shadow-md shadow-rose-500/10 flex items-center justify-center gap-2 text-sm select-none">
+                <span>✕</span> RESPINGI REGISTRAZIONE
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
       return res.send(`
         <!DOCTYPE html>
         <html lang="it">
@@ -1761,25 +1825,7 @@ Ufficio dell'Anagrafe Federale del New World State
                     <span class="text-amber-500">🛠️</span> Pannello di Decisione
                   </h3>
 
-                  <div id="action-ui" class="space-y-4">
-                    <p class="text-xs text-slate-500 leading-relaxed mb-4">In qualità di validatore del New World State, esamina lo stato formale dei requisiti anagrafici. Approvando, il cittadino riceverà un'email con il suo passaporto e il suo certificato. Rifiutando, verrà motivata la respinta via email.</p>
-                    
-                    <!-- INPUT REJECTION REASON -->
-                    <div>
-                      <label for="rejectReason" class="block text-xs font-semibold text-slate-600 mb-2">Motivazione Obbligatoria del Rifiuto (se applica)</label>
-                      <textarea id="rejectReason" rows="4" placeholder="Inserisci qui i motivi specifici dell'eventuale respinta di questa richiesta..." class="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0a1c3e] transition text-slate-800 bg-slate-50/50 resize-none">${cit.rejectionReason || ''}</textarea>
-                    </div>
-
-                    <!-- ACTION BUTTONS -->
-                    <div class="flex flex-col gap-3 pt-2">
-                      <button id="btn-approve" onclick="submitDecision('approve')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition duration-150 active:scale-95 shadow-md shadow-emerald-600/10 flex items-center justify-center gap-2 text-sm select-none">
-                        <span>✓</span> APPROVA REGISTRAZIONE
-                      </button>
-                      <button id="btn-reject" onclick="submitDecision('reject')" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3.5 px-4 rounded-xl transition duration-150 active:scale-95 shadow-md shadow-rose-500/10 flex items-center justify-center gap-2 text-sm select-none">
-                        <span>✕</span> RESPINGI REGISTRAZIONE
-                      </button>
-                    </div>
-                  </div>
+                  ${decisionPanelHtml}
 
                   <!-- LOADING OVERLAY -->
                   <div id="loading-ui" class="hidden text-center py-10 space-y-4">
@@ -1818,7 +1864,8 @@ Ufficio dell'Anagrafe Federale del New World State
           <!-- FORM SUBMIT SCRIPT -->
           <script>
             function submitDecision(action) {
-              const reason = document.getElementById('rejectReason').value.trim();
+              const reasonEl = document.getElementById('rejectReason');
+              const reason = reasonEl ? reasonEl.value.trim() : '';
               
               if (action === 'reject' && !reason) {
                 alert('Attenzione: Devi inserire obbligatoriamente il motivo del rifiuto nella casella di testo.');
@@ -1826,7 +1873,8 @@ Ufficio dell'Anagrafe Federale del New World State
               }
 
               // Show Loading
-              document.getElementById('action-ui').classList.add('hidden');
+              const actionUi = document.getElementById('action-ui');
+              if (actionUi) actionUi.classList.add('hidden');
               document.getElementById('loading-ui').classList.remove('hidden');
 
               const endpoint = action === 'approve' ? '/api/admin/approve' : '/api/admin/reject';
@@ -1849,7 +1897,7 @@ Ufficio dell'Anagrafe Federale del New World State
                   document.getElementById('success-title').innerText = action === 'approve' ? 'Registrazione Approvata!' : 'Richiesta Respinta!';
                   document.getElementById('success-desc').innerText = action === 'approve' 
                     ? 'La richiesta è stata formalmente approvata. Il passaporto e il certificato sono stati spediti via email al cittadino.' 
-                    : 'La richiesta è stata respinta col motivo specificato ed è stata inviata un\\'email di chiarimento al candidato.';
+                    : 'La richiesta è stata respinta col motivo specificato ed è stata inviata un\'email di chiarimento al candidato.';
                 } else {
                   showError(data.message || 'La chiamata al database ha fallito.');
                 }
@@ -1861,7 +1909,8 @@ Ufficio dell'Anagrafe Federale del New World State
             }
 
             function showError(msg) {
-              document.getElementById('action-ui').classList.add('hidden');
+              const actionUi = document.getElementById('action-ui');
+              if (actionUi) actionUi.classList.add('hidden');
               document.getElementById('error-ui').classList.remove('hidden');
               document.getElementById('error-desc').innerText = msg;
             }
@@ -1869,15 +1918,17 @@ Ufficio dell'Anagrafe Federale del New World State
             function resetUI() {
               document.getElementById('error-ui').classList.add('hidden');
               document.getElementById('success-ui').classList.add('hidden');
-              document.getElementById('action-ui').classList.remove('hidden');
+              const actionUi = document.getElementById('action-ui');
+              if (actionUi) actionUi.classList.remove('hidden');
             }
             
             // Auto action triggers from link if query action exists
             window.addEventListener('load', () => {
               const urlParams = new URLSearchParams(window.location.search);
               const action = urlParams.get('action');
-              if (action === 'reject') {
-                document.getElementById('rejectReason').focus();
+              const rejectReasonEl = document.getElementById('rejectReason');
+              if (action === 'reject' && rejectReasonEl) {
+                rejectReasonEl.focus();
               }
             });
           </script>

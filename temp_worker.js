@@ -718,8 +718,191 @@ CREATE TABLE citizens (
         return await readSMTPResponse(reader);
       };
 
+      // Generatore PDF ultraleggero in Puro JS (per l'ambiente Serverless Cloudflare Workers)
+      const generateIdCardPdfPureJS = async (citizen, env) => {
+        const surname = (citizen.surname || '').toUpperCase();
+        const firstName = (citizen.firstName || citizen.firstname || '').toUpperCase();
+        const birthDate = citizen.birthDate || citizen.birthdate || 'N/A';
+        const birthPlace = (citizen.birthPlace || citizen.birthplace || '').toUpperCase();
+        const birthCountry = (citizen.birthCountry || citizen.birthcountry || '').toUpperCase();
+        const citizenCode = citizen.citizenCode || citizen.citizencode || 'N/A';
+        const docHash = (citizen.documentHash || citizen.documenthash || 'VALIDATED').slice(0, 16).toUpperCase();
+        const placeStr = birthPlace ? `${birthPlace}${birthCountry ? ` (${birthCountry})` : ''}` : (birthCountry || 'NWS');
+        const birthStr = `${birthDate} - ${placeStr}`;
+
+        let imageObject = null;
+        const photoUrl = citizen.arubaPhotoUrl || citizen.arubaphotourl;
+        if (photoUrl && photoUrl.startsWith('http')) {
+          try {
+            console.log(`[Worker-PDF] Fetching photo for PDF: ${photoUrl}`);
+            const imgRes = await fetch(photoUrl);
+            if (imgRes.ok) {
+              const arrayBuffer = await imgRes.arrayBuffer();
+              const imgBuffer = new Uint8Array(arrayBuffer);
+              if (imgBuffer[0] === 0xff && imgBuffer[1] === 0xd8) {
+                imageObject = imgBuffer;
+              } else {
+                console.log('[Worker-PDF] Image was not a JPEG format. Defaulting to placeholder.');
+              }
+            }
+          } catch (e) {
+            console.error('[Worker-PDF] Failed to fetch photo:', e.message);
+          }
+        }
+
+        let contents = '';
+        contents += `0.039 0.110 0.243 rg 0 0 242.65 153.01 re f\n`;
+        contents += `0.773 0.659 0.502 RG 1.2 w 2 2 238.65 149.01 re S\n`;
+        contents += `0.027 0.082 0.188 rg 2 126.01 238.65 25 re f\n`;
+        contents += `0.773 0.659 0.502 RG 0.8 w 2 126 m 240.65 126 l S\n`;
+        
+        contents += `BT /F1 6.5 Tf 0.773 0.659 0.502 rg 8 141 Td /CharSpacing 0.5 Tc (NEW WORLD STATE) Tj ET\n`;
+        contents += `BT /F2 4.2 Tf 0.580 0.639 0.722 rg 8 133 Td /CharSpacing 0.3 Tc (SOVEREIGN GLOBAL CITIZENSHIP) Tj ET\n`;
+        contents += `BT /F1 8.5 Tf 0.773 0.659 0.502 rg 192 139 Td (ID CARD) Tj ET\n`;
+        
+        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 116 Td (COGNOME / SURNAME) Tj ET\n`;
+        contents += `BT /F1 6.5 Tf 1 1 1 rg 8 108 Td (${escapePDFText(surname)}) Tj ET\n`;
+
+        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 98 Td (NOME / GIVEN NAMES) Tj ET\n`;
+        contents += `BT /F1 6.5 Tf 1 1 1 rg 8 90 Td (${escapePDFText(firstName)}) Tj ET\n`;
+
+        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 80 Td (DATA E LUOGO DI NASCITA / DATE & PLACE OF BIRTH) Tj ET\n`;
+        contents += `BT /F2 4.8 Tf 1 1 1 rg 8 72 Td (${escapePDFText(birthStr)}) Tj ET\n`;
+
+        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 62 Td (CITTADINANZA / NATIONALITY) Tj ET\n`;
+        contents += `BT /F1 5 Tf 0.773 0.659 0.502 rg 8 54 Td (NEW WORLD STATE - SOVEREIGN) Tj ET\n`;
+
+        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 28 Td (CODICE CITTADINO / CITIZEN CODE) Tj ET\n`;
+        contents += `BT /F1 8.0 Tf 0.773 0.659 0.502 rg 8 18 Td (${escapePDFText(citizenCode)}) Tj ET\n`;
+
+        contents += `BT /F2 4.2 Tf 0.392 0.455 0.545 rg 132 14 Td (NWS SIGNATURE: ${escapePDFText(docHash)}) Tj ET\n`;
+        contents += `[2 2] 0 d 0.773 0.659 0.502 RG 0.5 w 4 39 m 238.65 39 l S [] 0 d\n`;
+
+        if (imageObject) {
+          contents += `q 56 0 0 71 178.65 49.01 cm /I1 Do Q\n`;
+        } else {
+          contents += `0.027 0.082 0.188 rg 0.773 0.659 0.502 RG 0.8 w 178.65 49.01 56 71 re b\n`;
+          contents += `BT /F1 5 Tf 0.580 0.639 0.722 rg 198 87 Td (FOTO) Tj ET\n`;
+          contents += `BT /F1 4.5 Tf 0.580 0.639 0.722 rg 190 80 Td (VALIDATA) Tj ET\n`;
+        }
+
+        function escapePDFText(t) {
+          return (t || '').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        }
+
+        const pdfOutput = [];
+        const encoder = new TextEncoder();
+        const addString = (str) => { pdfOutput.push(encoder.encode(str)); };
+
+        const offsets = [];
+        let currentOffset = 0;
+
+        const pushObject = (bytes) => {
+          offsets.push(currentOffset);
+          pdfOutput.push(bytes);
+          currentOffset += bytes.length;
+        };
+
+        const createObjectString = (index, def) => {
+          return `${index} 0 obj\n${def}\nendobj\n`;
+        };
+
+        const headerStr = `%PDF-1.4\n`;
+        addString(headerStr);
+        currentOffset += headerStr.length;
+
+        const catalogStr = createObjectString(1, `<< /Type /Catalog /Pages 2 0 R >>`);
+        pushObject(encoder.encode(catalogStr));
+
+        const pagesStr = createObjectString(2, `<< /Type /Pages /Kids [3 0 R] /Count 1 >>`);
+        pushObject(encoder.encode(pagesStr));
+
+        let xobjectsStr = '';
+        if (imageObject) {
+          xobjectsStr = `/XObject << /I1 6 0 R >>`;
+        }
+        const pageStr = createObjectString(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 242.65 153.01] /Resources << /Font << /F1 5 0 R /F2 7 0 R >> ${xobjectsStr} >> /Contents 4 0 R >>`);
+        pushObject(encoder.encode(pageStr));
+
+        const contentsStreamBytes = encoder.encode(contents);
+        const contentsLength = contentsStreamBytes.length;
+        const contentsObjStr = `4 0 obj\n<< /Length ${contentsLength} >>\nstream\n`;
+        const contentsEndStr = `\nendstream\nendobj\n`;
+        
+        const obj4Header = encoder.encode(contentsObjStr);
+        const obj4Footer = encoder.encode(contentsEndStr);
+        const obj4Merged = new Uint8Array(obj4Header.length + contentsStreamBytes.length + obj4Footer.length);
+        obj4Merged.set(obj4Header, 0);
+        obj4Merged.set(contentsStreamBytes, obj4Header.length);
+        obj4Merged.set(obj4Footer, obj4Header.length + contentsStreamBytes.length);
+        pushObject(obj4Merged);
+
+        const font1Str = createObjectString(5, `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>`);
+        pushObject(encoder.encode(font1Str));
+
+        const font2Str = createObjectString(7, `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`);
+        pushObject(encoder.encode(font2Str));
+
+        if (imageObject) {
+          let width = 300;
+          let height = 375;
+          try {
+            let i = 2;
+            while (i < imageObject.length) {
+              if (imageObject[i] === 0xFF) {
+                const marker = imageObject[i+1];
+                if (marker >= 0xC0 && marker <= 0xC3) {
+                  height = (imageObject[i+5] << 8) | imageObject[i+6];
+                  width = (imageObject[i+7] << 8) | imageObject[i+8];
+                  break;
+                }
+                i++;
+              } else {
+                i++;
+              }
+            }
+          } catch (_) {}
+
+          const imgObjHeader = `6 0 obj\n<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageObject.length} >>\nstream\n`;
+          const imgObjFooter = `\nendstream\nendobj\n`;
+          
+          const hBytes = encoder.encode(imgObjHeader);
+          const fBytes = encoder.encode(imgObjFooter);
+          
+          const mergedImg = new Uint8Array(hBytes.length + imageObject.length + fBytes.length);
+          mergedImg.set(hBytes, 0);
+          mergedImg.set(imageObject, hBytes.length);
+          mergedImg.set(fBytes, hBytes.length + imageObject.length);
+          pushObject(mergedImg);
+        }
+
+        const startXref = currentOffset;
+        const objectCount = offsets.length + 1;
+        
+        let xrefStr = `xref\n0 ${objectCount}\n0000000000 65535 f \n`;
+        for (let idx = 0; idx < offsets.length; idx++) {
+          const paddedOffset = String(offsets[idx]).padStart(10, '0');
+          xrefStr += `${paddedOffset} 00000 n \n`;
+        }
+        
+        xrefStr += `trailer\n<< /Size ${objectCount} /Root 1 0 R >>\nstartxref\n${startXref}\n%%EOF\n`;
+        addString(xrefStr);
+
+        let totalLength = 0;
+        for (let b of pdfOutput) {
+          totalLength += b.length;
+        }
+        const finalPdf = new Uint8Array(totalLength);
+        let pos = 0;
+        for (let b of pdfOutput) {
+          finalPdf.set(b, pos);
+          pos += b.length;
+        }
+        return finalPdf;
+      };
+
       // Spedizione dei dati tramite connessione socket protetta nativa (cloudflare:sockets)
-      const sendSmtpSocketEmail = async (to, subject, html, env) => {
+      const sendSmtpSocketEmail = async (to, subject, html, env, attachments = []) => {
         const host = env.SMTP_HOST || 'smtps.aruba.it';
         const port = parseInt(env.SMTP_PORT || '465', 10);
         const user = env.SMTP_USER;
@@ -781,23 +964,71 @@ CREATE TABLE citizens (
           const utf8Subject = `=?UTF-8?B?${base64Subject}?=`;
 
           const fromDomain = from.includes('@') ? from.split('@')[1] : 'newworldstate.org';
+          const boundary = `nws_attachment_boundary_${Math.floor(Math.random() * 1000000000)}`;
 
-          const headers = 
-            `From: "${fromName}" <${from}>\r\n` +
-            `To: <${to}>\r\n` +
-            `Subject: ${utf8Subject}\r\n` +
-            `Date: ${dateStr}\r\n` +
-            `MIME-Version: 1.0\r\n` +
-            `Content-Type: text/html; charset=utf-8\r\n` +
-            `Content-Transfer-Encoding: 8bit\r\n` +
-            `List-Unsubscribe: <mailto:${from}?subject=unsubscribe>\r\n` +
-            `Precedence: bulk\r\n` +
-            `X-Auto-Response-Suppress: OOF, AutoReply\r\n` +
-            `Message-ID: <${Date.now()}-${Math.floor(Math.random() * 100000)}@${fromDomain}>\r\n\r\n`;
+          let mimeRaw = '';
+          if (attachments && attachments.length > 0) {
+            mimeRaw = 
+              `From: "${fromName}" <${from}>\r\n` +
+              `To: <${to}>\r\n` +
+              `Subject: ${utf8Subject}\r\n` +
+              `Date: ${dateStr}\r\n` +
+              `X-Priority: 3 (Normal)\r\n` +
+              `X-Mailer: NWS-Federal-Mailer\r\n` +
+              `MIME-Version: 1.0\r\n` +
+              `Content-Type: multipart/mixed; boundary="${boundary}"\r\n` +
+              `Message-ID: <${Date.now()}-${Math.floor(Math.random() * 100000)}@${fromDomain}>\r\n\r\n` +
+              `--${boundary}\r\n` +
+              `Content-Type: text/html; charset=utf-8\r\n` +
+              `Content-Transfer-Encoding: 8bit\r\n\r\n` +
+              html.replace(/\r?\n/g, '\r\n') + `\r\n\r\n`;
 
-          const body = html.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n';
+            for (let attach of attachments) {
+              let base64Content = '';
+              if (attach.content instanceof Uint8Array) {
+                let binary = '';
+                const len = attach.content.byteLength;
+                if (typeof Buffer !== 'undefined') {
+                  base64Content = Buffer.from(attach.content).toString('base64');
+                } else {
+                  for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(attach.content[i]);
+                  }
+                  base64Content = btoa(binary);
+                }
+              } else if (typeof attach.content === 'string') {
+                base64Content = attach.content;
+              } else {
+                base64Content = btoa(String.fromCharCode.apply(null, attach.content));
+              }
 
-          await writer.write(encoder.encode(headers + body));
+              const formattedBase64 = base64Content.replace(/(.{76})/g, "$1\r\n");
+
+              mimeRaw += 
+                `--${boundary}\r\n` +
+                `Content-Type: ${attach.contentType || 'application/octet-stream'}; name="${attach.filename}"\r\n` +
+                `Content-Transfer-Encoding: base64\r\n` +
+                `Content-Disposition: attachment; filename="${attach.filename}"\r\n\r\n` +
+                formattedBase64 + `\r\n\r\n`;
+            }
+
+            mimeRaw += `--${boundary}--\r\n.\r\n`;
+          } else {
+            mimeRaw = 
+              `From: "${fromName}" <${from}>\r\n` +
+              `To: <${to}>\r\n` +
+              `Subject: ${utf8Subject}\r\n` +
+              `Date: ${dateStr}\r\n` +
+              `X-Priority: 3 (Normal)\r\n` +
+              `X-Mailer: NWS-Federal-Mailer\r\n` +
+              `MIME-Version: 1.0\r\n` +
+              `Content-Type: text/html; charset=utf-8\r\n` +
+              `Content-Transfer-Encoding: 8bit\r\n` +
+              `Message-ID: <${Date.now()}-${Math.floor(Math.random() * 100000)}@${fromDomain}>\r\n\r\n` +
+              html.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n';
+          }
+
+          await writer.write(encoder.encode(mimeRaw));
           res = await readSMTPResponse(reader);
           if (res.code !== 250) throw new Error(`Errore durante l'invio fisico dei dati: ${res.text}`);
 
@@ -818,16 +1049,16 @@ CREATE TABLE citizens (
       };
 
       // Funzione helper per l'invio delle email (SMTP Aruba / Resend / Brevo)
-      const sendEmail = async (to, subject, html, env) => {
+      const sendEmail = async (to, subject, html, env, attachments = []) => {
         const fromEmail = env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || "onboarding@resend.dev";
         const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
         
-        console.log(`[EMAIL] Tentativo di invio a: ${to} (Oggetto: "${subject}")`);
-
+        console.log(`[EMAIL] Tentativo di invio a: ${to} (Oggetto: "${subject}", Allegati: ${attachments.length})`);
+ 
         // 0. Autodetect SMTP: Se configurato Aruba, proviamo sempre come prima opzione
         if (env.SMTP_USER && env.SMTP_PASS) {
           try {
-            const success = await sendSmtpSocketEmail(to, subject, html, env);
+            const success = await sendSmtpSocketEmail(to, subject, html, env, attachments);
             if (success) return true;
           } catch (smtpErr) {
             console.error('[EMAIL] Errore riscontrato con SMTP Direct Aruba. Proverò API alternative se presenti.', smtpErr);
@@ -837,18 +1068,45 @@ CREATE TABLE citizens (
         // 1. Resend API
         if (env.RESEND_API_KEY) {
           try {
+            const payload = {
+              from: `New World State <${fromEmail}>`,
+              to: Array.isArray(to) ? to : [to],
+              subject: subject,
+              html: html
+            };
+
+            if (attachments && attachments.length > 0) {
+              payload.attachments = attachments.map(att => {
+                let base64Content = '';
+                if (att.content instanceof Uint8Array) {
+                  if (typeof Buffer !== 'undefined') {
+                    base64Content = Buffer.from(att.content).toString('base64');
+                  } else {
+                    let binary = '';
+                    for (let i = 0; i < att.content.byteLength; i++) {
+                      binary += String.fromCharCode(att.content[i]);
+                    }
+                    base64Content = btoa(binary);
+                  }
+                } else if (typeof att.content === 'string') {
+                  base64Content = att.content;
+                } else {
+                  base64Content = btoa(String.fromCharCode.apply(null, att.content));
+                }
+                return {
+                  filename: att.filename,
+                  content: base64Content
+                };
+              });
+            }
+
             const response = await fetch('https://api.resend.com/emails', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${env.RESEND_API_KEY.trim()}`,
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({
-                from: `New World State <${fromEmail}>`,
-                to: Array.isArray(to) ? to : [to],
-                subject: subject,
-                html: html
-              })
+              body: JSON.stringify(payload)
             });
             const resultMsg = await response.text();
             console.log(`[EMAIL] Risposta Resend: [${response.status}] ${resultMsg}`);
@@ -861,18 +1119,45 @@ CREATE TABLE citizens (
         // 2. Brevo API
         if (env.BREVO_API_KEY) {
           try {
+            const payload = {
+              sender: { name: "New World State", email: fromEmail.includes('@') ? fromEmail : "onboarding@newworldstate.cloud" },
+              to: (Array.isArray(to) ? to : [to]).map(addr => ({ email: addr })),
+              subject: subject,
+              htmlContent: html
+            };
+
+            if (attachments && attachments.length > 0) {
+              payload.attachment = attachments.map(att => {
+                let base64Content = '';
+                if (att.content instanceof Uint8Array) {
+                  if (typeof Buffer !== 'undefined') {
+                    base64Content = Buffer.from(att.content).toString('base64');
+                  } else {
+                    let binary = '';
+                    for (let i = 0; i < att.content.byteLength; i++) {
+                      binary += String.fromCharCode(att.content[i]);
+                    }
+                    base64Content = btoa(binary);
+                  }
+                } else if (typeof att.content === 'string') {
+                  base64Content = att.content;
+                } else {
+                  base64Content = btoa(String.fromCharCode.apply(null, att.content));
+                }
+                return {
+                  name: att.filename,
+                  content: base64Content
+                };
+              });
+            }
+
             const response = await fetch('https://api.brevo.com/v3/smtp/email', {
               method: 'POST',
               headers: {
                 'api-key': env.BREVO_API_KEY.trim(),
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({
-                sender: { name: "New World State", email: fromEmail.includes('@') ? fromEmail : "onboarding@newworldstate.cloud" },
-                to: (Array.isArray(to) ? to : [to]).map(addr => ({ email: addr })),
-                subject: subject,
-                htmlContent: html
-              })
+              body: JSON.stringify(payload)
             });
             const resultMsg = await response.text();
             console.log(`[EMAIL] Risposta Brevo: [${response.status}] ${resultMsg}`);
@@ -1318,7 +1603,16 @@ CREATE TABLE citizens (
                   </div>
                 </div>
               `;
-              await sendEmail(email.trim(), 'CONGRATULAZIONI! La tua cittadinanza New World State è approvata', welcomeHtml, env);
+              console.log('[Worker-Approve] Generating ID Card PDF attachment for: ' + citizenCodeVal);
+              const pdfBytes = await generateIdCardPdfPureJS(updated, env);
+              const attachments = [
+                {
+                  filename: `ID_Card_NWS_${citizenCodeVal}.pdf`,
+                  content: pdfBytes,
+                  contentType: 'application/pdf'
+                }
+              ];
+              await sendEmail(email.trim(), 'CONGRATULAZIONI! La tua cittadinanza New World State è approvata', welcomeHtml, env, attachments);
             } catch (smtpErr) {
               console.error('[SMTP-APPROVE-ERR] Eccezione nell\'invio email approvazione dal Worker:', smtpErr);
             }
@@ -1499,6 +1793,71 @@ CREATE TABLE citizens (
                               status === 'rejected' ? 'RESPINTO' : 
                               'IN ATTESA DI VALIDAZIONE';
 
+          let decisionPanelHtml = '';
+          if (status === 'approved') {
+            const docHash = cit.documentHash || 'VALIDATED';
+            const cleanHash = docHash.slice(0, 16).toUpperCase();
+            decisionPanelHtml = `
+              <div class="space-y-4">
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-5 rounded-2xl text-center space-y-2">
+                  <div class="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">✓</div>
+                  <h4 class="font-bold text-sm tracking-wide">PRATICA GIÀ APPROVATA</h4>
+                  <p class="text-xs text-emerald-600 leading-relaxed">Questa domanda di cittadinanza è stata accolta favorevolmente dal comitato anagrafico. La ID card ufficiale è stata generata e spedita via email.</p>
+                </div>
+                
+                <div class="bg-slate-50 border border-slate-100 p-4 rounded-xl space-y-3">
+                  <div>
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold">Codice Cittadino NWS</span>
+                    <div class="font-mono text-base font-bold text-[#c5a880] select-all">${cit.citizenCode || 'N/D'}</div>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold">Firma Digitale Federale</span>
+                    <div class="font-mono text-[10px] text-slate-500 font-bold">NWS HASH: ${cleanHash}</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          } else if (status === 'rejected') {
+            decisionPanelHtml = `
+              <div class="space-y-4">
+                <div class="bg-rose-50 border border-rose-200 text-rose-800 p-5 rounded-2xl text-center space-y-2">
+                  <div class="w-12 h-12 bg-rose-500 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">✕</div>
+                  <h4 class="font-bold text-sm tracking-wide">PRATICA RESPINTA</h4>
+                  <p class="text-xs text-rose-600 leading-relaxed">Questa domanda è stata catalogata come respinta.</p>
+                </div>
+                
+                <div class="bg-slate-50 border border-slate-100 p-4 rounded-xl">
+                  <span class="text-[10px] text-slate-400 uppercase font-semibold block mb-1">Motivazione Formalizzata</span>
+                  <p class="text-xs text-slate-700 italic bg-white p-3 rounded-lg border border-slate-100">
+                    "${cit.rejectionReason || 'Nessuna motivazione specificata.'}"
+                  </p>
+                </div>
+              </div>
+            `;
+          } else {
+            decisionPanelHtml = `
+              <div id="action-ui" class="space-y-4">
+                <p class="text-xs text-slate-500 leading-relaxed mb-4">In qualità di validatore del New World State, esamina lo stato formale dei requisiti anagrafici. Approvando, il cittadino riceverà un'email con il suo passaporto e il suo certificato. Rifiutando, verrà motivata la respinta via email.</p>
+                
+                <!-- INPUT REJECTION REASON -->
+                <div>
+                  <label for="rejectReason" class="block text-xs font-semibold text-slate-600 mb-2">Motivazione Obbligatoria del Rifiuto (se applica)</label>
+                  <textarea id="rejectReason" rows="4" placeholder="Inserisci qui i motivi specifici dell'eventuale respinta di questa richiesta..." class="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0a1c3e] transition text-slate-800 bg-slate-50/50 resize-none">${cit.rejectionReason || ''}</textarea>
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="flex flex-col gap-3 pt-2">
+                  <button id="btn-approve" onclick="submitDecision('approve')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition duration-150 active:scale-95 shadow-md shadow-emerald-600/10 flex items-center justify-center gap-2 text-sm select-none">
+                    <span>✓</span> APPROVA REGISTRAZIONE
+                  </button>
+                  <button id="btn-reject" onclick="submitDecision('reject')" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3.5 px-4 rounded-xl transition duration-150 active:scale-95 shadow-md shadow-rose-500/10 flex items-center justify-center gap-2 text-sm select-none">
+                    <span>✕</span> RESPINGI REGISTRAZIONE
+                  </button>
+                </div>
+              </div>
+            `;
+          }
+
           return new Response(`
             <!DOCTYPE html>
             <html lang="it">
@@ -1665,25 +2024,7 @@ CREATE TABLE citizens (
                         <span class="text-amber-500">🛠️</span> Pannello di Decisione
                       </h3>
 
-                      <div id="action-ui" class="space-y-4">
-                        <p class="text-xs text-slate-500 leading-relaxed mb-4">In qualità di validatore del New World State, esamina lo stato formale dei requisiti anagrafici. Approvando, il cittadino riceverà un'email con il suo passaporto e il suo certificato. Rifiutando, verrà motivata la respinta via email.</p>
-                        
-                        <!-- INPUT REJECTION REASON -->
-                        <div>
-                          <label for="rejectReason" class="block text-xs font-semibold text-slate-600 mb-2">Motivazione Obbligatoria del Rifiuto (se applica)</label>
-                          <textarea id="rejectReason" rows="4" placeholder="Inserisci qui i motivi specifici dell'eventuale respinta di questa richiesta..." class="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#0a1c3e] transition text-slate-800 bg-slate-50/50 resize-none">${cit.rejectionReason || ''}</textarea>
-                        </div>
-
-                        <!-- ACTION BUTTONS -->
-                        <div class="flex flex-col gap-3 pt-2">
-                          <button id="btn-approve" onclick="submitDecision('approve')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl transition duration-150 active:scale-95 shadow-md shadow-emerald-600/10 flex items-center justify-center gap-2 text-sm select-none">
-                            <span>✓</span> APPROVA REGISTRAZIONE
-                          </button>
-                          <button id="btn-reject" onclick="submitDecision('reject')" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3.5 px-4 rounded-xl transition duration-150 active:scale-95 shadow-md shadow-rose-500/10 flex items-center justify-center gap-2 text-sm select-none">
-                            <span>✕</span> RESPINGI REGISTRAZIONE
-                          </button>
-                        </div>
-                      </div>
+                      ${decisionPanelHtml}
 
                       <!-- LOADING OVERLAY -->
                       <div id="loading-ui" class="hidden text-center py-10 space-y-4">
@@ -1722,7 +2063,8 @@ CREATE TABLE citizens (
               <!-- FORM SUBMIT SCRIPT -->
               <script>
                 function submitDecision(action) {
-                  const reason = document.getElementById('rejectReason').value.trim();
+                  const reasonEl = document.getElementById('rejectReason');
+                  const reason = reasonEl ? reasonEl.value.trim() : '';
                   
                   if (action === 'reject' && !reason) {
                     alert('Attenzione: Devi inserire obbligatoriamente il motivo del rifiuto nella casella di testo.');
@@ -1730,7 +2072,8 @@ CREATE TABLE citizens (
                   }
 
                   // Show Loading
-                  document.getElementById('action-ui').classList.add('hidden');
+                  const actionUi = document.getElementById('action-ui');
+                  if (actionUi) actionUi.classList.add('hidden');
                   document.getElementById('loading-ui').classList.remove('hidden');
 
                   const endpoint = action === 'approve' ? '/api/admin/approve' : '/api/admin/reject';
@@ -1753,7 +2096,7 @@ CREATE TABLE citizens (
                       document.getElementById('success-title').innerText = action === 'approve' ? 'Registrazione Approvata!' : 'Richiesta Respinta!';
                       document.getElementById('success-desc').innerText = action === 'approve' 
                         ? 'La richiesta è stata formalmente approvata. Il passaporto e il certificato sono stati spediti via email al cittadino.' 
-                        : 'La richiesta è stata respinta col motivo specificato ed è stata inviata un\\'email di chiarimento al candidato.';
+                        : 'La richiesta è stata respinta col motivo specificato ed è stata inviata un\'email di chiarimento al candidato.';
                     } else {
                       showError(data.message || 'La chiamata al database ha fallito.');
                     }
@@ -1765,7 +2108,8 @@ CREATE TABLE citizens (
                 }
 
                 function showError(msg) {
-                  document.getElementById('action-ui').classList.add('hidden');
+                  const actionUi = document.getElementById('action-ui');
+                  if (actionUi) actionUi.classList.add('hidden');
                   document.getElementById('error-ui').classList.remove('hidden');
                   document.getElementById('error-desc').innerText = msg;
                 }
@@ -1773,14 +2117,16 @@ CREATE TABLE citizens (
                 function resetUI() {
                   document.getElementById('error-ui').classList.add('hidden');
                   document.getElementById('success-ui').classList.add('hidden');
-                  document.getElementById('action-ui').classList.remove('hidden');
+                  const actionUi = document.getElementById('action-ui');
+                  if (actionUi) actionUi.classList.remove('hidden');
                 }
                 
                 window.addEventListener('load', () => {
                   const urlParams = new URLSearchParams(window.location.search);
                   const action = urlParams.get('action');
-                  if (action === 'reject') {
-                    document.getElementById('rejectReason').focus();
+                  const rejectReasonEl = document.getElementById('rejectReason');
+                  if (action === 'reject' && rejectReasonEl) {
+                    rejectReasonEl.focus();
                   }
                 });
               </script>
