@@ -4,7 +4,8 @@
   per identificare errori di configurazione, connettività ed estensioni spaziali (PostGIS).
 */
 
-// import { connect } from 'cloudflare:sockets';
+// @ts-ignore
+import { connect } from 'cloudflare:sockets';
 
 const worker = {
   async fetch(request, env) {
@@ -2113,3 +2114,15 @@ CREATE TABLE citizens (
     }
   }
 };
+
+export default worker;
+
+// Autodetecta compatibilità Service Worker per pannelli di controllo Cloudflare legacy
+// @ts-ignore
+if (typeof addEventListener === 'function') {
+  // @ts-ignore
+  addEventListener('fetch', (event) => {
+    // @ts-ignore
+    event.respondWith(worker.fetch(event.request, globalThis));
+  });
+}
