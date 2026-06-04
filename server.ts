@@ -294,12 +294,16 @@ async function startServer() {
         .replace(/\s+/g, ' ')
         .trim();
 
+      const fromDomain = from.includes('@') ? from.split('@')[1] : 'newworldstate.org';
+      const cleanMessageId = `<${Date.now()}-${Math.floor(Math.random() * 100000)}@${fromDomain}>`;
+
       const mailOptions = {
         from: `"${fromName}" <${from}>`,
         to,
         subject,
         html,
         text: plainTextFallback,
+        messageId: cleanMessageId,
         headers: {
           'List-Unsubscribe': `<mailto:${from}?subject=unsubscribe>`,
           'Precedence': 'bulk',

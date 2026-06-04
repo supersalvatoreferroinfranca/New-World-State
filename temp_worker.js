@@ -780,6 +780,8 @@ CREATE TABLE citizens (
           const base64Subject = btoa(unescape(encodeURIComponent(subject)));
           const utf8Subject = `=?UTF-8?B?${base64Subject}?=`;
 
+          const fromDomain = from.includes('@') ? from.split('@')[1] : 'newworldstate.org';
+
           const headers = 
             `From: "${fromName}" <${from}>\r\n` +
             `To: <${to}>\r\n` +
@@ -787,11 +789,11 @@ CREATE TABLE citizens (
             `Date: ${dateStr}\r\n` +
             `MIME-Version: 1.0\r\n` +
             `Content-Type: text/html; charset=utf-8\r\n` +
-            `Content-Transfer-Encoding: 7bit\r\n` +
+            `Content-Transfer-Encoding: 8bit\r\n` +
             `List-Unsubscribe: <mailto:${from}?subject=unsubscribe>\r\n` +
             `Precedence: bulk\r\n` +
             `X-Auto-Response-Suppress: OOF, AutoReply\r\n` +
-            `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.cloud>\r\n\r\n`;
+            `Message-ID: <${Date.now()}-${Math.floor(Math.random() * 100000)}@${fromDomain}>\r\n\r\n`;
 
           const body = html.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n';
 
