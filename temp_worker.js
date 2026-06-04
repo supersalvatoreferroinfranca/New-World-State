@@ -1157,14 +1157,50 @@ CREATE TABLE citizens (
           const cols = await queryDb(columnsQuery);
           const existingColsLower = cols.map(c => c.column_name.toLowerCase());
 
+          let dbCitizenCode = citizen.citizenCode || citizen.citizencode || citizen.citizen_code;
+          let codeNeedsUpdate = false;
+          if (!dbCitizenCode || dbCitizenCode === 'N/A' || dbCitizenCode === 'N/D') {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let newCode = '';
+            for (let i = 0; i < 16; i++) {
+              if (i > 0 && i % 4 === 0) newCode += '-';
+              newCode += chars[Math.floor(Math.random() * chars.length)];
+            }
+            dbCitizenCode = newCode;
+            codeNeedsUpdate = true;
+          }
+
+          let citizenCodeCol = 'citizenCode';
+          const possibleCodeCols = ['citizenCode', 'citizencode', 'citizen_code'];
+          for (const key of possibleCodeCols) {
+            const idx = existingColsLower.indexOf(key.toLowerCase());
+            if (idx !== -1) {
+              const realCol = cols.find(c => c.column_name.toLowerCase() === key.toLowerCase());
+              if (realCol) {
+                citizenCodeCol = realCol.column_name;
+              }
+              break;
+            }
+          }
+
           let updateSql = '';
           let params = [];
           if (existingColsLower.includes('rejectionreason')) {
-            updateSql = 'UPDATE citizens SET status = $1, "rejectionReason" = $2 WHERE id = $3 RETURNING *';
-            params = ['approved', null, id];
+            if (codeNeedsUpdate) {
+              updateSql = `UPDATE citizens SET status = $1, "rejectionReason" = $2, "${citizenCodeCol}" = $3 WHERE id = $4 RETURNING *`;
+              params = ['approved', null, dbCitizenCode, id];
+            } else {
+              updateSql = 'UPDATE citizens SET status = $1, "rejectionReason" = $2 WHERE id = $3 RETURNING *';
+              params = ['approved', null, id];
+            }
           } else {
-            updateSql = 'UPDATE citizens SET status = $1 WHERE id = $2 RETURNING *';
-            params = ['approved', id];
+            if (codeNeedsUpdate) {
+              updateSql = `UPDATE citizens SET status = $1, "${citizenCodeCol}" = $2 WHERE id = $3 RETURNING *`;
+              params = ['approved', dbCitizenCode, id];
+            } else {
+              updateSql = 'UPDATE citizens SET status = $1 WHERE id = $2 RETURNING *';
+              params = ['approved', id];
+            }
           }
 
           const updatedRows = await queryDb(updateSql, params);
@@ -1786,7 +1822,7 @@ CREATE TABLE citizens (
           residenceCity, residenceProvince, residenceCountry, email, phonePrefix, phoneNumber,
           username, password, documentHash, documentType,
           plusCode, locationDescription, latitude, longitude,
-          isAmbassador, isPeacekeeper,
+          isAmbassador, isPeacekeeper, citizenCode,
           documentFrontData, documentFrontName, documentBackData, documentBackName,
           documentPhotoData, documentPhotoName
         } = body;
@@ -1855,6 +1891,7 @@ CREATE TABLE citizens (
         addColumnIfExist('isAmbassador', !!isAmbassador);
         addColumnIfExist('isPeacekeeper', !!isPeacekeeper);
         addColumnIfExist('status', 'pending');
+        addColumnIfExist('citizenCode', citizenCode || '');
 
         // Gestione colonna geografica spaziale (PostGIS)
         const locationIdx = existingColsLower.indexOf('location');
@@ -2076,4 +2113,3 @@ CREATE TABLE citizens (
     }
   }
 };
-```

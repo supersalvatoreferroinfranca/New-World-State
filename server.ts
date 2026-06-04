@@ -727,13 +727,35 @@ Ufficio dell'Anagrafe Federale del New World State
       let updatedRecord: any = null;
       const parsedId = String(id);
       
+      // Check if registration already has code
+      const existing = await findCitizenById(id);
+      let targetCitizenCode = existing?.citizenCode || existing?.citizencode || existing?.citizen_code;
+
+      if (status === 'approved' && (!targetCitizenCode || targetCitizenCode === 'N/A' || targetCitizenCode === 'N/D')) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let newCode = '';
+        for (let i = 0; i < 16; i++) {
+          if (i > 0 && i % 4 === 0) newCode += '-';
+          newCode += chars[Math.floor(Math.random() * chars.length)];
+        }
+        targetCitizenCode = newCode;
+      }
+      
       if (dbPool) {
         try {
           // Check if rejectionReason column exists, if not run migration dynamically
-          const qRes = await dbPool.query(
-            'UPDATE citizens SET status = $1, "rejectionReason" = $2 WHERE id = $3 RETURNING *',
-            [status, rejectionReason || null, id]
-          );
+          let qRes;
+          if (status === 'approved' && targetCitizenCode) {
+            qRes = await dbPool.query(
+              'UPDATE citizens SET status = $1, "rejectionReason" = $2, "citizenCode" = COALESCE("citizenCode", $3) WHERE id = $4 RETURNING *',
+              [status, rejectionReason || null, targetCitizenCode, id]
+            );
+          } else {
+            qRes = await dbPool.query(
+              'UPDATE citizens SET status = $1, "rejectionReason" = $2 WHERE id = $3 RETURNING *',
+              [status, rejectionReason || null, id]
+            );
+          }
           if (qRes.rows.length > 0) {
             updatedRecord = qRes.rows[0];
           }
@@ -746,6 +768,9 @@ Ufficio dell'Anagrafe Federale del New World State
       const memIdx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
       if (memIdx !== -1) {
         memoryCitizens[memIdx].status = status;
+        if (targetCitizenCode) {
+          memoryCitizens[memIdx].citizenCode = targetCitizenCode;
+        }
         if (rejectionReason) {
           memoryCitizens[memIdx].rejectionReason = rejectionReason;
         } else {
@@ -755,6 +780,9 @@ Ufficio dell'Anagrafe Federale del New World State
       } else {
         // If not in memory but we updated DB, save it to memory as fallback
         if (updatedRecord) {
+          if (targetCitizenCode) {
+            updatedRecord.citizenCode = targetCitizenCode;
+          }
           memoryCitizens.push(updatedRecord);
         }
       }

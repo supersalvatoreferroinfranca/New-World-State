@@ -118,7 +118,11 @@ export default function AdminDashboard() {
           await fetchCitizens();
           // Update selected view
           if (selectedCitizen && selectedCitizen.id === id) {
-            setSelectedCitizen({ ...selectedCitizen, status: 'approved' });
+            if (data.citizen) {
+              setSelectedCitizen(data.citizen);
+            } else {
+              setSelectedCitizen({ ...selectedCitizen, status: 'approved' });
+            }
           }
         } else {
           alert(`Errore: ${data.message}`);
@@ -449,7 +453,7 @@ export default function AdminDashboard() {
                   
                   {selectedCitizen.status === 'approved' ? (
                     <div className="bg-emerald-50 text-emerald-800 p-3 rounded-xl text-center font-bold text-xs flex items-center justify-center gap-2">
-                      <CheckCircle className="w-4 h-4" /> Approvata col Codice: {selectedCitizen.citizenCode}
+                      <CheckCircle className="w-4 h-4" /> Approvata col Codice: {selectedCitizen.citizenCode || (selectedCitizen as any).citizencode || (selectedCitizen as any).citizen_code || 'IN GENERAZIONE'}
                     </div>
                   ) : selectedCitizen.status === 'rejected' ? (
                     <div className="bg-rose-50 text-rose-800 p-3.5 rounded-xl text-xs space-y-1">

@@ -776,7 +776,7 @@ CREATE TABLE citizens (
       };
 
       // Spedizione dei dati tramite connessione socket protetta nativa (cloudflare:sockets)
-      const sendSmtpSocketEmail = async (to, subject, html, env) => {
+      const sendSmtpSocketEmail = async (to, subject, html, env, pdfAttachment = null) => {
         const host = env.SMTP_HOST || 'smtps.aruba.it';
         const port = parseInt(env.SMTP_PORT || '465', 10);
         const user = env.SMTP_USER;
@@ -837,17 +837,45 @@ CREATE TABLE citizens (
           const base64Subject = btoa(unescape(encodeURIComponent(subject)));
           const utf8Subject = `=?UTF-8?B?${base64Subject}?=`;
 
-          const headers = 
-            `From: "${fromName}" <${from}>\r\n` +
-            `To: <${to}>\r\n` +
-            `Subject: ${utf8Subject}\r\n` +
-            `Date: ${dateStr}\r\n` +
-            `MIME-Version: 1.0\r\n` +
-            `Content-Type: text/html; charset=utf-8\r\n` +
-            `Content-Transfer-Encoding: 7bit\r\n` +
-            `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.cloud>\r\n\r\n`;
+          let headers = '';
+          let body = '';
 
-          const body = html.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n';
+          if (pdfAttachment) {
+            const boundary = `----=_Part_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+            headers = 
+              `From: "${fromName}" <${from}>\r\n` +
+              `To: <${to}>\r\n` +
+              `Subject: ${utf8Subject}\r\n` +
+              `Date: ${dateStr}\r\n` +
+              `MIME-Version: 1.0\r\n` +
+              `Content-Type: multipart/mixed; boundary="${boundary}"\r\n` +
+              `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.cloud>\r\n\r\n`;
+
+            body = 
+              `This is a multi-part message in MIME format.\r\n\r\n` +
+              `--${boundary}\r\n` +
+              `Content-Type: text/html; charset=utf-8\r\n` +
+              `Content-Transfer-Encoding: 7bit\r\n\r\n` +
+              html + `\r\n\r\n` +
+              `--${boundary}\r\n` +
+              `Content-Type: application/pdf; name="${pdfAttachment.filename}"\r\n` +
+              `Content-Transfer-Encoding: base64\r\n` +
+              `Content-Disposition: attachment; filename="${pdfAttachment.filename}"\r\n\r\n` +
+              pdfAttachment.content + `\r\n\r\n` +
+              `--${boundary}--\r\n.\r\n`;
+          } else {
+            headers = 
+              `From: "${fromName}" <${from}>\r\n` +
+              `To: <${to}>\r\n` +
+              `Subject: ${utf8Subject}\r\n` +
+              `Date: ${dateStr}\r\n` +
+              `MIME-Version: 1.0\r\n` +
+              `Content-Type: text/html; charset=utf-8\r\n` +
+              `Content-Transfer-Encoding: 7bit\r\n` +
+              `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.cloud>\r\n\r\n`;
+
+            body = html.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n';
+          }
 
           await writer.write(encoder.encode(headers + body));
           res = await readSMTPResponse(reader);
@@ -869,8 +897,345 @@ CREATE TABLE citizens (
         }
       };
 
+      // Funzione per generare un PDF della carta di identità in puro JavaScript (standards-compliant)
+      const generateCitizenPdf = (citizen) => {
+        const citizenCode = citizen.citizenCode || citizen.citizencode || 'N/A';
+        const firstName = citizen.firstName || citizen.firstname || '';
+        const surname = citizen.surname || '';
+        const birthDate = citizen.birthDate || citizen.birthdate || 'N/A';
+        const birthPlace = citizen.birthPlace || citizen.birthplace || '';
+        const birthCountry = citizen.birthCountry || citizen.birthcountry || '';
+        const docHash = (citizen.documentHash || citizen.documenthash || 'VALIDATED').toUpperCase();
+        
+        // Escape special PDF characters: paren `(`, `)` and backslash `\`
+        const esc = (str) => {
+          if (!str) return '';
+          return str.toString()
+            .replace(/\\/g, '\\\\')
+            .replace(/\(/g, '\\(')
+            .replace(/\)/g, '\\)');
+        };
+
+        const escFirstName = esc(firstName).toUpperCase();
+        const escSurname = esc(surname).toUpperCase();
+        const escBirthPlace = esc(birthPlace).toUpperCase();
+        const escBirthCountry = esc(birthCountry).toUpperCase();
+        const escBirthDate = esc(birthDate);
+        const escCitizenCode = esc(citizenCode).toUpperCase();
+        const escDocHash = esc(docHash).toUpperCase();
+
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // Let's create a beautiful document using PDF drawing primitives!
+        let streamContent = '';
+
+        // Page background: Soft beige/white (#FAF9F6)
+        streamContent += '0.98 0.98 0.96 rg\n';
+        streamContent += '0 0 595.275 841.89 re f\n';
+
+        // Outer margin border (Gold)
+        streamContent += '0.77 0.66 0.50 RG\n';
+        streamContent += '1.5 w\n';
+        streamContent += '25 25 545.275 791.89 re s\n';
+
+        // Elegant top header bar (Dark Navy Blue #0A1C3E)
+        streamContent += '0.04 0.11 0.24 rg\n';
+        streamContent += '35 725 525 80 re f\n';
+
+        // Thin Gold accent bar
+        streamContent += '0.77 0.66 0.50 rg\n';
+        streamContent += '35 720 525 5 re f\n';
+
+        // Header Title (Gold)
+        streamContent += 'BT\n';
+        streamContent += '/F1 18 Tf\n';
+        streamContent += '0.77 0.66 0.50 rg\n';
+        streamContent += '55 765 Td\n';
+        streamContent += '(NEW WORLD STATE) Tj\n';
+        streamContent += 'ET\n';
+
+        // Header Subtitle (White)
+        streamContent += 'BT\n';
+        streamContent += '/F2 9.5 Tf\n';
+        streamContent += '1.0 1.0 1.0 rg\n';
+        streamContent += '55 745 Td\n';
+        streamContent += '(SOVEREIGN GLOBAL ADMINISTRATION OF CITIZENSHIP) Tj\n';
+        streamContent += 'ET\n';
+
+        // "OFFICIAL CERTIFICATE" Text (Gold)
+        streamContent += 'BT\n';
+        streamContent += '/F1 11 Tf\n';
+        streamContent += '0.77 0.66 0.50 rg\n';
+        streamContent += '440 762 Td\n';
+        streamContent += '(CERTIFICATE) Tj\n';
+        streamContent += 'ET\n';
+
+        // Subtitle Certificate
+        streamContent += 'BT\n';
+        streamContent += '/F2 7.5 Tf\n';
+        streamContent += '0.9 0.9 0.9 rg\n';
+        streamContent += '440 748 Td\n';
+        streamContent += '(No. ' + escCitizenCode + ') Tj\n';
+        streamContent += 'ET\n';
+
+        // Title of Certificate
+        streamContent += 'BT\n';
+        streamContent += '/F1 15 Tf\n';
+        streamContent += '0.04 0.11 0.24 rg\n';
+        streamContent += '35 680 Td\n';
+        streamContent += '(DECRETO FEDERALE DI CONCESSIONE DELLA CITTADINANZA) Tj\n';
+        streamContent += 'ET\n';
+
+        // Introduction text (using standard fonts)
+        const introLines = [
+          'Visto l\\\'articolo 1 della Costituzione Sovrana del New World State, inerente i diritti e',
+          'doveri dei cittadini del mondo e l\\\'unificazione pacifica dei popoli sovrani;',
+          'Esaminate le credenziali anagrafiche, di nascita e di identita presentate dal richiedente;',
+          'Accertata la piena conformita dei requisiti formali richiesti dall\\\'Anagrafe Centrale;',
+          'Il Comitato dei Validatori Federati decreta e riconosce solennemente lo status di:'
+        ];
+
+        let introY = 650;
+        for (const line of introLines) {
+          streamContent += 'BT\n';
+          streamContent += '/F2 9.5 Tf\n';
+          streamContent += '0.2 0.25 0.3 rg\n';
+          streamContent += `35 ${introY} Td\n`;
+          streamContent += `(${line}) Tj\n`;
+          streamContent += 'ET\n';
+          introY -= 14;
+        }
+
+        // VISUAL ID CARD (in the middle)
+        // Card Background (pure white)
+        streamContent += '1.0 1.0 1.0 rg\n';
+        streamContent += '0.04 0.11 0.24 RG\n'; // Navy Blue Border
+        streamContent += '1.5 w\n';
+        streamContent += '35 295 525 210 re f s\n'; // Draw the visual card container (Height 210, width 525)
+
+        // Visual Card Header (Navy Blue Accent Box)
+        streamContent += '0.04 0.11 0.24 rg\n';
+        streamContent += '35 470 525 35 re f\n';
+
+        // Gold divider inside card
+        streamContent += '0.77 0.66 0.50 rg\n';
+        streamContent += '35 466 525 4 re f\n';
+
+        // Card Title Text
+        streamContent += 'BT\n';
+        streamContent += '/F1 10.5 Tf\n';
+        streamContent += '0.77 0.66 0.50 rg\n';
+        streamContent += '50 482 Td\n';
+        streamContent += '(NEW WORLD STATE  *  UNIVERSAL IDENTITY CARD) Tj\n';
+        streamContent += 'ET\n';
+
+        streamContent += 'BT\n';
+        streamContent += '/F1 10.5 Tf\n';
+        streamContent += '1.0 1.0 1.0 rg\n';
+        streamContent += '440 482 Td\n';
+        streamContent += '(CITTADINO) Tj\n';
+        streamContent += 'ET\n';
+
+        // Card fields helpers
+        const addCardField = (label, value, x, y) => {
+          let out = '';
+          // Label text
+          out += 'BT\n';
+          out += '/F2 7.5 Tf\n';
+          out += '0.45 0.5 0.55 rg\n'; // soft grey/blue
+          out += `${x} ${y} Td\n`;
+          out += `(${label}) Tj\n`;
+          out += 'ET\n';
+          // Value text
+          out += 'BT\n';
+          out += '/F1 11 Tf\n';
+          out += '0.04 0.11 0.24 rg\n'; // Navy blue
+          out += `${x} ${y - 12} Td\n`;
+          out += `(${value}) Tj\n`;
+          out += 'ET\n';
+          return out;
+        };
+
+        // Populate fields
+        streamContent += addCardField('COGNOME / SURNAME', escSurname, 55, 442);
+        streamContent += addCardField('NOME / GIVEN NAMES', escFirstName, 55, 404);
+        streamContent += addCardField('DATA E LUOGO DI NASCITA / DATE & PLACE OF BIRTH', `${escBirthDate} - ${escBirthPlace} (${escBirthCountry})`, 55, 366);
+        streamContent += addCardField('STATUTO DI CITTADINANZA / NATIONALITY STATUS', 'NEW WORLD STATE SOVEREIGN ● GLOBAL INDEPENDENT', 55, 328);
+
+        // Photo Border Frame representing the placeholder
+        streamContent += '0.77 0.66 0.50 RG\n'; // Gold border for photo
+        streamContent += '1.5 w\n';
+        streamContent += '445 330 90 115 re s\n'; // photo rect
+
+        // NWS elegant watermark inside the photo frame
+        streamContent += 'BT\n';
+        streamContent += '/F1 9 Tf\n';
+        streamContent += '0.04 0.11 0.24 rg\n';
+        streamContent += '468 385 Td\n';
+        streamContent += '(NWS) Tj\n';
+        streamContent += 'ET\n';
+
+        streamContent += 'BT\n';
+        streamContent += '/F2 7 Tf\n';
+        streamContent += '0.5 0.5 0.5 rg\n';
+        streamContent += '458 373 Td\n';
+        streamContent += '(DOCUMENTO) Tj\n';
+        streamContent += 'ET\n';
+
+        streamContent += 'BT\n';
+        streamContent += '/F2 7 Tf\n';
+        streamContent += '0.5 0.5 0.5 rg\n';
+        streamContent += '463 361 Td\n';
+        streamContent += '(VALIDATO) Tj\n';
+        streamContent += 'ET\n';
+
+        // Footer block of the Visual Card
+        streamContent += 'BT\n';
+        streamContent += '/F2 7 Tf\n';
+        streamContent += '0.45 0.5 0.55 rg\n';
+        streamContent += '55 304 Td\n';
+        streamContent += '(CODICE CITTADINO / CITIZEN CODE:) Tj\n';
+        streamContent += 'ET\n';
+
+        streamContent += 'BT\n';
+        streamContent += '/F1 8.5 Tf\n';
+        streamContent += '0.77 0.66 0.50 rg\n';
+        streamContent += '195 304 Td\n';
+        streamContent += '(' + escCitizenCode + ') Tj\n';
+        streamContent += 'ET\n';
+
+        streamContent += 'BT\n';
+        streamContent += '/F2 6.5 Tf\n';
+        streamContent += '0.45 0.5 0.55 rg\n';
+        streamContent += '310 304 Td\n';
+        streamContent += '(* VERIFIED BY BLOCKCHAIN HASH: ' + escDocHash.slice(0, 20) + '...) Tj\n';
+        streamContent += 'ET\n';
+
+        // Let's add certificate explanation block below card
+        const bottomTextLines = [
+          'La concessione dello status sovraindicato conferisce al titolare la facolta di avvalersi',
+          'delle prerogative federate del New World State, dei servizi amministrativi correlati e dei',
+          'diritti inerenti la Libera Circolazione e Autodeterminazione riconosciuta dalle Nazioni Unite.',
+          'La presente carta, firmata digitalmente, costituisce titolo provvisorio ed idoneo.'
+        ];
+
+        let bottomY = 265;
+        for (const line of bottomTextLines) {
+          streamContent += 'BT\n';
+          streamContent += '/F2 9.2 Tf\n';
+          streamContent += '0.3 0.35 0.4 rg\n';
+          streamContent += `35 ${bottomY} Td\n`;
+          streamContent += `(${line}) Tj\n`;
+          streamContent += 'ET\n';
+          bottomY -= 13;
+        }
+
+        // Signature section (Bottom part of A4 sheet)
+        streamContent += '0.77 0.66 0.50 RG\n'; // gold divider line
+        streamContent += '1 w\n';
+        streamContent += '35 190 525 0.5 re s\n';
+
+        // Left signature: Date of issue and validation
+        streamContent += 'BT\n';
+        streamContent += '/F2 7.5 Tf\n';
+        streamContent += '0.4 0.4 0.4 rg\n';
+        streamContent += '55 174 Td\n';
+        streamContent += '(DATA DI EMISSIONE & VALIDAZIONE / DATE OF ISSUE) Tj\n';
+        streamContent += 'ET\n';
+
+        streamContent += 'BT\n';
+        streamContent += '/F1 10.5 Tf\n';
+        streamContent += '0.04 0.11 0.24 rg\n';
+        streamContent += `55 158 Td\n`;
+        streamContent += `(${todayStr}) Tj\n`;
+        streamContent += 'ET\n';
+
+        // Right signature: Official Federated Authority
+        streamContent += 'BT\n';
+        streamContent += '/F2 7.5 Tf\n';
+        streamContent += '0.4 0.4 0.4 rg\n';
+        streamContent += '365 174 Td\n';
+        streamContent += '(AUTORITA DI FIRMA / FEDERATED SIGNATORY AUTHORITY) Tj\n';
+        streamContent += 'ET\n';
+
+        streamContent += 'BT\n';
+        streamContent += '/F1 11 Tf\n';
+        streamContent += '0.77 0.66 0.50 rg\n';
+        streamContent += '365 158 Td\n';
+        streamContent += '(New World State Sovereign Administration) Tj\n';
+        streamContent += 'ET\n';
+
+        streamContent += 'BT\n';
+        streamContent += '/F2 6.5 Tf\n';
+        streamContent += '0.5 0.5 0.6 rg\n';
+        streamContent += '365 146 Td\n';
+        streamContent += `(NWS REGISTRY HASH: ${escDocHash}) Tj\n`;
+        streamContent += 'ET\n';
+
+        // Universal Motto centered
+        streamContent += 'BT\n';
+        streamContent += '/F1 9 Tf\n';
+        streamContent += '0.77 0.66 0.50 rg\n';
+        streamContent += '200 95 Td\n';
+        streamContent += '("UNITI NELLO SPAZIO, LEGATI PER DIRITTO") Tj\n';
+        streamContent += 'ET\n';
+
+        // Construct Catalog, Pages, Page, Resources, Content, Fonts objects
+        const objects = [];
+        objects.push('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj');
+        objects.push('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj');
+        objects.push('3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources 4 0 R /MediaBox [0 0 595.275 841.89] /Contents 5 0 R >>\nendobj');
+        objects.push('4 0 obj\n<< /Font << /F1 6 0 R /F2 7 0 R >> >>\nendobj');
+        
+        const streamLength = streamContent.length;
+        objects.push(`5 0 obj\n<< /Length ${streamLength} >>\nstream\n${streamContent}\nendstream\nendobj`);
+        objects.push('6 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj');
+        objects.push('7 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj');
+
+        let rawPdf = '%PDF-1.4\n%âãÏÓ\n';
+        const offsets = [];
+        for (let i = 0; i < objects.length; i++) {
+          offsets.push(rawPdf.length);
+          rawPdf += objects[i] + '\n';
+        }
+        const startXref = rawPdf.length;
+        rawPdf += 'xref\n';
+        rawPdf += `0 ${objects.length + 1}\n`;
+        rawPdf += '0000000000 65535 f \n';
+        for (let i = 0; i < offsets.length; i++) {
+          rawPdf += String(offsets[i]).padStart(10, '0') + ' 00000 n \n';
+        }
+        rawPdf += 'trailer\n';
+        rawPdf += `<< /Size ${objects.length + 1} /Root 1 0 R >>\n`;
+        rawPdf += 'startxref\n';
+        rawPdf += `${startXref}\n`;
+        rawPdf += '%%EOF';
+
+        // Safe conversion of binary string to Base64
+        const binaryToBase64 = (str) => {
+          let b64 = '';
+          try {
+            b64 = btoa(str);
+          } catch (err) {
+            const bytes = new TextEncoder().encode(str);
+            let bin = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+              bin += String.fromCharCode(bytes[i]);
+            }
+            b64 = btoa(bin);
+          }
+          return b64;
+        };
+
+        const sanitizedSurname = surname.replace(/[^a-zA-Z]/g, '');
+        return {
+          filename: `NWS_Certificato_Cittadinanza_${sanitizedSurname}.pdf`,
+          content: binaryToBase64(rawPdf)
+        };
+      };
+
       // Funzione helper per l'invio delle email (SMTP Aruba / Resend / Brevo)
-      const sendEmail = async (to, subject, html, env) => {
+      const sendEmail = async (to, subject, html, env, pdfAttachment = null) => {
         const fromEmail = env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || "onboarding@resend.dev";
         const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
         
@@ -879,7 +1244,7 @@ CREATE TABLE citizens (
         // 0. Autodetect SMTP: Se configurato Aruba, proviamo sempre come prima opzione
         if (env.SMTP_USER && env.SMTP_PASS) {
           try {
-            const success = await sendSmtpSocketEmail(to, subject, html, env);
+            const success = await sendSmtpSocketEmail(to, subject, html, env, pdfAttachment);
             if (success) return true;
           } catch (smtpErr) {
             console.error('[EMAIL] Errore riscontrato con SMTP Direct Aruba. Proverò API alternative se presenti.', smtpErr);
@@ -889,18 +1254,28 @@ CREATE TABLE citizens (
         // 1. Resend API
         if (env.RESEND_API_KEY) {
           try {
+            const resendPayload = {
+              from: `New World State <${fromEmail}>`,
+              to: Array.isArray(to) ? to : [to],
+              subject: subject,
+              html: html
+            };
+            if (pdfAttachment) {
+              resendPayload.attachments = [
+                {
+                  content: pdfAttachment.content,
+                  filename: pdfAttachment.filename
+                }
+              ];
+            }
+
             const response = await fetch('https://api.resend.com/emails', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${env.RESEND_API_KEY.trim()}`,
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({
-                from: `New World State <${fromEmail}>`,
-                to: Array.isArray(to) ? to : [to],
-                subject: subject,
-                html: html
-              })
+              body: JSON.stringify(resendPayload)
             });
             const resultMsg = await response.text();
             console.log(`[EMAIL] Risposta Resend: [${response.status}] ${resultMsg}`);
@@ -913,18 +1288,28 @@ CREATE TABLE citizens (
         // 2. Brevo API
         if (env.BREVO_API_KEY) {
           try {
+            const brevoPayload = {
+              sender: { name: "New World State", email: fromEmail.includes('@') ? fromEmail : "onboarding@newworldstate.cloud" },
+              to: (Array.isArray(to) ? to : [to]).map(addr => ({ email: addr })),
+              subject: subject,
+              htmlContent: html
+            };
+            if (pdfAttachment) {
+              brevoPayload.attachment = [
+                {
+                  content: pdfAttachment.content,
+                  name: pdfAttachment.filename
+                }
+              ];
+            }
+
             const response = await fetch('https://api.brevo.com/v3/smtp/email', {
               method: 'POST',
               headers: {
                 'api-key': env.BREVO_API_KEY.trim(),
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({
-                sender: { name: "New World State", email: fromEmail.includes('@') ? fromEmail : "onboarding@newworldstate.cloud" },
-                to: (Array.isArray(to) ? to : [to]).map(addr => ({ email: addr })),
-                subject: subject,
-                htmlContent: html
-              })
+              body: JSON.stringify(brevoPayload)
             });
             const resultMsg = await response.text();
             console.log(`[EMAIL] Risposta Brevo: [${response.status}] ${resultMsg}`);
@@ -1215,14 +1600,50 @@ CREATE TABLE citizens (
           const cols = await queryDb(columnsQuery);
           const existingColsLower = cols.map(c => c.column_name.toLowerCase());
 
+          let dbCitizenCode = citizen.citizenCode || citizen.citizencode || citizen.citizen_code;
+          let codeNeedsUpdate = false;
+          if (!dbCitizenCode || dbCitizenCode === 'N/A' || dbCitizenCode === 'N/D') {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let newCode = '';
+            for (let i = 0; i < 16; i++) {
+              if (i > 0 && i % 4 === 0) newCode += '-';
+              newCode += chars[Math.floor(Math.random() * chars.length)];
+            }
+            dbCitizenCode = newCode;
+            codeNeedsUpdate = true;
+          }
+
+          let citizenCodeCol = 'citizenCode';
+          const possibleCodeCols = ['citizenCode', 'citizencode', 'citizen_code'];
+          for (const key of possibleCodeCols) {
+            const idx = existingColsLower.indexOf(key.toLowerCase());
+            if (idx !== -1) {
+              const realCol = cols.find(c => c.column_name.toLowerCase() === key.toLowerCase());
+              if (realCol) {
+                citizenCodeCol = realCol.column_name;
+              }
+              break;
+            }
+          }
+
           let updateSql = '';
           let params = [];
           if (existingColsLower.includes('rejectionreason')) {
-            updateSql = 'UPDATE citizens SET status = $1, "rejectionReason" = $2 WHERE id = $3 RETURNING *';
-            params = ['approved', null, id];
+            if (codeNeedsUpdate) {
+              updateSql = `UPDATE citizens SET status = $1, "rejectionReason" = $2, "${citizenCodeCol}" = $3 WHERE id = $4 RETURNING *`;
+              params = ['approved', null, dbCitizenCode, id];
+            } else {
+              updateSql = 'UPDATE citizens SET status = $1, "rejectionReason" = $2 WHERE id = $3 RETURNING *';
+              params = ['approved', null, id];
+            }
           } else {
-            updateSql = 'UPDATE citizens SET status = $1 WHERE id = $2 RETURNING *';
-            params = ['approved', id];
+            if (codeNeedsUpdate) {
+              updateSql = `UPDATE citizens SET status = $1, "${citizenCodeCol}" = $2 WHERE id = $3 RETURNING *`;
+              params = ['approved', dbCitizenCode, id];
+            } else {
+              updateSql = 'UPDATE citizens SET status = $1 WHERE id = $2 RETURNING *';
+              params = ['approved', id];
+            }
           }
 
           const updatedRows = await queryDb(updateSql, params);
@@ -1234,7 +1655,7 @@ CREATE TABLE citizens (
           }
           const updated = updatedRows[0];
 
-          // Invio dell'email con la ID card ufficiale
+          // Invio dell'email con la ID card ufficiale ed il PDF allegato
           const email = updated.email || citizen.email;
           if (email && email.includes('@')) {
             try {
@@ -1249,92 +1670,101 @@ CREATE TABLE citizens (
               const photoUrlVal = updated.arubaPhotoUrl || updated.arubaphotourl || citizen.arubaPhotoUrl || citizen.arubaphotourl || '';
               const hashVal = updated.documentHash || updated.documenthash || citizen.documentHash || citizen.documenthash || '';
 
+              // Generazione del PDF in formato ufficiale A4
+              const pdfAttachment = generateCitizenPdf(updated);
+
               const welcomeHtml = `
-                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 16px;">
-                  <div style="background-color: ${brandColor}; padding: 40px 30px; border-radius: 12px; text-align: center; color: white; border-bottom: 4px solid ${goldColor};">
-                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: white;">Benvenuto, Cittadino!</h1>
-                    <p style="margin: 10px 0 0 0; color: ${goldColor}; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">Cittadinanza NWS Approvata</p>
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b; background-color: #f1f5f9; border-radius: 20px;">
+                  <div style="background-color: ${brandColor}; padding: 45px 30px; border-radius: 16px 16px 0 0; text-align: center; color: white; border-bottom: 5px solid ${goldColor};">
+                    <div style="font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: ${goldColor}; margin-bottom: 8px;">NEW WORLD STATE</div>
+                    <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.5px; color: white; line-height: 1.2;">Benvenuto, Cittadino!</h1>
+                    <p style="margin: 12px 0 0 0; color: #94a3b8; font-size: 15px; font-weight: 400; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.4;">La tua domanda di cittadinanza sovrana globale è stata formalmente approvata e registrata.</p>
                   </div>
                   
-                  <div style="padding: 30px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; line-height: 1.6;">
-                    <p style="font-size: 16px; margin-top: 0;">Gentile <strong>${firstNameVal} ${surnameVal}</strong>,</p>
+                  <div style="padding: 35px 30px; background-color: white; border-radius: 0 0 16px 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; border-top: none; line-height: 1.63;">
+                    <p style="font-size: 16px; margin-top: 0; color: #0f172a;">Gentile <strong>${firstNameVal} ${surnameVal}</strong>,</p>
                     
-                    <p style="font-size: 15px;">Siamo onorati di darti il benvenuto ufficiale nel <strong>New World State</strong>. Il nostro comitato di validatori ha completato con successo la verifica della tua anagrafica e dei tuoi documenti.</p>
+                    <p style="font-size: 15px; color: #334155;">Siamo onorati di darti il benvenuto ufficiale nella comunità federale globale del <strong>New World State</strong>. Il nostro comitato di validatori ha completato con successo la verifica della tua anagrafica e dei tuoi documenti di identità.</p>
                     
-                    <p style="font-size: 15px;">La tua registrazione è ora formalmente inserita nel Registro Fedele della Federazione Mondiale di NWS.</p>
+                    <div style="margin: 24px 0; background-color: #fef3c7; border-left: 4px solid ${goldColor}; padding: 18px; border-radius: 8px;">
+                      <h4 style="margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #92400e; display: flex; align-items: center; gap: 6px;">
+                        📎 CERTIFICATO PDF ALLEGATO ALL'EMAIL
+                      </h4>
+                      <p style="margin: 0; font-size: 13.5px; color: #78350f; line-height: 1.45;">Abbiamo generato e allegato a questa comunicazione la tua <strong>Carta d'Identità Ufficiale e Certificato di Cittadinanza in formato PDF</strong> ad alta risoluzione, firmato dall'autorità federale. Ti consigliamo di scaricarlo, stamparlo o conservarlo sul tuo smartphone.</p>
+                    </div>
+
+                    <p style="font-size: 15px; color: #334155;">Di seguito viene riportata un'anteprima digitale delle informazioni registrate nei nostri archivi sovrani:</p>
   
-                    <!-- TABELLA DOCUMENTO DI IDENTITA DIGITALE -->
-                    <div style="margin: 30px 0; background-color: ${brandColor}; color: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(10,28,62,0.25); border: 2px solid ${goldColor};">
-                      <div style="padding: 16px 20px; background-color: #071530; border-bottom: 1.5px solid ${goldColor};">
+                    <!-- TABELLA ANTEPRIMA DOCUMENTO -->
+                    <div style="margin: 28px 0; background-color: ${brandColor}; color: white; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 20px rgba(10,28,62,0.18); border: 2.5px solid ${goldColor};">
+                      <div style="padding: 14px 18px; background-color: #071530; border-bottom: 1.5px solid ${goldColor};">
                         <table style="width: 100%; border-collapse: collapse;">
                           <tr>
                             <td>
-                              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: ${goldColor};">NEW WORLD STATE</div>
-                              <div style="font-size: 8px; color: #94a3b8; text-transform: uppercase;">Sovereign Global Citizenship</div>
+                              <div style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: ${goldColor};">NEW WORLD STATE</div>
+                              <div style="font-size: 7.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Sovereign Global Citizenship</div>
                             </td>
-                            <td style="text-align: right; font-size: 18px; color: ${goldColor}; font-weight: bold;">ID CARD</td>
+                            <td style="text-align: right; font-size: 15px; color: ${goldColor}; font-weight: bold; letter-spacing: 0.5px;">IDENTITY CARD</td>
                           </tr>
                         </table>
                       </div>
                       
-                      <div style="padding: 24px 20px; background-color: ${brandColor}; position: relative;">
+                      <div style="padding: 22px 18px; background-color: ${brandColor};">
                         <table style="width: 100%; border-collapse: collapse;">
                           <tr>
-                            <td style="width: 70%; vertical-align: top; font-size: 12px; font-family: sans-serif;">
-                              <table style="width: 100%;">
-                                  <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Cognome / Surname</td></tr>
-                                  <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 6px;">${surnameVal}</td></tr>
+                            <td style="width: 70%; vertical-align: top; font-size: 11.5px; font-family: sans-serif;">
+                              <table style="width: 100%; border-collapse: collapse;">
+                                  <tr><td style="color: #94a3b8; font-size: 7.5px; text-transform: uppercase; padding: 0; letter-spacing: 0.5px;">Cognome / Surname</td></tr>
+                                  <tr><td style="font-weight: bold; color: white; font-size: 13.5px; padding-bottom: 7px; padding-top: 2px;">${surnameVal}</td></tr>
                                   
-                                  <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Nome / Given Names</td></tr>
-                                  <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 6px;">${firstNameVal}</td></tr>
+                                  <tr><td style="color: #94a3b8; font-size: 7.5px; text-transform: uppercase; padding: 0; letter-spacing: 0.5px;">Nome / Given Names</td></tr>
+                                  <tr><td style="font-weight: bold; color: white; font-size: 13.5px; padding-bottom: 7px; padding-top: 2px;">${firstNameVal}</td></tr>
                                   
-                                  <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Data e Luogo di Nascita / Date & Place of Birth</td></tr>
-                                  <tr><td style="color: white; font-size: 11px; padding-bottom: 6px;">${birthDateVal} - ${birthPlaceVal} (${birthCountryVal})</td></tr>
+                                  <tr><td style="color: #94a3b8; font-size: 7.5px; text-transform: uppercase; padding: 0; letter-spacing: 0.5px;">Data e Luogo di Nascita / Date & Place of Birth</td></tr>
+                                  <tr><td style="color: white; font-size: 11px; padding-bottom: 7px; padding-top: 2px;">${birthDateVal} - ${birthPlaceVal} (${birthCountryVal})</td></tr>
                                   
-                                  <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Cittadinanza / Nationality</td></tr>
-                                  <tr><td style="color: ${goldColor}; font-weight: bold; font-size: 11px; padding-bottom: 6px; text-transform: uppercase;">NEW WORLD STATE ● SOVEREIGN</td></tr>
+                                  <tr><td style="color: #94a3b8; font-size: 7.5px; text-transform: uppercase; padding: 0; letter-spacing: 0.5px;">Cittadinanza / Nationality</td></tr>
+                                  <tr><td style="color: ${goldColor}; font-weight: bold; font-size: 11px; padding-top: 2px; text-transform: uppercase; letter-spacing: 0.5px;">NEW WORLD STATE ● SOVEREIGN</td></tr>
                               </table>
                             </td>
-                            <td style="width: 30%; vertical-align: middle; text-align: center;">
-                              <div style="border: 2px solid ${goldColor}; width: 85px; height: 105px; background-color: #071530; border-radius: 8px; overflow: hidden; display: inline-block;">
-                                ${photoUrlVal ? `<img src="${photoUrlVal}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto" />` : `<div style="padding-top: 35px; font-size: 9px; color: #475569; text-align: center;">FOTO<br/>VALIDA</div>`}
+                            <td style="width: 30%; vertical-align: middle; text-align: center; padding-left: 10px;">
+                              <div style="border: 2.5px solid ${goldColor}; width: 85px; height: 105px; background-color: #071530; border-radius: 6px; overflow: hidden; display: inline-block; vertical-align: middle;">
+                                ${photoUrlVal ? `<img src="${photoUrlVal}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto" />` : `<div style="padding-top: 36px; font-size: 8.5px; color: #475569; text-align: center; font-weight: bold;">DOCUMENTO<br/>VALIDATO</div>`}
                               </div>
                             </td>
                           </tr>
                         </table>
                         
-                        <div style="margin-top: 15px; border-top: 1px dashed rgba(197,168,128,0.3); padding-top: 15px;">
-                          <table style="width: 100%;">
+                        <div style="margin-top: 15px; border-top: 1px dashed rgba(197,168,128,0.25); padding-top: 12px;">
+                          <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                               <td>
-                                <div style="color: #94a3b8; font-size: 8px; text-transform: uppercase;">Codice Cittadino / Citizen Code</div>
-                                <div style="font-family: monospace; font-size: 15px; font-weight: bold; color: ${goldColor}; letter-spacing: 1px; margin-top: 4px;">${citizenCodeVal}</div>
+                                <div style="color: #94a3b8; font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.5px;">Codice Cittadino / Citizen Code</div>
+                                <div style="font-family: monospace; font-size: 14.5px; font-weight: bold; color: ${goldColor}; letter-spacing: 0.8px; margin-top: 3px;">${citizenCodeVal}</div>
                               </td>
                               <td style="vertical-align: bottom; text-align: right;">
-                                <div style="font-family: monospace; font-size: 8px; color: #64748b; word-break: break-all;">NWS SIGNATURE HASH: ${hashVal ? hashVal.slice(0, 16).toUpperCase() : 'VALIDATED'}</div>
+                                <div style="font-family: monospace; font-size: 8.2px; color: #64748b; word-break: break-all;">NWS SIGNATURE: ${hashVal ? hashVal.slice(0, 16).toUpperCase() : 'VALIDATED'}</div>
                               </td>
                             </tr>
                           </table>
                         </div>
                       </div>
                     </div>
-  
-                    <p style="font-size: 14px; margin-top: 24px;">Il documento digitale generato qui sopra rappresenta il tuo identificativo provvisorio valido ed idoneo per l'esercizio di tutti i diritti federati e per il futuro rilascio del passaporto fisico anagrafico.</p>
                     
-                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 28px 0;" />
                     
-                    <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 0;">
-                      <em>"Uniti nello spazio, legati per diritto."</em><br/>
-                      <strong>Ufficio dell'Anagrafe Federale del New World State</strong>
+                    <p style="font-size: 13.5px; color: #64748b; text-align: center; margin-bottom: 0; line-height: 1.5;">
+                      <em style="color: #475569; font-weight: 500;">"Uniti nello spazio, legati per diritto."</em><br/>
+                      <strong style="color: #0f172a; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; display: block; margin-top: 6px;">Ufficio dell'Anagrafe Federale del New World State</strong>
                     </p>
                   </div>
                   
-                  <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8;">
-                    Ricevi questa email perché la tua domanda di cittadinanza è stata accolta favorevolmente dal Comitato.
+                  <div style="text-align: center; margin-top: 22px; font-size: 11.5px; color: #64748b; line-height: 1.4; padding: 0 10px;">
+                    Questa è una comunicazione ufficiale automatica inviata a seguito della delibera di accoglimento della pratica di cittadinanza da parte dei Ministri Federali. Si prega di verificare la presenza dell'allegato PDF sul proprio lettore email.
                   </div>
                 </div>
               `;
-              await sendEmail(email.trim(), 'CONGRATULAZIONI! La tua cittadinanza New World State è approvata', welcomeHtml, env);
+              await sendEmail(email.trim(), 'CONGRATULAZIONI! La tua cittadinanza New World State è approvata', welcomeHtml, env, pdfAttachment);
             } catch (smtpErr) {
               console.error('[SMTP-APPROVE-ERR] Eccezione nell\'invio email approvazione dal Worker:', smtpErr);
             }
@@ -1844,7 +2274,7 @@ CREATE TABLE citizens (
           residenceCity, residenceProvince, residenceCountry, email, phonePrefix, phoneNumber,
           username, password, documentHash, documentType,
           plusCode, locationDescription, latitude, longitude,
-          isAmbassador, isPeacekeeper,
+          isAmbassador, isPeacekeeper, citizenCode,
           documentFrontData, documentFrontName, documentBackData, documentBackName,
           documentPhotoData, documentPhotoName
         } = body;
@@ -1913,6 +2343,7 @@ CREATE TABLE citizens (
         addColumnIfExist('isAmbassador', !!isAmbassador);
         addColumnIfExist('isPeacekeeper', !!isPeacekeeper);
         addColumnIfExist('status', 'pending');
+        addColumnIfExist('citizenCode', citizenCode || '');
 
         // Gestione colonna geografica spaziale (PostGIS)
         const locationIdx = existingColsLower.indexOf('location');
