@@ -731,18 +731,52 @@ CREATE TABLE citizens (
         const birthStr = `${birthDate} - ${placeStr}`;
 
         let imageObject = null;
-        const photoUrl = citizen.arubaPhotoUrl || citizen.arubaphotourl;
+        let photoUrl = citizen.arubaPhotoUrl || citizen.arubaphotourl;
         if (photoUrl && photoUrl.startsWith('http')) {
           try {
             console.log(`[Worker-PDF] Fetching photo for PDF: ${photoUrl}`);
-            const imgRes = await fetch(photoUrl);
+            let imgRes = await fetch(photoUrl);
             if (imgRes.ok) {
-              const arrayBuffer = await imgRes.arrayBuffer();
-              const imgBuffer = new Uint8Array(arrayBuffer);
+              let arrayBuffer = await imgRes.arrayBuffer();
+              let imgBuffer = new Uint8Array(arrayBuffer);
               if (imgBuffer[0] === 0xff && imgBuffer[1] === 0xd8) {
                 imageObject = imgBuffer;
+                console.log('[Worker-PDF] Valid JPEG photo loaded successfully.');
               } else {
-                console.log('[Worker-PDF] Image was not a JPEG format. Defaulting to placeholder.');
+                console.warn('[Worker-PDF] Fetched image is not a JPEG (SOI magic header 0xFFD8 missing).');
+                // Auto-heal: if url ends with .png, let's try to search for its .jpg backup
+                if (photoUrl.toLowerCase().endsWith('.png')) {
+                  const backupUrl = photoUrl.substring(0, photoUrl.length - 4) + '.jpg';
+                  console.log(`[Worker-PDF] Self-healing: attempting to fetch JPEG backup from: ${backupUrl}`);
+                  const backupRes = await fetch(backupUrl);
+                  if (backupRes.ok) {
+                    const backupBuffer = new Uint8Array(await backupRes.arrayBuffer());
+                    if (backupBuffer[0] === 0xff && backupBuffer[1] === 0xd8) {
+                      imageObject = backupBuffer;
+                      console.log('[Worker-PDF] Valid JPEG backup photo loaded successfully!');
+                    } else {
+                      console.error('[Worker-PDF] Backup file is also not a valid JPEG.');
+                    }
+                  } else {
+                    console.warn(`[Worker-PDF] JPEG backup file not found on server: [${backupRes.status}]`);
+                  }
+                }
+              }
+            } else {
+              console.error(`[Worker-PDF] Photo fetch failed with status [${imgRes.status}]`);
+              
+              // Second Auto-heal: if we requested a .png but it failed, let's see if there is a .jpg on server
+              if (photoUrl.toLowerCase().endsWith('.png')) {
+                const alternateUrl = photoUrl.substring(0, photoUrl.length - 4) + '.jpg';
+                console.log(`[Worker-PDF] Self-healing alt fetch: trying to retrieve JPG directly from: ${alternateUrl}`);
+                const altRes = await fetch(alternateUrl);
+                if (altRes.ok) {
+                  const altBuffer = new Uint8Array(await altRes.arrayBuffer());
+                  if (altBuffer[0] === 0xff && altBuffer[1] === 0xd8) {
+                    imageObject = altBuffer;
+                    console.log('[Worker-PDF] Direct JPEG alternative loaded successfully!');
+                  }
+                }
               }
             }
           } catch (e) {
@@ -1604,7 +1638,12 @@ CREATE TABLE citizens (
                 </div>
               `;
               console.log('[Worker-Approve] Generating ID Card PDF attachment for: ' + citizenCodeVal);
-              const pdfBytes = await generateIdCardPdfPureJS(updated, env);
+              const augmentedCitizenForPdf = {
+                ...citizen,
+                ...updated,
+                ...getCitizenWithArubaUrls(updated)
+              };
+              const pdfBytes = await generateIdCardPdfPureJS(augmentedCitizenForPdf, env);
               const attachments = [
                 {
                   filename: `ID_Card_NWS_${citizenCodeVal}.pdf`,

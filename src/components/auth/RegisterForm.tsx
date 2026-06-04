@@ -450,7 +450,7 @@ export default function RegisterForm() {
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        const dataUrl = canvas.toDataURL('image/png');
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
         setPreviews(prev => ({ ...prev, photo: dataUrl }));
         setFormData(prev => ({ ...prev, documentPhoto: null })); 
         stopCamera();
@@ -478,6 +478,44 @@ export default function RegisterForm() {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const photoFileToJpegBase64 = (file: File): Promise<{ dataUrl: string; name: string }> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+              const originalName = file.name;
+              const lastDot = originalName.lastIndexOf('.');
+              const baseName = lastDot !== -1 ? originalName.substring(0, lastDot) : originalName;
+              resolve({ dataUrl, name: `${baseName}.jpg` });
+            } else {
+              resolve({ dataUrl: e.target?.result as string, name: file.name });
+            }
+          } catch (err) {
+            console.error('[JPEG-CONVERT-ERR] Fail, reusing original:', err);
+            resolve({ dataUrl: e.target?.result as string, name: file.name });
+          }
+        };
+        img.onerror = () => {
+          resolve({ dataUrl: e.target?.result as string, name: file.name });
+        };
+        img.src = e.target?.result as string;
+      };
       reader.onerror = error => reject(error);
     });
   };
@@ -1057,11 +1095,12 @@ export default function RegisterForm() {
         documentBackName = formData.documentBack.name;
       }
       if (formData.documentPhoto) {
-        documentPhotoData = await fileToBase64(formData.documentPhoto);
-        documentPhotoName = formData.documentPhoto.name;
+        const converted = await photoFileToJpegBase64(formData.documentPhoto);
+        documentPhotoData = converted.dataUrl;
+        documentPhotoName = converted.name;
       } else if (previews.photo) {
         documentPhotoData = previews.photo;
-        documentPhotoName = 'autoscatto.png';
+        documentPhotoName = 'autoscatto.jpg';
       }
 
       // Prepare the payload by removing non-serializable File objects and adding Base64 representations
