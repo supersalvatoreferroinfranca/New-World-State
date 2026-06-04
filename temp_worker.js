@@ -788,6 +788,9 @@ CREATE TABLE citizens (
             `MIME-Version: 1.0\r\n` +
             `Content-Type: text/html; charset=utf-8\r\n` +
             `Content-Transfer-Encoding: 7bit\r\n` +
+            `List-Unsubscribe: <mailto:${from}?subject=unsubscribe>\r\n` +
+            `Precedence: bulk\r\n` +
+            `X-Auto-Response-Suppress: OOF, AutoReply\r\n` +
             `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.cloud>\r\n\r\n`;
 
           const body = html.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n';
@@ -1992,6 +1995,88 @@ CREATE TABLE citizens (
           const brandColor = "#0a1c3e";
           const lightBg = "#f8fafc";
           
+          // Helper per evidenziare i dati mancanti / non inseriti o lasciare spazio vuoto pulito
+          const check = (val, fallbackLabel = 'Dato non inserito') => {
+            if (val === undefined || val === null) {
+              return `<span style="color: #b91c1c; background-color: #fef2f2; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px dashed #fee2e2; display: inline-block;">${fallbackLabel}</span>`;
+            }
+            const s = String(val).trim();
+            if (s === '' || s === '""' || s === "''" || s === 'N/A' || s === 'undefined' || s === 'null' || s === ',') {
+              return `<span style="color: #b91c1c; background-color: #fef2f2; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px dashed #fee2e2; display: inline-block;">${fallbackLabel}</span>`;
+            }
+            return s;
+          };
+
+          // Formattatore speciale per l'indirizzo di residenza
+          let displayResidence = '';
+          const cleanAddr = (residenceAddress || '').trim();
+          const cleanNo = (residenceNumber || '').trim();
+          if (cleanAddr && cleanAddr !== ',' && cleanAddr !== '""') {
+            displayResidence = (cleanNo && cleanNo !== '""') ? `${cleanAddr}, ${cleanNo}` : cleanAddr;
+          } else {
+            displayResidence = check('', 'Indirizzo non specificato');
+          }
+
+          // Formattatore speciale per CAP, Città e Provincia
+          let displayCapCityProv = '';
+          const zip = (residenceZip || '').trim();
+          const city = (residenceCity || '').trim();
+          const prov = (residenceProvince || '').trim();
+          if ((zip && zip !== '0') || city || prov) {
+            const parts = [];
+            if (zip && zip !== '0') parts.push(zip);
+            if (city) parts.push(city);
+            let combined = parts.join(' - ');
+            if (prov) combined += ` (${prov})`;
+            displayCapCityProv = combined || check('', 'Città/CAP non inseriti');
+          } else {
+            displayCapCityProv = check('', 'Città/CAP non inseriti');
+          }
+
+          // Formattatore per luogo di nascita
+          let displayBirthPlace = '';
+          const bPlace = (birthPlace || '').trim();
+          const bCountry = (birthCountry || '').trim();
+          if (bPlace || bCountry) {
+            displayBirthPlace = bPlace ? `${bPlace}${bCountry ? ` (${bCountry})` : ''}` : bCountry;
+          } else {
+            displayBirthPlace = check('', 'Luogo nascita non fornito');
+          }
+
+          // Formattatore per telefono
+          let displayPhone = '';
+          const prefix = (phonePrefix || '').trim();
+          const pNumber = (phoneNumber || '').trim();
+          if (pNumber && pNumber !== 'null' && pNumber !== 'undefined') {
+            displayPhone = prefix ? `${prefix} ${pNumber}` : pNumber;
+          } else {
+            displayPhone = check('', 'Nessun telefono fornito');
+          }
+
+          // Formattatore per descrizione luogo
+          let displayLocationDesc = '';
+          const locDesc = (locationDescription || '').trim();
+          if (locDesc && locDesc !== '""' && locDesc !== "''") {
+            displayLocationDesc = `"${locDesc}"`;
+          } else {
+            displayLocationDesc = check('', 'Nessuna descrizione inserita');
+          }
+
+          // Nominativi combinati puliti
+          const displayFullNameAdmin = [surname, firstName].filter(Boolean).map(x => x.trim()).join(' ') || check('', 'Nominativo mancante');
+          const displayFullNameCitizen = [firstName, surname].filter(Boolean).map(x => x.trim()).join(' ') || check('', 'Sportivo/Utente');
+
+          // Formattatore per residenza utente in riepilogo
+          let displayCitizenResidence = '';
+          if (cleanAddr && cleanAddr !== ',' && cleanAddr !== '""') {
+            const parts = [];
+            parts.push(displayResidence);
+            if (city) parts.push(city);
+            displayCitizenResidence = parts.join(' - ');
+          } else {
+            displayCitizenResidence = check('', 'Dato non inserito (Indirizzo mancante)');
+          }
+
           const adminHtml = `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: ${lightBg}; border-radius: 16px;">
               <div style="background-color: ${brandColor}; padding: 30px; border-radius: 12px; text-align: center; color: white;">
@@ -2003,31 +2088,31 @@ CREATE TABLE citizens (
                 <h2 style="font-size: 18px; color: ${brandColor}; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-top: 0;">Anagrafica Richiedente</h2>
                 
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
-                  <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Cognome e Nome:</strong></td><td style="padding: 6px 0; font-weight: 600;">${surname || ''} ${firstName || ''}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Sesso:</strong></td><td style="padding: 6px 0;">${gender || ''}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Data di Nascita:</strong></td><td style="padding: 6px 0;">${birthDate || 'Non fornito'}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Luogo di Nascita:</strong></td><td style="padding: 6px 0;">${birthPlace || ''} (${birthCountry || ''})</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Cittadinanza Attuale:</strong></td><td style="padding: 6px 0;">${citizenship || ''}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Stato Civile:</strong></td><td style="padding: 6px 0;">${maritalStatus || ''}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Email del Cittadino:</strong></td><td style="padding: 6px 0; font-weight: 600; color: #2563eb;">${email || 'Nessuna'}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Telefono:</strong></td><td style="padding: 6px 0;">${phonePrefix || ''} ${phoneNumber || 'Nessuno'}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Cognome e Nome:</strong></td><td style="padding: 6px 0; font-weight: 600;">${displayFullNameAdmin}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Sesso:</strong></td><td style="padding: 6px 0;">${check(gender, 'Non specificato')}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Data di Nascita:</strong></td><td style="padding: 6px 0;">${check(birthDate, 'Non fornita')}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Luogo di Nascita:</strong></td><td style="padding: 6px 0;">${displayBirthPlace}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Cittadinanza Attuale:</strong></td><td style="padding: 6px 0;">${check(citizenship, 'Non inserita')}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Stato Civile:</strong></td><td style="padding: 6px 0;">${check(maritalStatus, 'Non specificato')}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Email del Cittadino:</strong></td><td style="padding: 6px 0; font-weight: 600; color: #2563eb;">${check(email, 'Nessuna')}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Telefono:</strong></td><td style="padding: 6px 0;">${displayPhone}</td></tr>
                 </table>
 
                 <h2 style="font-size: 18px; color: ${brandColor}; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-top: 24px;">Localizzazione Geografica</h2>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
-                  <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Indirizzo Residenza:</strong></td><td style="padding: 6px 0;">${residenceAddress || ''}, ${residenceNumber || ''}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>CAP / Città:</strong></td><td style="padding: 6px 0;">${residenceZip || ''} - ${residenceCity || ''} (${residenceProvince || ''})</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Stato Residenza:</strong></td><td style="padding: 6px 0;">${residenceCountry || ''}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Coordinate Geografiche:</strong></td><td style="padding: 6px 0; font-family: monospace; font-size: 13px;">lat: ${latitude || 0}, lon: ${longitude || 0}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Plus Code:</strong></td><td style="padding: 6px 0; font-family: monospace; color: #0f766e; font-weight: 600;">${plusCode || ''}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Descrizione Luogo:</strong></td><td style="padding: 6px 0; font-style: italic;">"${locationDescription || ''}"</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Indirizzo Residenza:</strong></td><td style="padding: 6px 0;">${displayResidence}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>CAP / Città:</strong></td><td style="padding: 6px 0;">${displayCapCityProv}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Stato Residenza:</strong></td><td style="padding: 6px 0;">${check(residenceCountry, 'Non specificato')}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Coordinate Geografiche:</strong></td><td style="padding: 6px 0; font-family: monospace; font-size: 13px;">${(latitude && longitude) ? `lat: ${latitude}, lon: ${longitude}` : check('', 'Non rilevate')}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Plus Code:</strong></td><td style="padding: 6px 0; font-family: monospace; color: #0f766e; font-weight: 600;">${check(plusCode, 'Non rilevato')}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Descrizione Luogo:</strong></td><td style="padding: 6px 0; font-style: italic;">${displayLocationDesc}</td></tr>
                 </table>
 
                 <h2 style="font-size: 18px; color: ${brandColor}; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-top: 24px;">Credenziali ed Opzioni</h2>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
-                  <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Username:</strong></td><td style="padding: 6px 0; font-family: monospace;">${normalizedUsername || 'Registrato con email/tel'}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Hash Documento:</strong></td><td style="padding: 6px 0; font-family: monospace; font-size: 11px; word-break: break-all;">${documentHash || ''}</td></tr>
-                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Tipo Documento:</strong></td><td style="padding: 6px 0;">${documentType || ''}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b; width: 40%;"><strong>Username:</strong></td><td style="padding: 6px 0; font-family: monospace;">${normalizedUsername ? check(normalizedUsername) : 'Registrato con email/tel'}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Hash Documento:</strong></td><td style="padding: 6px 0; font-family: monospace; font-size: 11px; word-break: break-all;">${check(documentHash, 'Non generato')}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;"><strong>Tipo Documento:</strong></td><td style="padding: 6px 0;">${check(documentType, 'Non specificato')}</td></tr>
                   <tr><td style="padding: 6px 0; color: #64748b;"><strong>File Fisici su Aruba:</strong></td><td style="padding: 6px 0;">
                     ${arubaFrontUrl ? `<a href="${arubaFrontUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline; margin-right: 12px;">Visualizza Fronte</a>` : ''}
                     ${arubaBackUrl ? `<a href="${arubaBackUrl}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline; margin-right: 12px;">Visualizza Retro</a>` : ''}
@@ -2053,7 +2138,7 @@ CREATE TABLE citizens (
               </div>
               
               <div style="padding: 30px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); line-height: 1.6;">
-                <p style="font-size: 16px; margin-top: 0;">Caro/a <strong>${firstName || ''} ${surname || ''}</strong>,</p>
+                <p style="font-size: 16px; margin-top: 0;">Caro/a <strong>${displayFullNameCitizen}</strong>,</p>
                 
                 <p style="font-size: 15px;">Siamo felici di comunicarti che la tua richiesta per ottenere la cittadinanza del <strong>New World State</strong> è stata correttamente acquisita dal nostro sistema anagrafico.</p>
                 
@@ -2064,11 +2149,11 @@ CREATE TABLE citizens (
 
                 <h3 style="font-size: 15px; color: ${brandColor}; margin-top: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">Riepilogo Dati Registrati</h3>
                 <ul style="padding-left: 20px; margin: 10px 0; font-size: 14px; color: #475569;">
-                  <li><strong>Plus Code Posizione:</strong> <span style="font-family: monospace; color: #0f766e; font-weight: 600;">${plusCode || '-'}</span></li>
-                  <li><strong>Luogo e Nazione:</strong> ${birthPlace || ''} (${birthCountry || ''})</li>
-                  <li><strong>Stato Cittadinanza Richiesta:</strong> ${citizenship || ''}</li>
-                  <li><strong>Indirizzo Residenza:</strong> ${residenceAddress || ''}, ${residenceNumber || ''} - ${residenceCity || ''}</li>
-                  <li><strong>Tipologia Documento Fornito:</strong> ${documentType || '-'}</li>
+                  <li><strong>Plus Code Posizione:</strong> <span style="font-family: monospace; color: #0f766e; font-weight: 600;">${check(plusCode, 'Non rilevato')}</span></li>
+                  <li><strong>Luogo e Nazione:</strong> ${displayBirthPlace}</li>
+                  <li><strong>Stato Cittadinanza Richiesta:</strong> ${check(citizenship, 'Non inserita')}</li>
+                  <li><strong>Indirizzo Residenza:</strong> ${displayCitizenResidence}</li>
+                  <li><strong>Tipologia Documento Fornito:</strong> ${check(documentType, 'Non specificato')}</li>
                 </ul>
                 
                 <p style="font-size: 14px; margin-top: 24px;">Al termine della procedura di verifica dei dati, riceverai una seconda comunicazione email di inserimento definitivo nel registro, contenente il link per scaricare il tuo **Certificato di Cittadinanza Digitale**.</p>

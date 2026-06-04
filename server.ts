@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
 import pg from 'pg';
+import PDFDocument from 'pdfkit';
 
 const { Pool } = pg;
 
@@ -64,6 +65,164 @@ async function runMigrations() {
   }
 }
 
+// Genera un documento PDF ad alta risoluzione con le dimensioni esatte di una ID card (85,60 mm x 53,98 mm)
+function generateCitizenIdCardPdf(citizen: any): Promise<Buffer> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // 85.60 mm x 53.98 mm in PostScript points. 1 mm = 72 / 25.4 = 2.83464567 points
+      const width = 85.60 * 2.83464567; // ~242.65
+      const height = 53.98 * 2.83464567; // ~153.01
+
+      const doc = new PDFDocument({
+        size: [width, height],
+        margins: { top: 0, bottom: 0, left: 0, right: 0 }
+      });
+
+      const buffers: Buffer[] = [];
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => {
+        resolve(Buffer.concat(buffers));
+      });
+
+      const brandColor = '#0a1c3e';
+      const goldColor = '#c5a880';
+      const lightGray = '#94a3b8';
+
+      // Background color of the card
+      doc.rect(0, 0, width, height).fill(brandColor);
+
+      // Gold border
+      doc.rect(2, 2, width - 4, height - 4).lineWidth(1.2).stroke(goldColor);
+
+      // Header top bar (nested slightly darker blue rect)
+      doc.rect(2, 2, width - 4, 25).fill('#071530');
+      
+      // Header text
+      doc.fillColor(goldColor)
+         .fontSize(6)
+         .font('Helvetica-Bold')
+         .text('NEW WORLD STATE', 8, 6, { characterSpacing: 0.5 });
+         
+      doc.fillColor(lightGray)
+         .fontSize(4.2)
+         .font('Helvetica')
+         .text('SOVEREIGN GLOBAL CITIZENSHIP', 8, 14, { characterSpacing: 0.3 });
+
+      doc.fillColor(goldColor)
+         .fontSize(8.5)
+         .font('Helvetica-Bold')
+         .text('ID CARD', width - 60, 8, { width: 52, align: 'right' });
+
+      // Gold line below header
+      doc.moveTo(2, 27).lineTo(width - 2, 27).lineWidth(0.8).stroke(goldColor);
+
+      // Left column details (Surname, First Name, Birth, Nationality)
+      const textX = 8;
+      let textY = 32;
+      const colWidth = width * 0.65; // ~157pt
+
+      // Helper to draw text block
+      const writeField = (label: string, value: string, fontSize: number, bold: boolean, spacingAfter: number, color: string = 'white') => {
+        doc.fillColor(lightGray)
+           .fontSize(3.8)
+           .font('Helvetica')
+           .text(label, textX, textY);
+        textY += 4.5;
+
+        doc.fillColor(color)
+           .fontSize(fontSize)
+           .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+           .text(value, textX, textY, { width: colWidth, lineGap: 0, ellipsis: true });
+        textY += spacingAfter;
+      };
+
+      writeField('COGNOME / SURNAME', (citizen.surname || '').toUpperCase(), 6.5, true, 8);
+      writeField('NOME / GIVEN NAMES', (citizen.firstName || 'CITTADINO').toUpperCase(), 6.5, true, 8);
+      
+      const bDate = citizen.birthDate || 'N/A';
+      const bPlace = citizen.birthPlace || '';
+      const bCountry = citizen.birthCountry || '';
+      const placeString = bPlace ? `${bPlace}${bCountry ? ` (${bCountry})` : ''}` : bCountry || '';
+      const birthStr = placeString ? `${bDate} - ${placeString}` : bDate;
+      writeField('DATA E LUOGO DI NASCITA / DATE & PLACE OF BIRTH', birthStr.toUpperCase(), 5, false, 7.5);
+      
+      writeField('CITTADINANZA / NATIONALITY', 'NEW WORLD STATE • SOVEREIGN', 5, true, 4, goldColor);
+
+      // Photo on the right
+      const photoWidth = 56;
+      const photoHeight = 71;
+      const photoX = width - photoWidth - 8; // width - 64
+      const photoY = 33;
+
+      doc.rect(photoX, photoY, photoWidth, photoHeight).lineWidth(0.8).stroke(goldColor);
+      doc.rect(photoX + 1, photoY + 1, photoWidth - 2, photoHeight - 2).fill('#071530');
+
+      let imageAttached = false;
+      const photoUrl = citizen.arubaPhotoUrl || citizen.arubaphotourl;
+      if (photoUrl && photoUrl.startsWith('http')) {
+        try {
+          console.log(`[PDF] Fetching photo for PDF ID Card: ${photoUrl}`);
+          const imgRes = await fetch(photoUrl, { signal: AbortSignal.timeout(4000) });
+          if (imgRes.ok) {
+            const arrayBuffer = await imgRes.arrayBuffer();
+            const imgBuffer = Buffer.from(arrayBuffer);
+            doc.image(imgBuffer, photoX + 1.5, photoY + 1.5, {
+              width: photoWidth - 3,
+              height: photoHeight - 3,
+              fit: [photoWidth - 3, photoHeight - 3],
+              align: 'center',
+              valign: 'center'
+            });
+            imageAttached = true;
+          }
+        } catch (imgErr: any) {
+          console.error('[PDF] Failed to fetch photo for PDF, falling back to text:', imgErr.message);
+        }
+      }
+
+      if (!imageAttached) {
+        doc.fillColor(lightGray)
+           .fontSize(4)
+           .font('Helvetica-Bold')
+           .text('FOTO', photoX, photoY + 25, { width: photoWidth, align: 'center' });
+        doc.text('VALIDATA', photoX, photoY + 31, { width: photoWidth, align: 'center' });
+      }
+
+      // Dashed separator line near bottom
+      const dashY = 114;
+      doc.moveTo(4, dashY).lineTo(width - 4, dashY).lineWidth(0.5).dash(2, { space: 2 }).stroke('rgba(197,168,128,0.4)');
+      doc.undash();
+
+      // Bottom bar info
+      const codeX = 8;
+      const codeY = 119;
+      doc.fillColor(lightGray)
+         .fontSize(3.8)
+         .font('Helvetica')
+         .text('CODICE CITTADINO / CITIZEN CODE', codeX, codeY);
+      
+      const citizenCode = citizen.citizenCode || 'N/A';
+      doc.fillColor(goldColor)
+         .fontSize(8)
+         .font('Helvetica-Bold')
+         .text(citizenCode, codeX, codeY + 4.5, { characterSpacing: 0.5 });
+
+      const sigX = width - 110;
+      const sigY = 125;
+      const docHash = citizen.documentHash || 'VALIDATED';
+      const cleanHash = docHash.slice(0, 16).toUpperCase();
+      doc.fillColor('#64748b')
+         .fontSize(4)
+         .font('Courier-Bold')
+         .text(`NWS SIGNATURE: ${cleanHash}`, sigX, sigY, { width: 102, align: 'right' });
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
 // Fix for __dirname in both ESM and CJS bundled environments
 let __filename_val: string;
 let __dirname_val: string;
@@ -99,7 +258,7 @@ async function startServer() {
     app.use(express.json({ limit: '10mb' }));
 
     // Helper per inviare email tramite SMTP (es. Aruba)
-    async function sendLocalSmtpEmail({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
+    async function sendLocalSmtpEmail({ to, subject, html, text, attachments }: { to: string; subject: string; html: string; text?: string; attachments?: any[] }) {
       const host = process.env.SMTP_HOST || 'smtps.aruba.it';
       const port = parseInt(process.env.SMTP_PORT || '465', 10);
       const secure = process.env.SMTP_SECURE !== 'false'; // di default true per la porta 465
@@ -145,7 +304,8 @@ async function startServer() {
           'List-Unsubscribe': `<mailto:${from}?subject=unsubscribe>`,
           'Precedence': 'bulk',
           'X-Auto-Response-Suppress': 'OOF, AutoReply',
-        }
+        },
+        attachments: attachments || []
       };
 
       const info = await transporter.sendMail(mailOptions);
@@ -827,6 +987,11 @@ Ufficio dell'Anagrafe Federale del New World State
             const goldColor = '#c5a880';
             const code = updated.citizenCode || 'N/A';
 
+            // Genera la ID card fisica come PDF allegato di precisione al millimetro
+            console.log('[PDF] Avvio generazione ID Card ufficiale in formato PDF...');
+            const pdfBuffer = await generateCitizenIdCardPdf(updated);
+            console.log('[PDF] Generazione completata con successo! Dimensione del buffer:', pdfBuffer.length);
+
             const welcomeHtml = `
               <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 16px;">
                 <div style="background-color: ${brandColor}; padding: 40px 30px; border-radius: 12px; text-align: center; color: white; border-bottom: 4px solid ${goldColor};">
@@ -840,6 +1005,13 @@ Ufficio dell'Anagrafe Federale del New World State
                   <p style="font-size: 15px;">Siamo onorati di darti il benvenuto ufficiale nel <strong>New World State</strong>. Il nostro comitato di validatori ha completato con successo la verifica della tua anagrafica e dei tuoi documenti.</p>
                   
                   <p style="font-size: 15px;">La tua registrazione è ora formalmente inserita nel Registro Fedele della Federazione Mondiale di NWS.</p>
+                  
+                  <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 18px; border-radius: 8px; margin: 24px 0;">
+                    <h4 style="margin: 0 0 5px 0; color: #14532d; font-size: 14px; font-weight: bold; text-transform: uppercase;">CERTIFICATO / ID CARD PDF DA STAMPARE ALLEGATO</h4>
+                    <p style="margin: 0; color: #166534; font-size: 13.5px;">
+                      In allegato a questa comunicazione trovi la tua <strong>Sovereign ID Card ufficiale in formato PDF pronto per la stampa</strong>. Il file è stato rigidamente formattato per rispettare le proporzioni internazionali standard dello spazio di stampa delle schede tascabili: <strong>Larghezza: 85,60 mm e Altezza: 53,98 mm</strong> (ID-1).
+                    </p>
+                  </div>
 
                   <!-- TABELLA DOCUMENTO DI IDENTITA DIGITALE (IDENTITY CARD VISUAL MOCKUP) -->
                   <div style="margin: 30px 0; background-color: ${brandColor}; color: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(10,28,62,0.25); border: 2px solid ${goldColor};">
@@ -848,7 +1020,7 @@ Ufficio dell'Anagrafe Federale del New World State
                         <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: ${goldColor};">NEW WORLD STATE</div>
                         <div style="font-size: 8px; color: #94a3b8; text-transform: uppercase;">Sovereign Global Citizenship</div>
                       </div>
-                      <div style="font-size: 18px; color: ${goldColor}; font-weight: bold; text-align: right;">ID CARD</div>
+                      <div style="font-size: 18px; color: ${goldColor}; font-weight: bold; text-align: right;">ID CARD PREVIEW</div>
                     </div>
                     
                     <div style="padding: 24px 20px; background-color: ${brandColor}; position: relative;">
@@ -893,7 +1065,7 @@ Ufficio dell'Anagrafe Federale del New World State
                     </div>
                   </div>
 
-                  <p style="font-size: 14px; margin-top: 24px;">Il documento digitale generato qui sopra rappresenta il tuo identificativo provvisorio valido ed idoneo per l'esercizio di tutti i diritti federati e per il futuro rilascio del passaporto fisico anagrafico.</p>
+                  <p style="font-size: 14px; margin-top: 24px;">Il documento digitale allegato rappresenta il tuo identificativo provvisorio valido ed idoneo per l'esercizio di tutti i diritti federati e per la stampa fisica.</p>
                   
                   <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
                   
@@ -912,11 +1084,112 @@ Ufficio dell'Anagrafe Federale del New World State
             await sendLocalSmtpEmail({
               to: email.trim(),
               subject: 'CONGRATULAZIONI! La tua cittadinanza New World State è approvata',
-              html: welcomeHtml
+              html: welcomeHtml,
+              attachments: [
+                {
+                  filename: `ID_Card_NWS_${code}.pdf`,
+                  content: pdfBuffer,
+                  contentType: 'application/pdf'
+                }
+              ]
             });
-            console.log(`[SMTP] Inviata email di benvenuto e ID Card a ${email}`);
+            console.log(`[SMTP] Inviata email di benvenuto e ID Card PDF allegata a ${email}`);
           } catch (smtpErr: any) {
-            console.error('[SMTP-APPROVE-ERR] Eccezione nell\'invio email approvazione:', smtpErr.message);
+            console.error('[SMTP-APPROVE-ERR] Eccezione nell\'invio email approvazione prima scelta (tentativo fallback):', smtpErr.message);
+            // Fallback ad invio senza allegato PDF per garantire la massima tolleranza alle esclusioni
+            try {
+              const brandColor = '#0a1c3e';
+              const goldColor = '#c5a880';
+              const code = updated.citizenCode || 'N/A';
+              const fallbackHtml = `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 16px;">
+                  <div style="background-color: ${brandColor}; padding: 40px 30px; border-radius: 12px; text-align: center; color: white; border-bottom: 4px solid ${goldColor};">
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: white;">Benvenuto, Cittadino!</h1>
+                    <p style="margin: 10px 0 0 0; color: ${goldColor}; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">Cittadinanza NWS Approvata</p>
+                  </div>
+                  
+                  <div style="padding: 30px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; line-height: 1.6;">
+                    <p style="font-size: 16px; margin-top: 0;">Gentile <strong>${updated.firstName || ''} ${updated.surname || ''}</strong>,</p>
+                    
+                    <p style="font-size: 15px;">Siamo onorati di darti il benvenuto ufficiale nel <strong>New World State</strong>. Il nostro comitato di validatori ha completato con successo la verifica della tua anagrafica e dei tuoi documenti.</p>
+                    
+                    <p style="font-size: 15px;">La tua ID Card è disponibile e convalidata nel nostro archivio centrale.</p>
+
+                    <!-- TABELLA INTERNA PREVIEW -->
+                    <div style="margin: 30px 0; background-color: ${brandColor}; color: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(10,28,62,0.25); border: 2px solid ${goldColor};">
+                      <div style="padding: 16px 20px; background-color: #071530; border-bottom: 1.5px solid ${goldColor}; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: ${goldColor};">NEW WORLD STATE</div>
+                          <div style="font-size: 8px; color: #94a3b8; text-transform: uppercase;">Sovereign Global Citizenship</div>
+                        </div>
+                        <div style="font-size: 18px; color: ${goldColor}; font-weight: bold; text-align: right;">ID CARD</div>
+                      </div>
+                      
+                      <div style="padding: 24px 20px; background-color: ${brandColor}; position: relative;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                          <tr>
+                            <td style="width: 70%; vertical-align: top; font-size: 12px; font-family: sans-serif;">
+                              <table style="width: 100%;">
+                                <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Cognome / Surname</td></tr>
+                                <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 6px;">${updated.surname || ''}</td></tr>
+                                
+                                <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Nome / Given Names</td></tr>
+                                <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 6px;">${updated.firstName || ''}</td></tr>
+                                
+                                <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Data e Luogo di Nascita / Date & Place of Birth</td></tr>
+                                <tr><td style="color: white; font-size: 11px; padding-bottom: 6px;">${updated.birthDate || 'N/A'} - ${updated.birthPlace || ''} (${updated.birthCountry || ''})</td></tr>
+                                
+                                <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0;">Cittadinanza / Nationality</td></tr>
+                                <tr><td style="color: ${goldColor}; font-weight: bold; font-size: 11px; padding-bottom: 6px; text-transform: uppercase;">NEW WORLD STATE ● SOVEREIGN</td></tr>
+                              </table>
+                            </td>
+                            <td style="width: 30%; vertical-align: middle; text-align: center;">
+                              <div style="border: 2px solid ${goldColor}; width: 85px; height: 105px; background-color: #071530; border-radius: 8px; overflow: hidden; display: inline-block;">
+                                ${updated.arubaPhotoUrl ? `<img src="${updated.arubaPhotoUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto" />` : `<div style="padding-top: 35px; font-size: 9px; color: #475569; text-align: center;">FOTO<br/>VALIDA</div>`}
+                              </div>
+                            </td>
+                          </tr>
+                        </table>
+                        
+                        <div style="margin-top: 15px; border-top: 1px dashed rgba(197,168,128,0.3); padding-top: 15px;">
+                          <table style="width: 100%;">
+                            <tr>
+                              <td>
+                                <div style="color: #94a3b8; font-size: 8px; text-transform: uppercase;">Codice Cittadino / Citizen Code</div>
+                                <div style="font-family: monospace; font-size: 15px; font-weight: bold; color: ${goldColor}; letter-spacing: 1px; margin-top: 4px;">${code}</div>
+                              </td>
+                              <td style="vertical-align: bottom; text-align: right;">
+                                <div style="font-family: monospace; font-size: 8px; color: #64748b; word-break: break-all;">NWS SIGNATURE HASH: ${updated.documentHash ? updated.documentHash.slice(0, 16).toUpperCase() : 'VALIDATED'}</div>
+                              </td>
+                            </tr>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p style="font-size: 14px; margin-top: 24px;">La ID card digitale generata qui sopra rappresenta l'identificativo valido provvisorio idoneo per l'esercizio di tutti i diritti federati.</p>
+                    
+                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+                    
+                    <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 0;">
+                      <em>"Uniti nello spazio, legati per diritto."</em><br/>
+                      <strong>Ufficio dell'Anagrafe Federale del New World State</strong>
+                    </p>
+                  </div>
+                  
+                  <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8;">
+                    Ricevi questa email perché la tua domanda di cittadinanza è stata accolta favorevolmente dal Comitato.
+                  </div>
+                </div>
+              `;
+              await sendLocalSmtpEmail({
+                to: email.trim(),
+                subject: 'CONGRATULAZIONI! La tua cittadinanza New World State è approvata',
+                html: fallbackHtml
+              });
+            } catch (fallbackErr: any) {
+              console.error('[SMTP-FALLBACK-ERR] Impossibile inviare email anche senza allegato:', fallbackErr.message);
+            }
           }
         }
       }
