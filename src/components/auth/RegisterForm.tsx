@@ -257,6 +257,75 @@ function LocationMarker({ onPositionChange, position }: { onPositionChange: (pos
   );
 }
 
+const getCitizenshipFromCountryOrCity = (country: string, city: string = '', lang: 'it' | 'en' = 'it'): string => {
+  const normCountry = country.trim().toUpperCase();
+  const normCity = city.trim().toUpperCase();
+
+  const itCityMap: Record<string, string> = {
+    'ROMA': 'ITALIANA', 'MILANO': 'ITALIANA', 'NAPOLI': 'ITALIANA', 'TORINO': 'ITALIANA', 'PALERMO': 'ITALIANA',
+    'GENOVA': 'ITALIANA', 'BOLOGNA': 'ITALIANA', 'FIRENZE': 'ITALIANA', 'BARI': 'ITALIANA', 'CATANIA': 'ITALIANA',
+    'VENEZIA': 'ITALIANA', 'VERONA': 'ITALIANA', 'MESSINA': 'ITALIANA', 'PADOVA': 'ITALIANA', 'TRIESTE': 'ITALIANA',
+    'BRESCIA': 'ITALIANA', 'PRATO': 'ITALIANA', 'PARMA': 'ITALIANA', 'MODENA': 'ITALIANA', 'REGGIO CALABRIA': 'ITALIANA',
+    'REGGIO EMILIA': 'ITALIANA', 'PERUGIA': 'ITALIANA', 'LIVORNO': 'ITALIANA', 'RAVENNA': 'ITALIANA', 'CAGLIARI': 'ITALIANA',
+    'FOGGIA': 'ITALIANA', 'RIMINI': 'ITALIANA', 'SALERNO': 'ITALIANA', 'FERRARA': 'ITALIANA', 'SASSARI': 'ITALIANA',
+    'LATINA': 'ITALIANA', 'MONZA': 'ITALIANA', 'SIRACUSA': 'ITALIANA', 'PESCARA': 'ITALIANA', 'BERGAMO': 'ITALIANA',
+    'FORLÌ': 'ITALIANA', 'TRENTO': 'ITALIANA', 'VICENZA': 'ITALIANA', 'TERNI': 'ITALIANA', 'BOLZANO': 'ITALIANA',
+    'NOVARA': 'ITALIANA', 'PIACENZA': 'ITALIANA', 'ANCONA': 'ITALIANA', 'AREZZO': 'ITALIANA', 'UDINE': 'ITALIANA',
+    'CESENA': 'ITALIANA', 'LECCE': 'ITALIANA', 'PARIGI': 'FRANCESE', 'LONDRA': 'BRITANNICA', 'BERLINO': 'TEDESCA',
+    'MADRID': 'SPAGNOLA', 'NEW YORK': 'STATUNITENSE'
+  };
+
+  const enCityMap: Record<string, string> = {
+    'ROMA': 'ITALIAN', 'ROME': 'ITALIAN', 'MILAN': 'ITALIAN', 'MILANO': 'ITALIAN', 'NAPLES': 'ITALIAN', 'NAPOLI': 'ITALIAN', 'TURIN': 'ITALIAN', 'TORINO': 'ITALIAN',
+    'PALERMO': 'ITALIAN', 'GENOA': 'ITALIAN', 'GENOVA': 'ITALIAN', 'BOLOGNA': 'ITALIAN', 'FLORENCE': 'ITALIAN', 'FIRENZE': 'ITALIAN', 'VENICE': 'ITALIAN', 'VENEZIA': 'ITALIAN',
+    'VERONA': 'ITALIAN', 'PARIS': 'FRENCH', 'PARIGI': 'FRENCH', 'LONDON': 'BRITISH', 'LONDRA': 'BRITISH', 'BERLIN': 'GERMAN', 'BERLINO': 'GERMAN',
+    'MADRID': 'SPANISH', 'NEW YORK': 'AMERICAN'
+  };
+
+  const itCountryMap: Record<string, string> = {
+    'ITALIA': 'ITALIANA', 'ITALY': 'ITALIANA', 'FRANCIA': 'FRANCESE', 'FRANCE': 'FRANCESE', 'GERMANIA': 'TEDESCA',
+    'GERMANY': 'TEDESCA', 'DEUTSCHLAND': 'TEDESCA', 'SPAGNA': 'SPAGNOLA', 'SPAIN': 'SPAGNOLA', 'ESPAÑA': 'SPAGNOLA',
+    'REGNO UNITO': 'BRITANNICA', 'UNITED KINGDOM': 'BRITANNICA', 'UK': 'BRITANNICA', 'INGHILTERRA': 'BRITANNICA',
+    'STATI UNITI': 'STATUNITENSE', 'STATI UNITI D\'AMERICA': 'STATUNITENSE', 'UNITED STATES': 'STATUNITENSE', 'UNITED STATES OF AMERICA': 'STATUNITENSE', 'USA': 'STATUNITENSE',
+    'SVIZZERA': 'SVIZZERA', 'SWITZERLAND': 'SVIZZERA', 'AUSTRIA': 'AUSTRIACA', 'BELGIO': 'BELGA', 'BELGIUM': 'BELGA',
+    'PAESI BASSI': 'OLANDESE', 'NETHERLANDS': 'OLANDESE', 'PORTOGALLO': 'PORTOGHESE', 'PORTUGAL': 'PORTOGHESE',
+    'GRECIA': 'GRECA', 'GREECE': 'GRECA', 'ALBANIA': 'ALBANESE', 'MOLDAVIA': 'MOLDAVA', 'ROMANIA': 'RUMENA',
+    'POLONIA': 'POLACCA', 'POLAND': 'POLACCA', 'UCRAINA': 'UCRAINA', 'UKRAINE': 'UCRAINA', 'RUSSIA': 'RUSSA',
+    'MAROCCO': 'MAROCCHINA', 'MOROCCO': 'MAROCCHINA', 'TUNISIA': 'TUNISINA', 'EGITTO': 'EGIZIANA', 'EGYPT': 'EGIZIANA',
+    'CINA': 'CINESE', 'CHINA': 'CINESE', 'GIAPPONE': 'GIAPPONESE', 'JAPAN': 'GIAPPONESE', 'BRASILE': 'BRASILIANA',
+    'BRAZIL': 'BRASILIANA', 'ARGENTINA': 'ARGENTINA', 'MESSICO': 'MESSICANA', 'MEXICO': 'MESSICANA', 'CANADA': 'CANADESE',
+    'AUSTRALIA': 'AUSTRALIANA'
+  };
+
+  const enCountryMap: Record<string, string> = {
+    'ITALY': 'ITALIAN', 'ITALIA': 'ITALIAN', 'FRANCE': 'FRENCH', 'FRANCIA': 'FRENCH', 'GERMANY': 'GERMAN', 'GERMANIA': 'GERMAN',
+    'SPAIN': 'SPANISH', 'SPAGNA': 'SPANISH', 'ESPAÑA': 'SPANISH', 'UNITED KINGDOM': 'BRITISH', 'REGNO UNITO': 'BRITISH', 'UK': 'BRITISH',
+    'ENGLAND': 'BRITISH', 'INGHILTERRA': 'BRITISH', 'UNITED STATES': 'AMERICAN', 'STATI UNITI': 'AMERICAN', 'USA': 'AMERICAN', 'UNITED STATES OF AMERICA': 'AMERICAN',
+    'SWITZERLAND': 'SWISS', 'SVIZZERA': 'SWISS', 'AUSTRIA': 'AUSTRIAN', 'BELGIUM': 'BELGIAN', 'BELGIO': 'BELGIAN',
+    'NETHERLANDS': 'DUTCH', 'PAESI BASSI': 'DUTCH', 'PORTUGAL': 'PORTUGUESE', 'PORTOGALLO': 'PORTUGUESE', 'GREECE': 'GREEK', 'GRECIA': 'GREEK',
+    'ALBANIA': 'ALBANIAN', 'MOLDAVIA': 'MOLDAVIAN', 'ROMANIA': 'ROMANIAN', 'POLAND': 'POLISH', 'POLONIA': 'POLISH',
+    'UKRAINE': 'UKRAINIAN', 'UCRAINA': 'UKRAINIAN', 'RUSSIA': 'RUSSIAN', 'MOROCCO': 'MOROCCAN', 'MAROCCO': 'MOROCCAN',
+    'TUNISIA': 'TUNISIAN', 'EGYPT': 'EGYPTIAN', 'EGITTO': 'EGYPTIAN', 'CHINA': 'CHINESE', 'CINA': 'CHINESE',
+    'JAPAN': 'JAPANESE', 'GIAPPONE': 'JAPANESE', 'BRAZIL': 'BRAZILIAN', 'BRASILE': 'BRAZILIAN', 'ARGENTINA': 'ARGENTINE',
+    'MEXICO': 'MEXICAN', 'MESSICO': 'MEXICAN', 'CANADA': 'CANADIAN', 'AUSTRALIA': 'AUSTRALIAN'
+  };
+
+  if (lang === 'it') {
+    if (itCityMap[normCity]) return itCityMap[normCity];
+    if (itCountryMap[normCountry]) return itCountryMap[normCountry];
+    if (itCountryMap[normCity]) return itCountryMap[normCity];
+    if (normCountry.endsWith('IA')) {
+      return normCountry.substring(0, normCountry.length - 2) + 'ANA';
+    }
+    return normCountry || normCity;
+  } else {
+    if (enCityMap[normCity]) return enCityMap[normCity];
+    if (enCountryMap[normCountry]) return enCountryMap[normCountry];
+    if (enCountryMap[normCity]) return enCountryMap[normCity];
+    return normCountry || normCity;
+  }
+};
+
 const generateCitizenCode = (): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
@@ -270,7 +339,7 @@ const generateCitizenCode = (): string => {
 };
 
 export default function RegisterForm() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     surname: '',
@@ -539,15 +608,22 @@ export default function RegisterForm() {
     if (type === 'birthPlace') {
       const city = suggestion.address.city || suggestion.address.town || suggestion.address.village || suggestion.display_name.split(',')[0];
       const country = suggestion.address.country || suggestion.display_name.split(',').pop()?.trim();
+      const derivedCitizenship = getCitizenshipFromCountryOrCity(country, city, language);
       setFormData(prev => ({ 
         ...prev, 
         birthPlace: city.toUpperCase(),
-        birthCountry: (country || prev.birthCountry).toUpperCase()
+        birthCountry: (country || prev.birthCountry).toUpperCase(),
+        ...(derivedCitizenship ? { citizenship: derivedCitizenship } : {})
       }));
       setBirthPlaceSuggestions([]);
     } else {
       const country = suggestion.address.country || suggestion.display_name.split(',').pop()?.trim();
-      setFormData(prev => ({ ...prev, birthCountry: country.toUpperCase() }));
+      const derivedCitizenship = getCitizenshipFromCountryOrCity(country, '', language);
+      setFormData(prev => ({ 
+        ...prev, 
+        birthCountry: country.toUpperCase(),
+        ...(derivedCitizenship ? { citizenship: derivedCitizenship } : {})
+      }));
       setBirthCountrySuggestions([]);
     }
   };
@@ -1223,7 +1299,12 @@ export default function RegisterForm() {
                     onBlur={() => setTimeout(() => setBirthPlaceSuggestions([]), 200)}
                     onChange={e => {
                       const val = e.target.value.toUpperCase();
-                      setFormData({ ...formData, birthPlace: val });
+                      const derivedCitizenship = getCitizenshipFromCountryOrCity(formData.birthCountry, val, language);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        birthPlace: val,
+                        ...(derivedCitizenship ? { citizenship: derivedCitizenship } : {})
+                      }));
                       searchLocation(val, 'birthPlace');
                     }}
                   />
@@ -1253,7 +1334,12 @@ export default function RegisterForm() {
                     onBlur={() => setTimeout(() => setBirthCountrySuggestions([]), 200)}
                     onChange={e => {
                       const val = e.target.value.toUpperCase();
-                      setFormData({ ...formData, birthCountry: val });
+                      const derivedCitizenship = getCitizenshipFromCountryOrCity(val, formData.birthPlace, language);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        birthCountry: val,
+                        ...(derivedCitizenship ? { citizenship: derivedCitizenship } : {})
+                      }));
                       searchLocation(val, 'birthCountry');
                     }}
                   />
