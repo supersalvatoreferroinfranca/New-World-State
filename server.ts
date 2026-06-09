@@ -162,7 +162,15 @@ function generateCitizenIdCardPdf(citizen: any): Promise<Buffer> {
       if (photoUrl && photoUrl.startsWith('http')) {
         try {
           console.log(`[PDF] Fetching photo for PDF ID Card: ${photoUrl}`);
-          const imgRes = await fetch(photoUrl, { signal: AbortSignal.timeout(4000) });
+          let imgRes = await fetch(photoUrl, { signal: AbortSignal.timeout(4000) });
+          
+          // Self-heal fallback: if primary URL (e.g. .png) fails, try loading .jpg
+          if (!imgRes.ok && photoUrl.toLowerCase().endsWith('.png')) {
+            const altUrl = photoUrl.substring(0, photoUrl.length - 4) + '.jpg';
+            console.log(`[PDF] Self-healing fetch: primary 404/failed. Trying alternative URL: ${altUrl}`);
+            imgRes = await fetch(altUrl, { signal: AbortSignal.timeout(4000) });
+          }
+          
           if (imgRes.ok) {
             const arrayBuffer = await imgRes.arrayBuffer();
             const imgBuffer = Buffer.from(arrayBuffer);
@@ -174,6 +182,8 @@ function generateCitizenIdCardPdf(citizen: any): Promise<Buffer> {
               valign: 'center'
             });
             imageAttached = true;
+          } else {
+            console.warn(`[PDF] Fetch response was not OK: [${imgRes.status}]`);
           }
         } catch (imgErr: any) {
           console.error('[PDF] Failed to fetch photo for PDF, falling back to text:', imgErr.message);
@@ -855,7 +865,7 @@ Ufficio dell'Anagrafe Federale del New World State
       
       const arubaFrontUrl = front || `${arubaBase}documents/${citizenId}/fronte.png`;
       const arubaBackUrl = back || `${arubaBase}documents/${citizenId}/retro.png`;
-      const arubaPhotoUrl = photo || `${arubaBase}documents/${citizenId}/foto.png`;
+      const arubaPhotoUrl = photo || `${arubaBase}documents/${citizenId}/foto.jpg`;
 
       return {
         ...cit,

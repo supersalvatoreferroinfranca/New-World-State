@@ -673,7 +673,7 @@ CREATE TABLE citizens (
         
         const arubaFrontUrl = front || `${arubaBase}documents/${citizenId}/fronte.png`;
         const arubaBackUrl = back || `${arubaBase}documents/${citizenId}/retro.png`;
-        const arubaPhotoUrl = photo || `${arubaBase}documents/${citizenId}/foto.png`;
+        const arubaPhotoUrl = photo || `${arubaBase}documents/${citizenId}/foto.jpg`;
 
         return {
           ...cit,
@@ -1456,7 +1456,7 @@ CREATE TABLE citizens (
       if (url.pathname === '/api/admin/approve' && request.method === 'POST') {
         try {
           const body = await request.json();
-          const { id } = body;
+          const id = Number(body.id);
           if (!id) {
             return new Response(JSON.stringify({ success: false, message: 'ID cittadino mancante.' }), {
               status: 400,
@@ -1672,7 +1672,8 @@ CREATE TABLE citizens (
       if (url.pathname === '/api/admin/reject' && request.method === 'POST') {
         try {
           const body = await request.json();
-          const { id, reason } = body;
+          const id = Number(body.id);
+          const { reason } = body;
           if (!id) {
             return new Response(JSON.stringify({ success: false, message: 'ID cittadino mancante.' }), {
               status: 400,

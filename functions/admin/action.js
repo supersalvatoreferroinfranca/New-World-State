@@ -80,7 +80,7 @@ export async function onRequest(context) {
       
       const arubaFrontUrl = front || `${arubaBase}documents/${citizenId}/fronte.png`;
       const arubaBackUrl = back || `${arubaBase}documents/${citizenId}/retro.png`;
-      const arubaPhotoUrl = photo || `${arubaBase}documents/${citizenId}/foto.png`;
+      const arubaPhotoUrl = photo || `${arubaBase}documents/${citizenId}/foto.jpg`;
 
       return {
         ...cit,
