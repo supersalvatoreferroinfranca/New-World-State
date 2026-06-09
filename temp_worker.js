@@ -758,7 +758,12 @@ CREATE TABLE citizens (
             for (const url of uniqueUrls) {
               try {
                 console.log(`[Worker-PDF] Trial load: ${url}`);
-                const imgRes = await fetch(url);
+                const imgRes = await fetch(url, {
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+                  }
+                });
                 if (imgRes.ok) {
                   const arrayBuffer = await imgRes.arrayBuffer();
                   const imgBuffer = new Uint8Array(arrayBuffer);
@@ -1004,6 +1009,27 @@ CREATE TABLE citizens (
             .replace(/\s+/g, ' ')
             .trim();
 
+          const safeBase64Encode = (str) => {
+            try {
+              const utf8Bytes = new TextEncoder().encode(str);
+              let binString = '';
+              const chunkUnit = 65536;
+              if (utf8Bytes.length < chunkUnit) {
+                binString = String.fromCharCode.apply(null, utf8Bytes);
+              } else {
+                for (let i = 0; i < utf8Bytes.length; i += chunkUnit) {
+                  const chunk = utf8Bytes.subarray(i, i + chunkUnit);
+                  binString += String.fromCharCode.apply(null, chunk);
+                }
+              }
+              const b64 = btoa(binString);
+              return b64.replace(/(.{76})/g, "$1\r\n");
+            } catch (err) {
+              const b64 = btoa(str);
+              return b64.replace(/(.{76})/g, "$1\r\n");
+            }
+          };
+
           let mimeRaw = '';
           if (attachments && attachments.length > 0) {
             mimeRaw = 
@@ -1022,13 +1048,13 @@ CREATE TABLE citizens (
               
               `--${altBoundary}\r\n` +
               `Content-Type: text/plain; charset=utf-8\r\n` +
-              `Content-Transfer-Encoding: 8bit\r\n\r\n` +
-              plainText.replace(/\r?\n/g, '\r\n') + `\r\n\r\n` +
+              `Content-Transfer-Encoding: base64\r\n\r\n` +
+              safeBase64Encode(plainText) + `\r\n\r\n` +
               
               `--${altBoundary}\r\n` +
               `Content-Type: text/html; charset=utf-8\r\n` +
-              `Content-Transfer-Encoding: 8bit\r\n\r\n` +
-              html.replace(/\r?\n/g, '\r\n') + `\r\n\r\n` +
+              `Content-Transfer-Encoding: base64\r\n\r\n` +
+              safeBase64Encode(html) + `\r\n\r\n` +
               
               `--${altBoundary}--\r\n\r\n`;
 
@@ -1076,13 +1102,13 @@ CREATE TABLE citizens (
               
               `--${altBoundary}\r\n` +
               `Content-Type: text/plain; charset=utf-8\r\n` +
-              `Content-Transfer-Encoding: 8bit\r\n\r\n` +
-              plainText.replace(/\r?\n/g, '\r\n') + `\r\n\r\n` +
+              `Content-Transfer-Encoding: base64\r\n\r\n` +
+              safeBase64Encode(plainText) + `\r\n\r\n` +
               
               `--${altBoundary}\r\n` +
               `Content-Type: text/html; charset=utf-8\r\n` +
-              `Content-Transfer-Encoding: 8bit\r\n\r\n` +
-              html.replace(/\r?\n/g, '\r\n') + `\r\n\r\n` +
+              `Content-Transfer-Encoding: base64\r\n\r\n` +
+              safeBase64Encode(html) + `\r\n\r\n` +
               
               `--${altBoundary}--\r\n.\r\n`;
           }
