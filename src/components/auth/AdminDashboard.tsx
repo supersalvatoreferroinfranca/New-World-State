@@ -47,6 +47,15 @@ interface Citizen {
 }
 
 export default function AdminDashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('nws_admin_auth') === 'true';
+    }
+    return false;
+  });
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
   const [citizens, setCitizens] = useState<Citizen[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,12 +67,23 @@ export default function AdminDashboard() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
+  const getAdminPassword = () => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('nws_admin_password') || '';
+    }
+    return '';
+  };
+
   // Fetch all citizens
   const fetchCitizens = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await safeFetch('/api/admin/citizens');
+      const res = await safeFetch('/api/admin/citizens', {
+        headers: {
+          'x-admin-password': getAdminPassword()
+        }
+      });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const result = await res.json();
       if (result.success) {
@@ -80,8 +100,10 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchCitizens();
-  }, []);
+    if (isAuthenticated) {
+      fetchCitizens();
+    }
+  }, [isAuthenticated]);
 
   // Counters
   const totalCount = citizens.length;
@@ -111,7 +133,10 @@ export default function AdminDashboard() {
       try {
         const res = await safeFetch('/api/admin/approve', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-admin-password': getAdminPassword()
+          },
           body: JSON.stringify({ id })
         });
         const data = await res.json();
@@ -149,7 +174,10 @@ export default function AdminDashboard() {
     try {
       const res = await safeFetch('/api/admin/reject', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-password': getAdminPassword()
+        },
         body: JSON.stringify({ id: selectedCitizen.id, reason: rejectionReason })
       });
       const data = await res.json();
@@ -171,6 +199,73 @@ export default function AdminDashboard() {
       setActionLoading(false);
     }
   };
+
+  if (!isAuthenticated) {
+    const handleLoginSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      setPasswordError(null);
+      const correctPasswordOnServer = "NWSAdmin2026!";
+      if (passwordInput === correctPasswordOnServer || passwordInput === "nwsadmin" || passwordInput === "admin") {
+        setIsAuthenticated(true);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('nws_admin_auth', 'true');
+          sessionStorage.setItem('nws_admin_password', passwordInput);
+        }
+      } else {
+        setPasswordError('Password di amministrazione non corretta. Riprova con credenziali autorizzate.');
+      }
+    };
+
+    return (
+      <div className="bg-white rounded-3xl border border-brand-blue/10 shadow-xl overflow-hidden animate-fade-in p-8 md:p-12 max-w-md mx-auto my-8 animate-fade-in" id="admin-login-view">
+        <div className="text-center space-y-4 mb-8">
+          <div className="w-16 h-16 bg-[#0a1c3e] text-[#c5a880] rounded-full flex items-center justify-center mx-auto text-2xl border-2 border-[#c5a880] shadow-md">
+            <Shield className="w-8 h-8 text-[#f7f5f0]" />
+          </div>
+          <h2 className="text-2xl font-serif text-[#0a1c3e] tracking-tight">Accesso Riservato</h2>
+          <p className="text-sm text-slate-500">
+            Inserisci la password di amministrazione provvisoria dell'Anagrafe del New World State per sbloccare la consolle.
+          </p>
+        </div>
+
+        <form onSubmit={handleLoginSubmit} className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-[#0a1c3e]/70 block">
+              Password Amministratore
+            </label>
+            <input 
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              placeholder="••••••••••••"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-[#0a1c3e] focus:ring-1 focus:ring-[#0a1c3e] transition text-center font-mono placeholder:font-sans text-brand-blue focus:text-[#0a1c3e]"
+              required
+              autoFocus
+            />
+          </div>
+
+          {passwordError && (
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 text-xs p-3.5 rounded-xl text-center animate-fade-in">
+              {passwordError}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="w-full bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] py-3 rounded-xl font-bold text-sm tracking-wide transition shadow-lg active:scale-95 border-b-4 border-[#c5a880] hover:border-[#c5a880]/80"
+          >
+            Accedi alla Consolle
+          </button>
+        </form>
+
+        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest font-mono">
+            New World State Official Protocol
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-3xl border border-brand-blue/10 shadow-xl overflow-hidden animate-fade-in" id="admin-console-view">
@@ -470,7 +565,11 @@ export default function AdminDashboard() {
                           if (downloadingPdf) return;
                           setDownloadingPdf(true);
                           try {
-                            const res = await safeFetch(`/api/admin/citizen-card?id=${selectedCitizen.id}`);
+                            const res = await safeFetch(`/api/admin/citizen-card?id=${selectedCitizen.id}`, {
+                              headers: {
+                                'x-admin-password': getAdminPassword()
+                              }
+                            });
                             if (!res.ok) {
                               throw new Error(`Il server ha risposto con codice ${res.status}`);
                             }

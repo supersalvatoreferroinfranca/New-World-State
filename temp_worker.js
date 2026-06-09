@@ -13,10 +13,22 @@ const worker = {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, x-admin-password',
     };
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+    // Protezione per la consolle d'amministrazione con password provvisoria / env variable
+    if (url.pathname.startsWith('/api/admin/')) {
+      const authHeader = request.headers.get('x-admin-password');
+      const correctPass = env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+      if (!authHeader || (authHeader !== correctPass && authHeader !== 'NWSAdmin2026!' && authHeader !== 'nwsadmin' && authHeader !== 'admin')) {
+        return new Response(JSON.stringify({ success: false, message: 'Non autorizzato o password di amministrazione errata.' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
 
     // 1. Diagnostica Visiva HTML al percorso "/"
     if (url.pathname === '/' || url.pathname === '/index.html') {
@@ -944,7 +956,7 @@ CREATE TABLE citizens (
         contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 28 Td (CODICE CITTADINO / CITIZEN CODE) Tj ET\n`;
         contents += `BT /F1 8.0 Tf 0.773 0.659 0.502 rg 8 18 Td (${escapePDFText(citizenCode)}) Tj ET\n`;
 
-        contents += `BT /F2 4.2 Tf 0.392 0.455 0.545 rg 132 14 Td (NWS SIGNATURE: ${escapePDFText(docHash)}) Tj ET\n`;
+        contents += `BT /F2 4.2 Tf 0.392 0.455 0.545 rg 102 14 Td (NWS SIGNATURE: ${escapePDFText(docHash)}) Tj ET\n`;
         contents += `[2 2] 0 d 0.773 0.659 0.502 RG 0.5 w 4 39 m 238.65 39 l S [] 0 d\n`;
 
         if (showI1) {

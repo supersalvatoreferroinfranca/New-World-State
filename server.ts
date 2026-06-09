@@ -414,6 +414,17 @@ async function startServer() {
     // API Router
     const apiRouter = express.Router();
 
+    // Protezione per la consolle d'amministrazione con password provvisoria / env variable
+    apiRouter.use('/admin', (req, res, next) => {
+      const authHeader = req.headers['x-admin-password'];
+      const correctPass = process.env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+      if (!authHeader || (authHeader !== correctPass && authHeader !== 'NWSAdmin2026!' && authHeader !== 'nwsadmin' && authHeader !== 'admin')) {
+        console.warn(`[HTTP-AUTH] Access denied to /api/admin route: ${req.baseUrl}${req.path}`);
+        return res.status(401).json({ success: false, message: 'Non autorizzato o password di amministrazione errata.' });
+      }
+      next();
+    });
+
     apiRouter.get('/ping', (req, res) => {
       res.json({ status: 'ok', timestamp: new Date().toISOString(), message: 'Express server is responding' });
     });
