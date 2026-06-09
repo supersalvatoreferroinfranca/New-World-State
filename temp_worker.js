@@ -735,48 +735,46 @@ CREATE TABLE citizens (
         if (photoUrl && photoUrl.startsWith('http')) {
           try {
             console.log(`[Worker-PDF] Fetching photo for PDF: ${photoUrl}`);
-            let imgRes = await fetch(photoUrl);
-            if (imgRes.ok) {
-              let arrayBuffer = await imgRes.arrayBuffer();
-              let imgBuffer = new Uint8Array(arrayBuffer);
-              if (imgBuffer[0] === 0xff && imgBuffer[1] === 0xd8) {
-                imageObject = imgBuffer;
-                console.log('[Worker-PDF] Valid JPEG photo loaded successfully.');
-              } else {
-                console.warn('[Worker-PDF] Fetched image is not a JPEG (SOI magic header 0xFFD8 missing).');
-                // Auto-heal: if url ends with .png, let's try to search for its .jpg backup
-                if (photoUrl.toLowerCase().endsWith('.png')) {
-                  const backupUrl = photoUrl.substring(0, photoUrl.length - 4) + '.jpg';
-                  console.log(`[Worker-PDF] Self-healing: attempting to fetch JPEG backup from: ${backupUrl}`);
-                  const backupRes = await fetch(backupUrl);
-                  if (backupRes.ok) {
-                    const backupBuffer = new Uint8Array(await backupRes.arrayBuffer());
-                    if (backupBuffer[0] === 0xff && backupBuffer[1] === 0xd8) {
-                      imageObject = backupBuffer;
-                      console.log('[Worker-PDF] Valid JPEG backup photo loaded successfully!');
-                    } else {
-                      console.error('[Worker-PDF] Backup file is also not a valid JPEG.');
-                    }
-                  } else {
-                    console.warn(`[Worker-PDF] JPEG backup file not found on server: [${backupRes.status}]`);
-                  }
-                }
-              }
+            const baseWithoutExt = photoUrl.substring(0, photoUrl.lastIndexOf('.'));
+            const ext = photoUrl.substring(photoUrl.lastIndexOf('.')).toLowerCase();
+            
+            const urlsToTry = [photoUrl];
+            if (ext === '.jpg') {
+              urlsToTry.push(baseWithoutExt + '.png');
+              urlsToTry.push(baseWithoutExt + '.jpeg');
+            } else if (ext === '.png') {
+              urlsToTry.push(baseWithoutExt + '.jpg');
+              urlsToTry.push(baseWithoutExt + '.jpeg');
+            } else if (ext === '.jpeg') {
+              urlsToTry.push(baseWithoutExt + '.jpg');
+              urlsToTry.push(baseWithoutExt + '.png');
             } else {
-              console.error(`[Worker-PDF] Photo fetch failed with status [${imgRes.status}]`);
-              
-              // Second Auto-heal: if we requested a .png but it failed, let's see if there is a .jpg on server
-              if (photoUrl.toLowerCase().endsWith('.png')) {
-                const alternateUrl = photoUrl.substring(0, photoUrl.length - 4) + '.jpg';
-                console.log(`[Worker-PDF] Self-healing alt fetch: trying to retrieve JPG directly from: ${alternateUrl}`);
-                const altRes = await fetch(alternateUrl);
-                if (altRes.ok) {
-                  const altBuffer = new Uint8Array(await altRes.arrayBuffer());
-                  if (altBuffer[0] === 0xff && altBuffer[1] === 0xd8) {
-                    imageObject = altBuffer;
-                    console.log('[Worker-PDF] Direct JPEG alternative loaded successfully!');
+              urlsToTry.push(baseWithoutExt + '.jpg');
+              urlsToTry.push(baseWithoutExt + '.png');
+              urlsToTry.push(baseWithoutExt + '.jpeg');
+            }
+            
+            const uniqueUrls = [...new Set(urlsToTry)];
+            for (const url of uniqueUrls) {
+              try {
+                console.log(`[Worker-PDF] Trial load: ${url}`);
+                const imgRes = await fetch(url);
+                if (imgRes.ok) {
+                  const arrayBuffer = await imgRes.arrayBuffer();
+                  const imgBuffer = new Uint8Array(arrayBuffer);
+                  
+                  if (imgBuffer[0] === 0xff && imgBuffer[1] === 0xd8) {
+                    imageObject = imgBuffer;
+                    console.log(`[Worker-PDF] Loaded valid JPEG from: ${url}`);
+                    break;
+                  } else {
+                    console.warn(`[Worker-PDF] Loaded image from ${url} but it is NOT a JPEG (no FFD8 header). PNG is not natively supported in pure JS PDF.`);
                   }
+                } else {
+                  console.warn(`[Worker-PDF] Fetch failed for ${url} with status: ${imgRes.status}`);
                 }
+              } catch (fetchErr) {
+                console.warn(`[Worker-PDF] Fetch exception for ${url}:`, fetchErr.message);
               }
             }
           } catch (e) {
@@ -992,13 +990,19 @@ CREATE TABLE citizens (
           res = await sendSMTPCommand(writer, reader, `DATA\r\n`);
           if (res.code !== 354) throw new Error(`Inizio trasmissione dati rifiutato: ${res.text}`);
 
-          // 9. Scrittura Intestazione Email RFC-compliant con codifica UTF-8 del Soggetto
-          const dateStr = new Date().toUTCString();
+                 const dateStr = new Date().toUTCString();
           const base64Subject = btoa(unescape(encodeURIComponent(subject)));
           const utf8Subject = `=?UTF-8?B?${base64Subject}?=`;
 
           const fromDomain = from.includes('@') ? from.split('@')[1] : 'newworldstate.org';
-          const boundary = `nws_attachment_boundary_${Math.floor(Math.random() * 1000000000)}`;
+          const mixedBoundary = `nws_mixed_${Math.floor(Math.random() * 1000000000)}`;
+          const altBoundary = `nws_alt_${Math.floor(Math.random() * 1000000000)}`;
+
+          const plainText = html
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
 
           let mimeRaw = '';
           if (attachments && attachments.length > 0) {
@@ -1010,12 +1014,23 @@ CREATE TABLE citizens (
               `X-Priority: 3 (Normal)\r\n` +
               `X-Mailer: NWS-Federal-Mailer\r\n` +
               `MIME-Version: 1.0\r\n` +
-              `Content-Type: multipart/mixed; boundary="${boundary}"\r\n` +
+              `Content-Type: multipart/mixed; boundary="${mixedBoundary}"\r\n` +
               `Message-ID: <${Date.now()}-${Math.floor(Math.random() * 100000)}@${fromDomain}>\r\n\r\n` +
-              `--${boundary}\r\n` +
+              
+              `--${mixedBoundary}\r\n` +
+              `Content-Type: multipart/alternative; boundary="${altBoundary}"\r\n\r\n` +
+              
+              `--${altBoundary}\r\n` +
+              `Content-Type: text/plain; charset=utf-8\r\n` +
+              `Content-Transfer-Encoding: 8bit\r\n\r\n` +
+              plainText.replace(/\r?\n/g, '\r\n') + `\r\n\r\n` +
+              
+              `--${altBoundary}\r\n` +
               `Content-Type: text/html; charset=utf-8\r\n` +
               `Content-Transfer-Encoding: 8bit\r\n\r\n` +
-              html.replace(/\r?\n/g, '\r\n') + `\r\n\r\n`;
+              html.replace(/\r?\n/g, '\r\n') + `\r\n\r\n` +
+              
+              `--${altBoundary}--\r\n\r\n`;
 
             for (let attach of attachments) {
               let base64Content = '';
@@ -1039,14 +1054,14 @@ CREATE TABLE citizens (
               const formattedBase64 = base64Content.replace(/(.{76})/g, "$1\r\n");
 
               mimeRaw += 
-                `--${boundary}\r\n` +
+                `--${mixedBoundary}\r\n` +
                 `Content-Type: ${attach.contentType || 'application/octet-stream'}; name="${attach.filename}"\r\n` +
                 `Content-Transfer-Encoding: base64\r\n` +
                 `Content-Disposition: attachment; filename="${attach.filename}"\r\n\r\n` +
                 formattedBase64 + `\r\n\r\n`;
             }
 
-            mimeRaw += `--${boundary}--\r\n.\r\n`;
+            mimeRaw += `--${mixedBoundary}--\r\n.\r\n`;
           } else {
             mimeRaw = 
               `From: "${fromName}" <${from}>\r\n` +
@@ -1056,10 +1071,20 @@ CREATE TABLE citizens (
               `X-Priority: 3 (Normal)\r\n` +
               `X-Mailer: NWS-Federal-Mailer\r\n` +
               `MIME-Version: 1.0\r\n` +
-              `Content-Type: text/html; charset=utf-8\r\n` +
-              `Content-Transfer-Encoding: 8bit\r\n` +
+              `Content-Type: multipart/alternative; boundary="${altBoundary}"\r\n` +
               `Message-ID: <${Date.now()}-${Math.floor(Math.random() * 100000)}@${fromDomain}>\r\n\r\n` +
-              html.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n';
+              
+              `--${altBoundary}\r\n` +
+              `Content-Type: text/plain; charset=utf-8\r\n` +
+              `Content-Transfer-Encoding: 8bit\r\n\r\n` +
+              plainText.replace(/\r?\n/g, '\r\n') + `\r\n\r\n` +
+              
+              `--${altBoundary}\r\n` +
+              `Content-Type: text/html; charset=utf-8\r\n` +
+              `Content-Transfer-Encoding: 8bit\r\n\r\n` +
+              html.replace(/\r?\n/g, '\r\n') + `\r\n\r\n` +
+              
+              `--${altBoundary}--\r\n.\r\n`;
           }
 
           await writer.write(encoder.encode(mimeRaw));
@@ -1536,21 +1561,60 @@ CREATE TABLE citizens (
             });
           }
           const updated = updatedRows[0];
+          
+          let augmented = {
+            ...citizen,
+            ...updated,
+            ...getCitizenWithArubaUrls(updated)
+          };
+
+          // Determine the real arubaPhotoUrl that actually exists on the Aruba server
+          let realPhotoUrl = augmented.arubaPhotoUrl || augmented.arubaphotourl;
+          if (realPhotoUrl && realPhotoUrl.startsWith('http')) {
+            const citizenId = augmented.id;
+            let arubaBase = 'https://www.newworldstate.org/';
+            if (env.ARUBA_UPLOADER_URL) {
+              const cleanUrl = env.ARUBA_UPLOADER_URL.replace(/nws-uploader\.php.*/, '').replace(/uploader\.php.*/, '');
+              arubaBase = cleanUrl.includes('newworldstate.cloud') ? 'https://www.newworldstate.org/' : cleanUrl;
+            }
+            if (!arubaBase.endsWith('/')) arubaBase += '/';
+            
+            const baseNoExt = `${arubaBase}documents/${citizenId}/foto`;
+            const testUrls = [baseNoExt + '.png', baseNoExt + '.jpg', baseNoExt + '.jpeg'];
+            for (const testUrl of testUrls) {
+              try {
+                const hRes = await fetch(testUrl, { method: 'HEAD' });
+                if (hRes.ok) {
+                  realPhotoUrl = testUrl;
+                  console.log(`[REAL-PHOTO-WK] Found actual photo URL on Aruba: ${realPhotoUrl}`);
+                  break;
+                }
+              } catch (_) {}
+            }
+            // Save the correct photo URL to both the augmented object and DB
+            augmented.arubaPhotoUrl = realPhotoUrl;
+            augmented.arubaphotourl = realPhotoUrl;
+            try {
+              await queryDb('UPDATE citizens SET "arubaPhotoUrl" = $1 WHERE id = $2', [realPhotoUrl, Number(id)]);
+            } catch (dbErr) {
+              console.error('[DB-ERR-WK] Failed to save corrected photo URL:', dbErr);
+            }
+          }
 
           // Invio dell'email con la ID card ufficiale
-          const email = updated.email || citizen.email;
+          const email = augmented.email || citizen.email;
           if (email && email.includes('@')) {
             try {
               const brandColor = '#0a1c3e';
               const goldColor = '#c5a880';
-              const citizenCodeVal = updated.citizenCode || updated.citizencode || citizen.citizenCode || citizen.citizencode || 'N/A';
-              const firstNameVal = updated.firstName || updated.firstname || citizen.firstName || citizen.firstname || '';
-              const surnameVal = updated.surname || citizen.surname || '';
-              const birthDateVal = updated.birthDate || updated.birthdate || citizen.birthDate || citizen.birthdate || 'N/A';
-              const birthPlaceVal = updated.birthPlace || updated.birthplace || citizen.birthPlace || citizen.birthplace || '';
-              const birthCountryVal = updated.birthCountry || updated.birthcountry || citizen.birthCountry || citizen.birthcountry || '';
-              const photoUrlVal = updated.arubaPhotoUrl || updated.arubaphotourl || citizen.arubaPhotoUrl || citizen.arubaphotourl || '';
-              const hashVal = updated.documentHash || updated.documenthash || citizen.documentHash || citizen.documenthash || '';
+              const citizenCodeVal = augmented.citizenCode || augmented.citizencode || 'N/A';
+              const firstNameVal = augmented.firstName || augmented.firstname || '';
+              const surnameVal = augmented.surname || '';
+              const birthDateVal = augmented.birthDate || augmented.birthdate || 'N/A';
+              const birthPlaceVal = augmented.birthPlace || augmented.birthplace || '';
+              const birthCountryVal = augmented.birthCountry || augmented.birthcountry || '';
+              const photoUrlVal = augmented.arubaPhotoUrl || augmented.arubaphotourl || '';
+              const hashVal = augmented.documentHash || augmented.documenthash || '';
 
               const welcomeHtml = `
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 16px;">
@@ -1638,12 +1702,7 @@ CREATE TABLE citizens (
                 </div>
               `;
               console.log('[Worker-Approve] Generating ID Card PDF attachment for: ' + citizenCodeVal);
-              const augmentedCitizenForPdf = {
-                ...citizen,
-                ...updated,
-                ...getCitizenWithArubaUrls(updated)
-              };
-              const pdfBytes = await generateIdCardPdfPureJS(augmentedCitizenForPdf, env);
+              const pdfBytes = await generateIdCardPdfPureJS(augmented, env);
               const attachments = [
                 {
                   filename: `ID_Card_NWS_${citizenCodeVal}.pdf`,
@@ -2001,7 +2060,25 @@ CREATE TABLE citizens (
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
                         <div class="sm:col-span-2">
                           <span class="text-xs text-slate-400 block mb-0.5">Indirizzo Completo</span>
-                          <span class="font-semibold text-slate-800 block">${cit.residenceAddress || ''}, ${cit.residenceNumber || ''} - ${cit.residenceZip || ''} ${cit.residenceCity || ''} (${cit.residenceProvince || ''})</span>
+                          <span class="font-semibold text-slate-800 block">
+                            ${(() => {
+                              const parts = [];
+                              if (cit.residenceAddress && cit.residenceAddress.trim()) parts.push(cit.residenceAddress.trim());
+                              if (cit.residenceNumber && cit.residenceNumber.trim()) parts.push(cit.residenceNumber.trim());
+                              const street = parts.join(', ');
+
+                              const secondParts = [];
+                              if (cit.residenceZip && cit.residenceZip.trim()) secondParts.push(cit.residenceZip.trim());
+                              if (cit.residenceCity && cit.residenceCity.trim()) secondParts.push(cit.residenceCity.trim());
+                              if (cit.residenceProvince && cit.residenceProvince.trim()) secondParts.push(`(${cit.residenceProvince.trim()})`);
+                              const cityZip = secondParts.join(' ');
+
+                              if (street && cityZip) return `${street} - ${cityZip}`;
+                              if (street) return street;
+                              if (cityZip) return cityZip;
+                              return 'N/D';
+                            })()}
+                          </span>
                         </div>
                         <div>
                           <span class="text-xs text-slate-400 block mb-0.5">Stato di Residenza</span>
@@ -2135,8 +2212,8 @@ CREATE TABLE citizens (
                       document.getElementById('success-ui').classList.remove('hidden');
                       document.getElementById('success-title').innerText = action === 'approve' ? 'Registrazione Approvata!' : 'Richiesta Respinta!';
                       document.getElementById('success-desc').innerText = action === 'approve' 
-                        ? 'La richiesta è stata formalmente approvata. Il passaporto e il certificato sono stati spediti via email al cittadino.' 
-                        : 'La richiesta è stata respinta col motivo specificato ed è stata inviata un\'email di chiarimento al candidato.';
+                        ? "La richiesta è stata formalmente approvata. Il passaporto e il certificato sono stati spediti via email al cittadino." 
+                        : "La richiesta è stata respinta col motivo specificato ed è stata inviata un'email di chiarimento al candidato.";
                     } else {
                       showError(data.message || 'La chiamata al database ha fallito.');
                     }

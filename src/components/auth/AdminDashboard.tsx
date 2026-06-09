@@ -35,6 +35,7 @@ interface Citizen {
   birthCountry?: string;
   residenceAddress?: string;
   residenceNumber?: string;
+  residenceZip?: string;
   residenceCity?: string;
   residenceCountry?: string;
   plusCode?: string;
@@ -395,7 +396,25 @@ export default function AdminDashboard() {
                     <MapPin className="w-4 h-4 text-brand-gold mt-0.5 flex-shrink-0" />
                     <div>
                       <span className="text-slate-400 block text-[10px]">Residenza Dichiarata</span>
-                      <strong className="text-slate-700">{selectedCitizen.residenceAddress || ''}, {selectedCitizen.residenceNumber} - {selectedCitizen.residenceCity} ({selectedCitizen.residenceCountry})</strong>
+                      <strong className="text-slate-700">
+                        {(() => {
+                          const parts = [];
+                          if (selectedCitizen.residenceAddress?.trim()) parts.push(selectedCitizen.residenceAddress.trim());
+                          if (selectedCitizen.residenceNumber?.trim()) parts.push(selectedCitizen.residenceNumber.trim());
+                          const street = parts.join(', ');
+
+                          const secondParts = [];
+                          if (selectedCitizen.residenceZip?.trim()) secondParts.push(selectedCitizen.residenceZip.trim());
+                          if (selectedCitizen.residenceCity?.trim()) secondParts.push(selectedCitizen.residenceCity.trim());
+                          if (selectedCitizen.residenceCountry?.trim()) secondParts.push(`(${selectedCitizen.residenceCountry.trim()})`);
+                          const cityZip = secondParts.join(' ');
+
+                          if (street && cityZip) return `${street} - ${cityZip}`;
+                          if (street) return street;
+                          if (cityZip) return cityZip;
+                          return 'N/D';
+                        })()}
+                      </strong>
                     </div>
                   </div>
 

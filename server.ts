@@ -162,28 +162,49 @@ function generateCitizenIdCardPdf(citizen: any): Promise<Buffer> {
       if (photoUrl && photoUrl.startsWith('http')) {
         try {
           console.log(`[PDF] Fetching photo for PDF ID Card: ${photoUrl}`);
-          let imgRes = await fetch(photoUrl, { signal: AbortSignal.timeout(4000) });
+          const baseWithoutExt = photoUrl.substring(0, photoUrl.lastIndexOf('.'));
+          const ext = photoUrl.substring(photoUrl.lastIndexOf('.')).toLowerCase();
           
-          // Self-heal fallback: if primary URL (e.g. .png) fails, try loading .jpg
-          if (!imgRes.ok && photoUrl.toLowerCase().endsWith('.png')) {
-            const altUrl = photoUrl.substring(0, photoUrl.length - 4) + '.jpg';
-            console.log(`[PDF] Self-healing fetch: primary 404/failed. Trying alternative URL: ${altUrl}`);
-            imgRes = await fetch(altUrl, { signal: AbortSignal.timeout(4000) });
+          const urlsToTry = [photoUrl];
+          if (ext === '.jpg') {
+            urlsToTry.push(baseWithoutExt + '.png');
+            urlsToTry.push(baseWithoutExt + '.jpeg');
+          } else if (ext === '.png') {
+            urlsToTry.push(baseWithoutExt + '.jpg');
+            urlsToTry.push(baseWithoutExt + '.jpeg');
+          } else if (ext === '.jpeg') {
+            urlsToTry.push(baseWithoutExt + '.jpg');
+            urlsToTry.push(baseWithoutExt + '.png');
+          } else {
+            urlsToTry.push(baseWithoutExt + '.jpg');
+            urlsToTry.push(baseWithoutExt + '.png');
+            urlsToTry.push(baseWithoutExt + '.jpeg');
           }
           
-          if (imgRes.ok) {
-            const arrayBuffer = await imgRes.arrayBuffer();
-            const imgBuffer = Buffer.from(arrayBuffer);
-            doc.image(imgBuffer, photoX + 1.5, photoY + 1.5, {
-              width: photoWidth - 3,
-              height: photoHeight - 3,
-              fit: [photoWidth - 3, photoHeight - 3],
-              align: 'center',
-              valign: 'center'
-            });
-            imageAttached = true;
-          } else {
-            console.warn(`[PDF] Fetch response was not OK: [${imgRes.status}]`);
+          const uniqueUrls = [...new Set(urlsToTry)];
+          for (const url of uniqueUrls) {
+            try {
+              console.log(`[PDF] Trial load: ${url}`);
+              const imgRes = await fetch(url, { signal: AbortSignal.timeout(4000) });
+              if (imgRes.ok) {
+                const arrayBuffer = await imgRes.arrayBuffer();
+                const imgBuffer = Buffer.from(arrayBuffer);
+                doc.image(imgBuffer, photoX + 1.5, photoY + 1.5, {
+                  width: photoWidth - 3,
+                  height: photoHeight - 3,
+                  fit: [photoWidth - 3, photoHeight - 3],
+                  align: 'center',
+                  valign: 'center'
+                });
+                imageAttached = true;
+                console.log(`[PDF] Loaded valid photo from: ${url}`);
+                break;
+              } else {
+                console.warn(`[PDF] Fetch failed for ${url} with status: ${imgRes.status}`);
+              }
+            } catch (fetchErr: any) {
+              console.warn(`[PDF] Fetch exception for ${url}:`, fetchErr.message);
+            }
           }
         } catch (imgErr: any) {
           console.error('[PDF] Failed to fetch photo for PDF, falling back to text:', imgErr.message);
@@ -991,6 +1012,41 @@ Ufficio dell'Anagrafe Federale del New World State
       const updated = await updateCitizenStatus(id, 'approved');
       if (!updated) return res.status(500).json({ success: false, message: 'Impossibile aggiornare lo stato di validazione.' });
 
+      // Determine the real arubaPhotoUrl that actually exists on the Aruba server
+      let realPhotoUrl = updated.arubaPhotoUrl || updated.arubaphotourl;
+      if (realPhotoUrl && realPhotoUrl.startsWith('http')) {
+        const citizenId = updated.id;
+        let arubaBase = 'https://www.newworldstate.org/';
+        if (process.env.ARUBA_UPLOADER_URL) {
+          const cleanUrl = process.env.ARUBA_UPLOADER_URL.replace(/nws-uploader\.php.*/, '').replace(/uploader\.php.*/, '');
+          arubaBase = cleanUrl.includes('newworldstate.cloud') ? 'https://www.newworldstate.org/' : cleanUrl;
+        }
+        if (!arubaBase.endsWith('/')) arubaBase += '/';
+        
+        const baseNoExt = `${arubaBase}documents/${citizenId}/foto`;
+        const testUrls = [baseNoExt + '.png', baseNoExt + '.jpg', baseNoExt + '.jpeg'];
+        for (const testUrl of testUrls) {
+          try {
+            const hRes = await fetch(testUrl, { method: 'HEAD', signal: AbortSignal.timeout(2000) });
+            if (hRes.ok) {
+              realPhotoUrl = testUrl;
+              console.log(`[REAL-PHOTO] Found actual photo URL on Aruba: ${realPhotoUrl}`);
+              break;
+            }
+          } catch (_) {}
+        }
+        // Save the correct photo URL to database and object for maximum persistence/reproducibility
+        updated.arubaPhotoUrl = realPhotoUrl;
+        updated.arubaphotourl = realPhotoUrl;
+        if (dbPool) {
+          try {
+            await dbPool.query('UPDATE citizens SET "arubaPhotoUrl" = $1 WHERE id = $2', [realPhotoUrl, id]);
+          } catch (dbErr: any) {
+            console.error('[DB-ERR] Failed to save corrected photo URL:', dbErr.message);
+          }
+        }
+      }
+
       // Invia email di benvenuto formattando una splendida ID card
       if (process.env.SMTP_USER) {
         const email = updated.email;
@@ -1772,7 +1828,25 @@ Ufficio dell'Anagrafe Federale del New World State
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
                     <div class="sm:col-span-2">
                       <span class="text-xs text-slate-400 block mb-0.5">Indirizzo Completo</span>
-                      <span class="font-semibold text-slate-800 block">${cit.residenceAddress || ''}, ${cit.residenceNumber || ''} - ${cit.residenceZip || ''} ${cit.residenceCity || ''} (${cit.residenceProvince || ''})</span>
+                      <span class="font-semibold text-slate-800 block">
+                        ${(() => {
+                          const parts = [];
+                          if (cit.residenceAddress && cit.residenceAddress.trim()) parts.push(cit.residenceAddress.trim());
+                          if (cit.residenceNumber && cit.residenceNumber.trim()) parts.push(cit.residenceNumber.trim());
+                          const street = parts.join(', ');
+
+                          const secondParts = [];
+                          if (cit.residenceZip && cit.residenceZip.trim()) secondParts.push(cit.residenceZip.trim());
+                          if (cit.residenceCity && cit.residenceCity.trim()) secondParts.push(cit.residenceCity.trim());
+                          if (cit.residenceProvince && cit.residenceProvince.trim()) secondParts.push(`(${cit.residenceProvince.trim()})`);
+                          const cityZip = secondParts.join(' ');
+
+                          if (street && cityZip) return `${street} - ${cityZip}`;
+                          if (street) return street;
+                          if (cityZip) return cityZip;
+                          return 'N/D';
+                        })()}
+                      </span>
                     </div>
                     <div>
                       <span class="text-xs text-slate-400 block mb-0.5">Stato di Residenza</span>
@@ -1906,8 +1980,8 @@ Ufficio dell'Anagrafe Federale del New World State
                   document.getElementById('success-ui').classList.remove('hidden');
                   document.getElementById('success-title').innerText = action === 'approve' ? 'Registrazione Approvata!' : 'Richiesta Respinta!';
                   document.getElementById('success-desc').innerText = action === 'approve' 
-                    ? 'La richiesta è stata formalmente approvata. Il passaporto e il certificato sono stati spediti via email al cittadino.' 
-                    : 'La richiesta è stata respinta col motivo specificato ed è stata inviata un\'email di chiarimento al candidato.';
+                    ? "La richiesta è stata formalmente approvata. Il passaporto e il certificato sono stati spediti via email al cittadino." 
+                    : "La richiesta è stata respinta col motivo specificato ed è stata inviata un'email di chiarimento al candidato.";
                 } else {
                   showError(data.message || 'La chiamata al database ha fallito.');
                 }

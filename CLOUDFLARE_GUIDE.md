@@ -2048,7 +2048,25 @@ CREATE TABLE citizens (
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
                         <div class="sm:col-span-2">
                           <span class="text-xs text-slate-400 block mb-0.5">Indirizzo Completo</span>
-                          <span class="font-semibold text-slate-800 block">${cit.residenceAddress || ''}, ${cit.residenceNumber || ''} - ${cit.residenceZip || ''} ${cit.residenceCity || ''} (${cit.residenceProvince || ''})</span>
+                          <span class="font-semibold text-slate-800 block">
+                            ${(() => {
+                              const parts = [];
+                              if (cit.residenceAddress && cit.residenceAddress.trim()) parts.push(cit.residenceAddress.trim());
+                              if (cit.residenceNumber && cit.residenceNumber.trim()) parts.push(cit.residenceNumber.trim());
+                              const street = parts.join(', ');
+
+                              const secondParts = [];
+                              if (cit.residenceZip && cit.residenceZip.trim()) secondParts.push(cit.residenceZip.trim());
+                              if (cit.residenceCity && cit.residenceCity.trim()) secondParts.push(cit.residenceCity.trim());
+                              if (cit.residenceProvince && cit.residenceProvince.trim()) secondParts.push(`(${cit.residenceProvince.trim()})`);
+                              const cityZip = secondParts.join(' ');
+
+                              if (street && cityZip) return `${street} - ${cityZip}`;
+                              if (street) return street;
+                              if (cityZip) return cityZip;
+                              return 'N/D';
+                            })()}
+                          </span>
                         </div>
                         <div>
                           <span class="text-xs text-slate-400 block mb-0.5">Stato di Residenza</span>
@@ -2198,8 +2216,8 @@ CREATE TABLE citizens (
                       document.getElementById('success-ui').classList.remove('hidden');
                       document.getElementById('success-title').innerText = action === 'approve' ? 'Registrazione Approvata!' : 'Richiesta Respinta!';
                       document.getElementById('success-desc').innerText = action === 'approve' 
-                        ? 'La richiesta è stata formalmente approvata. Il passaporto e il certificato sono stati spediti via email al cittadino.' 
-                        : 'La richiesta è stata respinta col motivo specificato ed è stata inviata un\\'email di chiarimento al candidato.';
+                        ? "La richiesta è stata formalmente approvata. Il passaporto e il certificato sono stati spediti via email al cittadino." 
+                        : "La richiesta è stata respinta col motivo specificato ed è stata inviata un'email di chiarimento al candidato.";
                     } else {
                       showError(data.message || 'La chiamata al database ha fallito.');
                     }
