@@ -856,9 +856,9 @@ CREATE TABLE citizens (
 
         let xobjectsStr = '';
         if (imageObject) {
-          xobjectsStr = `/XObject << /I1 6 0 R >>`;
+          xobjectsStr = `/XObject << /I1 7 0 R >>`;
         }
-        const pageStr = createObjectString(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 242.65 153.01] /Resources << /Font << /F1 5 0 R /F2 7 0 R >> ${xobjectsStr} >> /Contents 4 0 R >>`);
+        const pageStr = createObjectString(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 242.65 153.01] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> ${xobjectsStr} >> /Contents 4 0 R >>`);
         pushObject(encoder.encode(pageStr));
 
         const contentsStreamBytes = encoder.encode(contents);
@@ -877,7 +877,7 @@ CREATE TABLE citizens (
         const font1Str = createObjectString(5, `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>`);
         pushObject(encoder.encode(font1Str));
 
-        const font2Str = createObjectString(7, `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`);
+        const font2Str = createObjectString(6, `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`);
         pushObject(encoder.encode(font2Str));
 
         if (imageObject) {
@@ -900,7 +900,7 @@ CREATE TABLE citizens (
             }
           } catch (_) {}
 
-          const imgObjHeader = `6 0 obj\n<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageObject.length} >>\nstream\n`;
+          const imgObjHeader = `7 0 obj\n<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageObject.length} >>\nstream\n`;
           const imgObjFooter = `\nendstream\nendobj\n`;
           
           const hBytes = encoder.encode(imgObjHeader);
