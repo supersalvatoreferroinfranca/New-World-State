@@ -603,6 +603,7 @@ CREATE TABLE citizens (
                 <div><span class="text-amber-500 font-semibold">GET</span> /api/admin/citizens (Lista cittadini iscritti)</div>
                 <div><span class="text-amber-500 font-semibold">POST</span> /api/admin/approve (Approvazione con ID Card)</div>
                 <div><span class="text-amber-500 font-semibold">POST</span> /api/admin/reject (Rifiuto con motivazione)</div>
+                <div><span class="text-amber-500 font-semibold">GET</span> /api/admin/citizen-card?id=... (Generazione PDF ID Card)</div>
             </div>
         </div>
 
@@ -1499,6 +1500,48 @@ CREATE TABLE citizens (
           return new Response(JSON.stringify({ success: false, message: 'Errore durante l\'interrogazione del database: ' + dbErr.message }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      // Rotta: Admin Citizen Card (Scarica o visualizza ID card PDF)
+      if (url.pathname === '/api/admin/citizen-card') {
+        const id = url.searchParams.get('id');
+        if (!id) {
+          return new Response('ID cittadino mancante.', {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+          });
+        }
+        try {
+          const rows = await queryDb('SELECT * FROM citizens WHERE id = $1', [Number(id)]);
+          if (rows.length === 0) {
+            return new Response('Cittadino non trovato.', {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+            });
+          }
+          const citizen = getCitizenWithArubaUrls(rows[0]);
+          if (citizen.status !== 'approved') {
+            return new Response('La carta d\'identità può essere stampata solo per i cittadini approvati.', {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+            });
+          }
+
+          const pdfBytes = await generateIdCardPdfPureJS(citizen, env);
+          return new Response(pdfBytes, {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/pdf',
+              'Content-Disposition': `inline; filename="ID_Card_NWS_${citizen.citizenCode || citizen.id}.pdf"`
+            }
+          });
+        } catch (err) {
+          return new Response(`Impossibile generare la carta d'identità: ${err.message}`, {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
           });
         }
       }
