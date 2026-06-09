@@ -56,6 +56,7 @@ export default function AdminDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   // Fetch all citizens
   const fetchCitizens = async () => {
@@ -464,15 +465,53 @@ export default function AdminDashboard() {
                     </a>
 
                     {selectedCitizen.status === 'approved' && (
-                      <a 
-                        href={`/api/admin/citizen-card?id=${selectedCitizen.id}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="border rounded-xl p-2.5 block transition bg-emerald-50 border-emerald-100/50 hover:border-emerald-300 hover:bg-emerald-100/20 text-emerald-800"
+                      <button 
+                        onClick={async () => {
+                          if (downloadingPdf) return;
+                          setDownloadingPdf(true);
+                          try {
+                            const res = await safeFetch(`/api/admin/citizen-card?id=${selectedCitizen.id}`);
+                            if (!res.ok) {
+                              throw new Error(`Il server ha risposto con codice ${res.status}`);
+                            }
+                            const blob = await res.blob();
+                            const blobUrl = window.URL.createObjectURL(blob);
+                            
+                            // Open in a new tab directly
+                            const newTab = window.open(blobUrl, '_blank');
+                            if (!newTab) {
+                              // If popup blocker intervened, trigger file download fallback
+                              const link = document.createElement('a');
+                              link.href = blobUrl;
+                              link.download = `ID_Card_NWS_${selectedCitizen.citizenCode || selectedCitizen.id}.pdf`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }
+                          } catch (err: any) {
+                            console.error('[PDF-DOWNLOAD-ERROR]:', err);
+                            alert(`Errore durante lo scaricamento della ID Card: ${err.message || 'Connessione fallita'}`);
+                          } finally {
+                            setDownloadingPdf(false);
+                          }
+                        }}
+                        disabled={downloadingPdf}
+                        className="border rounded-xl p-2.5 block text-center w-full transition bg-emerald-50 border-emerald-100/50 hover:border-emerald-300 hover:bg-emerald-100/20 text-emerald-800 disabled:opacity-60 cursor-pointer outline-none"
                       >
-                        <div className="font-bold text-emerald-800">PDF Card</div>
-                        <div className="text-[9px] text-emerald-600 mt-1 flex items-center justify-center gap-0.5">Custom <ExternalLink className="w-2.5 h-2.5" /></div>
-                      </a>
+                        <div className="font-bold text-emerald-800 flex items-center justify-center gap-1.5">
+                          {downloadingPdf ? (
+                            <>
+                              <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Generazione...</span>
+                            </>
+                          ) : (
+                            <span>PDF Card</span>
+                          )}
+                        </div>
+                        <div className="text-[9px] text-emerald-600 mt-1 flex items-center justify-center gap-0.5">
+                          {downloadingPdf ? 'Attendere prego' : 'Vedi / Stampa'} <ExternalLink className="w-2.5 h-2.5" />
+                        </div>
+                      </button>
                     )}
 
                   </div>
