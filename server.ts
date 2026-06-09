@@ -967,7 +967,10 @@ Ufficio dell'Anagrafe Federale del New World State
     async function findCitizenById(id: string | number) {
       if (dbPool) {
         try {
-          const qRes = await dbPool.query('SELECT * FROM citizens WHERE id = $1', [id]);
+          const numericId = typeof id === 'number' ? id : (/^\d+$/.test(id) ? parseInt(id, 10) : NaN);
+          const qRes = !isNaN(numericId)
+            ? await dbPool.query('SELECT * FROM citizens WHERE id = $1', [numericId])
+            : await dbPool.query('SELECT * FROM citizens WHERE id::text = $1', [String(id)]);
           if (qRes.rows.length > 0) {
             return getCitizenWithArubaUrls(qRes.rows[0]);
           }
