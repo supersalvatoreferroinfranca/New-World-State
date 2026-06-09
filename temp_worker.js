@@ -731,7 +731,35 @@ CREATE TABLE citizens (
         const placeStr = birthPlace ? `${birthPlace}${birthCountry ? ` (${birthCountry})` : ''}` : (birthCountry || 'NWS');
         const birthStr = `${birthDate} - ${placeStr}`;
 
-        let imageObject = null;
+        // 1x1 white pixel fallback image bytes
+        const rawFallbackImg = new Uint8Array([
+          0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x48,
+          0x00, 0x48, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xC0, 0x00, 0x0B, 0x08, 0x00,
+          0x01, 0x00, 0x01, 0x01, 0x01, 0x11, 0x00, 0xFF, 0xC4, 0x00, 0x14, 0x00, 0x01, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xDA, 0x00,
+          0x0C, 0x03, 0x01, 0x00, 0x02, 0x11, 0x03, 0x11, 0x00, 0x3F, 0x00, 0x3F, 0xFF, 0xD9
+        ]);
+
+        let img1Bytes = rawFallbackImg;
+        let img1Width = 1;
+        let img1Height = 1;
+        let showI1 = false;
+
+        let img2Bytes = rawFallbackImg;
+        let img2Width = 1;
+        let img2Height = 1;
+        let showI2 = false;
+
+        let img3Bytes = rawFallbackImg;
+        let img3Width = 1;
+        let img3Height = 1;
+        let showI3 = false;
+
+        // Fetch Citizen Photo
         let photoUrl = citizen.arubaPhotoUrl || citizen.arubaphotourl;
         if (photoUrl && photoUrl.startsWith('http')) {
           try {
@@ -770,11 +798,32 @@ CREATE TABLE citizens (
                   const imgBuffer = new Uint8Array(arrayBuffer);
                   
                   if (imgBuffer[0] === 0xff && imgBuffer[1] === 0xd8) {
-                    imageObject = imgBuffer;
-                    console.log(`[Worker-PDF] Loaded valid JPEG from: ${url}`);
+                    img1Bytes = imgBuffer;
+                    showI1 = true;
+                    img1Width = 300;
+                    img1Height = 375;
+                    
+                    try {
+                      let i = 2;
+                      while (i < img1Bytes.length - 8) {
+                        if (img1Bytes[i] === 0xFF) {
+                          const marker = img1Bytes[i+1];
+                          if (marker >= 0xC0 && marker <= 0xC3) {
+                            img1Height = (img1Bytes[i+5] << 8) | img1Bytes[i+6];
+                            img1Width = (img1Bytes[i+7] << 8) | img1Bytes[i+8];
+                            break;
+                          }
+                          i++;
+                        } else {
+                          i++;
+                        }
+                      }
+                    } catch (_) {}
+
+                    console.log(`[Worker-PDF] Loaded valid photo JPEG (${img1Width}x${img1Height})`);
                     break;
                   } else {
-                    console.warn(`[Worker-PDF] Loaded image from ${url} but it is NOT a JPEG (no FFD8 header). PNG is not natively supported in pure JS PDF.`);
+                    console.warn(`[Worker-PDF] Loaded image from ${url} but it is NOT a JPEG (no FFD8 header).`);
                   }
                 } else {
                   console.warn(`[Worker-PDF] Fetch failed for ${url} with status: ${imgRes.status}`);
@@ -788,14 +837,96 @@ CREATE TABLE citizens (
           }
         }
 
+        // Fetch Official Logo (JPEG format)
+        try {
+          const logoUrl = 'https://www.newworldstate.org/wp-content/uploads/2025/03/NEW-WORLD-STATE-768x512.jpg';
+          console.log(`[Worker-PDF] Fetching logo from: ${logoUrl}`);
+          const logoRes = await fetch(logoUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'image/*'
+            }
+          });
+          if (logoRes.ok) {
+            const arrayBuffer = await logoRes.arrayBuffer();
+            const imgBuffer = new Uint8Array(arrayBuffer);
+            if (imgBuffer[0] === 0xff && imgBuffer[1] === 0xd8) {
+              img2Bytes = imgBuffer;
+              showI2 = true;
+              img2Width = 768;
+              img2Height = 512;
+              
+              try {
+                let i = 2;
+                while (i < img2Bytes.length - 8) {
+                  if (img2Bytes[i] === 0xFF) {
+                    const marker = img2Bytes[i+1];
+                    if (marker >= 0xC0 && marker <= 0xC3) {
+                      img2Height = (img2Bytes[i+5] << 8) | img2Bytes[i+6];
+                      img2Width = (img2Bytes[i+7] << 8) | img2Bytes[i+8];
+                      break;
+                    }
+                    i++;
+                  } else {
+                    i++;
+                  }
+                }
+              } catch (_) {}
+
+              console.log(`[Worker-PDF] Loaded valid logo JPEG (${img2Width}x${img2Height})`);
+            } else {
+              console.warn('[Worker-PDF] Logo from url is NOT a JPEG (no FFD8 header)');
+            }
+          }
+        } catch (err) {
+          console.error('[Worker-PDF] Failed to fetch logo:', err.message);
+        }
+
+        // Fetch Live verification QR Code Linking to verification portal as JPEG
+        try {
+          const verifyUrl = `${env.APP_URL || 'https://www.newworldstate.org'}/verify?id=${encodeURIComponent(citizenCode)}`;
+          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}&format=jpg`;
+          console.log(`[Worker-PDF] Fetching QR Code from: ${qrUrl}`);
+          const qrRes = await fetch(qrUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'image/*'
+            }
+          });
+          if (qrRes.ok) {
+            const arrayBuffer = await qrRes.arrayBuffer();
+            const imgBuffer = new Uint8Array(arrayBuffer);
+            if (imgBuffer[0] === 0xff && imgBuffer[1] === 0xd8) {
+              img3Bytes = imgBuffer;
+              showI3 = true;
+              img3Width = 150;
+              img3Height = 150;
+              console.log(`[Worker-PDF] Loaded valid QR Code JPEG!`);
+            } else {
+              console.warn('[Worker-PDF] QR Code from url is NOT a JPEG (no FFD8 header)');
+            }
+          }
+        } catch (err) {
+          console.error('[Worker-PDF] Failed to fetch QR Code:', err.message);
+        }
+
+        let headerTextX = 8;
+        if (showI2) {
+          headerTextX = 36;
+        }
+
         let contents = '';
         contents += `0.039 0.110 0.243 rg 0 0 242.65 153.01 re f\n`;
         contents += `0.773 0.659 0.502 RG 1.2 w 2 2 238.65 149.01 re S\n`;
         contents += `0.027 0.082 0.188 rg 2 126.01 238.65 25 re f\n`;
         contents += `0.773 0.659 0.502 RG 0.8 w 2 126 m 240.65 126 l S\n`;
         
-        contents += `BT /F1 6.5 Tf 0.773 0.659 0.502 rg 8 141 Td /CharSpacing 0.5 Tc (NEW WORLD STATE) Tj ET\n`;
-        contents += `BT /F2 4.2 Tf 0.580 0.639 0.722 rg 8 133 Td /CharSpacing 0.3 Tc (SOVEREIGN GLOBAL CITIZENSHIP) Tj ET\n`;
+        if (showI2) {
+          contents += `q 24 0 0 16 8 131.01 cm /I2 Do Q\n`;
+        }
+
+        contents += `BT /F1 6.5 Tf 0.773 0.659 0.502 rg ${headerTextX} 141 Td /CharSpacing 0.5 Tc (NEW WORLD STATE) Tj ET\n`;
+        contents += `BT /F2 4.2 Tf 0.580 0.639 0.722 rg ${headerTextX} 133 Td /CharSpacing 0.3 Tc (SOVEREIGN GLOBAL CITIZENSHIP) Tj ET\n`;
         contents += `BT /F1 8.5 Tf 0.773 0.659 0.502 rg 192 139 Td (ID CARD) Tj ET\n`;
         
         contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 116 Td (COGNOME / SURNAME) Tj ET\n`;
@@ -816,12 +947,18 @@ CREATE TABLE citizens (
         contents += `BT /F2 4.2 Tf 0.392 0.455 0.545 rg 132 14 Td (NWS SIGNATURE: ${escapePDFText(docHash)}) Tj ET\n`;
         contents += `[2 2] 0 d 0.773 0.659 0.502 RG 0.5 w 4 39 m 238.65 39 l S [] 0 d\n`;
 
-        if (imageObject) {
+        if (showI1) {
           contents += `q 56 0 0 71 178.65 49.01 cm /I1 Do Q\n`;
         } else {
           contents += `0.027 0.082 0.188 rg 0.773 0.659 0.502 RG 0.8 w 178.65 49.01 56 71 re b\n`;
           contents += `BT /F1 5 Tf 0.580 0.639 0.722 rg 198 87 Td (FOTO) Tj ET\n`;
           contents += `BT /F1 4.5 Tf 0.580 0.639 0.722 rg 190 80 Td (VALIDATA) Tj ET\n`;
+        }
+
+        if (showI3) {
+          contents += `1 1 1 rg 209.65 10 25 25 re f\n`;
+          contents += `0.773 0.659 0.502 RG 0.5 w 209.15 9.5 26 26 re S\n`;
+          contents += `q 25 0 0 25 209.65 10 cm /I3 Do Q\n`;
         }
 
         function escapePDFText(t) {
@@ -855,11 +992,8 @@ CREATE TABLE citizens (
         const pagesStr = createObjectString(2, `<< /Type /Pages /Kids [3 0 R] /Count 1 >>`);
         pushObject(encoder.encode(pagesStr));
 
-        let xobjectsStr = '';
-        if (imageObject) {
-          xobjectsStr = `/XObject << /I1 7 0 R >>`;
-        }
-        const pageStr = createObjectString(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 242.65 153.01] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> ${xobjectsStr} >> /Contents 4 0 R >>`);
+        const pageResources = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 242.65 153.01] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> /XObject << /I1 7 0 R /I2 8 0 R /I3 9 0 R >> >> /Contents 4 0 R >>`;
+        const pageStr = createObjectString(3, pageResources);
         pushObject(encoder.encode(pageStr));
 
         const contentsStreamBytes = encoder.encode(contents);
@@ -881,38 +1015,38 @@ CREATE TABLE citizens (
         const font2Str = createObjectString(6, `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`);
         pushObject(encoder.encode(font2Str));
 
-        if (imageObject) {
-          let width = 300;
-          let height = 375;
-          try {
-            let i = 2;
-            while (i < imageObject.length) {
-              if (imageObject[i] === 0xFF) {
-                const marker = imageObject[i+1];
-                if (marker >= 0xC0 && marker <= 0xC3) {
-                  height = (imageObject[i+5] << 8) | imageObject[i+6];
-                  width = (imageObject[i+7] << 8) | imageObject[i+8];
-                  break;
-                }
-                i++;
-              } else {
-                i++;
-              }
-            }
-          } catch (_) {}
+        // Object 7: Citizen Photo
+        const imgObj7Header = `7 0 obj\n<< /Type /XObject /Subtype /Image /Width ${img1Width} /Height ${img1Height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${img1Bytes.length} >>\nstream\n`;
+        const imgObj7Footer = `\nendstream\nendobj\n`;
+        const obj7Merged = new Uint8Array(imgObj7Header.length + img1Bytes.length + imgObj7Footer.length);
+        const h7Bytes = encoder.encode(imgObj7Header);
+        const f7Bytes = encoder.encode(imgObj7Footer);
+        obj7Merged.set(h7Bytes, 0);
+        obj7Merged.set(img1Bytes, h7Bytes.length);
+        obj7Merged.set(f7Bytes, h7Bytes.length + img1Bytes.length);
+        pushObject(obj7Merged);
 
-          const imgObjHeader = `7 0 obj\n<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageObject.length} >>\nstream\n`;
-          const imgObjFooter = `\nendstream\nendobj\n`;
-          
-          const hBytes = encoder.encode(imgObjHeader);
-          const fBytes = encoder.encode(imgObjFooter);
-          
-          const mergedImg = new Uint8Array(hBytes.length + imageObject.length + fBytes.length);
-          mergedImg.set(hBytes, 0);
-          mergedImg.set(imageObject, hBytes.length);
-          mergedImg.set(fBytes, hBytes.length + imageObject.length);
-          pushObject(mergedImg);
-        }
+        // Object 8: Logo Image
+        const imgObj8Header = `8 0 obj\n<< /Type /XObject /Subtype /Image /Width ${img2Width} /Height ${img2Height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${img2Bytes.length} >>\nstream\n`;
+        const imgObj8Footer = `\nendstream\nendobj\n`;
+        const obj8Merged = new Uint8Array(imgObj8Header.length + img2Bytes.length + imgObj8Footer.length);
+        const h8Bytes = encoder.encode(imgObj8Header);
+        const f8Bytes = encoder.encode(imgObj8Footer);
+        obj8Merged.set(h8Bytes, 0);
+        obj8Merged.set(img2Bytes, h8Bytes.length);
+        obj8Merged.set(f8Bytes, h8Bytes.length + img2Bytes.length);
+        pushObject(obj8Merged);
+
+        // Object 9: QR Image
+        const imgObj9Header = `9 0 obj\n<< /Type /XObject /Subtype /Image /Width ${img3Width} /Height ${img3Height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${img3Bytes.length} >>\nstream\n`;
+        const imgObj9Footer = `\nendstream\nendobj\n`;
+        const obj9Merged = new Uint8Array(imgObj9Header.length + img3Bytes.length + imgObj9Footer.length);
+        const h9Bytes = encoder.encode(imgObj9Header);
+        const f9Bytes = encoder.encode(imgObj9Footer);
+        obj9Merged.set(h9Bytes, 0);
+        obj9Merged.set(img3Bytes, h9Bytes.length);
+        obj9Merged.set(f9Bytes, h9Bytes.length + img3Bytes.length);
+        pushObject(obj9Merged);
 
         const startXref = currentOffset;
         const objectCount = offsets.length + 1;
