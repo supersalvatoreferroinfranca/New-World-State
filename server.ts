@@ -1,11 +1,13 @@
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
 import pg from 'pg';
 import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 
 const { Pool } = pg;
 
@@ -66,7 +68,7 @@ async function runMigrations() {
 }
 
 // Genera un documento PDF ad alta risoluzione con le dimensioni esatte di una ID card (85,60 mm x 53,98 mm)
-function generateCitizenIdCardPdf(citizen: any): Promise<Buffer> {
+function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://www.newworldstate.org'): Promise<Buffer> {
   return new Promise(async (resolve, reject) => {
     try {
       // 85.60 mm x 53.98 mm in PostScript points. 1 mm = 72 / 25.4 = 2.83464567 points
@@ -96,17 +98,38 @@ function generateCitizenIdCardPdf(citizen: any): Promise<Buffer> {
 
       // Header top bar (nested slightly darker blue rect)
       doc.rect(2, 2, width - 4, 25).fill('#071530');
+
+      // Attempt to load and draw the official logo
+      const logoPath = path.join(process.cwd(), 'src', 'components', 'layout', 'logo-nws.png');
+      let drawLogo = false;
+      try {
+        if (fs.existsSync(logoPath)) {
+          drawLogo = true;
+        }
+      } catch (_) {}
+
+      if (drawLogo) {
+        try {
+          // Centered vertically in the 25pt header space (2pt margin, starts at 5, height 16)
+          doc.image(logoPath, 8, 5, { height: 16 });
+        } catch (logoErr) {
+          console.warn('[PDF] Failed to draw header logo:', logoErr);
+          drawLogo = false;
+        }
+      }
+
+      const textLeftMargin = drawLogo ? 36 : 8;
       
       // Header text
       doc.fillColor(goldColor)
          .fontSize(6)
          .font('Helvetica-Bold')
-         .text('NEW WORLD STATE', 8, 6, { characterSpacing: 0.5 });
+         .text('NEW WORLD STATE', textLeftMargin, 6, { characterSpacing: 0.5 });
          
       doc.fillColor(lightGray)
          .fontSize(4.2)
          .font('Helvetica')
-         .text('SOVEREIGN GLOBAL CITIZENSHIP', 8, 14, { characterSpacing: 0.3 });
+         .text('SOVEREIGN GLOBAL CITIZENSHIP', textLeftMargin, 14, { characterSpacing: 0.3 });
 
       doc.fillColor(goldColor)
          .fontSize(8.5)
@@ -244,14 +267,49 @@ function generateCitizenIdCardPdf(citizen: any): Promise<Buffer> {
          .font('Helvetica-Bold')
          .text(citizenCode, codeX, codeY + 4.5, { characterSpacing: 0.5 });
 
-      const sigX = width - 110;
-      const sigY = 125;
+      // Generate verification QR code linking to database record
+      let qrBuffer: Buffer | null = null;
+      try {
+        const verifyUrl = `${baseUrl}/verify?id=${encodeURIComponent(citizenCode)}`;
+        console.log(`[PDF] Generating verification QR code for URL: ${verifyUrl}`);
+        qrBuffer = await QRCode.toBuffer(verifyUrl, {
+          margin: 1,
+          width: 80,
+          color: {
+            dark: '#071530',
+            light: '#ffffff'
+          }
+        });
+      } catch (qrErr: any) {
+        console.error('[PDF] Failed to generate validation QR code:', qrErr.message);
+      }
+
+      const qrX = width - 33;
+      const qrY = 116;
+      const qrSize = 25;
+
+      if (qrBuffer) {
+        try {
+          // Draw neat gold border representing authentication security stamp
+          doc.rect(qrX - 0.5, qrY - 0.5, qrSize + 1, qrSize + 1).lineWidth(0.5).stroke(goldColor);
+          // Draw white background block underneath
+          doc.rect(qrX, qrY, qrSize, qrSize).fill('white');
+          // Draw the actual code
+          doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
+        } catch (drawQrErr: any) {
+          console.error('[PDF] Failed to draw QR on PDF:', drawQrErr.message);
+        }
+      }
+
+      // Digital federal stamp signature (shifted left of the QR code stamp)
+      const sigX = width - 142;
+      const sigY = 126;
       const docHash = citizen.documentHash || 'VALIDATED';
       const cleanHash = docHash.slice(0, 16).toUpperCase();
       doc.fillColor('#64748b')
          .fontSize(4)
          .font('Courier-Bold')
-         .text(`NWS SIGNATURE: ${cleanHash}`, sigX, sigY, { width: 102, align: 'right' });
+         .text(`NWS SIGNATURE: ${cleanHash}`, sigX, sigY, { width: 104, align: 'right' });
 
       doc.end();
     } catch (err) {
@@ -922,6 +980,39 @@ Ufficio dell'Anagrafe Federale del New World State
       return found ? getCitizenWithArubaUrls(found) : null;
     }
 
+    // Helper search function by Citizen Code or ID (for verification / QR code validation)
+    async function findCitizenByCodeOrId(key: string) {
+      const cleanKey = String(key).trim().toUpperCase();
+      if (!cleanKey) return null;
+      
+      // Try searching by ID if it's a numeric digit
+      if (/^\d+$/.test(cleanKey)) {
+        const byId = await findCitizenById(cleanKey);
+        if (byId) return byId;
+      }
+
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query(
+            'SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR UPPER(citizen_code) = $1 OR UPPER(citizencode) = $1 OR id::text = $1', 
+            [cleanKey]
+          );
+          if (qRes.rows.length > 0) {
+            return getCitizenWithArubaUrls(qRes.rows[0]);
+          }
+        } catch (e: any) {
+          console.error('[DB-LOCAL-GET-BY-CODE-ERR] Fallback to memory search:', e.message);
+        }
+      }
+
+      // Fallback memory search
+      const found = memoryCitizens.find(c => {
+        const cCode = c.citizenCode || c.citizencode || c.citizen_code;
+        return (cCode && String(cCode).trim().toUpperCase() === cleanKey) || String(c.id) === cleanKey;
+      });
+      return found ? getCitizenWithArubaUrls(found) : null;
+    }
+
     // Helper status update function
     async function updateCitizenStatus(id: string | number, status: 'approved' | 'rejected', rejectionReason?: string) {
       let updatedRecord: any = null;
@@ -1064,7 +1155,8 @@ Ufficio dell'Anagrafe Federale del New World State
 
             // Genera la ID card fisica come PDF allegato di precisione al millimetro
             console.log('[PDF] Avvio generazione ID Card ufficiale in formato PDF...');
-            const pdfBuffer = await generateCitizenIdCardPdf(updated);
+            const baseUrl = `${req.protocol}://${req.get('host')}`;
+            const pdfBuffer = await generateCitizenIdCardPdf(updated, baseUrl);
             console.log('[PDF] Generazione completata con successo! Dimensione del buffer:', pdfBuffer.length);
 
             const welcomeHtml = `
@@ -1270,6 +1362,31 @@ Ufficio dell'Anagrafe Federale del New World State
       }
 
       return res.json({ success: true, message: 'Cittadino approvato con successo e ID card spedita via email!', citizen: updated });
+    });
+
+    // Scarica o visualizza al volo la ID card PDF per qualsiasi cittadino approvato (con logo e qrcode)
+    apiRouter.get('/admin/citizen-card', async (req, res) => {
+      const { id } = req.query;
+      if (!id) return res.status(400).send('ID cittadino mancante.');
+
+      const citizen = await findCitizenById(id as string);
+      if (!citizen) return res.status(404).send('Cittadino non trovato.');
+
+      if (citizen.status !== 'approved') {
+        return res.status(400).send('La carta d\'identità può essere stampata solo per i cittadini approvati.');
+      }
+
+      try {
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const pdfBuffer = await generateCitizenIdCardPdf(citizen, baseUrl);
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="ID_Card_NWS_${citizen.citizenCode || citizen.id}.pdf"`);
+        return res.send(pdfBuffer);
+      } catch (err: any) {
+        console.error('[PDF-LIVE-GET-ERR]', err.message);
+        return res.status(500).send(`Impossibile generare la carta d'identità: ${err.message}`);
+      }
     });
 
     // Reject a citizen, set reason & email notification explaining the rejection
@@ -1613,6 +1730,267 @@ Ufficio dell'Anagrafe Federale del New World State
 
     // Mount API Router before static/fallback
     app.use('/api', apiRouter);
+
+    // Servizio Centrale di Verifica per Carta d'Identità Sovereign NWS (Anti-Counterfeiting System)
+    app.get('/verify', async (req, res) => {
+      const { id, code } = req.query;
+      const key = ((id || code || '') as string).trim();
+
+      if (!key) {
+        return res.send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>NWS Identity Verification Center</title>
+              <script src="https://cdn.tailwindcss.com"></script>
+              <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;550&display=swap" rel="stylesheet">
+              <style>
+                body { font-family: 'Inter', sans-serif; }
+                .font-display { font-family: 'Space Grotesk', sans-serif; }
+                .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+              </style>
+            </head>
+            <body class="bg-[#050d1e] min-h-screen text-slate-100 flex flex-col justify-between">
+              <header class="border-b border-[#c5a880]/20 bg-[#071328]/80 backdrop-blur py-5 px-6 sticky top-0 z-50">
+                <div class="max-w-4xl mx-auto flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-[#c5a880] flex items-center justify-center font-display font-bold text-[#0a1c3e] text-xs">NWS</div>
+                    <div>
+                      <h1 class="text-sm font-display font-bold tracking-wider text-white">NEW WORLD STATE</h1>
+                      <p class="text-[9px] font-mono-tech tracking-widest text-[#c5a880]">VERIFICATION REGISTRY</p>
+                    </div>
+                  </div>
+                  <span class="text-[8px] font-mono-tech bg-[#ef4444]/10 text-[#ef4444] px-2 py-0.5 border border-[#ef4444]/20 rounded font-semibold uppercase">SECURE LINK NEEDED</span>
+                </div>
+              </header>
+
+              <main class="max-w-md w-full mx-auto px-6 py-12 flex-1 flex items-center justify-center">
+                <div class="bg-[#071530] border border-red-500/20 rounded-3xl shadow-2xl p-8 text-center space-y-6 w-full">
+                  <div class="w-16 h-16 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold animate-pulse">!</div>
+                  <div class="space-y-2">
+                    <h2 class="text-xl font-display font-bold text-white tracking-tight">Parametro Mancante</h2>
+                    <p class="text-slate-400 text-xs leading-relaxed">Nessun codice cittadino o identificativo univoco specificato per la verifica decentralizzata. Inquadra nuovamente il QR code presente sulla carta fisica d'identità.</p>
+                  </div>
+                  <div class="pt-4">
+                    <a href="/" class="inline-flex w-full justify-center bg-gradient-to-r from-[#c5a880] to-[#e4cbab] text-[#0a1c3e] font-bold text-xs uppercase tracking-widest py-3 px-6 rounded-xl hover:opacity-90 shadow-lg shadow-amber-500/10 transition">Torna alla Home</a>
+                  </div>
+                </div>
+              </main>
+
+              <footer class="border-t border-[#c5a880]/10 bg-[#040a15] py-6 px-4 text-center text-[10px] text-slate-500 font-mono-tech">
+                <p>© 2026 Sovereign Administration of New World State. Central Verification Authority.</p>
+              </footer>
+            </body>
+          </html>
+        `);
+      }
+
+      const citizen = await findCitizenByCodeOrId(key);
+
+      // If NOT approved or NOT found
+      if (!citizen || citizen.status !== 'approved') {
+        return res.send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>AVVISO CONTRAFFATTURA - NWS</title>
+              <script src="https://cdn.tailwindcss.com"></script>
+              <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;550&display=swap" rel="stylesheet">
+              <style>
+                body { font-family: 'Inter', sans-serif; }
+                .font-display { font-family: 'Space Grotesk', sans-serif; }
+                .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+              </style>
+            </head>
+            <body class="bg-[#050d1e] min-h-screen text-slate-100 flex flex-col justify-between">
+              <header class="border-b border-[#c5a880]/20 bg-[#071328]/80 backdrop-blur py-5 px-6 sticky top-0 z-50">
+                <div class="max-w-4xl mx-auto flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-[#ef4444] flex items-center justify-center font-display font-bold text-white text-xs">!</div>
+                    <div>
+                      <h1 class="text-sm font-display font-bold tracking-wider text-white">NEW WORLD STATE</h1>
+                      <p class="text-[9px] font-mono-tech tracking-widest text-[#ef4444]">SECURITY DIVISION</p>
+                    </div>
+                  </div>
+                  <span class="text-[8px] font-mono-tech bg-[#ef4444]/10 text-rose-500 px-2 py-0.5 border border-rose-500/20 rounded font-semibold uppercase">VERIFICA FALLITA</span>
+                </div>
+              </header>
+
+              <main class="max-w-lg w-full mx-auto px-6 py-10 flex-grow flex items-center">
+                <div class="bg-[#110714] border-2 border-red-500/30 rounded-3xl p-8 space-y-6 shadow-2xl relative overflow-hidden w-full animate-fade-in">
+                  <div class="absolute -top-10 -right-10 w-28 h-28 bg-red-500/10 rounded-full blur-2xl"></div>
+                  
+                  <div class="text-center space-y-4">
+                    <div class="w-16 h-16 bg-red-600/10 text-red-500 border-2 border-red-500/20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">!</div>
+                    <div class="space-y-1">
+                      <span class="text-[10px] font-mono-tech tracking-widest text-red-400 font-bold uppercase">AVVISO DI SICUREZZA</span>
+                      <h2 class="text-2xl font-display font-bold text-white tracking-tight">DOCUMENTO COPIATO O CONTRAFFATTO</h2>
+                    </div>
+                  </div>
+
+                  <p class="text-slate-300 text-xs leading-relaxed text-center">
+                    Il codice identificativo <strong class="text-red-400 font-mono-tech font-bold uppercase select-all">${key}</strong> inserito o inquadrato <span class="font-semibold text-white">NON RISULTA REGISTRATO</span> o approvato nell'Anagrafe Centrale della Federazione Sovrana di New World State.
+                  </p>
+
+                  <div class="bg-black/30 border border-red-500/20 rounded-2xl p-5 space-y-2.5 text-xs text-slate-400">
+                    <p class="font-bold text-red-300 text-center uppercase text-[10px] tracking-wider mb-1">ISTRUZIONI PER FUNZIONARI DI FRONTIERA</p>
+                    <ul class="space-y-2 list-none pl-0">
+                      <li class="flex items-start gap-2"><span class="text-red-500">🛡️</span> Ogni documento NWS ufficiale possiede una corrispondenza univoca nel nostro server di registro. Se la scansione fallisce, la carta stampata è priva di efficacia giuridica.</li>
+                      <li class="flex items-start gap-2"><span class="text-red-500">🛡️</span> La contraffazione dei documenti e l'utilizzo abusivo del design federale costituiscono gravi violazioni penali.</li>
+                      <li class="flex items-start gap-2"><span class="text-red-500">🛡️</span> Trattieni la tessera fisica ed esegui i dovuti controlli anagrafici approfonditi.</li>
+                    </ul>
+                  </div>
+
+                  <div class="pt-2 text-center text-[10px] text-slate-500 font-mono-tech">
+                    ID Transazione Verifica: NWS-SEC-ERR-${Math.floor(100000 + Math.random() * 900000)}
+                  </div>
+                </div>
+              </main>
+
+              <footer class="border-t border-[#c5a880]/10 bg-[#040a15] py-6 px-4 text-center text-[10px] text-slate-500 font-mono-tech">
+                <p>© 2026 Sovereign Administration of New World State. Central Verification Authority.</p>
+              </footer>
+            </body>
+          </html>
+        `);
+      }
+
+      // If approved and found!
+      const docHash = citizen.documentHash || 'VALIDATED';
+      const cleanHash = docHash.slice(0, 16).toUpperCase();
+      const citizenPhoto = citizen.arubaPhotoUrl || citizen.arubaphotourl || '';
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>CITTADINANZA VERIFICATA - NWS Registry</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;550&display=swap" rel="stylesheet">
+            <style>
+              body { font-family: 'Inter', sans-serif; }
+              .font-display { font-family: 'Space Grotesk', sans-serif; }
+              .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+            </style>
+          </head>
+          <body class="bg-[#050d1e] min-h-screen text-slate-100 flex flex-col justify-between">
+            <header class="border-b border-[#c5a880]/20 bg-[#071328]/80 backdrop-blur py-5 px-6 sticky top-0 z-50">
+              <div class="max-w-4xl mx-auto flex items-center justify-between w-full">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[#10b981] flex items-center justify-center font-display font-bold text-[#0a1c3e] text-xs">✓</div>
+                  <div>
+                    <h1 class="text-sm font-display font-bold tracking-wider text-white">NEW WORLD STATE</h1>
+                    <p class="text-[9px] font-mono-tech tracking-widest text-[#c5a880]">SOVEREIGN CITIZENSHIP REGISTRY</p>
+                  </div>
+                </div>
+                <span class="text-[8px] font-mono-tech bg-[#10b981]/10 text-emerald-400 px-2.5 py-1 border border-emerald-500/20 rounded font-semibold uppercase tracking-wider animate-pulse">✓ DOCUMENTO AUTENTICO</span>
+              </div>
+            </header>
+
+            <main class="max-w-2xl w-full mx-auto px-6 py-8 flex-grow">
+              <div class="bg-[#071530] border border-[#c5a880]/20 rounded-3xl shadow-2xl p-6 md:p-8 space-y-6">
+                
+                {/* Visual Header */}
+                <div class="text-center space-y-2">
+                  <div class="w-14 h-14 bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">✓</div>
+                  <div>
+                    <h2 class="text-xl font-display font-bold text-white tracking-tight">Anagrafe Federale Validata</h2>
+                    <p class="text-[11px] text-[#c5a880] uppercase tracking-widest font-mono-tech font-bold">Stato Cittadinanza: Attivo e Convalidato</p>
+                  </div>
+                </div>
+
+                {/* Instructions Box */}
+                <div class="bg-[#0d1f3d] rounded-2xl p-4 border border-[#c5a880]/15 text-xs text-sky-200/80 leading-relaxed">
+                  <strong class="text-white">IMPORTANTE CONFRONTO DATI COPIE:</strong> Controlla attentamente i dati anagrafici scritti sulla tessera fisica di identità con quelli estratti in tempo reale dal nostro database centrale sottostante. Accertati inoltre che la <strong>fotografia stampata</strong> sulla carta plastificata corrisponda esattamente a quella ufficiale qui registrata.
+                </div>
+
+                {/* Profile Photo Comparison & Core Details split */}
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                  
+                  {/* Photo area */}
+                  <div class="md:col-span-4 flex flex-col items-center space-y-2">
+                    <div class="text-[10px] font-mono-tech text-slate-400 uppercase tracking-wider font-semibold">Foto Ufficiale nel DB</div>
+                    <div class="w-36 h-48 rounded-xl border border-[#c5a880]/30 overflow-hidden bg-[#050e21] shadow-xl flex items-center justify-center relative group">
+                      ${citizenPhoto ? `
+                        <img src="${citizenPhoto}" class="w-full h-full object-cover" alt="Foto Dossier" referrerPolicy="no-referrer" />
+                      ` : `
+                        <div class="text-center p-3">
+                          <span class="text-2xl block">👤</span>
+                          <span class="text-[9px] text-slate-500 font-mono-tech">Foto non disponibile</span>
+                        </div>
+                      `}
+                    </div>
+                    <span class="text-[10px] bg-emerald-500/15 text-emerald-400 py-0.5 px-2.5 rounded-full font-mono-tech uppercase font-bold tracking-wider">Identità Verificata</span>
+                  </div>
+
+                  {/* Fields Area */}
+                  <div class="md:col-span-8 space-y-4">
+                    <div class="text-[10px] font-mono-tech text-slate-400 uppercase tracking-wider font-semibold">Anagrafica Federale Archiviata</div>
+                    
+                    <div class="bg-[#050e21] rounded-2xl p-5 border border-slate-800 space-y-3.5 text-xs">
+                      <div class="grid grid-cols-2 gap-y-3.5 gap-x-2 border-b border-white/5 pb-3">
+                        <div>
+                          <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Cognome / Surname</span>
+                          <strong class="text-white text-sm font-semibold select-all font-display">${(citizen.surname || '').toUpperCase()}</strong>
+                        </div>
+                        <div>
+                          <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Nome / Given Names</span>
+                          <strong class="text-white text-sm font-semibold select-all font-display">${(citizen.firstName || '').toUpperCase()}</strong>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-3.5 border-b border-white/5 pb-3">
+                        <div>
+                          <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Nato il / Date of Birth</span>
+                          <strong class="text-slate-200 select-all font-mono-tech">${citizen.birthDate || 'N/A'}</strong>
+                        </div>
+                        <div>
+                          <span class="text-slate-400 block text-[9px] uppercase tracking-wider">A / Place of Birth</span>
+                          <strong class="text-slate-200 select-all font-mono-tech">${(citizen.birthPlace || '').toUpperCase()} (${(citizen.birthCountry || '').toUpperCase()})</strong>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-3.5 border-b border-white/5 pb-3">
+                        <div>
+                          <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Codice Cittadino / Citizen Code</span>
+                          <strong class="text-[#c5a880] select-all font-bold text-sm font-mono-tech tracking-wider">${citizen.citizenCode || 'N/A'}</strong>
+                        </div>
+                        <div>
+                          <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Genere / Sex</span>
+                          <strong class="text-slate-200 select-all uppercase font-mono-tech">${citizen.gender || '-'}</strong>
+                        </div>
+                      </div>
+
+                      <div class="pt-1 select-all">
+                        <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Firma di Controllo Algoritmica (Centrale)</span>
+                        <strong class="text-slate-500 font-mono-tech text-[9px] font-bold block overflow-x-auto whitespace-nowrap bg-black/30 p-2 border border-white/5 rounded-lg mt-1 uppercase">HASH: ${docHash}</strong>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div class="bg-emerald-500/5 text-emerald-400/90 rounded-2xl p-4 border border-emerald-500/20 text-[11px] font-mono-tech text-center flex items-center justify-center gap-2">
+                  <span>🛡️</span> REGISTRO DI CITTADINANZA SOVRANA NWS: INTEGRITÀ CERTIFICATA SUL DATABASE FEDERALE
+                </div>
+
+              </div>
+            </main>
+
+            <footer class="border-t border-[#c5a880]/10 bg-[#040a15] py-6 px-4 text-center text-[10px] text-slate-500 font-mono-tech">
+              <p>© 2026 Sovereign Administration of New World State. Central Verification Authority.</p>
+            </footer>
+          </body>
+        </html>
+      `);
+    });
 
     // Servizio di Validazione Interattivo via Link di Approvazione/Rifiuto Email
     app.get('/admin/action', async (req, res) => {

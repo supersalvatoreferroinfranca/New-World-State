@@ -431,7 +431,7 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Documenti Allegati (Aruba Links)</span>
                   
-                  <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-semibold text-brand-blue">
+                  <div className={`grid ${selectedCitizen.status === 'approved' ? 'grid-cols-4' : 'grid-cols-3'} gap-2 text-center text-[10px] font-semibold text-brand-blue`}>
                     
                     <a 
                       href={selectedCitizen.arubaFrontUrl || '#'} 
@@ -462,6 +462,18 @@ export default function AdminDashboard() {
                       <div className="font-bold text-slate-800">Foto</div>
                       <div className="text-[9px] text-brand-gold mt-1 flex items-center justify-center gap-0.5">Vedi <ExternalLink className="w-2.5 h-2.5" /></div>
                     </a>
+
+                    {selectedCitizen.status === 'approved' && (
+                      <a 
+                        href={`/api/admin/citizen-card?id=${selectedCitizen.id}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="border rounded-xl p-2.5 block transition bg-emerald-50 border-emerald-100/50 hover:border-emerald-300 hover:bg-emerald-100/20 text-emerald-800"
+                      >
+                        <div className="font-bold text-emerald-800">PDF Card</div>
+                        <div className="text-[9px] text-emerald-600 mt-1 flex items-center justify-center gap-0.5">Custom <ExternalLink className="w-2.5 h-2.5" /></div>
+                      </a>
+                    )}
 
                   </div>
                 </div>

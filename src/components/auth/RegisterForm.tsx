@@ -441,14 +441,51 @@ export default function RegisterForm() {
   const capturePhoto = () => {
     if (videoRef.current) {
       const video = videoRef.current;
+      const originalW = video.videoWidth || 640;
+      const originalH = video.videoHeight || 480;
+      
+      // We want a portrait photo with aspect ratio 3/4 (which is 0.75, matching the aspect-[3/4] UI box)
+      const targetRatio = 0.75;
+      
+      let cropW = originalW;
+      let cropH = originalH;
+      let sx = 0;
+      let sy = 0;
+      
+      if (originalW / originalH > targetRatio) {
+        // Source is wider than target ratio (standard horizontal webcam feed like 4:3 or 16:9)
+        cropW = originalH * targetRatio;
+        cropH = originalH;
+        sx = (originalW - cropW) / 2;
+        sy = 0;
+      } else {
+        // Source is narrower than target ratio (vertical/portrait stream)
+        cropW = originalW;
+        cropH = originalW / targetRatio;
+        sx = 0;
+        sy = (originalH - cropH) / 2;
+      }
+      
       const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
+      canvas.width = Math.round(cropW);
+      canvas.height = Math.round(cropH);
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        // Since the live preview is mirrored horizontally, we reflect the canvas horizontally
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        ctx.drawImage(
+          video,
+          sx,                    // source starting x
+          sy,                    // source starting y
+          cropW,                 // source width
+          cropH,                 // source height
+          0,                     // destination x
+          0,                     // destination y
+          canvas.width,          // destination width
+          canvas.height          // destination height
+        );
         
         const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
         setPreviews(prev => ({ ...prev, photo: dataUrl }));
