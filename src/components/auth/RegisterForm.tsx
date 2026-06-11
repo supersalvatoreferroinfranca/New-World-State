@@ -1209,17 +1209,31 @@ export default function RegisterForm() {
           >
             <UserCheck className="w-10 h-10" />
           </motion.div>
-          <h2 className="text-3xl font-serif text-brand-blue">Benvenuto, Cittadino!</h2>
+          <h2 className="text-3xl font-serif text-brand-blue">
+            {language === 'en' ? 'Welcome, Citizen!' : 'Benvenuto, Cittadino!'}
+          </h2>
           <div className="bg-brand-parchment/60 p-5 border border-brand-gold/30 rounded-2xl space-y-2 my-4 text-center shadow-inner">
-            <span className="text-[10px] uppercase font-bold text-brand-blue tracking-widest block">Codice Identificativo Unico NWS</span>
+            <span className="text-[10px] uppercase font-bold text-brand-blue tracking-widest block">
+              {language === 'en' ? 'NWS Unique Identifier Code' : 'Codice Identificativo Unico NWS'}
+            </span>
             <p className="text-xl font-mono font-bold text-brand-gold select-all tracking-wider md:text-2xl">{formData.citizenCode}</p>
-            <span className="text-[9px] text-muted block leading-normal max-w-sm mx-auto">Conserva questo codice alfanumerico di 16 cifre. Identifica in modo univoco ed inviolabile la tua identità sovrana.</span>
+            <span className="text-[9px] text-muted block leading-normal max-w-sm mx-auto">
+              {language === 'en' 
+                ? 'Store this 16-digit alphanumeric code securely. It uniquely and inviolably identifies your sovereign identity.' 
+                : 'Conserva questo codice alfanumerico di 16 cifre. Identifica in modo univoco ed inviolabile la tua identità sovrana.'}
+            </span>
           </div>
           <div className="space-y-4">
-            <p className="text-muted text-sm leading-relaxed">La tua richiesta è stata registrata con successo nel registro anagrafico mondiale.</p>
+            <p className="text-muted text-sm leading-relaxed">
+              {language === 'en' 
+                ? 'Your request has been successfully recorded in the global registry.' 
+                : 'La tua richiesta è stata registrata con successo nel registro anagrafico mondiale.'}
+            </p>
             {formData.email && (
               <p className="text-xs text-brand-blue/80 bg-brand-blue/5 p-4 rounded-xl border border-brand-blue/10 text-left leading-relaxed">
-                Abbiamo ricevuto la tua email. La tua richiesta sarà validata da un cittadino incaricato e riceverai un'email di inserimento definitivo al termine della procedura.
+                {language === 'en'
+                  ? 'We have received your email. Your request will be validated by an authorized registrar, and you will receive a confirmation email upon completion.'
+                  : "Abbiamo ricevuto la tua email. La tua richiesta sarà validata da un cittadino incaricato e riceverai un'email di inserimento definitivo al termine della procedura."}
               </p>
             )}
           </div>
@@ -1229,7 +1243,7 @@ export default function RegisterForm() {
               onClick={() => window.location.reload()}
               className="px-8 py-3 bg-brand-blue text-white rounded-xl shadow-lg hover:bg-brand-blue/90 transition-all font-medium text-sm"
             >
-              Torna alla Home
+              {language === 'en' ? 'Back to Home' : 'Torna alla Home'}
             </button>
           </div>
         </div>
@@ -1264,8 +1278,12 @@ export default function RegisterForm() {
           <div className="py-20 flex flex-col items-center justify-center space-y-6">
             <Loader2 className="w-12 h-12 text-brand-blue animate-spin" />
             <div className="text-center">
-              <h3 className="text-xl font-serif text-brand-blue">Verifica Sistemi...</h3>
-              <p className="text-muted text-sm mt-2">Stiamo verificando la connessione al registro mondiale.</p>
+              <h3 className="text-xl font-serif text-brand-blue">
+                {language === 'en' ? 'System Verification...' : 'Verifica Sistemi...'}
+              </h3>
+              <p className="text-muted text-sm mt-2">
+                {language === 'en' ? 'We are verifying connection to the global civil registry.' : 'Stiamo verificando la connessione al registro mondiale.'}
+              </p>
             </div>
           </div>
         ) : systemStatus === 'error' ? (
@@ -1274,13 +1292,15 @@ export default function RegisterForm() {
               <AlertCircle className="w-10 h-10" />
             </div>
             <div className="text-center max-w-sm">
-              <h3 className="text-xl font-serif text-brand-blue">Sistema non pronto</h3>
+              <h3 className="text-xl font-serif text-brand-blue">
+                {language === 'en' ? 'System Not Ready' : 'Sistema non pronto'}
+              </h3>
               <p className="text-red-600 text-sm mt-2">{error}</p>
               <button 
                 onClick={() => window.location.reload()}
                 className="mt-6 px-6 py-2 bg-brand-blue text-white rounded-xl text-sm font-medium"
               >
-                Riprova
+                {language === 'en' ? 'Retry' : 'Riprova'}
               </button>
             </div>
           </div>
@@ -1296,7 +1316,9 @@ export default function RegisterForm() {
             >
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif text-brand-blue">{t('personalData')}</h2>
-                <p className="text-muted text-xs uppercase tracking-widest italic">Parte 1: Identità Individuale</p>
+                <p className="text-muted text-xs uppercase tracking-widest italic">
+                  {language === 'en' ? 'Part 1: Individual Identity' : 'Parte 1: Identità Individuale'}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1328,8 +1350,8 @@ export default function RegisterForm() {
                     value={formData.gender}
                     onChange={e => setFormData({ ...formData, gender: e.target.value })}
                   >
-                    <option value="M">Maschio</option>
-                    <option value="F">Femmina</option>
+                    <option value="M">{language === 'en' ? 'Male' : 'Maschio'}</option>
+                    <option value="F">{language === 'en' ? 'Female' : 'Femmina'}</option>
                   </select>
                 </div>
               </div>
@@ -1344,14 +1366,16 @@ export default function RegisterForm() {
                       className="text-[9px] uppercase font-bold text-brand-blue flex items-center gap-1 hover:text-brand-gold transition-colors"
                     >
                       <Calendar className="w-3 h-3" />
-                      {isManualDateEntry ? 'Usa Calendario' : 'Inserimento Manuale'}
+                      {language === 'en' 
+                        ? (isManualDateEntry ? 'Use Calendar' : 'Manual Entry') 
+                        : (isManualDateEntry ? 'Usa Calendario' : 'Inserimento Manuale')}
                     </button>
                   </div>
                   {isManualDateEntry ? (
                     <input 
                       type="text"
                       inputMode="numeric"
-                      placeholder="GG/MM/AAAA"
+                      placeholder={language === 'en' ? 'DD/MM/YYYY' : 'GG/MM/AAAA'}
                       className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.birthDate ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                       value={manualDate}
                       onChange={e => handleManualDateChange(e.target.value)}
@@ -1369,7 +1393,7 @@ export default function RegisterForm() {
                   <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('birthPlace')}</label>
                   <input 
                     type="text"
-                    placeholder="Es: Roma, Parigi..."
+                    placeholder={language === 'en' ? 'e.g. Rome, Paris...' : 'Es: Roma, Parigi...'}
                     className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.birthPlace ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                     value={formData.birthPlace}
                     onBlur={() => setTimeout(() => setBirthPlaceSuggestions([]), 200)}
@@ -1404,7 +1428,7 @@ export default function RegisterForm() {
                   <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('birthCountry')}</label>
                   <input 
                     type="text"
-                    placeholder="Es: Italia, USA..."
+                    placeholder={language === 'en' ? 'e.g. Italy, USA...' : 'Es: Italia, USA...'}
                     className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.birthCountry ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                     value={formData.birthCountry}
                     onBlur={() => setTimeout(() => setBirthCountrySuggestions([]), 200)}
@@ -1471,7 +1495,9 @@ export default function RegisterForm() {
             >
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif text-brand-blue">{t('personalData')} (Cont.)</h2>
-                <p className="text-muted text-xs uppercase tracking-widest italic">Cittadinanza e Stato Civile</p>
+                <p className="text-muted text-xs uppercase tracking-widest italic">
+                  {language === 'en' ? 'Citizenship and Marital Status' : 'Cittadinanza e Stato Civile'}
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -1479,7 +1505,7 @@ export default function RegisterForm() {
                   <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('citizenship')}</label>
                   <input 
                     type="text"
-                    placeholder="Es: Italiana, Francese..."
+                    placeholder={language === 'en' ? 'e.g. Italian, French...' : 'Es: Italiana, Francese...'}
                     className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.citizenship ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                     value={formData.citizenship}
                     onBlur={() => setTimeout(() => setCitizenshipSuggestions([]), 200)}
@@ -1513,11 +1539,11 @@ export default function RegisterForm() {
                     value={formData.maritalStatus}
                     onChange={e => setFormData({ ...formData, maritalStatus: e.target.value })}
                   >
-                    <option value="Single">Celibe/Nubile</option>
-                    <option value="Married">Coniugato/a</option>
-                    <option value="Divorced">Divorziato/a</option>
-                    <option value="Widow">Vedovo/a</option>
-                    <option value="CivilUnion">Unito/a civilmente</option>
+                    <option value="Single">{language === 'en' ? 'Single' : 'Celibe/Nubile'}</option>
+                    <option value="Married">{language === 'en' ? 'Married' : 'Coniugato/a'}</option>
+                    <option value="Divorced">{language === 'en' ? 'Divorced' : 'Divorziato/a'}</option>
+                    <option value="Widow">{language === 'en' ? 'Widowed' : 'Vedovo/a'}</option>
+                    <option value="CivilUnion">{language === 'en' ? 'Civil Union' : 'Unito/a civilmente'}</option>
                   </select>
                 </div>
               </div>
@@ -1563,7 +1589,9 @@ export default function RegisterForm() {
             >
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif text-brand-blue">{t('residenceData')}</h2>
-                <p className="text-muted text-xs uppercase tracking-widest italic">Localizzazione e Residenza</p>
+                <p className="text-muted text-xs uppercase tracking-widest italic">
+                  {language === 'en' ? 'Localization and Residence' : 'Localizzazione e Residenza'}
+                </p>
               </div>
 
               <div className="space-y-6">
@@ -1572,26 +1600,40 @@ export default function RegisterForm() {
                   <div className="bg-brand-blue/5 p-4 rounded-xl border border-brand-blue/10 space-y-3">
                     <div className="flex items-center gap-2 text-brand-blue">
                       <AlertCircle className="w-5 h-5" />
-                      <h3 className="text-sm font-bold uppercase tracking-wider">Quale modalità scegliere?</h3>
+                      <h3 className="text-sm font-bold uppercase tracking-wider">
+                        {language === 'en' ? 'Which option to choose?' : 'Quale modalità scegliere?'}
+                      </h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div className="text-[10px] space-y-1">
                         <p className="font-bold text-brand-blue/80 flex items-center gap-1">
-                          <User className="w-3 h-3" /> PIÙ FACILE
+                          <User className="w-3 h-3" /> {language === 'en' ? 'EASIER' : 'PIÙ FACILE'}
                         </p>
-                        <p className="text-muted leading-tight">Usa l'<b>autocompletamento</b> iniziando a scrivere la tua via. È ideale se abiti in aree urbane mappate.</p>
+                        <p className="text-muted leading-tight">
+                          {language === 'en'
+                            ? 'Use autocomplete by starting to type your street. Ideal for mapped urban areas.'
+                            : "Usa l'autocompletamento iniziando a scrivere la tua via. È ideale se abiti in aree urbane mappate."}
+                        </p>
                       </div>
                       <div className="text-[10px] space-y-1">
                         <p className="font-bold text-brand-blue/80 flex items-center gap-1">
-                          <Navigation className="w-3 h-3" /> PIÙ PRECISA
+                          <Navigation className="w-3 h-3" /> {language === 'en' ? 'MORE PRECISE' : 'PIÙ PRECISA'}
                         </p>
-                        <p className="text-muted leading-tight">Usa <b>"La mia posizione"</b> se sei fisicamente a casa. Estrae coordinate GPS e Plus Code univoci.</p>
+                        <p className="text-muted leading-tight">
+                          {language === 'en'
+                            ? 'Use "My position" if at home. Extracts coordinates and a unique Plus Code.'
+                            : 'Usa "La mia posizione" se sei fisicamente a casa. Estrae coordinate GPS e Plus Code univoci.'}
+                        </p>
                       </div>
                       <div className="text-[10px] space-y-1">
                         <p className="font-bold text-brand-blue/80 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> AREE RURALI
+                          <MapPin className="w-3 h-3" /> {language === 'en' ? 'RURAL AREAS' : 'AREE RURALI'}
                         </p>
-                        <p className="text-muted leading-tight">Trascina il <b>Pin sulla mappa</b> e compila la <b>Descrizione Località</b> con punti di riferimento fissi.</p>
+                        <p className="text-muted leading-tight">
+                          {language === 'en'
+                            ? 'Drag the Pin on the map and write a description with reference landmarks.'
+                            : 'Trascina il Pin sulla mappa e compila la Descrizione Località con punti di riferimento fissi.'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1599,10 +1641,14 @@ export default function RegisterForm() {
                   <div className="bg-orange-50 p-4 rounded-xl border border-orange-200 space-y-2 animate-pulse-slow">
                     <div className="flex items-center gap-2 text-orange-600">
                       <Search className="w-5 h-5" />
-                      <h3 className="text-sm font-bold uppercase tracking-wider">Verifica i dati rilevati</h3>
+                      <h3 className="text-sm font-bold uppercase tracking-wider">
+                        {language === 'en' ? 'Verify detected details' : 'Verifica i dati rilevati'}
+                      </h3>
                     </div>
                     <p className="text-[10px] text-orange-700 leading-tight">
-                      Abbiamo estratto i dati dalla mappa. <b>Controlla attentamente CAP e Provincia</b> poiché OpenStreetMap potrebbe non essere preciso al 100%. Modifica i campi se necessario.
+                      {language === 'en'
+                        ? 'We extracted data from the map. Double check Zip Code and Province/State since map suggestions might not be 100% precise.'
+                        : 'Abbiamo estratto i dati dalla mappa. Controlla attentamente CAP e Provincia poiché OpenStreetMap potrebbe non essere preciso al 100%. Modifica i campi se necessario.'}
                     </p>
                   </div>
                 )}
@@ -1610,10 +1656,12 @@ export default function RegisterForm() {
                 <div ref={addressSectionRef} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="md:col-span-3 relative">
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-muted ml-1 italic">{t('address')} (Inizia a scrivere per i suggerimenti)</label>
+                      <label className="text-[10px] uppercase font-bold text-muted ml-1 italic">
+                        {language === 'en' ? 'Street / Square & Number (Start typing for suggestions)' : `${t('address')} (Inizia a scrivere per i suggerimenti)`}
+                      </label>
                       <input 
                         type="text"
-                        placeholder="VIA / PIAZZA / CORSO..."
+                        placeholder={language === 'en' ? 'STREET / SQUARE / AVENUE...' : 'VIA / PIAZZA / CORSO...'}
                         className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.residenceAddress && !formData.plusCode && !(formData.latitude && formData.longitude)) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                         value={formData.residenceAddress}
                         onBlur={() => setTimeout(() => setAddressSuggestions([]), 200)}
@@ -1651,10 +1699,12 @@ export default function RegisterForm() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted ml-1">N. Civico</label>
+                    <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                      {language === 'en' ? 'Civic No.' : 'N. Civico'}
+                    </label>
                     <input 
                       type="text"
-                      placeholder="ES: 12/A"
+                      placeholder={language === 'en' ? 'e.g. 12/A' : 'ES: 12/A'}
                       className={`w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-blue outline-none transition-all`}
                       value={formData.residenceNumber}
                       onChange={e => setFormData({ ...formData, residenceNumber: e.target.value.toUpperCase() })}
@@ -1704,7 +1754,9 @@ export default function RegisterForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold text-muted ml-1">Posizione sulla Mappa (Trascina il Pin)</label>
+                    <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                      {language === 'en' ? 'Map Position (Drag the Pin)' : 'Posizione sulla Mappa (Trascina il Pin)'}
+                    </label>
                     <div className="h-48 w-full rounded-2xl overflow-hidden border border-gray-200 shadow-inner z-0">
                       <MapContainer 
                         center={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : [41.9028, 12.4964]} 
@@ -1723,7 +1775,10 @@ export default function RegisterForm() {
                       </MapContainer>
                     </div>
                     <p className="text-[9px] text-muted italic ml-1 flex items-center gap-1">
-                      <MapPin className="w-2 h-2" /> Clicca sulla mappa o trascina il pin per validare la tua posizione esatta.
+                      <MapPin className="w-2 h-2" /> 
+                      {language === 'en' 
+                        ? 'Click on the map or drag the pin to set your exact location.' 
+                        : 'Clicca sulla mappa o trascina il pin per validare la tua posizione esatta.'}
                     </p>
                   </div>
 
@@ -1733,7 +1788,7 @@ export default function RegisterForm() {
                       <input 
                         type="text"
                         readOnly
-                        placeholder="Automatico..."
+                        placeholder={language === 'en' ? 'Automatic...' : 'Automatico...'}
                         className="flex-1 px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 text-brand-blue text-sm font-mono outline-none"
                         value={formData.plusCode}
                       />
@@ -1745,7 +1800,7 @@ export default function RegisterForm() {
                         }}
                         disabled={isDetectingLocation}
                         className="px-4 py-3 bg-brand-blue/5 text-brand-blue rounded-xl hover:bg-brand-blue/10 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-wait"
-                        title="Rileva posizione attuale"
+                        title={language === 'en' ? 'Detect current position' : 'Rileva posizione attuale'}
                       >
                         {isDetectingLocation ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -1753,7 +1808,9 @@ export default function RegisterForm() {
                           <Navigation className="w-4 h-4" />
                         )}
                         <span className="text-[10px] font-bold uppercase hidden md:inline">
-                          {isDetectingLocation ? 'Rilevamento...' : 'Usa la mia posizione'}
+                          {language === 'en'
+                            ? (isDetectingLocation ? 'Detecting...' : 'Use my position')
+                            : (isDetectingLocation ? 'Rilevamento...' : 'Usa la mia posizione')}
                         </span>
                       </button>
                     </div>
@@ -1761,7 +1818,9 @@ export default function RegisterForm() {
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <label className="text-[10px] uppercase font-bold text-muted ml-1">Punti di Riferimento / Descrizione (Max 500 car.)</label>
+                      <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                        {language === 'en' ? 'Reference Landmarks / Description (Max 500 chars)' : 'Punti di Riferimento / Descrizione (Max 500 car.)'}
+                      </label>
                       {formData.locationDescription.length > 10 && (
                         <button 
                           type="button"
@@ -1776,14 +1835,16 @@ export default function RegisterForm() {
                           className="flex items-center gap-1 text-[9px] font-bold text-brand-gold uppercase hover:text-brand-blue transition-colors disabled:opacity-50"
                         >
                           <Wand2 className={`w-3 h-3 ${isEnhancing ? 'animate-spin' : ''}`} />
-                          {isEnhancing ? 'Miglioramento...' : 'Migliora con AI'}
+                          {language === 'en'
+                            ? (isEnhancing ? 'Improving...' : 'Improve with AI')
+                            : (isEnhancing ? 'Miglioramento...' : 'Migliora con AI')}
                         </button>
                       )}
                     </div>
                     <textarea 
                       maxLength={500}
                       rows={2}
-                      placeholder="Se l'indirizzo non è preciso, descrivi come raggiungerti (es. vicino alla chiesa, palazzo rosso...)"
+                      placeholder={language === 'en' ? 'If the address is not accurate, describe how to find you (e.g., near the red building, next to the church...)' : "Se l'indirizzo non è preciso, descrivi come raggiungerti (es. vicino alla chiesa, palazzo rosso...)"}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-blue outline-none transition-all text-sm resize-none"
                       value={formData.locationDescription}
                       onChange={e => setFormData({ ...formData, locationDescription: e.target.value.toUpperCase() })}
@@ -1832,7 +1893,9 @@ export default function RegisterForm() {
             >
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif text-brand-blue">{t('contactData')}</h2>
-                <p className="text-muted text-sm italic">Informazioni di contatto ufficiali</p>
+                <p className="text-muted text-sm italic">
+                  {language === 'en' ? 'Official contact information' : 'Informazioni di contatto ufficiali'}
+                </p>
               </div>
 
               <div className="space-y-6">
@@ -1847,20 +1910,22 @@ export default function RegisterForm() {
                         <div className="w-8 h-8 bg-brand-blue/10 rounded-full flex items-center justify-center">
                           <Mail className="w-4 h-4 text-brand-blue" />
                         </div>
-                        <span className="text-sm font-medium text-brand-blue">Hai un indirizzo email?</span>
+                        <span className="text-sm font-medium text-brand-blue">
+                          {language === 'en' ? 'Do you have an email address?' : 'Hai un indirizzo email?'}
+                        </span>
                       </div>
                       <div className="flex gap-2">
                         <button 
                           onClick={() => setEmailSelection(true)}
                           className="px-4 py-2 bg-brand-blue text-white text-xs font-bold rounded-lg hover:bg-brand-blue/90 transition-all uppercase"
                         >
-                          Sì
+                          {language === 'en' ? 'Yes' : 'Sì'}
                         </button>
                         <button 
                           onClick={() => { setEmailSelection(false); setFormData({ ...formData, email: '' }); }}
                           className="px-4 py-2 bg-white border border-brand-blue/20 text-brand-blue text-xs font-bold rounded-lg hover:bg-brand-blue/5 transition-all uppercase"
                         >
-                          No
+                          {language === 'en' ? 'No' : 'No'}
                         </button>
                       </div>
                     </motion.div>
@@ -1872,7 +1937,7 @@ export default function RegisterForm() {
                           onClick={() => { setEmailSelection(null); setFormData({ ...formData, email: '' }); }}
                           className="text-[9px] uppercase font-bold text-brand-blue hover:underline"
                         >
-                          Cambia risposta
+                          {language === 'en' ? 'Change answer' : 'Cambia risposta'}
                         </button>
                       </div>
                       {emailSelection === true ? (
@@ -1882,12 +1947,12 @@ export default function RegisterForm() {
                             className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.email || !formData.email.includes('@')) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                             value={formData.email}
                             onChange={e => setFormData({ ...formData, email: e.target.value.toUpperCase() })}
-                            placeholder="INSERISCI LA TUA EMAIL..."
+                            placeholder={language === 'en' ? 'ENTER YOUR EMAIL...' : 'INSERISCI LA TUA EMAIL...'}
                           />
                         </motion.div>
                       ) : (
                         <div className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg text-[10px] text-muted italic">
-                          Nessun indirizzo email fornito.
+                          {language === 'en' ? 'No email address provided.' : 'Nessun indirizzo email fornito.'}
                         </div>
                       )}
                     </div>
@@ -1906,20 +1971,22 @@ export default function RegisterForm() {
                           <div className="w-8 h-8 bg-brand-blue/10 rounded-full flex items-center justify-center">
                             <Navigation className="w-4 h-4 text-brand-blue" />
                           </div>
-                          <span className="text-sm font-medium text-brand-blue">Hai un numero di telefono?</span>
+                          <span className="text-sm font-medium text-brand-blue">
+                            {language === 'en' ? 'Do you have a phone number?' : 'Hai un numero di telefono?'}
+                          </span>
                         </div>
                         <div className="flex gap-2">
                           <button 
                             onClick={() => setPhoneSelection(true)}
                             className="px-4 py-2 bg-brand-blue text-white text-xs font-bold rounded-lg hover:bg-brand-blue/90 transition-all uppercase"
                           >
-                            Sì
+                            {language === 'en' ? 'Yes' : 'Sì'}
                           </button>
                           <button 
                             onClick={() => { setPhoneSelection(false); setFormData({ ...formData, phone: '' }); }}
                             className="px-4 py-2 bg-white border border-brand-blue/20 text-brand-blue text-xs font-bold rounded-lg hover:bg-brand-blue/5 transition-all uppercase"
                           >
-                            No
+                            {language === 'en' ? 'No' : 'No'}
                           </button>
                         </div>
                       </motion.div>
@@ -1931,7 +1998,7 @@ export default function RegisterForm() {
                             onClick={() => { setPhoneSelection(null); setFormData({ ...formData, phone: '' }); }}
                             className="text-[9px] uppercase font-bold text-brand-blue hover:underline"
                           >
-                            Cambia risposta
+                            {language === 'en' ? 'Change answer' : 'Cambia risposta'}
                           </button>
                         </div>
                         {phoneSelection === true ? (
@@ -1981,7 +2048,9 @@ export default function RegisterForm() {
                                         p.prefix.includes(prefixSearch) ||
                                         p.code.toLowerCase().includes(prefixSearch.toLowerCase())
                                       ).length === 0 && (
-                                      <div className="px-4 py-2 text-[10px] text-muted italic">Nessun prefisso trovato</div>
+                                      <div className="px-4 py-2 text-[10px] text-muted italic">
+                                        {language === 'en' ? 'No prefix found' : 'Nessun prefisso trovato'}
+                                      </div>
                                     )}
                                   </motion.div>
                                 )}
@@ -1990,7 +2059,7 @@ export default function RegisterForm() {
                             <div className="w-2/3">
                               <input 
                                 type="tel"
-                                placeholder="NUMERO..."
+                                placeholder={language === 'en' ? 'NUMBER...' : 'NUMERO...'}
                                 className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.phoneNumber ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                                 value={formData.phoneNumber}
                                 onChange={e => setFormData({ ...formData, phoneNumber: e.target.value.toUpperCase() })}
@@ -1999,7 +2068,7 @@ export default function RegisterForm() {
                           </motion.div>
                         ) : (
                           <div className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg text-[10px] text-muted italic">
-                            Nessun numero di telefono fornito.
+                            {language === 'en' ? 'No phone number provided.' : 'Nessun numero di telefono fornito.'}
                           </div>
                         )}
                       </div>
@@ -2017,29 +2086,37 @@ export default function RegisterForm() {
                     <div className="bg-orange-50 p-4 rounded-xl border border-orange-200 space-y-2">
                       <div className="flex items-center gap-2 text-orange-600">
                         <AlertCircle className="w-4 h-4" />
-                        <h4 className="text-[10px] font-bold uppercase">Credenziali di Accesso</h4>
+                        <h4 className="text-[10px] font-bold uppercase">
+                          {language === 'en' ? 'Access Credentials' : 'Credenziali di Accesso'}
+                        </h4>
                       </div>
                       <p className="text-[10px] text-orange-700 leading-tight">
-                        Non avendo fornito email o telefono, devi creare un <b>Nome Utente</b> e una <b>Password</b> per poter accedere al sistema in futuro.
+                        {language === 'en' 
+                          ? 'Since you did not provide an email or phone number, you must create a Username and a Password to access the system in the future.' 
+                          : 'Non avendo fornito email o telefono, devi creare un Nome Utente e una Password per poter accedere al sistema in futuro.'}
                       </p>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-muted ml-1">Nome Utente</label>
+                        <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                          {language === 'en' ? 'Username' : 'Nome Utente'}
+                        </label>
                         <input 
-                          type="text"
-                          placeholder="SCEGLI UN NOME UTENTE..."
-                          className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.username || formData.username.length < 4) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
-                          value={formData.username}
-                          onChange={e => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
+                           type="text"
+                           placeholder={language === 'en' ? 'CHOOSE A USERNAME...' : 'SCEGLI UN NOME UTENTE...'}
+                           className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.username || formData.username.length < 4) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
+                           value={formData.username}
+                           onChange={e => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-muted ml-1">Password</label>
+                        <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                          {language === 'en' ? 'Password' : 'Password'}
+                        </label>
                         <input 
                           type="password"
-                          placeholder="SCEGLI UNA PASSWORD..."
+                          placeholder={language === 'en' ? 'CHOOSE A PASSWORD...' : 'SCEGLI UNA PASSWORD...'}
                           className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.password || formData.password.length < 6) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                           value={formData.password}
                           onChange={e => setFormData({ ...formData, password: e.target.value })}
@@ -2124,8 +2201,14 @@ export default function RegisterForm() {
 
               <div className="p-4 bg-brand-blue/5 border border-brand-blue/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="space-y-1 text-center sm:text-left">
-                  <span className="text-[10px] uppercase font-bold text-brand-gold tracking-widest block">Codice Cittadino Riservato</span>
-                  <p className="text-[11px] text-muted leading-tight">Questo codice alfanumerico di 16 cifre identificherà in modo univoco il tuo certificato e ID.</p>
+                  <span className="text-[10px] uppercase font-bold text-brand-gold tracking-widest block">
+                    {language === 'en' ? 'Reserved Citizen Code' : 'Codice Cittadino Riservato'}
+                  </span>
+                  <p className="text-[11px] text-muted leading-tight">
+                    {language === 'en'
+                      ? 'This 16-digit alphanumeric code will uniquely identify your certificate and ID.'
+                      : 'Questo codice alfanumerico di 16 cifre identificherà in modo univoco il tuo certificato e ID.'}
+                  </p>
                 </div>
                 <div className="px-4 py-2 bg-white border border-brand-gold/25 rounded-xl text-center shadow-sm shrink-0">
                   <span className="font-mono text-xs font-bold text-brand-blue tracking-wider select-all">{formData.citizenCode}</span>
@@ -2155,7 +2238,9 @@ export default function RegisterForm() {
                       </div>
                       <div className="space-y-1">
                         <p className="text-xs font-medium text-brand-blue truncate px-2">
-                          {formData.documentFront ? formData.documentFront.name : "Seleziona Fronte"}
+                          {formData.documentFront 
+                            ? formData.documentFront.name 
+                            : (language === 'en' ? 'Select Front' : 'Seleziona Fronte')}
                         </p>
                         <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
                       </div>
@@ -2203,7 +2288,9 @@ export default function RegisterForm() {
                       </div>
                       <div className="space-y-1">
                         <p className="text-xs font-medium text-brand-blue truncate px-2">
-                          {formData.documentBack ? formData.documentBack.name : "Seleziona Retro"}
+                          {formData.documentBack 
+                            ? formData.documentBack.name 
+                            : (language === 'en' ? 'Select Back' : 'Seleziona Retro')}
                         </p>
                         <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
                       </div>
@@ -2248,10 +2335,12 @@ export default function RegisterForm() {
               <div className="border border-brand-gold/15 bg-slate-50/50 p-6 rounded-2xl space-y-4">
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-brand-blue block">
-                    Foto Tessera per Documenti (Carta di Identità + Passaporto NWS)
+                    {language === 'en' ? 'Passport & ID Card Photo (ID Card + NWS Passport)' : 'Foto Tessera per Documenti (Carta di Identità + Passaporto NWS)'}
                   </label>
                   <p className="text-xs text-muted">
-                    Scatta un autoscatto (selfie) in tempo reale oppure carica una foto formale dal tuo dispositivo. La foto verrà posizionata nella stessa cartella dei documenti.
+                    {language === 'en'
+                      ? 'Take a real-time selfie or upload a formal photo from your device. The photo will be saved along with your identity documents.'
+                      : "Scatta un autoscatto (selfie) in tempo reale oppure carica una foto formale dal tuo dispositivo. La foto verrà posizionata nella stessa cartella dei documenti."}
                   </p>
                 </div>
 
@@ -2266,7 +2355,7 @@ export default function RegisterForm() {
                     }`}
                   >
                     <Camera className="w-4 h-4" />
-                    Autoscatto Camera
+                    {language === 'en' ? 'Camera Selfie' : 'Autoscatto Camera'}
                   </button>
                   <button
                     type="button"
@@ -2278,7 +2367,7 @@ export default function RegisterForm() {
                     }`}
                   >
                     <Upload className="w-4 h-4" />
-                    Carica File Foto
+                    {language === 'en' ? 'Upload Photo File' : 'Carica File Foto'}
                   </button>
                 </div>
 
@@ -2289,7 +2378,7 @@ export default function RegisterForm() {
                         <div className="relative w-full h-full">
                           <img
                             src={previews.photo}
-                            alt="Foto tessera acquisita"
+                            alt="Foto tessera"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
                           />
@@ -2302,7 +2391,7 @@ export default function RegisterForm() {
                             className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-2 bg-brand-blue text-white text-xs font-bold rounded-xl shadow-lg hover:bg-brand-blue/90"
                           >
                             <RefreshCw className="w-3.5 h-3.5" />
-                            Riprova Scatto
+                            {language === 'en' ? 'Retake Photo' : 'Riprova Scatto'}
                           </button>
                         </div>
                       ) : isCameraActive ? (
@@ -2320,14 +2409,14 @@ export default function RegisterForm() {
                               className="px-5 py-2.5 bg-brand-gold text-brand-blue text-xs font-bold rounded-xl shadow-lg hover:bg-brand-gold/90 flex items-center gap-1.5 animate-pulse"
                             >
                               <Camera className="w-4 h-4" />
-                              Scatta Ora
+                              {language === 'en' ? 'Take Photo' : 'Scatta Ora'}
                             </button>
                             <button
                               type="button"
                               onClick={stopCamera}
                               className="px-4 py-2.5 bg-gray-800/80 text-white text-xs font-medium rounded-xl shadow-lg hover:bg-gray-800"
                             >
-                              Annulla
+                              {language === 'en' ? 'Cancel' : 'Annulla'}
                             </button>
                           </div>
                         </div>
@@ -2337,9 +2426,13 @@ export default function RegisterForm() {
                             <Camera className="w-8 h-8" />
                           </div>
                           <div className="space-y-1">
-                            <p className="text-xs font-semibold text-brand-blue">Fotocamera Inattiva</p>
+                            <p className="text-xs font-semibold text-brand-blue">
+                              {language === 'en' ? 'Camera Inactive' : 'Fotocamera Inattiva'}
+                            </p>
                             <p className="text-[10px] text-muted max-w-[200px] leading-normal">
-                              Clicca sotto per abilitare la webcam ed eseguire il tuo autoscatto.
+                              {language === 'en'
+                                ? 'Click below to enable your webcam and take a selfie.'
+                                : 'Clicca sotto per abilitare la webcam ed eseguire il tuo autoscatto.'}
                             </p>
                           </div>
                           {cameraError && (
@@ -2351,7 +2444,7 @@ export default function RegisterForm() {
                             className="px-4 py-2 bg-brand-gold text-brand-blue text-xs font-bold rounded-xl shadow-sm hover:bg-brand-gold/90 inline-flex items-center gap-1.5"
                           >
                             <Camera className="w-3.5 h-3.5" />
-                            Attiva Fotocamera
+                            {language === 'en' ? 'Enable Camera' : 'Attiva Fotocamera'}
                           </button>
                         </div>
                       )}
@@ -2367,7 +2460,9 @@ export default function RegisterForm() {
                       </div>
                       <div className="space-y-1">
                         <p className="text-xs font-medium text-brand-blue truncate px-2">
-                          {formData.documentPhoto ? formData.documentPhoto.name : "Seleziona Foto Tessera"}
+                          {formData.documentPhoto 
+                            ? formData.documentPhoto.name 
+                            : (language === 'en' ? 'Select Passport Photo' : 'Seleziona Foto Tessera')}
                         </p>
                         <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, JPEG</p>
                       </div>
@@ -2387,11 +2482,18 @@ export default function RegisterForm() {
                         }}
                       />
                       {previews.photo && !formData.documentPhoto && previews.photo.startsWith('data:') && (
-                        <p className="text-[10px] text-green-600 font-medium">Scatto webcam caricato in memoria</p>
+                        <p className="text-[10px] text-green-600 font-medium">
+                          {language === 'en' ? 'Webcam snapshot saved in memory' : 'Scatto webcam caricato in memoria'}
+                        </p>
                       )}
                       {previews.photo && (
                         <div className="mt-2 relative h-48 w-36 mx-auto rounded-lg overflow-hidden border border-brand-gold/20">
-                          <img src={previews.photo} alt="Anteprima Foto Tessera" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <img 
+                            src={previews.photo} 
+                            alt={language === 'en' ? 'Passport Photo Preview' : 'Anteprima Foto Tessera'} 
+                            className="w-full h-full object-cover" 
+                            referrerPolicy="no-referrer" 
+                          />
                           <button 
                             type="button"
                             className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 hover:scale-105 transition-all"
@@ -2411,7 +2513,10 @@ export default function RegisterForm() {
               </div>
 
               <div className="p-4 bg-brand-parchment/50 rounded-xl border border-brand-gold/20 text-[11px] text-brand-blue/70">
-                <strong>Nota del Garante:</strong> I dati raccolti verranno utilizzati esclusivamente per la gestione dell'Anagrafe del New World State e protetti secondo i più alti standard di crittografia mondiale.
+                <strong>{language === 'en' ? 'Privacy Notice:' : 'Nota del Garante:'}</strong>{' '}
+                {language === 'en'
+                  ? 'The collected data will be processed solely for the New World State Civil Registry, protected under the highest global encryption standards.'
+                  : "I dati raccolti verranno utilizzati esclusivamente per la gestione dell'Anagrafe del New World State e protetti secondo i più alti standard di crittografia mondiale."}
               </div>
 
               <div className="flex justify-between pt-4 border-t border-gray-50 flex-col gap-3">
@@ -2439,7 +2544,7 @@ export default function RegisterForm() {
                     disabled={isSubmitting}
                     className="px-12 py-4 bg-brand-gold text-brand-blue rounded-xl font-bold hover:bg-brand-gold/90 transition-all shadow-lg text-lg uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? 'Inviando...' : t('submit')}
+                    {isSubmitting ? (language === 'en' ? 'Submitting...' : 'Inviando...') : t('submit')}
                   </button>
                 </div>
               </div>

@@ -28,9 +28,15 @@ export default function Header() {
 
         <div className="flex items-center gap-8">
           <div className="hidden lg:flex items-center gap-8 text-[10px] uppercase tracking-[0.2em] font-tech text-gray-300">
-            <a href="#" className="hover:text-brand-gold transition-colors">Constituzione</a>
-            <a href="#" className="hover:text-brand-gold transition-colors">Governance</a>
-            <a href="#" className="hover:text-brand-gold transition-colors">Digital ID</a>
+            <a href="#" className="hover:text-brand-gold transition-colors">
+              {language === 'en' ? 'Constitution' : 'Costituzione'}
+            </a>
+            <a href="#" className="hover:text-brand-gold transition-colors">
+              {language === 'en' ? 'Governance' : 'Governance'}
+            </a>
+            <a href="#" className="hover:text-brand-gold transition-colors">
+              {language === 'en' ? 'Digital ID' : 'Digital ID'}
+            </a>
           </div>
 
           <div className="h-4 w-px bg-white/10 hidden lg:block" />
@@ -42,8 +48,8 @@ export default function Header() {
               onChange={(e) => setLanguage(e.target.value as any)}
               className="bg-transparent text-xs font-tech font-bold uppercase tracking-widest focus:outline-none cursor-pointer hover:text-brand-gold transition-colors"
             >
-              <option value="it" className="text-black">IT</option>
-              <option value="en" className="text-black">EN</option>
+              <option value="it" className="text-white bg-[#0a1c3e]">IT</option>
+              <option value="en" className="text-white bg-[#0a1c3e]">EN</option>
             </select>
           </div>
           
