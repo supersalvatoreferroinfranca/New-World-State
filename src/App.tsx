@@ -106,13 +106,6 @@ function AppContent() {
                 >
                   {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
                 </button>
-                <button 
-                  onClick={() => setActiveTab('admin')}
-                  id="tab-admin-btn"
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'admin' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
-                >
-                  {language === 'en' ? 'Admin Console' : 'Consolle Amministratore'}
-                </button>
               </div>
             </div>
           </div>
@@ -174,6 +167,13 @@ function AppContent() {
               className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'network' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
             >
               {language === 'en' ? 'Network Status' : 'Stato Network'}
+            </button>
+            <button 
+              onClick={() => setActiveTab('admin')} 
+              id="footer-admin-btn"
+              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'admin' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+            >
+              {language === 'en' ? 'Admin Console' : 'Consolle Amministratore'}
             </button>
           </div>
         </div>

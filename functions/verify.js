@@ -2,9 +2,9 @@ export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
   
-  // Point target to root index.html preserving search query params (id)
-  const newUrl = new URL(request.url);
-  newUrl.pathname = '/';
+  // Point target to root index.html without search parameters to prevent asset-lookup 404
+  const newUrl = new URL(url.origin);
+  newUrl.pathname = '/index.html';
   
   try {
     // ASSETS is a built-in Cloudflare Pages binding to grab static files of the build
