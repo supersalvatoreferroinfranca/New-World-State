@@ -9,16 +9,18 @@ import React, { useState } from 'react';
 import Header from './components/layout/Header';
 import RegisterForm from './components/auth/RegisterForm';
 import AdminDashboard from './components/auth/AdminDashboard';
+import ConstitutionPage from './components/constitution/ConstitutionPage';
+import CharterPage from './components/constitution/CharterPage';
 import DbStatus from './components/debug/DbStatus';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'register' | 'admin'>('register');
+  const [activeTab, setActiveTab] = useState<'register' | 'admin' | 'constitution' | 'charter'>('register');
   const { language } = useI18n();
 
   return (
     <div className="min-h-screen bg-brand-parchment font-sans text-brand-blue selection:bg-brand-gold selection:text-brand-blue overflow-x-hidden">
-      <Header />
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
       
       <main className="pt-20 px-4 relative">
         {/* Background Decorative Element */}
@@ -51,18 +53,32 @@ function AppContent() {
             
             {/* INTERACTIVE TAB SWITCHER (PORTAL VS ADMIN CONSOLE) */}
             <div className="flex justify-center pt-6">
-              <div className="inline-flex bg-[#0a1c3e]/5 backdrop-blur-sm p-1.5 rounded-2xl border border-[#0a1c3e]/10">
+              <div className="inline-flex bg-[#0a1c3e]/5 backdrop-blur-sm p-1.5 rounded-2xl border border-[#0a1c3e]/10 flex-wrap justify-center gap-1">
                 <button 
                   onClick={() => setActiveTab('register')}
                   id="tab-register-btn"
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 ${activeTab === 'register' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'register' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
                 >
-                  {language === 'en' ? 'Registration Portal' : 'Portale Registrazione'}
+                  {language === 'en' ? 'Registration' : 'Registrazione'}
+                </button>
+                <button 
+                  onClick={() => setActiveTab('constitution')}
+                  id="tab-constitution-btn"
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'constitution' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                >
+                  {language === 'en' ? 'Constitution' : 'Costituzione'}
+                </button>
+                <button 
+                  onClick={() => setActiveTab('charter')}
+                  id="tab-charter-btn"
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'charter' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                >
+                  {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
                 </button>
                 <button 
                   onClick={() => setActiveTab('admin')}
                   id="tab-admin-btn"
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 ${activeTab === 'admin' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'admin' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
                 >
                   {language === 'en' ? 'Admin Console' : 'Consolle Amministratore'}
                 </button>
@@ -78,8 +94,12 @@ function AppContent() {
             
             {activeTab === 'register' ? (
               <RegisterForm />
-            ) : (
+            ) : activeTab === 'admin' ? (
               <AdminDashboard />
+            ) : activeTab === 'constitution' ? (
+              <ConstitutionPage />
+            ) : (
+              <CharterPage />
             )}
           </div>
         </div>
@@ -92,10 +112,24 @@ function AppContent() {
         <div className="max-w-xl mx-auto space-y-6">
           <p className="font-tech text-xs uppercase tracking-[0.1em]">© 2025 New World State Authority. Established MMXIV.</p>
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 uppercase tracking-[0.3em] text-[9px] font-bold">
-            <a href="#" className="hover:text-brand-gold transition-colors border-b border-transparent hover:border-brand-gold">Constitution</a>
-            <a href="#" className="hover:text-brand-gold transition-colors border-b border-transparent hover:border-brand-gold">Charter of Rights</a>
-            <a href="#" className="hover:text-brand-gold transition-colors border-b border-transparent hover:border-brand-gold">Privacy Protocol</a>
-            <a href="#" className="hover:text-brand-gold transition-colors border-b border-transparent hover:border-brand-gold">Network Status</a>
+            <button 
+              onClick={() => setActiveTab('constitution')} 
+              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'constitution' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+            >
+              {language === 'en' ? 'Constitution' : 'Costituzione'}
+            </button>
+            <button 
+              onClick={() => setActiveTab('charter')} 
+              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'charter' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+            >
+              {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
+            </button>
+            <a href="#" className="hover:text-brand-gold transition-colors border-b border-transparent hover:border-brand-gold">
+              {language === 'en' ? 'Privacy Protocol' : 'Protocollo Privacy'}
+            </a>
+            <a href="#" className="hover:text-brand-gold transition-colors border-b border-transparent hover:border-brand-gold">
+              {language === 'en' ? 'Network Status' : 'Stato Network'}
+            </a>
           </div>
         </div>
       </footer>

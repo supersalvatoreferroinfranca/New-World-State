@@ -2,13 +2,21 @@ import React from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { Globe, Menu, ShieldCheck } from 'lucide-react';
 
-export default function Header() {
+interface HeaderProps {
+  activeTab?: 'register' | 'admin' | 'constitution' | 'charter';
+  setActiveTab?: (tab: 'register' | 'admin' | 'constitution' | 'charter') => void;
+}
+
+export default function Header({ activeTab, setActiveTab }: HeaderProps) {
   const { language, setLanguage, t } = useI18n();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-brand-blue/98 backdrop-blur-md border-b border-brand-gold/30 text-white shadow-2xl">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-5">
+        <div 
+          onClick={() => setActiveTab?.('register')} 
+          className="flex items-center gap-5 cursor-pointer"
+        >
           <div className="relative group">
             <div className="absolute -inset-1 bg-brand-gold/20 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
             <img 
@@ -28,15 +36,24 @@ export default function Header() {
 
         <div className="flex items-center gap-8">
           <div className="hidden lg:flex items-center gap-8 text-[10px] uppercase tracking-[0.2em] font-tech text-gray-300">
-            <a href="#" className="hover:text-brand-gold transition-colors">
+            <button 
+              onClick={() => setActiveTab?.('constitution')}
+              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'constitution' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
+            >
               {language === 'en' ? 'Constitution' : 'Costituzione'}
-            </a>
-            <a href="#" className="hover:text-brand-gold transition-colors">
+            </button>
+            <button 
+              onClick={() => setActiveTab?.('charter')}
+              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'charter' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
+            >
+              {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
+            </button>
+            <button 
+              onClick={() => setActiveTab?.('register')}
+              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'register' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
+            >
               {language === 'en' ? 'Governance' : 'Governance'}
-            </a>
-            <a href="#" className="hover:text-brand-gold transition-colors">
-              {language === 'en' ? 'Digital ID' : 'Digital ID'}
-            </a>
+            </button>
           </div>
 
           <div className="h-4 w-px bg-white/10 hidden lg:block" />

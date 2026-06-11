@@ -732,12 +732,23 @@ CREATE TABLE citizens (
       };
 
       // Generatore PDF ultraleggero in Puro JS (per l'ambiente Serverless Cloudflare Workers)
+      const toPdfSafeUpper = (str) => {
+        if (!str) return '';
+        return str
+          .toUpperCase()
+          .replace(/[ÀÁÂÃÄÅ]/g, "A'")
+          .replace(/[ÈÉÊË]/g, "E'")
+          .replace(/[ÌÍÎÏ]/g, "I'")
+          .replace(/[ÒÓÔÕÖØ]/g, "O'")
+          .replace(/[ÙÚÛÜ]/g, "U'");
+      };
+
       const generateIdCardPdfPureJS = async (citizen, env) => {
-        const surname = (citizen.surname || '').toUpperCase();
-        const firstName = (citizen.firstName || citizen.firstname || '').toUpperCase();
+        const surname = toPdfSafeUpper(citizen.surname || '');
+        const firstName = toPdfSafeUpper(citizen.firstName || citizen.firstname || '');
         const birthDate = citizen.birthDate || citizen.birthdate || 'N/A';
-        const birthPlace = (citizen.birthPlace || citizen.birthplace || '').toUpperCase();
-        const birthCountry = (citizen.birthCountry || citizen.birthcountry || '').toUpperCase();
+        const birthPlace = toPdfSafeUpper(citizen.birthPlace || citizen.birthplace || '');
+        const birthCountry = toPdfSafeUpper(citizen.birthCountry || citizen.birthcountry || '');
         const citizenCode = citizen.citizenCode || citizen.citizencode || 'N/A';
         const docHash = (citizen.documentHash || citizen.documenthash || 'VALIDATED').slice(0, 16).toUpperCase();
         const placeStr = birthPlace ? `${birthPlace}${birthCountry ? ` (${birthCountry})` : ''}` : (birthCountry || 'NWS');
@@ -896,7 +907,11 @@ CREATE TABLE citizens (
 
         // Fetch Live verification QR Code Linking to verification portal as JPEG
         try {
-          const verifyUrl = `${env.APP_URL || 'https://www.newworldstate.org'}/verify?id=${encodeURIComponent(citizenCode)}`;
+          let cleanAppUrl = env.APP_URL || 'https://newworldstate.cloud';
+          if (cleanAppUrl.includes('newworldstate.org')) {
+            cleanAppUrl = cleanAppUrl.replace('newworldstate.org', 'newworldstate.cloud');
+          }
+          const verifyUrl = `${cleanAppUrl}/verify?id=${encodeURIComponent(citizenCode)}`;
           const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}&format=jpg`;
           console.log(`[Worker-PDF] Fetching QR Code from: ${qrUrl}`);
           const qrRes = await fetch(qrUrl, {

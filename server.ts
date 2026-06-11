@@ -68,7 +68,18 @@ async function runMigrations() {
 }
 
 // Genera un documento PDF ad alta risoluzione con le dimensioni esatte di una ID card (85,60 mm x 53,98 mm)
-function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://www.newworldstate.org'): Promise<Buffer> {
+function toPdfSafeUpper(str: string): string {
+  if (!str) return '';
+  return str
+    .toUpperCase()
+    .replace(/[ÀÁÂÃÄÅ]/g, "A'")
+    .replace(/[ÈÉÊË]/g, "E'")
+    .replace(/[ÌÍÎÏ]/g, "I'")
+    .replace(/[ÒÓÔÕÖØ]/g, "O'")
+    .replace(/[ÙÚÛÜ]/g, "U'");
+}
+
+function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newworldstate.cloud'): Promise<Buffer> {
   return new Promise(async (resolve, reject) => {
     try {
       // 85.60 mm x 53.98 mm in PostScript points. 1 mm = 72 / 25.4 = 2.83464567 points
@@ -159,15 +170,15 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://www.n
         textY += spacingAfter;
       };
 
-      writeField('COGNOME / SURNAME', (citizen.surname || '').toUpperCase(), 6.5, true, 8);
-      writeField('NOME / GIVEN NAMES', (citizen.firstName || 'CITTADINO').toUpperCase(), 6.5, true, 8);
+      writeField('COGNOME / SURNAME', toPdfSafeUpper(citizen.surname || ''), 6.5, true, 8);
+      writeField('NOME / GIVEN NAMES', toPdfSafeUpper(citizen.firstName || 'CITTADINO'), 6.5, true, 8);
       
       const bDate = citizen.birthDate || 'N/A';
       const bPlace = citizen.birthPlace || '';
       const bCountry = citizen.birthCountry || '';
       const placeString = bPlace ? `${bPlace}${bCountry ? ` (${bCountry})` : ''}` : bCountry || '';
       const birthStr = placeString ? `${bDate} - ${placeString}` : bDate;
-      writeField('DATA E LUOGO DI NASCITA / DATE & PLACE OF BIRTH', birthStr.toUpperCase(), 5, false, 7.5);
+      writeField('DATA E LUOGO DI NASCITA / DATE & PLACE OF BIRTH', toPdfSafeUpper(birthStr), 5, false, 7.5);
       
       writeField('CITTADINANZA / NATIONALITY', 'NEW WORLD STATE • SOVEREIGN', 5, true, 4, goldColor);
 
@@ -270,7 +281,11 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://www.n
       // Generate verification QR code linking to database record
       let qrBuffer: Buffer | null = null;
       try {
-        const verifyUrl = `${baseUrl}/verify?id=${encodeURIComponent(citizenCode)}`;
+        let cleanBaseUrl = baseUrl;
+        if (cleanBaseUrl && cleanBaseUrl.includes('newworldstate.org')) {
+          cleanBaseUrl = cleanBaseUrl.replace('newworldstate.org', 'newworldstate.cloud');
+        }
+        const verifyUrl = `${cleanBaseUrl}/verify?id=${encodeURIComponent(citizenCode)}`;
         console.log(`[PDF] Generating verification QR code for URL: ${verifyUrl}`);
         qrBuffer = await QRCode.toBuffer(verifyUrl, {
           margin: 1,
@@ -1183,7 +1198,11 @@ Ufficio dell'Anagrafe Federale del New World State
 
             let qrCodeDataUrl = '';
             try {
-              const verifyUrl = `${baseUrl}/verify?id=${encodeURIComponent(code)}`;
+              let cleanBaseUrl = baseUrl;
+              if (cleanBaseUrl && cleanBaseUrl.includes('newworldstate.org')) {
+                cleanBaseUrl = cleanBaseUrl.replace('newworldstate.org', 'newworldstate.cloud');
+              }
+              const verifyUrl = `${cleanBaseUrl}/verify?id=${encodeURIComponent(code)}`;
               qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, {
                 margin: 1,
                 width: 120,
@@ -1338,7 +1357,11 @@ Ufficio dell'Anagrafe Federale del New World State
 
               let qrCodeDataUrl = '';
               try {
-                const verifyUrl = `${baseUrl}/verify?id=${encodeURIComponent(code)}`;
+                let cleanBaseUrl = baseUrl;
+                if (cleanBaseUrl && cleanBaseUrl.includes('newworldstate.org')) {
+                  cleanBaseUrl = cleanBaseUrl.replace('newworldstate.org', 'newworldstate.cloud');
+                }
+                const verifyUrl = `${cleanBaseUrl}/verify?id=${encodeURIComponent(code)}`;
                 qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, {
                   margin: 1,
                   width: 120,
