@@ -2683,7 +2683,7 @@ CREATE TABLE citizens (
 
               <!-- FORM SUBMIT SCRIPT -->
               <script>
-                function submitDecision(action) {
+                function submitDecision(action, customPass = null) {
                   const reasonEl = document.getElementById('rejectReason');
                   const reason = reasonEl ? reasonEl.value.trim() : '';
                   
@@ -2698,21 +2698,29 @@ CREATE TABLE citizens (
                   document.getElementById('loading-ui').classList.remove('hidden');
 
                   const endpoint = action === 'approve' ? '/api/admin/approve' : '/api/admin/reject';
+                  const adminPassword = customPass || localStorage.getItem('nws_admin_password') || 'NWSAdmin2026!';
                   
                   fetch(endpoint, {
                     method: 'POST',
                     headers: {
-                      'Content-Type': 'application/json'
+                      'Content-Type': 'application/json',
+                      'x-admin-password': adminPassword
                     },
                     body: JSON.stringify({
                       id: "${cit.id}",
                       reason: reason
                     })
                   })
-                  .then(res => res.json())
+                  .then(async res => {
+                    if (res.status === 401) {
+                      throw new Error('UNAUTHORIZED_PASSWORD_ERROR');
+                    }
+                    return res.json();
+                  })
                   .then(data => {
                     document.getElementById('loading-ui').classList.add('hidden');
                     if (data.success) {
+                      localStorage.setItem('nws_admin_password', adminPassword);
                       document.getElementById('success-ui').classList.remove('hidden');
                       document.getElementById('success-title').innerText = action === 'approve' ? 'Registrazione Approvata!' : 'Richiesta Respinta!';
                       document.getElementById('success-desc').innerText = action === 'approve' 
@@ -2724,7 +2732,16 @@ CREATE TABLE citizens (
                   })
                   .catch(err => {
                     document.getElementById('loading-ui').classList.add('hidden');
-                    showError(err.message || 'Connessione al server interrotta.');
+                    if (err.message === 'UNAUTHORIZED_PASSWORD_ERROR') {
+                      const newPass = prompt("Inserisci la password di amministrazione corretta del New World State:", "");
+                      if (newPass !== null && newPass.trim() !== '') {
+                        submitDecision(action, newPass);
+                      } else {
+                        resetUI();
+                      }
+                    } else {
+                      showError(err.message || 'Connessione al server interrotta.');
+                    }
                   });
                 }
 
