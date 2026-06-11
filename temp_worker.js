@@ -943,43 +943,43 @@ CREATE TABLE citizens (
         }
 
         let contents = '';
-        contents += `0.039 0.110 0.243 rg 0 0 242.65 153.01 re f\n`;
+        contents += `0.980 0.976 0.961 rg 0 0 242.65 153.01 re f\n`;
         contents += `0.773 0.659 0.502 RG 1.2 w 2 2 238.65 149.01 re S\n`;
-        contents += `0.027 0.082 0.188 rg 2 126.01 238.65 25 re f\n`;
+        contents += `0.945 0.961 0.976 rg 2 126.01 238.65 25 re f\n`;
         contents += `0.773 0.659 0.502 RG 0.8 w 2 126 m 240.65 126 l S\n`;
         
         if (showI2) {
           contents += `q 24 0 0 16 8 131.01 cm /I2 Do Q\n`;
         }
 
-        contents += `BT /F1 6.5 Tf 0.773 0.659 0.502 rg ${headerTextX} 141 Td /CharSpacing 0.5 Tc (NEW WORLD STATE) Tj ET\n`;
-        contents += `BT /F2 4.2 Tf 0.580 0.639 0.722 rg ${headerTextX} 133 Td /CharSpacing 0.3 Tc (SOVEREIGN GLOBAL CITIZENSHIP) Tj ET\n`;
-        contents += `BT /F1 8.5 Tf 0.773 0.659 0.502 rg 192 139 Td (ID CARD) Tj ET\n`;
+        contents += `BT /F1 6.5 Tf 0.039 0.110 0.243 rg ${headerTextX} 141 Td /CharSpacing 0.5 Tc (NEW WORLD STATE) Tj ET\n`;
+        contents += `BT /F2 4.2 Tf 0.278 0.333 0.412 rg ${headerTextX} 133 Td /CharSpacing 0.3 Tc (SOVEREIGN GLOBAL CITIZENSHIP) Tj ET\n`;
+        contents += `BT /F1 8.5 Tf 0.039 0.110 0.243 rg 192 139 Td (ID CARD) Tj ET\n`;
         
-        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 116 Td (COGNOME / SURNAME) Tj ET\n`;
-        contents += `BT /F1 6.5 Tf 1 1 1 rg 8 108 Td (${escapePDFText(surname)}) Tj ET\n`;
+        contents += `BT /F2 3.8 Tf 0.278 0.333 0.412 rg 8 116 Td (COGNOME / SURNAME) Tj ET\n`;
+        contents += `BT /F1 6.5 Tf 0.039 0.110 0.243 rg 8 108 Td (${escapePDFText(surname)}) Tj ET\n`;
 
-        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 98 Td (NOME / GIVEN NAMES) Tj ET\n`;
-        contents += `BT /F1 6.5 Tf 1 1 1 rg 8 90 Td (${escapePDFText(firstName)}) Tj ET\n`;
+        contents += `BT /F2 3.8 Tf 0.278 0.333 0.412 rg 8 98 Td (NOME / GIVEN NAMES) Tj ET\n`;
+        contents += `BT /F1 6.5 Tf 0.039 0.110 0.243 rg 8 90 Td (${escapePDFText(firstName)}) Tj ET\n`;
 
-        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 80 Td (DATA E LUOGO DI NASCITA / DATE & PLACE OF BIRTH) Tj ET\n`;
-        contents += `BT /F2 4.8 Tf 1 1 1 rg 8 72 Td (${escapePDFText(birthStr)}) Tj ET\n`;
+        contents += `BT /F2 3.8 Tf 0.278 0.333 0.412 rg 8 80 Td (DATA E LUOGO DI NASCITA / DATE & PLACE OF BIRTH) Tj ET\n`;
+        contents += `BT /F2 4.8 Tf 0.059 0.090 0.165 rg 8 72 Td (${escapePDFText(birthStr)}) Tj ET\n`;
 
-        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 62 Td (CITTADINANZA / NATIONALITY) Tj ET\n`;
-        contents += `BT /F1 5 Tf 0.773 0.659 0.502 rg 8 54 Td (NEW WORLD STATE - SOVEREIGN) Tj ET\n`;
+        contents += `BT /F2 3.8 Tf 0.278 0.333 0.412 rg 8 62 Td (CITTADINANZA / NATIONALITY) Tj ET\n`;
+        contents += `BT /F1 5 Tf 0.521 0.368 0.161 rg 8 54 Td (NEW WORLD STATE - SOVEREIGN) Tj ET\n`;
 
-        contents += `BT /F2 3.8 Tf 0.580 0.639 0.722 rg 8 28 Td (CODICE CITTADINO / CITIZEN CODE) Tj ET\n`;
-        contents += `BT /F1 8.0 Tf 0.773 0.659 0.502 rg 8 18 Td (${escapePDFText(citizenCode)}) Tj ET\n`;
+        contents += `BT /F2 3.8 Tf 0.278 0.333 0.412 rg 8 28 Td (CODICE CITTADINO / CITIZEN CODE) Tj ET\n`;
+        contents += `BT /F1 8.0 Tf 0.039 0.110 0.243 rg 8 18 Td (${escapePDFText(citizenCode)}) Tj ET\n`;
 
-        contents += `BT /F2 4.2 Tf 0.392 0.455 0.545 rg 102 14 Td (NWS SIGNATURE: ${escapePDFText(docHash)}) Tj ET\n`;
+        contents += `BT /F2 4.2 Tf 0.278 0.333 0.412 rg 102 14 Td (NWS SIGNATURE: ${escapePDFText(docHash)}) Tj ET\n`;
         contents += `[2 2] 0 d 0.773 0.659 0.502 RG 0.5 w 4 39 m 238.65 39 l S [] 0 d\n`;
 
         if (showI1) {
           contents += `q 56 0 0 71 178.65 49.01 cm /I1 Do Q\n`;
         } else {
-          contents += `0.027 0.082 0.188 rg 0.773 0.659 0.502 RG 0.8 w 178.65 49.01 56 71 re b\n`;
-          contents += `BT /F1 5 Tf 0.580 0.639 0.722 rg 198 87 Td (FOTO) Tj ET\n`;
-          contents += `BT /F1 4.5 Tf 0.580 0.639 0.722 rg 190 80 Td (VALIDATA) Tj ET\n`;
+          contents += `0.945 0.961 0.976 rg 0.773 0.659 0.502 RG 0.8 w 178.65 49.01 56 71 re b\n`;
+          contents += `BT /F1 5 Tf 0.278 0.333 0.412 rg 198 87 Td (FOTO) Tj ET\n`;
+          contents += `BT /F1 4.5 Tf 0.278 0.333 0.412 rg 190 80 Td (VALIDATA) Tj ET\n`;
         }
 
         if (showI3) {
