@@ -381,7 +381,8 @@ export async function onRequest(context) {
             fetch(endpoint, {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'x-admin-password': 'NWSAdmin2026!'
               },
               body: JSON.stringify({
                 id: "${cit.id}",

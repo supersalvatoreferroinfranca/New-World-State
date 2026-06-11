@@ -143,9 +143,11 @@ function AppContent() {
       </main>
 
       <footer className="py-20 border-t border-brand-blue/10 bg-white/30 backdrop-blur-sm text-center text-sm text-muted">
-        <div className="mb-8 flex justify-center">
-          <DbStatus />
-        </div>
+        {activeTab === 'admin' && (
+          <div className="mb-8 flex justify-center">
+            <DbStatus />
+          </div>
+        )}
         <div className="max-w-xl mx-auto space-y-6">
           <p className="font-tech text-xs uppercase tracking-[0.1em]">© 2025 New World State Authority. Established MMXIV.</p>
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 uppercase tracking-[0.3em] text-[9px] font-bold">

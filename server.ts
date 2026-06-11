@@ -1274,8 +1274,8 @@ Ufficio dell'Anagrafe Federale del New World State
                   </div>
 
                   <!-- TABELLA DOCUMENTO DI IDENTITA DIGITALE (IDENTITY CARD VISUAL MOCKUP) -->
-                  <div style="margin: 30px 0; background-color: ${brandColor}; color: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(10,28,62,0.25); border: 2px solid ${goldColor};">
-                    <div style="padding: 16px 20px; background-color: #071530; border-bottom: 2px solid ${goldColor};">
+                  <div style="margin: 30px 0; background-color: #faf9f5; color: #0f172a; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 2px solid ${goldColor};">
+                    <div style="padding: 16px 20px; background-color: #f7f3eb; border-bottom: 2px solid ${goldColor};">
                       <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                           <td style="vertical-align: middle; text-align: left;">
@@ -1283,63 +1283,63 @@ Ufficio dell'Anagrafe Federale del New World State
                               <tr>
                                 ${logoDataUrl ? `<td style="padding-right: 10px; vertical-align: middle;"><img src="${logoDataUrl}" style="height: 22px; display: block;" alt="NWS Logo" /></td>` : ''}
                                 <td style="vertical-align: middle;">
-                                  <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: ${goldColor}; line-height: 1.2;">NEW WORLD STATE</div>
-                                  <div style="font-size: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;">Sovereign Global Citizenship</div>
+                                  <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: #0a1c3e; line-height: 1.2;">NEW WORLD STATE</div>
+                                  <div style="font-size: 8px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;">Sovereign Global Citizenship</div>
                                 </td>
                               </tr>
                             </table>
                           </td>
-                          <td style="font-size: 15px; color: ${goldColor}; font-weight: bold; text-align: right; vertical-align: middle; letter-spacing: 0.5px;">
+                          <td style="font-size: 15px; color: #0a1c3e; font-weight: bold; text-align: right; vertical-align: middle; letter-spacing: 0.5px;">
                             ID CARD
                           </td>
                         </tr>
                       </table>
                     </div>
                     
-                    <div style="padding: 24px 20px; background-color: ${brandColor};">
+                    <div style="padding: 24px 20px; background-color: #faf9f5;">
                       <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                           <td style="width: 68%; vertical-align: top; font-size: 12px; font-family: sans-serif;">
                             <table style="width: 100%;">
-                              <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px;">Cognome / Surname</td></tr>
-                              <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 7px; font-family: sans-serif;">${updated.surname || ''}</td></tr>
+                              <tr><td style="color: #475569; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px; font-weight: 600;">Cognome / Surname</td></tr>
+                              <tr><td style="font-weight: bold; color: #0a1c3e; font-size: 14px; padding-bottom: 7px; font-family: sans-serif;">${updated.surname || ''}</td></tr>
                               
-                              <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px;">Nome / Given Names</td></tr>
-                              <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 7px; font-family: sans-serif;">${updated.firstName || ''}</td></tr>
+                              <tr><td style="color: #475569; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px; font-weight: 600;">Nome / Given Names</td></tr>
+                              <tr><td style="font-weight: bold; color: #0a1c3e; font-size: 14px; padding-bottom: 7px; font-family: sans-serif;">${updated.firstName || ''}</td></tr>
                               
-                              <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px;">Data e Luogo di Nascita / Date & Place of Birth</td></tr>
-                              <tr><td style="color: white; font-size: 11px; padding-bottom: 7px; font-family: monospace;">${updated.birthDate || 'N/A'} - ${(updated.birthPlace || '').toUpperCase()} (${(updated.birthCountry || '').toUpperCase()})</td></tr>
+                              <tr><td style="color: #475569; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px; font-weight: 600;">Data e Luogo di Nascita / Date & Place of Birth</td></tr>
+                              <tr><td style="color: #0f172a; font-weight: bold; font-size: 11px; padding-bottom: 7px; font-family: monospace;">${updated.birthDate || 'N/A'} - ${(updated.birthPlace || '').toUpperCase()} (${(updated.birthCountry || '').toUpperCase()})</td></tr>
                               
-                              <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px;">Cittadinanza / Nationality</td></tr>
-                              <tr><td style="color: ${goldColor}; font-weight: bold; font-size: 11px; padding-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">NEW WORLD STATE ● SOVEREIGN</td></tr>
+                              <tr><td style="color: #475569; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px; font-weight: 600;">Cittadinanza / Nationality</td></tr>
+                              <tr><td style="color: #855e29; font-weight: bold; font-size: 11px; padding-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">NEW WORLD STATE ● SOVEREIGN</td></tr>
                             </table>
                           </td>
                           <td style="width: 32%; vertical-align: middle; text-align: right;">
-                            <div style="border: 2px solid ${goldColor}; width: 85px; height: 108px; background-color: #071530; border-radius: 8px; overflow: hidden; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                            <div style="border: 2px solid ${goldColor}; width: 85px; height: 108px; background-color: #f1f5f9; border-radius: 8px; overflow: hidden; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                               ${updated.arubaPhotoUrl ? `<img src="${updated.arubaPhotoUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto Dossier" referrerPolicy="no-referrer" />` : `<div style="padding-top: 38px; font-size: 9px; color: #475569; text-align: center; font-weight: bold; font-family: monospace;">FOTO<br/>VALIDA</div>`}
                             </div>
                           </td>
                         </tr>
                       </table>
                       
-                      <div style="margin-top: 18px; border-top: 1px dashed rgba(197,168,128,0.3); padding-top: 14px;">
+                      <div style="margin-top: 18px; border-top: 1px dashed rgba(197,168,128,0.5); padding-top: 14px;">
                         <table style="width: 100%; border-collapse: collapse;">
                           <tr>
                             <td style="width: 50%; vertical-align: middle;">
-                              <div style="color: #94a3b8; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Codice Cittadino / Citizen Code</div>
-                              <div style="font-family: monospace; font-size: 15px; font-weight: bold; color: ${goldColor}; letter-spacing: 1.5px; margin-top: 3px;">${code}</div>
+                              <div style="color: #475569; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600;">Codice Cittadino / Citizen Code</div>
+                              <div style="font-family: monospace; font-size: 15px; font-weight: bold; color: #0a1c3e; letter-spacing: 1.5px; margin-top: 3px;">${code}</div>
                             </td>
                             <td style="width: 20%; text-align: center; vertical-align: middle;">
                               ${qrCodeDataUrl ? `
-                                <div style="display: inline-block; padding: 3px; background: white; border: 1.5px solid ${goldColor}; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                <div style="display: inline-block; padding: 3px; background: white; border: 1.5px solid ${goldColor}; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                   <img src="${qrCodeDataUrl}" style="width: 38px; height: 38px; display: block;" alt="Scansiona" />
                                 </div>
                               ` : ''}
                             </td>
                             <td style="width: 30%; vertical-align: middle; text-align: right;">
-                              <div style="font-family: monospace; font-size: 7.5px; color: #64748b; word-break: break-all; line-height: 1.3;">
+                              <div style="font-family: monospace; font-size: 7.5px; color: #475569; word-break: break-all; line-height: 1.3;">
                                 NWS SIGNATURE:<br/>
-                                <strong style="color: #94a3b8; font-size: 8px;">${updated.documentHash ? updated.documentHash.slice(0, 16).toUpperCase() : 'VALIDATED'}</strong>
+                                <strong style="color: #0f172a; font-size: 8px;">${updated.documentHash ? updated.documentHash.slice(0, 16).toUpperCase() : 'VALIDATED'}</strong>
                               </div>
                             </td>
                           </tr>
@@ -1426,8 +1426,8 @@ Ufficio dell'Anagrafe Federale del New World State
                     <p style="font-size: 15px;">La tua ID Card è disponibile e convalidata nel nostro archivio centrale.</p>
 
                     <!-- TABELLA INTERNA PREVIEW -->
-                    <div style="margin: 30px 0; background-color: ${brandColor}; color: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(10,28,62,0.25); border: 2px solid ${goldColor};">
-                      <div style="padding: 16px 20px; background-color: #071530; border-bottom: 2px solid ${goldColor};">
+                    <div style="margin: 30px 0; background-color: #faf9f5; color: #0f172a; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 2px solid ${goldColor};">
+                      <div style="padding: 16px 20px; background-color: #f7f3eb; border-bottom: 2px solid ${goldColor};">
                         <table style="width: 100%; border-collapse: collapse;">
                           <tr>
                             <td style="vertical-align: middle; text-align: left;">
@@ -1435,63 +1435,63 @@ Ufficio dell'Anagrafe Federale del New World State
                                 <tr>
                                   ${logoDataUrl ? `<td style="padding-right: 10px; vertical-align: middle;"><img src="${logoDataUrl}" style="height: 22px; display: block;" alt="NWS Logo" /></td>` : ''}
                                   <td style="vertical-align: middle;">
-                                    <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: ${goldColor}; line-height: 1.2;">NEW WORLD STATE</div>
-                                    <div style="font-size: 8px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;">Sovereign Global Citizenship</div>
+                                    <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: #0a1c3e; line-height: 1.2;">NEW WORLD STATE</div>
+                                    <div style="font-size: 8px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;">Sovereign Global Citizenship</div>
                                   </td>
                                 </tr>
                               </table>
                             </td>
-                            <td style="font-size: 15px; color: ${goldColor}; font-weight: bold; text-align: right; vertical-align: middle; letter-spacing: 0.5px;">
+                            <td style="font-size: 15px; color: #0a1c3e; font-weight: bold; text-align: right; vertical-align: middle; letter-spacing: 0.5px;">
                               ID CARD
                             </td>
                           </tr>
                         </table>
                       </div>
                       
-                      <div style="padding: 24px 20px; background-color: ${brandColor};">
+                      <div style="padding: 24px 20px; background-color: #faf9f5;">
                         <table style="width: 100%; border-collapse: collapse;">
                           <tr>
                             <td style="width: 68%; vertical-align: top; font-size: 12px; font-family: sans-serif;">
                               <table style="width: 100%;">
-                                <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px;">Cognome / Surname</td></tr>
-                                <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 7px; font-family: sans-serif;">${updated.surname || ''}</td></tr>
+                                <tr><td style="color: #475569; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px; font-weight: 600;">Cognome / Surname</td></tr>
+                                <tr><td style="font-weight: bold; color: #0a1c3e; font-size: 14px; padding-bottom: 7px; font-family: sans-serif;">${updated.surname || ''}</td></tr>
                                 
-                                <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px;">Nome / Given Names</td></tr>
-                                <tr><td style="font-weight: bold; color: white; font-size: 14px; padding-bottom: 7px; font-family: sans-serif;">${updated.firstName || ''}</td></tr>
+                                <tr><td style="color: #475569; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px; font-weight: 600;">Nome / Given Names</td></tr>
+                                <tr><td style="font-weight: bold; color: #0a1c3e; font-size: 14px; padding-bottom: 7px; font-family: sans-serif;">${updated.firstName || ''}</td></tr>
                                 
-                                <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px;">Data e Luogo di Nascita / Date & Place of Birth</td></tr>
-                                <tr><td style="color: white; font-size: 11px; padding-bottom: 7px; font-family: monospace;">${updated.birthDate || 'N/A'} - ${(updated.birthPlace || '').toUpperCase()} (${(updated.birthCountry || '').toUpperCase()})</td></tr>
+                                <tr><td style="color: #475569; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px; font-weight: 600;">Data e Luogo di Nascita / Date & Place of Birth</td></tr>
+                                <tr><td style="color: #0f172a; font-weight: bold; font-size: 11px; padding-bottom: 7px; font-family: monospace;">${updated.birthDate || 'N/A'} - ${(updated.birthPlace || '').toUpperCase()} (${(updated.birthCountry || '').toUpperCase()})</td></tr>
                                 
-                                <tr><td style="color: #94a3b8; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px;">Cittadinanza / Nationality</td></tr>
-                                <tr><td style="color: ${goldColor}; font-weight: bold; font-size: 11px; padding-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">NEW WORLD STATE ● SOVEREIGN</td></tr>
+                                <tr><td style="color: #475569; font-size: 8px; text-transform: uppercase; padding: 1px 0; letter-spacing: 0.3px; font-weight: 600;">Cittadinanza / Nationality</td></tr>
+                                <tr><td style="color: #855e29; font-weight: bold; font-size: 11px; padding-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px;">NEW WORLD STATE ● SOVEREIGN</td></tr>
                               </table>
                             </td>
                             <td style="width: 32%; vertical-align: middle; text-align: right;">
-                              <div style="border: 2px solid ${goldColor}; width: 85px; height: 108px; background-color: #071530; border-radius: 8px; overflow: hidden; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                              <div style="border: 2px solid ${goldColor}; width: 85px; height: 108px; background-color: #f1f5f9; border-radius: 8px; overflow: hidden; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                                 ${updated.arubaPhotoUrl ? `<img src="${updated.arubaPhotoUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto Dossier" referrerPolicy="no-referrer" />` : `<div style="padding-top: 38px; font-size: 9px; color: #475569; text-align: center; font-weight: bold; font-family: monospace;">FOTO<br/>VALIDA</div>`}
                               </div>
                             </td>
                           </tr>
                         </table>
                         
-                        <div style="margin-top: 18px; border-top: 1px dashed rgba(197,168,128,0.3); padding-top: 14px;">
+                        <div style="margin-top: 18px; border-top: 1px dashed rgba(197,168,128,0.5); padding-top: 14px;">
                           <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                               <td style="width: 50%; vertical-align: middle;">
-                                <div style="color: #94a3b8; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Codice Cittadino / Citizen Code</div>
-                                <div style="font-family: monospace; font-size: 15px; font-weight: bold; color: ${goldColor}; letter-spacing: 1.5px; margin-top: 3px;">${code}</div>
+                                <div style="color: #475569; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600;">Codice Cittadino / Citizen Code</div>
+                                <div style="font-family: monospace; font-size: 15px; font-weight: bold; color: #0a1c3e; letter-spacing: 1.5px; margin-top: 3px;">${code}</div>
                               </td>
                               <td style="width: 20%; text-align: center; vertical-align: middle;">
                                 ${qrCodeDataUrl ? `
-                                  <div style="display: inline-block; padding: 3px; background: white; border: 1.5px solid ${goldColor}; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                  <div style="display: inline-block; padding: 3px; background: white; border: 1.5px solid ${goldColor}; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                     <img src="${qrCodeDataUrl}" style="width: 38px; height: 38px; display: block;" alt="Scansiona" />
                                   </div>
                                 ` : ''}
                               </td>
                               <td style="width: 30%; vertical-align: middle; text-align: right;">
-                                <div style="font-family: monospace; font-size: 7.5px; color: #64748b; word-break: break-all; line-height: 1.3;">
+                                <div style="font-family: monospace; font-size: 7.5px; color: #475569; word-break: break-all; line-height: 1.3;">
                                   NWS SIGNATURE:<br/>
-                                  <strong style="color: #94a3b8; font-size: 8px;">${updated.documentHash ? updated.documentHash.slice(0, 16).toUpperCase() : 'VALIDATED'}</strong>
+                                  <strong style="color: #0f172a; font-size: 8px;">${updated.documentHash ? updated.documentHash.slice(0, 16).toUpperCase() : 'VALIDATED'}</strong>
                                 </div>
                               </td>
                             </tr>
@@ -2516,7 +2516,8 @@ Ufficio dell'Anagrafe Federale del New World State
               fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json'
+                  'Content-Type': 'application/json',
+                  'x-admin-password': 'NWSAdmin2026!'
                 },
                 body: JSON.stringify({
                   id: "${cit.id}",
