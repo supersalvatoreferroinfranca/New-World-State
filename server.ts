@@ -97,18 +97,21 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
         resolve(Buffer.concat(buffers));
       });
 
-      const brandColor = '#0a1c3e';
-      const goldColor = '#c5a880';
-      const lightGray = '#94a3b8';
+      const cardBgColor = '#faf9f5'; // Light Ivory background for high contrast
+      const borderGold = '#c5a880'; // Elegant border gold accent
+      const textDarkCharcoal = '#0f172a'; // Deep charcoal/black for maximum contrast text
+      const textNavyBrand = '#0a1c3e'; // Brand navy for prominent identifiers
+      const labelSlateGray = '#475569'; // High contrast charcoal slate for labels (replaces light Gray)
+      const bronzeNationalityColor = '#855e29'; // Deep rich bronze/gold for nationality text
 
       // Background color of the card
-      doc.rect(0, 0, width, height).fill(brandColor);
+      doc.rect(0, 0, width, height).fill(cardBgColor);
 
       // Gold border
-      doc.rect(2, 2, width - 4, height - 4).lineWidth(1.2).stroke(goldColor);
+      doc.rect(2, 2, width - 4, height - 4).lineWidth(1.2).stroke(borderGold);
 
-      // Header top bar (nested slightly darker blue rect)
-      doc.rect(2, 2, width - 4, 25).fill('#071530');
+      // Header top bar (nested subtle light silver/grey rect)
+      doc.rect(2, 2, width - 4, 25).fill('#f1f5f9');
 
       // Attempt to load and draw the official logo
       const logoPath = path.join(process.cwd(), 'src', 'components', 'layout', 'logo-nws.png');
@@ -131,24 +134,24 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
 
       const textLeftMargin = drawLogo ? 36 : 8;
       
-      // Header text
-      doc.fillColor(goldColor)
+      // Header text (High contrast on #f1f5f9)
+      doc.fillColor(textNavyBrand)
          .fontSize(6)
          .font('Helvetica-Bold')
          .text('NEW WORLD STATE', textLeftMargin, 6, { characterSpacing: 0.5 });
          
-      doc.fillColor(lightGray)
+      doc.fillColor(labelSlateGray)
          .fontSize(4.2)
          .font('Helvetica')
          .text('SOVEREIGN GLOBAL CITIZENSHIP', textLeftMargin, 14, { characterSpacing: 0.3 });
 
-      doc.fillColor(goldColor)
+      doc.fillColor(textNavyBrand)
          .fontSize(8.5)
          .font('Helvetica-Bold')
          .text('ID CARD', width - 60, 8, { width: 52, align: 'right' });
 
       // Gold line below header
-      doc.moveTo(2, 27).lineTo(width - 2, 27).lineWidth(0.8).stroke(goldColor);
+      doc.moveTo(2, 27).lineTo(width - 2, 27).lineWidth(0.8).stroke(borderGold);
 
       // Left column details (Surname, First Name, Birth, Nationality)
       const textX = 8;
@@ -156,31 +159,31 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
       const colWidth = width * 0.65; // ~157pt
 
       // Helper to draw text block
-      const writeField = (label: string, value: string, fontSize: number, bold: boolean, spacingAfter: number, color: string = 'white') => {
-        doc.fillColor(lightGray)
+      const writeField = (label: string, value: string, fontSize: number, bold: boolean, spacingAfter: number, color: string = textDarkCharcoal) => {
+        doc.fillColor(labelSlateGray)
            .fontSize(3.8)
            .font('Helvetica')
            .text(label, textX, textY);
         textY += 4.5;
 
-        doc.fillColor(color)
+        doc.fillColor(color === 'white' ? textDarkCharcoal : color)
            .fontSize(fontSize)
            .font(bold ? 'Helvetica-Bold' : 'Helvetica')
            .text(value, textX, textY, { width: colWidth, lineGap: 0, ellipsis: true });
         textY += spacingAfter;
       };
 
-      writeField('COGNOME / SURNAME', toPdfSafeUpper(citizen.surname || ''), 6.5, true, 8);
-      writeField('NOME / GIVEN NAMES', toPdfSafeUpper(citizen.firstName || 'CITTADINO'), 6.5, true, 8);
+      writeField('COGNOME / SURNAME', toPdfSafeUpper(citizen.surname || ''), 6.5, true, 8, textNavyBrand);
+      writeField('NOME / GIVEN NAMES', toPdfSafeUpper(citizen.firstName || 'CITTADINO'), 6.5, true, 8, textNavyBrand);
       
       const bDate = citizen.birthDate || 'N/A';
       const bPlace = citizen.birthPlace || '';
       const bCountry = citizen.birthCountry || '';
       const placeString = bPlace ? `${bPlace}${bCountry ? ` (${bCountry})` : ''}` : bCountry || '';
       const birthStr = placeString ? `${bDate} - ${placeString}` : bDate;
-      writeField('DATA E LUOGO DI NASCITA / DATE & PLACE OF BIRTH', toPdfSafeUpper(birthStr), 5, false, 7.5);
+      writeField('DATA E LUOGO DI NASCITA / DATE & PLACE OF BIRTH', toPdfSafeUpper(birthStr), 5, false, 7.5, textDarkCharcoal);
       
-      writeField('CITTADINANZA / NATIONALITY', 'NEW WORLD STATE • SOVEREIGN', 5, true, 4, goldColor);
+      writeField('CITTADINANZA / NATIONALITY', 'NEW WORLD STATE • SOVEREIGN', 5, true, 4, bronzeNationalityColor);
 
       // Photo on the right
       const photoWidth = 56;
@@ -188,8 +191,8 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
       const photoX = width - photoWidth - 8; // width - 64
       const photoY = 33;
 
-      doc.rect(photoX, photoY, photoWidth, photoHeight).lineWidth(0.8).stroke(goldColor);
-      doc.rect(photoX + 1, photoY + 1, photoWidth - 2, photoHeight - 2).fill('#071530');
+      doc.rect(photoX, photoY, photoWidth, photoHeight).lineWidth(0.8).stroke(borderGold);
+      doc.rect(photoX + 1, photoY + 1, photoWidth - 2, photoHeight - 2).fill('#f1f5f9');
 
       let imageAttached = false;
       const photoUrl = citizen.arubaPhotoUrl || citizen.arubaphotourl;
@@ -252,7 +255,7 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
       }
 
       if (!imageAttached) {
-        doc.fillColor(lightGray)
+        doc.fillColor(labelSlateGray)
            .fontSize(4)
            .font('Helvetica-Bold')
            .text('FOTO', photoX, photoY + 25, { width: photoWidth, align: 'center' });
@@ -261,19 +264,19 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
 
       // Dashed separator line near bottom
       const dashY = 114;
-      doc.moveTo(4, dashY).lineTo(width - 4, dashY).lineWidth(0.5).dash(2, { space: 2 }).stroke('rgba(197,168,128,0.4)');
+      doc.moveTo(4, dashY).lineTo(width - 4, dashY).lineWidth(0.5).dash(2, { space: 2 }).stroke('rgba(197,168,128,0.6)');
       doc.undash();
 
       // Bottom bar info
       const codeX = 8;
       const codeY = 119;
-      doc.fillColor(lightGray)
+      doc.fillColor(labelSlateGray)
          .fontSize(3.8)
          .font('Helvetica')
          .text('CODICE CITTADINO / CITIZEN CODE', codeX, codeY);
       
       const citizenCode = citizen.citizenCode || 'N/A';
-      doc.fillColor(goldColor)
+      doc.fillColor(textNavyBrand)
          .fontSize(8)
          .font('Helvetica-Bold')
          .text(citizenCode, codeX, codeY + 4.5, { characterSpacing: 0.5 });
@@ -291,7 +294,7 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
           margin: 1,
           width: 80,
           color: {
-            dark: '#071530',
+            dark: '#0a1c3e', // High-contrast navy key modules
             light: '#ffffff'
           }
         });
@@ -306,7 +309,7 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
       if (qrBuffer) {
         try {
           // Draw neat gold border representing authentication security stamp
-          doc.rect(qrX - 0.5, qrY - 0.5, qrSize + 1, qrSize + 1).lineWidth(0.5).stroke(goldColor);
+          doc.rect(qrX - 0.5, qrY - 0.5, qrSize + 1, qrSize + 1).lineWidth(0.5).stroke(borderGold);
           // Draw white background block underneath
           doc.rect(qrX, qrY, qrSize, qrSize).fill('white');
           // Draw the actual code
@@ -321,7 +324,7 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
       const sigY = 126;
       const docHash = citizen.documentHash || 'VALIDATED';
       const cleanHash = docHash.slice(0, 16).toUpperCase();
-      doc.fillColor('#64748b')
+      doc.fillColor(labelSlateGray)
          .fontSize(4)
          .font('Courier-Bold')
          .text(`NWS SIGNATURE: ${cleanHash}`, sigX, sigY, { width: 104, align: 'right' });
@@ -501,6 +504,42 @@ async function startServer() {
           message: err.name === 'AbortError' ? 'Timeout comunicazione worker' : 'Impossibile raggiungere il Worker Database (NWS-WK).', 
           details: err.message 
         });
+      }
+    });
+
+    apiRouter.get('/verify', async (req, res) => {
+      const { id, code } = req.query;
+      const key = ((id || code || '') as string).trim();
+      console.log(`[API] Processing /api/verify for key: ${key}`);
+      if (!key) {
+        return res.status(400).json({ success: false, error: 'Parametro id o code mancante.' });
+      }
+      
+      try {
+        const citizen = await findCitizenByCodeOrId(key);
+        if (!citizen) {
+          return res.status(404).json({ success: false, error: 'Cittadino non trovato o non registrato.' });
+        }
+        
+        return res.json({
+          success: true,
+          citizen: {
+            id: citizen.id,
+            firstName: citizen.firstName,
+            surname: citizen.surname,
+            birthDate: citizen.birthDate,
+            birthPlace: citizen.birthPlace,
+            birthCountry: citizen.birthCountry,
+            citizenCode: citizen.citizenCode,
+            gender: citizen.gender,
+            status: citizen.status,
+            arubaPhotoUrl: citizen.arubaPhotoUrl || citizen.arubaphotourl || '',
+            documentHash: citizen.documentHash || 'VALIDATED'
+          }
+        });
+      } catch (err: any) {
+        console.error('[API] Error in /api/verify:', err.message);
+        return res.status(500).json({ success: false, error: 'Errore interno del server durante la verifica.', details: err.message });
       }
     });
 

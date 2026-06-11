@@ -3,8 +3,8 @@ import { useI18n } from '../../contexts/I18nContext';
 import { Globe, Menu, ShieldCheck } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab?: 'register' | 'admin' | 'constitution' | 'charter';
-  setActiveTab?: (tab: 'register' | 'admin' | 'constitution' | 'charter') => void;
+  activeTab?: 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network';
+  setActiveTab?: (tab: 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network') => void;
 }
 
 export default function Header({ activeTab, setActiveTab }: HeaderProps) {
@@ -49,10 +49,22 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
             </button>
             <button 
-              onClick={() => setActiveTab?.('register')}
-              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'register' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
+              onClick={() => setActiveTab?.('governance')}
+              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'governance' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
             >
               {language === 'en' ? 'Governance' : 'Governance'}
+            </button>
+            <button 
+              onClick={() => setActiveTab?.('privacy')}
+              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'privacy' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
+            >
+              {language === 'en' ? 'Privacy' : 'Privacy'}
+            </button>
+            <button 
+              onClick={() => setActiveTab?.('network')}
+              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'network' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
+            >
+              {language === 'en' ? 'Network' : 'Network'}
             </button>
           </div>
 

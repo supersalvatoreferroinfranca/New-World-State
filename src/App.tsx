@@ -11,12 +11,36 @@ import RegisterForm from './components/auth/RegisterForm';
 import AdminDashboard from './components/auth/AdminDashboard';
 import ConstitutionPage from './components/constitution/ConstitutionPage';
 import CharterPage from './components/constitution/CharterPage';
+import GovernancePage from './components/constitution/GovernancePage';
+import PrivacyProtocolPage from './components/constitution/PrivacyProtocolPage';
+import NetworkStatusPage from './components/constitution/NetworkStatusPage';
+import VerifyCitizenPage from './components/constitution/VerifyCitizenPage';
 import DbStatus from './components/debug/DbStatus';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'register' | 'admin' | 'constitution' | 'charter'>('register');
+  const [activeTab, setActiveTab] = useState<'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network'>('register');
+  const [isVerifyPath] = useState<boolean>(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    return window.location.pathname === '/verify' || 
+           window.location.pathname.startsWith('/verify') || 
+           searchParams.get('verify') === 'true';
+  });
   const { language } = useI18n();
+
+  if (isVerifyPath) {
+    return (
+      <div className="min-h-screen bg-brand-parchment font-sans text-brand-blue selection:bg-brand-gold selection:text-brand-blue overflow-x-hidden pt-12">
+        <header className="max-w-xl mx-auto px-6 mb-4 flex items-center justify-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-[#0a1c3e] flex items-center justify-center font-serif font-bold text-white text-xs">NWS</div>
+          <span className="font-serif font-bold tracking-wider text-[#0a1c3e] text-sm uppercase">New World State</span>
+        </header>
+        <main className="px-4 relative">
+          <VerifyCitizenPage />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-brand-parchment font-sans text-brand-blue selection:bg-brand-gold selection:text-brand-blue overflow-x-hidden">
@@ -69,6 +93,13 @@ function AppContent() {
                   {language === 'en' ? 'Constitution' : 'Costituzione'}
                 </button>
                 <button 
+                  onClick={() => setActiveTab('governance')}
+                  id="tab-governance-btn"
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'governance' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                >
+                  {language === 'en' ? 'Governance' : 'Governance'}
+                </button>
+                <button 
                   onClick={() => setActiveTab('charter')}
                   id="tab-charter-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'charter' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
@@ -98,6 +129,12 @@ function AppContent() {
               <AdminDashboard />
             ) : activeTab === 'constitution' ? (
               <ConstitutionPage />
+            ) : activeTab === 'governance' ? (
+              <GovernancePage />
+            ) : activeTab === 'privacy' ? (
+              <PrivacyProtocolPage />
+            ) : activeTab === 'network' ? (
+              <NetworkStatusPage />
             ) : (
               <CharterPage />
             )}
@@ -124,12 +161,18 @@ function AppContent() {
             >
               {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
             </button>
-            <a href="#" className="hover:text-brand-gold transition-colors border-b border-transparent hover:border-brand-gold">
+            <button 
+              onClick={() => setActiveTab('privacy')} 
+              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'privacy' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+            >
               {language === 'en' ? 'Privacy Protocol' : 'Protocollo Privacy'}
-            </a>
-            <a href="#" className="hover:text-brand-gold transition-colors border-b border-transparent hover:border-brand-gold">
+            </button>
+            <button 
+              onClick={() => setActiveTab('network')} 
+              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'network' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+            >
               {language === 'en' ? 'Network Status' : 'Stato Network'}
-            </a>
+            </button>
           </div>
         </div>
       </footer>
