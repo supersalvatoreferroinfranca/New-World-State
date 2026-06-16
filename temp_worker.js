@@ -637,7 +637,108 @@ CREATE TABLE citizens (
     }
 
     try {
-      if (!env.DATABASE_URL) throw new Error('DATABASE_URL non configurata');
+      if (!env.DATABASE_URL) {
+        // Se si tratta di un percorso di visualizzazione (HTML), mostriamo una guida visiva bellissima al posto del JSON raw
+        if (url.pathname === '/verify' || url.pathname === '/admin/action') {
+          const pageTitle = url.pathname === '/verify' ? 'NWS Registro Verifica Coesione' : 'Amministrazione NWS';
+          return new Response(`
+            <!DOCTYPE html>
+            <html lang="it">
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${pageTitle} | Configurazione d'Ambiente Richiesta</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+                <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;550&display=swap" rel="stylesheet">
+                <style>
+                  body { font-family: 'Inter', sans-serif; }
+                  .font-display { font-family: 'Space Grotesk', sans-serif; }
+                  .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+                </style>
+              </head>
+              <body class="bg-[#050d1e] min-h-screen text-slate-100 flex flex-col justify-between">
+                <header class="border-b border-[#c5a880]/20 bg-[#071328]/80 backdrop-blur py-5 px-6 sticky top-0 z-50">
+                  <div class="max-w-4xl mx-auto flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-[#c5a880] flex items-center justify-center font-display font-bold text-[#0a1c3e] text-xs">NWS</div>
+                      <div>
+                        <h1 class="text-sm font-display font-bold tracking-wider text-white">NEW WORLD STATE</h1>
+                        <p class="text-[9px] font-mono-tech tracking-widest text-[#c5a880]">CENTRAL PLATFORM STATUS</p>
+                      </div>
+                    </div>
+                    <span class="text-[8px] font-mono-tech bg-[#f59e0b]/10 text-[#f59e0b] px-2 py-0.5 border border-[#f59e0b]/20 rounded font-semibold uppercase">SETUP INCOMPLETO</span>
+                  </div>
+                </header>
+
+                <main class="max-w-xl w-full mx-auto px-6 py-12 flex-1 flex items-center justify-center">
+                  <div class="bg-[#071530] border border-amber-500/20 rounded-3xl shadow-2xl p-8 space-y-6 w-full">
+                    <div class="w-16 h-16 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full flex items-center justify-center mx-auto text-3xl">⚙️</div>
+                    
+                    <div class="space-y-3 text-center">
+                      <h2 class="text-xl font-display font-bold text-white tracking-tight">Database (DATABASE_URL) non configurato</h2>
+                      <p class="text-slate-400 text-sm leading-relaxed px-2">
+                        La variabile d'ambiente <code class="bg-[#0a1c3e] text-[#c5a880] px-2 py-1 rounded font-mono text-xs">DATABASE_URL</code> non è definita nell'ambiente del tuo <strong>Cloudflare Worker</strong> o delle <strong>Cloudflare Pages Functions</strong>.
+                      </p>
+                    </div>
+
+                    <div class="bg-[#040e22] border border-slate-700/30 rounded-2xl p-5 space-y-4 text-xs text-slate-350">
+                      <h3 class="font-display font-bold text-slate-200 uppercase tracking-wider text-[10px]">Guida per Risolvere l'Errore in 2 Minuti:</h3>
+                      <ol class="list-decimal pl-4 space-y-3 text-slate-400">
+                        <li>
+                          Accedi alla tua dashboard di <strong>Cloudflare</strong>.
+                        </li>
+                        <li>
+                          In base a dove hai configurato il dominio, naviga su:
+                          <ul class="list-disc pl-4 mt-1 space-y-1 text-slate-400">
+                            <li><strong>Workers & Pages (Overview)</strong> &rarr; seleziona il tuo worker (es. <code class="text-white">nws-wk</code> o <code class="text-white">newworldstate</code>).</li>
+                          </ul>
+                        </li>
+                        <li>
+                          Vai sulla scheda <strong>Settings</strong> (Impostazioni) in alto, quindi seleziona <strong>Variables</strong> (Variabili) a sinistra.
+                        </li>
+                        <li>
+                          Sotto la sezione <strong>Environment Variables</strong> (Variabili d'Ambiente), fai clic su <strong>Add variable</strong> (Aggiungi variabile).
+                        </li>
+                        <li>
+                          Compila i campi come segue:
+                          <div class="mt-2 bg-[#0a1c3e] p-3 rounded-lg border border-slate-700/50 space-y-1 font-mono text-[11px]">
+                            <div><span class="text-slate-500">Name:</span> <span class="text-white">DATABASE_URL</span></div>
+                            <div><span class="text-slate-500">Value:</span> <span class="text-[#c5a880]">postgresql://neondb_owner:password@ep-host.region.neon.tech/neondb</span></div>
+                          </div>
+                        </li>
+                        <li>
+                          Fai clic su <strong>Save</strong> (Salva) o <strong>Save and Deploy</strong>.
+                        </li>
+                        <li>
+                          <strong>IMPORTANTE:</strong> I Worker e le Pages richiedono una nuova pubblicazione affinché le variabili vengano registrate. Clicca su <strong>Deployments</strong> ed effettua un deploy degli ultimi commit o premi <strong>Redeploy</strong> per attivare subito la stringa di connessione!
+                        </li>
+                      </ol>
+                    </div>
+
+                    <div class="pt-2 flex flex-col gap-2">
+                      <a href="/" class="text-center bg-[#0d1e3a] border border-[#c5a880]/30 text-[#c5a880] hover:bg-[#11274c] font-bold text-xs uppercase tracking-widest py-3 px-6 rounded-xl transition">
+                        Esegui Diagnostica Completa (Home)
+                      </a>
+                    </div>
+                  </div>
+                </main>
+
+                <footer class="border-t border-[#c5a880]/10 bg-[#040a15] py-6 px-4 text-center text-[10px] text-slate-500 font-mono-tech">
+                  <p>© 2026 Sovereign Administration of New World State. Central Registry Authority.</p>
+                </footer>
+              </body>
+            </html>
+          `, {
+            status: 500,
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              ...corsHeaders
+            }
+          });
+        }
+
+        throw new Error('DATABASE_URL non configurata. Imposta la variabile d\'ambiente DATABASE_URL nelle impostazioni (Settings -> Variables) del tuo progetto nella dashboard di Cloudflare, quindi esegui un Redeploy del Worker per rendere attive le modifiche.');
+      }
       
       // Funzione helper per query via HTTP
       const queryDb = async (sqlQuery, params = []) => {
