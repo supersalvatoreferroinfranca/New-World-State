@@ -29,6 +29,40 @@ const worker = {
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+    // Se DATABASE_URL non è configurato su questo dominio/worker locale, ma abbiamo il worker primario con database attivo, facciamo il proxy trasparente
+    if (!env.DATABASE_URL && !url.hostname.includes('nws-wk.supersalvatoreferroinfranca.workers.dev') && !url.hostname.includes('localhost') && !url.hostname.includes('127.0.0.1')) {
+      const targetUrl = new URL(request.url);
+      targetUrl.hostname = 'nws-wk.supersalvatoreferroinfranca.workers.dev';
+      targetUrl.protocol = 'https:';
+      targetUrl.port = '';
+      
+      const headers = new Headers(request.headers);
+      headers.delete('host');
+      
+      try {
+        const fetchOptions = {
+          method: request.method,
+          headers: headers,
+        };
+        if (request.method !== 'GET' && request.method !== 'HEAD') {
+          fetchOptions.body = request.clone().body;
+        }
+        
+        const response = await fetch(targetUrl.toString(), fetchOptions);
+        
+        const responseHeaders = new Headers(response.headers);
+        responseHeaders.set('Access-Control-Allow-Origin', '*');
+        
+        return new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: responseHeaders
+        });
+      } catch (err) {
+        // Se il proxy trasparente fallisce, proseguiamo mostrando la pagina di diagnostica o errore standard
+      }
+    }
+
     // Protezione per la consolle d'amministrazione con password provvisoria / env variable
     if (url.pathname.startsWith('/api/admin/')) {
       const authHeader = request.headers.get('x-admin-password');
