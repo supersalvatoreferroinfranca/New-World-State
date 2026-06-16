@@ -1649,6 +1649,66 @@ CREATE TABLE citizens (
         }
       }
 
+      // Rotta: Public Verify (Cerca cittadino per verifica QR o ID)
+      if (url.pathname === '/api/verify') {
+        const id = url.searchParams.get('id') || url.searchParams.get('code');
+        const key = (id || '').trim();
+        if (!key) {
+          return new Response(JSON.stringify({ success: false, error: 'Parametro id o code mancante.' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        try {
+          let rows = [];
+          if (/^\d+$/.test(key)) {
+            rows = await queryDb('SELECT * FROM citizens WHERE id = $1', [Number(key)]);
+          }
+          if (rows.length === 0) {
+            rows = await queryDb(
+              'SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR UPPER(citizen_code) = $1 OR UPPER(citizencode) = $1 OR id::text = $1',
+              [key.toUpperCase()]
+            );
+          }
+
+          if (rows.length === 0) {
+            return new Response(JSON.stringify({ success: false, error: 'Cittadino non trovato o non registrato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const rawCitizen = rows[0];
+          const citizen = getCitizenWithArubaUrls(rawCitizen);
+
+          return new Response(JSON.stringify({
+            success: true,
+            citizen: {
+              id: citizen.id,
+              firstName: citizen.firstName,
+              surname: citizen.surname,
+              birthDate: citizen.birthDate,
+              birthPlace: citizen.birthPlace,
+              birthCountry: citizen.birthCountry,
+              citizenCode: citizen.citizenCode,
+              gender: citizen.gender,
+              status: citizen.status,
+              arubaPhotoUrl: citizen.arubaPhotoUrl || citizen.arubaphotourl || '',
+              documentHash: citizen.documentHash || 'VALIDATED'
+            }
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+
+        } catch (dbErr) {
+          return new Response(JSON.stringify({ success: false, error: 'Errore interno del database.', details: dbErr.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
       // Rotta: Admin Citizens (Lista iscritti per Consolle Amministratore)
       if (url.pathname === '/api/admin/citizens') {
         try {
