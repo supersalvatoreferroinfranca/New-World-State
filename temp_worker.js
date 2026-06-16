@@ -8,7 +8,18 @@
 import { connect } from 'cloudflare:sockets';
 
 const worker = {
-  async fetch(request, env) {
+  async fetch(request, rawEnv) {
+    const env = new Proxy(rawEnv || {}, {
+      get(target, prop) {
+        if (typeof prop !== 'string') return undefined;
+        if (target[prop] !== undefined) return target[prop];
+        if (typeof globalThis !== 'undefined' && globalThis[prop] !== undefined) return globalThis[prop];
+        try {
+          if (typeof process !== 'undefined' && process.env && process.env[prop] !== undefined) return process.env[prop];
+        } catch (e) {}
+        return undefined;
+      }
+    });
     const url = new URL(request.url);
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
