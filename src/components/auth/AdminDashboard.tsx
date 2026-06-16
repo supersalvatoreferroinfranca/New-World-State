@@ -17,7 +17,10 @@ import {
   ExternalLink,
   ChevronRight,
   Shield,
-  FileText
+  FileText,
+  Briefcase,
+  Trash,
+  Clock
 } from 'lucide-react';
 
 interface Citizen {
@@ -44,7 +47,19 @@ interface Citizen {
   arubaPhotoUrl?: string;
   documentHash?: string;
   createdAt?: string;
+  isAdmin?: boolean;
+  operationalRole?: string | null;
 }
+
+const PREDEFINED_ROLES = [
+  "Console dell'Anagrafe",
+  "Ministro della Giustizia",
+  "Garante della Costituzione",
+  "Supervisore Elettorale",
+  "Ambasciatore Digitale",
+  "Ufficiale di Pace",
+  "Custode Digitale (IT)"
+];
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -56,6 +71,10 @@ export default function AdminDashboard() {
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
+  // Core navigation state
+  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals'>('citizens');
+
+  // Citizens list state
   const [citizens, setCitizens] = useState<Citizen[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +86,24 @@ export default function AdminDashboard() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
+  // Digital democracy admin proposals state
+  const [proposals, setProposals] = useState<any[]>([]);
+  const [proposalsLoading, setProposalsLoading] = useState(false);
+  const [proposalsError, setProposalsError] = useState<string | null>(null);
+  const [proposalStatusFilter, setProposalStatusFilter] = useState('all');
+  const [selectedProposal, setSelectedProposal] = useState<any | null>(null);
+
+  // Scheduling states
+  const [scheduleProposalId, setScheduleProposalId] = useState<number | null>(null);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [votingStartsAt, setVotingStartsAt] = useState('');
+  const [votingEndsAt, setVotingEndsAt] = useState('');
+
+  // Proposals rejection modal
+  const [proposalRejectionModalOpen, setProposalRejectionModalOpen] = useState(false);
+  const [proposalRejectionId, setProposalRejectionId] = useState<number | null>(null);
+  const [proposalRejectionReason, setProposalRejectionReason] = useState('');
+
   const getAdminPassword = () => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem('nws_admin_password') || '';
@@ -74,7 +111,7 @@ export default function AdminDashboard() {
     return '';
   };
 
-  // Fetch all citizens
+  // Fetch all registered citizens
   const fetchCitizens = async () => {
     setLoading(true);
     setError(null);
@@ -99,34 +136,38 @@ export default function AdminDashboard() {
     }
   };
 
+  // Fetch all digital democracy proposals
+  const fetchProposals = async () => {
+    setProposalsLoading(true);
+    setProposalsError(null);
+    try {
+      const res = await safeFetch('/api/democracy/proposals');
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const result = await res.json();
+      if (result.success) {
+        setProposals(result.data || []);
+      } else {
+        throw new Error(result.message || 'Errore durante il caricamento delle proposte.');
+      }
+    } catch (err: any) {
+      console.error('[ADMIN-DASHBOARD] Props fetch failed:', err);
+      setProposalsError(err.message || 'Impossibile connettersi alle API di democrazia.');
+    } finally {
+      setProposalsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
-      fetchCitizens();
+      if (activeTab === 'citizens') {
+        fetchCitizens();
+      } else {
+        fetchProposals();
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, activeTab]);
 
-  // Counters
-  const totalCount = citizens.length;
-  const pendingCount = citizens.filter(c => !c.status || c.status === 'pending').length;
-  const approvedCount = citizens.filter(c => c.status === 'approved').length;
-  const rejectedCount = citizens.filter(c => c.status === 'rejected').length;
-
-  // Filter & Search
-  const filteredCitizens = citizens.filter(cit => {
-    const fullName = `${cit.firstName} ${cit.surname}`.toLowerCase();
-    const matchesSearch = 
-      fullName.includes(searchTerm.toLowerCase()) || 
-      (cit.citizenCode && cit.citizenCode.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (cit.email && cit.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (cit.username && cit.username.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const status = cit.status || 'pending';
-    const matchesStatus = statusFilter === 'all' || status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  // Approve action
+  // Citizen approval action
   const handleApprove = async (id: string | number) => {
     if (window.confirm('Sei sicuro di voler approvare questa domanda di cittadinanza? Verrà generata la ID card ufficiale e inviata via email.')) {
       setActionLoading(true);
@@ -141,7 +182,7 @@ export default function AdminDashboard() {
         });
         const data = await res.json();
         if (data.success) {
-          alert('Pratica approvata e ID Card spedita con successo!');
+          alert('Pratica convalidata col massimo protocollo federale e inviata via email con successo!');
           await fetchCitizens();
           // Update selected view
           if (selectedCitizen && selectedCitizen.id === id) {
@@ -162,7 +203,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // Reject action
+  // Citizen rejection action
   const submitRejection = async () => {
     if (!selectedCitizen) return;
     if (!rejectionReason.trim()) {
@@ -200,31 +241,262 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!isAuthenticated) {
-    const handleLoginSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      setPasswordError(null);
-      const correctPasswordOnServer = "NWSAdmin2026!";
-      if (passwordInput === correctPasswordOnServer || passwordInput === "nwsadmin" || passwordInput === "admin") {
-        setIsAuthenticated(true);
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('nws_admin_auth', 'true');
-          sessionStorage.setItem('nws_admin_password', passwordInput);
+  // Promote/Demote Citizen Administrator Role (Calls /api/admin/toggle-admin)
+  const handleToggleAdmin = async (citizenId: string | number, currentIsAdmin: boolean) => {
+    const targetVal = !currentIsAdmin;
+    const msg = targetVal 
+      ? "Abilitare questo cittadino come Co-Amministratore di Sistema autorizzato?" 
+      : "Revocare i privilegi di Amministrazione per questo cittadino?";
+    
+    if (window.confirm(msg)) {
+      setActionLoading(true);
+      try {
+        const res = await safeFetch('/api/admin/toggle-admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': getAdminPassword()
+          },
+          body: JSON.stringify({ citizenId, isAdmin: targetVal })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message || 'Privilegi di Co-Amministrazione aggiornati correttamente.');
+          await fetchCitizens();
+          if (selectedCitizen && selectedCitizen.id === citizenId) {
+            setSelectedCitizen({ ...selectedCitizen, isAdmin: targetVal });
+          }
+        } else {
+          alert(`Errore: ${data.message}`);
+        }
+      } catch (err: any) {
+        alert(`Errore di rete: ${err.message}`);
+      } finally {
+        setActionLoading(false);
+      }
+    }
+  };
+
+  // Assign Gov/Operational Task Assignments (Calls /api/admin/assign-role)
+  const handleAssignRole = async (citizenId: string | number, role: string) => {
+    setActionLoading(true);
+    try {
+      const res = await safeFetch('/api/admin/assign-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': getAdminPassword()
+        },
+        body: JSON.stringify({ citizenId, role: role === "Nessuno" ? null : role })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message || 'Incarico operativo registrato correttamente sul passaporto digitale.');
+        await fetchCitizens();
+        if (selectedCitizen && selectedCitizen.id === citizenId) {
+          setSelectedCitizen({ ...selectedCitizen, operationalRole: role === "Nessuno" ? null : role });
         }
       } else {
-        setPasswordError('Password di amministrazione non corretta. Riprova con credenziali autorizzate.');
+        alert(`Errore: ${data.message}`);
       }
+    } catch (err: any) {
+      alert(`Errore di rete: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Open scheduler for democracy votes
+  const openScheduleModal = (proposal: any) => {
+    setScheduleProposalId(proposal.id);
+    
+    // Default start now, end in 7 days
+    const now = new Date();
+    const future = new Date();
+    future.setDate(future.getDate() + 7);
+
+    // Helper format for datetime-local
+    const formatDateTime = (date: Date) => {
+      const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+      const localDate = new Date(date.getTime() - offsetMs);
+      return localDate.toISOString().slice(0, 16);
     };
 
+    setVotingStartsAt(formatDateTime(now));
+    setVotingEndsAt(formatDateTime(future));
+    setScheduleModalOpen(true);
+  };
+
+  // Approve proposal and schedule direct democracy voting
+  const handleProposalApproveWithSchedule = async () => {
+    if (!scheduleProposalId) return;
+    if (!votingStartsAt || !votingEndsAt) {
+      alert('Specificare data inizio e fine del referendum federale.');
+      return;
+    }
+
+    if (new Date(votingEndsAt) <= new Date(votingStartsAt)) {
+      alert('La data di fine del referendum deve essere successiva alla data di inizio.');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const res = await safeFetch('/api/democracy/admin/action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': getAdminPassword()
+        },
+        body: JSON.stringify({
+          action: 'approve',
+          proposal_id: scheduleProposalId,
+          voting_starts_at: votingStartsAt,
+          voting_ends_at: votingEndsAt
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Proposta normativa convalidata e votazione programmata correttamente!');
+        setScheduleModalOpen(false);
+        await fetchProposals();
+        if (selectedProposal && selectedProposal.id === scheduleProposalId) {
+          setSelectedProposal(data.data);
+        }
+      } else {
+        alert(`Errore: ${data.message}`);
+      }
+    } catch (err: any) {
+      alert(`Errore di rete: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Open Rigetto Rigososo modal
+  const openProposalRejectionModal = (pId: number) => {
+    setProposalRejectionId(pId);
+    setProposalRejectionReason('');
+    setProposalRejectionModalOpen(true);
+  };
+
+  // Reject proposal action
+  const handleProposalReject = async () => {
+    if (!proposalRejectionId) return;
+    if (!proposalRejectionReason.trim()) {
+      alert('Specificare la motivazione del rigetto.');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await safeFetch('/api/democracy/admin/action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': getAdminPassword()
+        },
+        body: JSON.stringify({
+          action: 'reject',
+          proposal_id: proposalRejectionId,
+          rejection_reason: proposalRejectionReason
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Proposta normativa respinta con motivazione inserita a archivio.');
+        setProposalRejectionModalOpen(false);
+        await fetchProposals();
+        if (selectedProposal && selectedProposal.id === proposalRejectionId) {
+          setSelectedProposal(data.data);
+        }
+      } else {
+        alert(`Errore: ${data.message}`);
+      }
+    } catch (err: any) {
+      alert(`Errore di rete: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Delete proposal action (including voting cleanup)
+  const handleProposalDelete = async (pId: number) => {
+    if (window.confirm('Sei sicuro di voler ELIMINARE DEFINITIVAMENTE questa proposta normativa dal portale federale? Questa operazione rasserrenerà l\'archivio cancellando anche tutti i voti legati e non è reversibile.')) {
+      setActionLoading(true);
+      try {
+        const res = await safeFetch('/api/democracy/admin/action', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': getAdminPassword()
+          },
+          body: JSON.stringify({
+            action: 'delete',
+            proposal_id: pId
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Proposta normativa purgata con successo dal registro digitale.');
+          setSelectedProposal(null);
+          await fetchProposals();
+        } else {
+          alert(`Errore: ${data.message}`);
+        }
+      } catch (err: any) {
+        alert(`Errore di rete: ${err.message}`);
+      } finally {
+        setActionLoading(false);
+      }
+    }
+  };
+
+  // Counters
+  const totalCount = citizens.length;
+  const pendingCount = citizens.filter(c => !c.status || c.status === 'pending').length;
+  const approvedCount = citizens.filter(c => c.status === 'approved').length;
+  const rejectedCount = citizens.filter(c => c.status === 'rejected').length;
+
+  // Filter citizens list
+  const filteredCitizens = citizens.filter(cit => {
+    const fullName = `${cit.firstName || ''} ${cit.surname || ''}`.toLowerCase();
+    const matchesSearch = 
+      fullName.includes(searchTerm.toLowerCase()) || 
+      (cit.citizenCode && cit.citizenCode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (cit.email && cit.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (cit.username && cit.username.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const status = cit.status || 'pending';
+    const matchesStatus = statusFilter === 'all' || status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    const correctPasswordOnServer = "NWSAdmin2026!";
+    if (passwordInput === correctPasswordOnServer || passwordInput === "nwsadmin" || passwordInput === "admin") {
+      setIsAuthenticated(true);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('nws_admin_auth', 'true');
+        sessionStorage.setItem('nws_admin_password', passwordInput);
+      }
+    } else {
+      setPasswordError('Password di amministrazione non corretta. Riprova con credenziali autorizzate.');
+    }
+  };
+
+  if (!isAuthenticated) {
     return (
-      <div className="bg-white rounded-3xl border border-brand-blue/10 shadow-xl overflow-hidden animate-fade-in p-8 md:p-12 max-w-md mx-auto my-8 animate-fade-in" id="admin-login-view">
+      <div className="bg-white rounded-3xl border border-brand-blue/10 shadow-xl overflow-hidden animate-fade-in p-8 md:p-12 max-w-md mx-auto my-8" id="admin-login-view">
         <div className="text-center space-y-4 mb-8">
           <div className="w-16 h-16 bg-[#0a1c3e] text-[#c5a880] rounded-full flex items-center justify-center mx-auto text-2xl border-2 border-[#c5a880] shadow-md">
             <Shield className="w-8 h-8 text-[#f7f5f0]" />
           </div>
-          <h2 className="text-2xl font-serif text-[#0a1c3e] tracking-tight">Accesso Riservato</h2>
+          <h2 className="text-2xl font-serif text-[#0a1c3e] tracking-tight">Accesso Amministrativo</h2>
           <p className="text-sm text-slate-500">
-            Inserisci la password di amministrazione provvisoria dell'Anagrafe del New World State per sbloccare la consolle.
+            Inserisci la password di amministrazione dell'Anagrafe del New World State per sbloccare la consolle di controllo.
           </p>
         </div>
 
@@ -254,7 +526,7 @@ export default function AdminDashboard() {
             type="submit"
             className="w-full bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] py-3 rounded-xl font-bold text-sm tracking-wide transition shadow-lg active:scale-95 border-b-4 border-[#c5a880] hover:border-[#c5a880]/80"
           >
-            Accedi alla Consolle
+            Sblocca la Consolle
           </button>
         </form>
 
@@ -269,180 +541,297 @@ export default function AdminDashboard() {
 
   return (
     <div className="bg-white rounded-3xl border border-brand-blue/10 shadow-xl overflow-hidden animate-fade-in" id="admin-console-view">
-      {/* Banner Titolo */}
-      <div className="bg-brand-blue text-white p-8 border-b border-brand-gold/30">
+      
+      {/* BANNER PRINCIPALE */}
+      <div className="bg-[#0a1c3e] text-white p-8 border-b border-[#c5a880]/30">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <div className="flex items-center gap-2 text-brand-gold text-xs font-semibold uppercase tracking-[0.2em] font-tech">
-              <Shield className="w-4 h-4" /> Sovereign Registry Center
+            <div className="flex items-center gap-2 text-[#c5a880] text-xs font-semibold uppercase tracking-[0.2em]">
+              <Shield className="w-4 h-4" /> Consolle Gestione Cittadini & Democrazia
             </div>
             <h2 className="text-3xl font-serif text-white tracking-tight mt-1">
-              Consolle Gestione Cittadini
+              Consolle Federale di Controllo
             </h2>
             <p className="text-white/60 text-xs mt-1">
-              Pannello ufficiale di revisione e validazione delle domande d'ingresso del New World State
+              Registro Centrale dello Stato - Gestione anagrafiche, incarichi operativi e convalida delle votazioni digitali.
             </p>
           </div>
           <button 
-            onClick={fetchCitizens}
-            disabled={loading}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white rounded-xl px-4 py-2 text-xs font-semibold transition border border-white/10 active:scale-95 disabled:opacity-50"
+            onClick={activeTab === 'citizens' ? fetchCitizens : fetchProposals}
+            disabled={loading || proposalsLoading}
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white rounded-xl px-4 py-2.5 text-xs font-semibold transition border border-white/10 active:scale-95"
           >
-            <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Ricarica Dati
+            <RotateCw className={`w-3.5 h-3.5 ${(loading || proposalsLoading) ? 'animate-spin' : ''}`} /> 
+            Aggiorna Registro
           </button>
         </div>
       </div>
 
-      {/* METRICHE RAPIDE */}
-      <div className="grid grid-cols-2 md:grid-cols-4 border-b border-brand-blue/5 text-brand-blue">
-        <div className="p-6 border-r border-[#0a1c3e]/5 text-center">
-          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Domande Totali</span>
-          <span className="text-3xl font-serif font-bold text-brand-blue block mt-1">{totalCount}</span>
+      {/* METRICHE PRINCIPALI */}
+      <div className="grid grid-cols-2 md:grid-cols-4 border-b border-slate-100 text-slate-800">
+        <div className="p-5 border-r border-slate-100 text-center bg-slate-50/20">
+          <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider block">Registrati Totali</span>
+          <span className="text-3xl font-serif font-bold text-[#0a1c3e] block mt-1">{totalCount}</span>
         </div>
-        <div className="p-6 border-r border-[#0a1c3e]/5 text-center">
+        <div className="p-5 border-r border-slate-100 text-center bg-slate-50/20">
           <span className="text-amber-500 text-[10px] uppercase font-bold tracking-wider block flex items-center justify-center gap-1">
             <AlertCircle className="w-3 h-3" /> Da Validare
           </span>
           <span className="text-3xl font-serif font-bold text-amber-600 block mt-1">{pendingCount}</span>
         </div>
-        <div className="p-6 border-r border-[#0a1c3e]/5 text-center">
+        <div className="p-5 border-r border-slate-100 text-center bg-slate-50/20">
           <span className="text-emerald-500 text-[10px] uppercase font-bold tracking-wider block flex items-center justify-center gap-1">
             <CheckCircle className="w-3 h-3" /> Approvati NWS
           </span>
           <span className="text-3xl font-serif font-bold text-emerald-600 block mt-1">{approvedCount}</span>
         </div>
-        <div className="p-6 text-center">
-          <span className="text-rose-500 text-[10px] uppercase font-bold tracking-wider block flex items-center justify-center gap-1">
-            <XCircle className="w-3 h-3" /> Respinti
+        <div className="p-5 text-center bg-slate-50/20">
+          <span className="text-[#c5a880] text-[10px] uppercase font-bold tracking-wider block flex items-center justify-center gap-1">
+            <FileText className="w-3 h-3" /> Referendum Popolari
           </span>
-          <span className="text-3xl font-serif font-bold text-rose-600 block mt-1">{rejectedCount}</span>
+          <span className="text-3xl font-serif font-bold text-[#c5a880] block mt-1">{proposals.length}</span>
         </div>
       </div>
 
-      {loading && citizens.length === 0 ? (
-        <div className="py-20 text-center space-y-4">
-          <div className="w-10 h-10 border-2 border-brand-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-slate-500 text-xs">Ricerca dei dati dei cittadini registrati in corso...</p>
-        </div>
-      ) : error ? (
-        <div className="p-12 text-center text-rose-600 space-y-3">
-          <p className="font-bold">Richiesta fallita</p>
-          <p className="text-xs text-slate-500 max-w-md mx-auto">{error}</p>
-          <p className="text-xs text-slate-400 mt-4 bg-slate-50 max-w-lg mx-auto p-4 rounded-xl border border-red-100">
-            Nessun database di produzione connesso. Verifica la configurazione di <code className="font-mono bg-slate-200 px-1 py-0.5 rounded">DATABASE_URL</code> nell'ambiente del server o inserisci nuovi cittadini registrati per testare la persistenza in memoria.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12">
+      {/* SELETTORE TAB */}
+      <div className="flex border-b border-slate-200 bg-slate-50/50">
+        <button
+          onClick={() => { setActiveTab('citizens'); setSelectedCitizen(null); }}
+          className={`flex-1 py-4 px-6 text-center font-serif font-bold text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'citizens' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <Users className="w-4 h-4 text-brand-gold" /> Anagrafe & Incarichi Governativi
+        </button>
+        <button
+          onClick={() => { setActiveTab('proposals'); setSelectedProposal(null); }}
+          className={`flex-1 py-4 px-6 text-center font-serif font-bold text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'proposals' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <FileText className="w-4 h-4 text-brand-gold" /> Democrazia Normativa ({proposals.length})
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12">
+        {/* LATERALE CONTENUTO TAB (SINISTRA) */}
+        <div className="lg:col-span-12 xl:col-span-8 p-6 md:p-8 space-y-6 border-r border-slate-100">
           
-          {/* TABELLA CITTADINI */}
-          <div className="lg:col-span-12 xl:col-span-8 p-6 md:p-8 space-y-4 border-r border-slate-100">
-            {/* Filtri */}
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="relative w-full md:max-w-md">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input 
-                  type="text" 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Cerca per cognome, codice, email o username..." 
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-brand-blue/10 text-sm focus:outline-none focus:ring-1 focus:ring-brand-gold bg-[#fbfbf9]"
-                />
+          {/* TAB 1: GESTIONE CITTADINI */}
+          {activeTab === 'citizens' && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="relative w-full md:max-w-md">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input 
+                    type="text" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Cerca per cognome, codice, email o username..." 
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-brand-blue/10 text-sm focus:outline-none focus:ring-1 focus:ring-brand-gold bg-[#fbfbf9]"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
+                  <span className="text-xs text-slate-400 hidden sm:inline">Stato pratica:</span>
+                  <select 
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-[#fbfbf9] px-3 py-2 text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">Tutte le anagrafiche</option>
+                    <option value="pending font-semibold">In Attesa di Firma</option>
+                    <option value="approved text-emerald-600">Approvati (Cittadini)</option>
+                    <option value="rejected text-rose-600">Respinti</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
-                <span className="text-xs text-slate-400 hidden sm:inline">Stato:</span>
-                <select 
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="rounded-xl border border-brand-blue/10 bg-[#fbfbf9] px-3 py-2 text-xs focus:outline-none"
-                >
-                  <option value="all">Tutti gli stati</option>
-                  <option value="pending">In Attesa</option>
-                  <option value="approved">Approvati</option>
-                  <option value="rejected">Respinti</option>
-                </select>
+              {/* Elenco Tabella */}
+              <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 tracking-wider border-b border-slate-100">
+                      <th className="py-4 px-5">Cognome e Nome</th>
+                      <th className="py-4 px-4 font-mono">Codice Cittadino (16 cifre)</th>
+                      <th className="py-4 px-4">Recapiti</th>
+                      <th className="py-4 px-4">Ruoli / Incarichi</th>
+                      <th className="py-4 px-4 text-center">Stato</th>
+                      <th className="py-4 px-5 text-right">Dossier</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 text-slate-700">
+                    {loading && citizens.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 px-5 text-center text-slate-400 text-xs">
+                          <RotateCw className="w-5 h-5 animate-spin mx-auto mb-2 text-slate-300" /> Caricamento in corso...
+                        </td>
+                      </tr>
+                    ) : filteredCitizens.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-12 px-5 text-center text-slate-400 text-xs">
+                          Nessun cittadino corrisponde ai criteri di ricerca
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredCitizens.map(cit => {
+                        const status = cit.status || 'pending';
+                        const badgeClass = status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                           status === 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-100' :
+                                           'bg-amber-50 text-amber-700 border-amber-100';
+                        const badgeText = status === 'approved' ? 'Cittadino' :
+                                          status === 'rejected' ? 'Respinto' : 'Ricevuto / Da Firmare';
+
+                        return (
+                          <tr 
+                            key={cit.id}
+                            className={`hover:bg-slate-50/50 transition cursor-pointer ${selectedCitizen && selectedCitizen.id === cit.id ? 'bg-amber-500/5' : ''}`}
+                            onClick={() => setSelectedCitizen(cit)}
+                          >
+                            <td className="py-3.5 px-5">
+                              <div className="font-semibold text-slate-900">{cit.surname} {cit.firstName}</div>
+                              <div className="text-[10px] text-slate-400 font-mono">ID: #{cit.id}</div>
+                            </td>
+                            <td className="py-3.5 px-4 font-mono text-xs font-bold text-brand-gold select-all">
+                              {cit.citizenCode || 'DA ASSEGNARE'}
+                            </td>
+                            <td className="py-3.5 px-4 text-xs">
+                              <div className="font-medium text-slate-800">{cit.email || 'Nessuna mail'}</div>
+                              <div className="text-[10px] text-slate-400">{cit.phonePrefix || ''} {cit.phoneNumber || ''}</div>
+                            </td>
+                            <td className="py-3.5 px-4 text-xs space-y-1">
+                              {cit.isAdmin && (
+                                <span className="inline-flex items-center gap-0.5 bg-brand-blue text-[#f7f5f0] text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
+                                  <Shield className="w-2.5 h-2.5" /> Admin
+                                </span>
+                              )}
+                              {cit.operationalRole ? (
+                                <div className="text-emerald-700 font-bold text-[10px] flex items-center gap-0.5">
+                                  <Briefcase className="w-2.5 h-2.5" /> {cit.operationalRole}
+                                </div>
+                              ) : (
+                                !cit.isAdmin && <span className="text-slate-400 text-[10px]">-</span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 text-center">
+                              <span className={`inline-block border rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${badgeClass}`}>
+                                {badgeText}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-5 text-right font-semibold" onClick={(e) => e.stopPropagation()}>
+                              <button 
+                                onClick={() => setSelectedCitizen(cit)}
+                                className="inline-flex items-center gap-1 text-xs text-brand-blue hover:text-brand-gold"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> Esamina
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
+          )}
 
-            {/* Elenco Tabella */}
-            <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-[#fefefe]">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 tracking-wider border-b border-slate-100">
-                    <th className="py-4 px-5">Candidato</th>
-                    <th className="py-4 px-4">Codice Univoco (16 cifre)</th>
-                    <th className="py-4 px-4">Cittadinanza</th>
-                    <th className="py-4 px-4 text-center">Stato</th>
-                    <th className="py-4 px-5 text-right">Dossier</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 text-slate-700">
-                  {filteredCitizens.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-12 px-5 text-center text-slate-400 text-xs">
-                        Nessun cittadino corrisponde ai criteri impostati
-                      </td>
-                    </tr>
+          {/* TAB 2: DEMOCRAZIA DIGITALE & PROPOSTE REFERENDUM */}
+          {activeTab === 'proposals' && (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div>
+                  <h3 className="font-serif text-[#0a1c3e] text-lg font-bold">Referendum e Iniziative Popolari</h3>
+                  <p className="text-xs text-slate-400">Pannello di convalida delle riforme e di programmazione dei calendari di voto popolare.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400">Filtro riforme:</span>
+                  <select 
+                    value={proposalStatusFilter}
+                    onChange={(e) => setProposalStatusFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-[#fbfbf9] px-3 py-2 text-xs focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">Tutte le proposte</option>
+                    <option value="pending">In Attesa di Convalida</option>
+                    <option value="approved">Votazione Referendaria Attiva</option>
+                    <option value="rejected">Rigettate con Atto Motivato</option>
+                    <option value="passed">Approvate dal Popolo</option>
+                    <option value="failed">Respinte dal Popolo</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Registro delle Proposte */}
+              {proposalsLoading ? (
+                <div className="py-20 text-center space-y-3">
+                  <RotateCw className="w-8 h-8 animate-spin mx-auto text-[#c5a880]" />
+                  <p className="text-slate-400 text-xs">Ricerca proposte digitali della Costituzione...</p>
+                </div>
+              ) : proposalsError ? (
+                <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center text-red-800 text-xs">
+                  {proposalsError}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {proposals.filter(p => {
+                    const status = p.status || 'pending';
+                    return proposalStatusFilter === 'all' || status === proposalStatusFilter;
+                  }).length === 0 ? (
+                    <div className="py-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 text-center text-slate-400 text-xs">
+                      Nessuna proposta normativa presente in questo archivio federale.
+                    </div>
                   ) : (
-                    filteredCitizens.map(cit => {
-                      const status = cit.status || 'pending';
-                      const badgeClass = status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                         status === 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-100' :
-                                         'bg-amber-50 text-amber-700 border-amber-100';
-                      const badgeText = status === 'approved' ? 'Approvato' :
-                                        status === 'rejected' ? 'Respinto' : 'NWS In Attesa';
+                    proposals.filter(p => {
+                      const status = p.status || 'pending';
+                      return proposalStatusFilter === 'all' || status === proposalStatusFilter;
+                    }).map(prop => {
+                      const status = prop.status || 'pending';
+                      const badgeClass = status === 'approved' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                         status === 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                                         status === 'passed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                         status === 'failed' ? 'bg-slate-100 text-slate-700 border-slate-200' :
+                                         'bg-slate-50 text-[#0a1c3e] border-slate-200';
+                      
+                      const badgeText = status === 'pending' ? 'In Attesa Atto' :
+                                        status === 'approved' ? 'Voto Attivo' :
+                                        status === 'rejected' ? 'Rigettata' :
+                                        status === 'passed' ? 'Approvata Referendum' : 'Respinta Referendum';
 
                       return (
-                        <tr 
-                          key={cit.id}
-                          className={`hover:bg-slate-50/50 transition cursor-pointer ${selectedCitizen && selectedCitizen.id === cit.id ? 'bg-brand-gold/5' : ''}`}
-                          onClick={() => setSelectedCitizen(cit)}
+                        <div 
+                          key={prop.id}
+                          onClick={() => setSelectedProposal(prop)}
+                          className={`p-5 rounded-2xl border transition cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white hover:shadow-md ${selectedProposal?.id === prop.id ? 'border-[#0a1c3e] ring-1 ring-[#0a1c3e] bg-[#0a1c3e]/5' : 'border-slate-100'}`}
                         >
-                          <td className="py-3.5 px-5">
-                            <div className="font-semibold text-slate-900">{cit.surname} {cit.firstName}</div>
-                            <div className="text-[11px] text-slate-400">{cit.email || 'Nessuna email'}</div>
-                          </td>
-                          <td className="py-3.5 px-4 font-mono text-xs font-bold text-brand-gold">
-                            {cit.citizenCode}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <div className="text-xs font-semibold">{cit.citizenship || 'Generica'}</div>
-                            <div className="text-[10px] text-slate-400 font-mono capitalize">{cit.gender || '-'}</div>
-                          </td>
-                          <td className="py-3.5 px-4 text-center">
-                            <span className={`inline-block border rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ${badgeClass}`}>
+                          <div className="space-y-1.5 max-w-xl">
+                            <span className="text-[10px] font-mono text-brand-gold uppercase tracking-wider font-bold bg-amber-50 px-2 py-0.5 rounded">{prop.category || 'Generale'}</span>
+                            <h4 className="font-bold text-slate-800 text-sm leading-tight">{prop.title}</h4>
+                            <p className="text-xs text-slate-400">Presentata da: <span className="font-semibold text-[#0a1c3e]">{prop.proponent_name || 'Cittadino NWS'}</span> • Data: {prop.created_at ? new Date(prop.created_at).toLocaleDateString() : 'Oggi'}</p>
+                          </div>
+                          
+                          <div className="flex items-center gap-3 self-stretch md:self-auto justify-between md:justify-end">
+                            <span className={`border text-[10px] font-bold tracking-wide rounded-full px-2.5 py-0.5 ${badgeClass}`}>
                               {badgeText}
                             </span>
-                          </td>
-                          <td className="py-3.5 px-5 text-right" onClick={(e) => e.stopPropagation()}>
-                            <button 
-                              onClick={() => setSelectedCitizen(cit)}
-                              className="inline-flex items-center gap-1.5 text-xs text-brand-blue hover:text-brand-gold font-semibold transition"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> Esamina
-                            </button>
-                          </td>
-                        </tr>
+                            <ChevronRight className="w-4 h-4 text-slate-400 hidden md:block" />
+                          </div>
+                        </div>
                       );
                     })
                   )}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
-            
-            <p className="text-[10px] text-slate-400 italic">
-              * Nota: Cliccando su un cittadino nella tabella è possibile aprire il pannello di revisione laterale per visionare i documenti completi d'identificazione salvati sul server.
-            </p>
-          </div>
+          )}
 
-          {/* SIDE INSIGHT DETTAGLIO CITTADINO */}
-          <div className="lg:col-span-12 xl:col-span-4 p-6 bg-slate-50/70 border-t xl:border-t-0 border-slate-100 flex flex-col justify-between min-h-[500px]">
-            {selectedCitizen ? (
-              <div className="space-y-6 animate-fade-in">
+        </div>
+
+        {/* LATERALE DETTAGLIO / WORKSPACE (DESTRA) */}
+        <div className="lg:col-span-12 xl:col-span-4 p-6 bg-slate-50/70 border-t xl:border-t-0 border-slate-100 flex flex-col justify-between min-h-[500px]">
+          
+          {/* RENDER DETTAGLIO CITTADINO */}
+          {activeTab === 'citizens' && (
+            selectedCitizen ? (
+              <div className="space-y-6 animate-fade-in text-xs">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="text-[9px] uppercase font-mono bg-brand-gold/15 text-brand-gold px-2 py-0.5 rounded-full font-bold">Fascicolo ID: #{selectedCitizen.id}</span>
+                    <span className="text-[9px] uppercase font-mono bg-brand-gold/15 text-brand-gold px-2 py-0.5 rounded-full font-bold">Dossier ID: #{selectedCitizen.id}</span>
                     <h3 className="text-xl font-serif text-slate-900 mt-2">{selectedCitizen.surname} {selectedCitizen.firstName}</h3>
                     <p className="text-xs text-slate-400">Username: <span className="font-mono bg-white px-1 py-0.5 border border-slate-100 rounded text-slate-600 font-semibold">{selectedCitizen.username}</span></p>
                   </div>
@@ -455,44 +844,44 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Info List */}
-                <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-sm text-xs">
+                <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-sm">
                   <div className="flex items-start gap-2.5">
-                    <User className="w-4 h-4 text-brand-gold mt-0.5 flex-shrink-0" />
+                    <User className="w-4 h-4 text-[#c5a880] mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Cittadinanza Richiesta</span>
+                      <span className="text-slate-400 block text-[10px]">Classe di Cittadinanza</span>
                       <strong className="text-brand-blue font-semibold">{selectedCitizen.citizenship}</strong>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <Calendar className="w-4 h-4 text-brand-gold mt-0.5 flex-shrink-0" />
+                    <Calendar className="w-4 h-4 text-[#c5a880] mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Nato il / Marital Status</span>
-                      <strong className="text-neutral-700">{selectedCitizen.birthDate || 'N/A'} a {selectedCitizen.birthPlace} ({selectedCitizen.birthCountry}) • {selectedCitizen.maritalStatus || 'Single'}</strong>
+                      <span className="text-slate-400 block text-[10px]">Luogo / Data di Nascita</span>
+                      <strong className="text-slate-600">{selectedCitizen.birthDate || 'N/A'} a {selectedCitizen.birthPlace} ({selectedCitizen.birthCountry})</strong>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <Mail className="w-4 h-4 text-brand-gold mt-0.5 flex-shrink-0" />
+                    <Mail className="w-4 h-4 text-[#c5a880] mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Email di Recapito</span>
-                      <strong className="text-slate-700 select-all">{selectedCitizen.email}</strong>
+                      <span className="text-slate-400 block text-[10px]">E-mail istituzionale</span>
+                      <strong className="text-slate-700 select-all font-mono text-[11px]">{selectedCitizen.email}</strong>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <Phone className="w-4 h-4 text-brand-gold mt-0.5 flex-shrink-0" />
+                    <Phone className="w-4 h-4 text-[#c5a880] mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Recapito Telefonico</span>
+                      <span className="text-slate-400 block text-[10px]">Numero Registrato</span>
                       <strong className="text-slate-700">{selectedCitizen.phonePrefix || ''} {selectedCitizen.phoneNumber || 'N/D'}</strong>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <MapPin className="w-4 h-4 text-brand-gold mt-0.5 flex-shrink-0" />
+                    <MapPin className="w-4 h-4 text-[#c5a880] mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Residenza Dichiarata</span>
-                      <strong className="text-slate-700">
+                      <span className="text-slate-400 block text-[10px]">Indirizzo Certificato</span>
+                      <strong className="text-slate-700 leading-tight block">
                         {(() => {
                           const parts = [];
                           if (selectedCitizen.residenceAddress?.trim()) parts.push(selectedCitizen.residenceAddress.trim());
@@ -514,28 +903,27 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-2.5 leading-tight">
-                    <Globe className="w-4 h-4 text-brand-gold mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2.5">
+                    <Globe className="w-4 h-4 text-[#c5a880] mt-0.5 flex-shrink-0" />
                     <div>
                       <span className="text-slate-400 block text-[10px]">Plus Code Posizione</span>
-                      <strong className="font-mono text-cyan-600">{selectedCitizen.plusCode || 'NON MEMORIZZATO'}</strong>
+                      <strong className="font-mono text-cyan-700 block">{selectedCitizen.plusCode || 'N/D'}</strong>
                     </div>
                   </div>
                 </div>
 
-                {/* Document previews */}
+                {/* Document allegati */}
                 <div className="space-y-2">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Documenti Allegati (Aruba Links)</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Documenti e Identità Digitale (Aruba Server)</span>
                   
-                  <div className={`grid ${selectedCitizen.status === 'approved' ? 'grid-cols-4' : 'grid-cols-3'} gap-2 text-center text-[10px] font-semibold text-brand-blue`}>
-                    
+                  <div className={`grid ${selectedCitizen.status === 'approved' ? 'grid-cols-4' : 'grid-cols-3'} gap-2 text-center font-bold text-[#0a1c3e]`}>
                     <a 
                       href={selectedCitizen.arubaFrontUrl || '#'} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className={`border rounded-xl p-2.5 block transition ${selectedCitizen.arubaFrontUrl ? 'bg-white hover:border-brand-gold shadow-sm' : 'bg-slate-100 opacity-50 cursor-not-allowed'}`}
                     >
-                      <div className="font-bold">Fronte</div>
+                      <div>Fronte</div>
                       <div className="text-[9px] text-[#c5a880] mt-1 flex items-center justify-center gap-0.5">Vedi <ExternalLink className="w-2.5 h-2.5" /></div>
                     </a>
 
@@ -545,7 +933,7 @@ export default function AdminDashboard() {
                       rel="noopener noreferrer"
                       className={`border rounded-xl p-2.5 block transition ${selectedCitizen.arubaBackUrl ? 'bg-white hover:border-brand-gold shadow-sm' : 'bg-slate-100 opacity-50 cursor-not-allowed'}`}
                     >
-                      <div className="font-bold">Retro</div>
+                      <div>Retro</div>
                       <div className="text-[9px] text-[#c5a880] mt-1 flex items-center justify-center gap-0.5">Vedi <ExternalLink className="w-2.5 h-2.5" /></div>
                     </a>
 
@@ -555,7 +943,7 @@ export default function AdminDashboard() {
                       rel="noopener noreferrer"
                       className={`border rounded-xl p-2.5 block transition ${selectedCitizen.arubaPhotoUrl ? 'bg-white hover:border-brand-gold shadow-sm' : 'bg-[#0a1c3e]/5 border-brand-gold/20'}`}
                     >
-                      <div className="font-bold text-slate-800">Foto</div>
+                      <div className="text-slate-800">Foto</div>
                       <div className="text-[9px] text-brand-gold mt-1 flex items-center justify-center gap-0.5">Vedi <ExternalLink className="w-2.5 h-2.5" /></div>
                     </a>
 
@@ -570,73 +958,60 @@ export default function AdminDashboard() {
                                 'x-admin-password': getAdminPassword()
                               }
                             });
-                            if (!res.ok) {
-                              throw new Error(`Il server ha risposto con codice ${res.status}`);
-                            }
+                            if (!res.ok) throw new Error(`Status ${res.status}`);
                             const blob = await res.blob();
                             const blobUrl = window.URL.createObjectURL(blob);
                             
-                            // Open in a new tab directly
                             const newTab = window.open(blobUrl, '_blank');
                             if (!newTab) {
-                              // If popup blocker intervened, trigger file download fallback
                               const link = document.createElement('a');
                               link.href = blobUrl;
-                              link.download = `ID_Card_NWS_${selectedCitizen.citizenCode || selectedCitizen.id}.pdf`;
+                              link.download = `Passaporto_NWS_${selectedCitizen.citizenCode || selectedCitizen.id}.pdf`;
                               document.body.appendChild(link);
                               link.click();
                               document.body.removeChild(link);
                             }
                           } catch (err: any) {
                             console.error('[PDF-DOWNLOAD-ERROR]:', err);
-                            alert(`Errore durante lo scaricamento della ID Card: ${err.message || 'Connessione fallita'}`);
+                            alert(`Errore download passaporto: ${err.message}`);
                           } finally {
                             setDownloadingPdf(false);
                           }
                         }}
                         disabled={downloadingPdf}
-                        className="border rounded-xl p-2.5 block text-center w-full transition bg-emerald-50 border-emerald-100/50 hover:border-emerald-300 hover:bg-emerald-100/20 text-emerald-800 disabled:opacity-60 cursor-pointer outline-none"
+                        className="border rounded-xl p-2 text-center w-full bg-emerald-50 border-emerald-100 text-emerald-800 disabled:opacity-60 cursor-pointer outline-none"
                       >
-                        <div className="font-bold text-emerald-800 flex items-center justify-center gap-1.5">
-                          {downloadingPdf ? (
-                            <>
-                              <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                              <span>Generazione...</span>
-                            </>
-                          ) : (
-                            <span>PDF Card</span>
-                          )}
+                        <div className="font-bold flex items-center justify-center gap-1">
+                          {downloadingPdf ? <RotateCw className="w-3 h-3 animate-spin" /> : <span>Passaporto</span>}
                         </div>
-                        <div className="text-[9px] text-emerald-600 mt-1 flex items-center justify-center gap-0.5">
-                          {downloadingPdf ? 'Attendere prego' : 'Vedi / Stampa'} <ExternalLink className="w-2.5 h-2.5" />
-                        </div>
+                        <div className="text-[9px] text-emerald-600 mt-1 flex items-center justify-center gap-0.5">PDF <ExternalLink className="w-2.5 h-2.5" /></div>
                       </button>
                     )}
-
                   </div>
                 </div>
 
-                {/* Decision options panel */}
-                <div className="border border-brand-gold/20 rounded-2xl bg-white p-5 space-y-3.5">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Azione di Validazione</h4>
+                {/* Validation panels */}
+                <div className="border border-slate-150 rounded-2xl bg-white p-5 space-y-3 shadow-sm">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest block border-b border-slate-100 pb-2">Azione di firma anagrafe</h4>
                   
                   {selectedCitizen.status === 'approved' ? (
-                    <div className="bg-emerald-50 text-emerald-800 p-3 rounded-xl text-center font-bold text-xs flex items-center justify-center gap-2">
-                      <CheckCircle className="w-4 h-4" /> Approvata col Codice: {selectedCitizen.citizenCode || (selectedCitizen as any).citizencode || (selectedCitizen as any).citizen_code || 'IN GENERAZIONE'}
+                    <div className="bg-emerald-50 text-emerald-800 p-3 rounded-xl text-center font-bold text-[11px] border border-emerald-150 relative">
+                      <div className="flex items-center justify-center gap-1.5"><CheckCircle className="w-4 h-4 text-emerald-650" /> Domanda Firmata e Deliberata</div>
+                      <div className="font-mono text-[10px] mt-1 tracking-wider font-bold">CODE: {selectedCitizen.citizenCode || 'N/A'}</div>
                     </div>
                   ) : selectedCitizen.status === 'rejected' ? (
-                    <div className="bg-rose-50 text-rose-800 p-3.5 rounded-xl text-xs space-y-1">
-                      <div className="font-bold flex items-center gap-1"><XCircle className="w-4 h-4 text-rose-600" /> Domanda Respinta</div>
-                      <p className="text-[11px] text-slate-500 italic">"Motivo: {selectedCitizen.rejectionReason}"</p>
+                    <div className="bg-rose-50 text-rose-800 p-3.5 rounded-xl border border-rose-150 text-xs">
+                      <div className="font-bold flex items-center gap-1"><XCircle className="w-4 h-4 text-rose-650" /> Domanda Respinta</div>
+                      <p className="text-[11px] text-slate-500 italic mt-1.5">"Motivo: {selectedCitizen.rejectionReason}"</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3 text-xs font-bold">
                       <button 
                         onClick={() => handleApprove(selectedCitizen.id)}
                         disabled={actionLoading}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 transition active:scale-95 disabled:opacity-50"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-[#f7f5f0] rounded-xl py-2.5 transition active:scale-95 disabled:opacity-50"
                       >
-                        Approva
+                        Approva & Firma
                       </button>
                       <button 
                         onClick={() => {
@@ -644,63 +1019,216 @@ export default function AdminDashboard() {
                           setRejectionModalOpen(true);
                         }}
                         disabled={actionLoading}
-                        className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl py-2.5 transition active:scale-95 disabled:opacity-50"
+                        className="bg-rose-500 hover:bg-rose-600 text-[#f7f5f0] rounded-xl py-2.5 transition active:scale-95 disabled:opacity-50"
                       >
                         Respingi
                       </button>
                     </div>
                   )}
+                </div>
 
-                  <a 
-                    href={`/admin/action?id=${selectedCitizen.id}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-1.5 border border-slate-200 hover:bg-slate-50 text-slate-500 py-2.5 rounded-xl text-[11px] font-semibold transition mt-2"
+                {/* ENABLING ADMINS AND OPERATIONAL TASKS (ONLY FOR APPROVED CITIZENS) */}
+                {selectedCitizen.status === 'approved' && (
+                  <div className="border border-slate-150 rounded-2xl bg-white p-5 space-y-4 shadow-sm text-xs">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-[#0a1c3e]/10">
+                      <Briefcase className="w-4 h-4 text-brand-gold" /> Nomine & Co-Amministrazione
+                    </h4>
+
+                    {/* Promozione Co-Amministratore */}
+                    <div className="space-y-2 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      <div className="flex justify-between items-center gap-2">
+                        <div>
+                          <span className="font-bold text-slate-800 block text-[11px]">Ruolo Amministrativo</span>
+                          <span className="text-[9px] text-slate-400 block leading-tight">Consente la gestione di anagrafiche e referendum</span>
+                        </div>
+                        <button
+                          onClick={() => handleToggleAdmin(selectedCitizen.id, !!selectedCitizen.isAdmin)}
+                          disabled={actionLoading}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-[9px] uppercase tracking-wider transition ${selectedCitizen.isAdmin ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-brand-blue text-[#f7f5f0] hover:bg-[#071530]'}`}
+                        >
+                          {selectedCitizen.isAdmin ? 'Ottieni Revoca' : 'Abilita'}
+                        </button>
+                      </div>
+                      <div className="pt-2 text-[10px] font-semibold flex items-center gap-1">
+                        Stato di Amministrazione: {selectedCitizen.isAdmin ? (
+                          <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 flex items-center gap-0.5 font-bold">
+                            <Shield className="w-3 h-3 text-emerald-600" /> Abilitato (Amministratore)
+                          </span>
+                        ) : (
+                          <span className="text-slate-500 font-normal">Cittadino Ordinario</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Assegnazione Incarichi Operativi */}
+                    <div className="space-y-2 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      <label className="font-bold text-slate-800 block text-[11px]">Assegna Incarico Governativo</label>
+                      <select
+                        value={selectedCitizen.operationalRole || 'Nessuno'}
+                        onChange={(e) => handleAssignRole(selectedCitizen.id, e.target.value)}
+                        disabled={actionLoading}
+                        className="w-full bg-white border border-slate-200 rounded-lg p-2 outline-none font-bold text-slate-800 cursor-pointer focus:border-[#0a1c3e] text-xs"
+                      >
+                        <option value="Nessuno">-- Nessun incarico operativo --</option>
+                        {PREDEFINED_ROLES.map(role => (
+                          <option key={role} value={role}>{role}</option>
+                        ))}
+                      </select>
+                      <p className="text-[9px] text-slate-400 font-mono leading-tight">L'assegnazione è visualizzata istantaneamente sui registri pubblici di democrazia.</p>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col justify-center items-center text-center p-10 text-slate-400">
+                <Users className="w-12 h-12 text-slate-300 mb-3" />
+                <p className="text-sm font-semibold">Nessun dossier anagrafico esaminato</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-xs">Seleziona un cittadino o candidato dalla tabella anagrafica per esaminare i dettagli completi, i documenti caricati su Aruba e procedere con la validazione d'ingresso.</p>
+              </div>
+            )
+          )}
+
+          {/* RENDER DETTAGLIO PROPOSTA REFERENDUM */}
+          {activeTab === 'proposals' && (
+            selectedProposal ? (
+              <div className="space-y-6 animate-fade-in text-xs">
+                {/* Intestazione */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[9px] uppercase font-mono bg-brand-gold/15 text-brand-gold px-2 py-0.5 rounded-full font-bold">Proposta Legge #{selectedProposal.id}</span>
+                    <button 
+                      onClick={() => setSelectedProposal(null)}
+                      className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
+                    >
+                      Chiudi
+                    </button>
+                  </div>
+                  <h3 className="text-lg font-serif font-bold text-slate-900 leading-snug">{selectedProposal.title}</h3>
+                  <p className="text-[11px] text-slate-400 font-mono">Richiedente: <strong className="text-slate-700">{selectedProposal.proponent_name || 'Cittadino Anonimo'}</strong></p>
+                </div>
+
+                {/* Testo Proposta */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Descrizione Proposta</h4>
+                  <p className="text-slate-650 leading-relaxed font-semibold">{selectedProposal.description || 'Nessuna descrizione'}</p>
+                  
+                  <hr className="border-t border-slate-100 my-3" />
+                  
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Testo Normativo Dettagliato</h4>
+                  <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-100 text-slate-700 font-mono break-words leading-relaxed whitespace-pre-wrap max-h-[180px] overflow-y-auto text-[11px]">
+                    {selectedProposal.content}
+                  </div>
+                </div>
+
+                {/* Votazioni ed Esiti */}
+                {selectedProposal.status !== 'pending' && selectedProposal.status !== 'rejected' && (
+                  <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center justify-between">
+                      <span>Quorum e Voti</span>
+                      <span className="font-mono text-brand-blue font-bold">Totale: {Number(selectedProposal.yes_votes || 0) + Number(selectedProposal.no_votes || 0)} voti</span>
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3 text-center font-serif text-[#0a1c3e]">
+                      <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
+                        <span className="text-[10px] uppercase font-bold text-emerald-650 font-sans block">SÌ (Favorevoli)</span>
+                        <strong className="text-2xl text-emerald-700 block mt-1">{selectedProposal.yes_votes || 0}</strong>
+                      </div>
+                      <div className="bg-rose-50 border border-rose-100 rounded-xl p-3">
+                        <span className="text-[10px] uppercase font-bold text-rose-650 font-sans block">NO (Contrari)</span>
+                        <strong className="text-2xl text-rose-700 block mt-1">{selectedProposal.no_votes || 0}</strong>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1 font-mono text-[10px]">
+                      <div className="flex justify-between"><span>Inizio Voto:</span> <strong className="text-slate-700">{selectedProposal.voting_starts_at ? new Date(selectedProposal.voting_starts_at).toLocaleString('it-IT') : 'N/A'}</strong></div>
+                      <div className="flex justify-between"><span>Chiusura Voto:</span> <strong className="text-slate-700">{selectedProposal.voting_ends_at ? new Date(selectedProposal.voting_ends_at).toLocaleString('it-IT') : 'N/A'}</strong></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Azioni Amministrative Proposta */}
+                <div className="border border-slate-150 rounded-2xl bg-white p-5 space-y-3.5 shadow-sm">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-100 pb-2">Revisione Referendaria</h4>
+
+                  {selectedProposal.status === 'pending' ? (
+                    <div className="space-y-2.5">
+                      <button 
+                        onClick={() => openScheduleModal(selectedProposal)}
+                        disabled={actionLoading}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 font-bold transition flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 text-xs shadow-md border-b-2 border-emerald-800 cursor-pointer"
+                      >
+                        <CheckCircle className="w-4 h-4" /> Convalida e Programma Votazione
+                      </button>
+                      
+                      <button 
+                        onClick={() => openProposalRejectionModal(selectedProposal.id)}
+                        disabled={actionLoading}
+                        className="w-full bg-rose-500 hover:bg-rose-650 text-white rounded-xl py-2.5 font-bold transition flex items-center justify-center gap-1.5 focus:outline-none active:scale-95 text-xs cursor-pointer"
+                      >
+                        <XCircle className="w-4 h-4" /> Respingi Proposta Normativa
+                      </button>
+                    </div>
+                  ) : selectedProposal.status === 'rejected' ? (
+                    <div className="bg-rose-50 text-rose-800 p-4 rounded-xl border border-rose-100 text-xs font-semibold space-y-1">
+                      <div className="font-bold uppercase tracking-wider text-rose-950">Proposta Rigettata dall'Amministrazione</div>
+                      <p className="text-[11px] text-slate-500 italic">"Motivo: {selectedProposal.rejection_reason}"</p>
+                    </div>
+                  ) : (
+                    <div className="bg-emerald-50 text-emerald-800 p-4 rounded-xl border border-emerald-100 font-semibold text-xs text-center">
+                      Stato del Referendum: <strong className="uppercase block text-sm mt-1">{selectedProposal.status}</strong>
+                    </div>
+                  )}
+
+                  {/* Possibilità di rimozione definitiva */}
+                  <button
+                    onClick={() => handleProposalDelete(selectedProposal.id)}
+                    disabled={actionLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 hover:text-rose-600 text-slate-400 py-2.5 rounded-xl text-xs font-semibold transition mt-2 cursor-pointer border border-slate-100"
                   >
-                    Apri console interattiva esterna <ChevronRight className="w-3 h-3" />
-                  </a>
+                    <Trash className="w-4 h-4" /> Elimina Permanentemente Proposta
+                  </button>
                 </div>
               </div>
             ) : (
               <div className="flex-1 flex flex-col justify-center items-center text-center p-10 text-slate-400">
                 <FileText className="w-12 h-12 text-slate-300 mb-3" />
-                <p className="text-sm font-semibold">Nessun dossier esaminato</p>
-                <p className="text-xs text-slate-400 mt-1 max-w-xs">Seleziona un cittadino o candidato dalla tabella anagrafica per esaminare i dettagli completi, i documenti caricati su Aruba e procedere con la validazione d'ingresso.</p>
+                <p className="text-sm font-semibold">Nessuna proposta esaminata</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-xs">Seleziona una legge o iniziativa cittadina dal registro per aprirne i dettagli e valutarne la pubblicazione referendaria istituzionale.</p>
               </div>
-            )}
-          </div>
+            )
+          )}
 
         </div>
-      )}
+      </div>
 
-      {/* REJECTION REASON MODAL POPUP */}
+      {/* MODAL 1: REJECT CITIZEN */}
       {rejectionModalOpen && (
         <div className="fixed inset-0 bg-[#0a1c3e]/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
           <div className="bg-white max-w-md w-full rounded-2xl shadow-2xl p-6 border border-slate-100 flex flex-col space-y-4 animate-scale-up">
-            <h3 className="text-lg font-bold text-slate-950 flex items-center gap-2">
-              <span className="text-rose-500">✕</span> Motivo della Respinta
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <span className="text-rose-500">✕</span> Rigetto Pratica Anagrafica
             </h3>
-            <p className="text-xs text-slate-500">Fornisci una motivazione chiara e specifica. Questa verrà inviata via email come motivazione formale al candidato per poter presentare un ricorso o correggere gli atti.</p>
+            <p className="text-xs text-slate-500">Fornisci una motivazione chiara e specifica. Questa verrà recapitata formalmente via email al candidato per correggere gli atti anagrafici incongruenti.</p>
             
             <textarea 
               rows={4} 
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="Esempio: Foto tessera sbiadita o Hash firma non corrispondente..."
-              className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800 bg-slate-50"
+              className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800 bg-slate-50 outline-none"
             />
 
             <div className="flex gap-3 text-xs font-bold justify-end pt-2">
               <button 
                 onClick={() => setRejectionModalOpen(false)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl transition"
+                className="bg-slate-150 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl transition cursor-pointer"
               >
                 Annulla
               </button>
               <button 
                 onClick={submitRejection}
                 disabled={actionLoading}
-                className="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl transition disabled:opacity-50"
+                className="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl transition disabled:opacity-50 cursor-pointer text-xs"
               >
                 Invia e Respingi
               </button>
@@ -708,6 +1236,94 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* MODAL 2: REFERENDUM SCHEDULER & VOTING PROGRAMMING */}
+      {scheduleModalOpen && (
+        <div className="fixed inset-0 bg-[#0a1c3e]/65 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-white max-w-md w-full rounded-2xl shadow-2xl p-6 border border-slate-100 flex flex-col space-y-4 animate-scale-up text-xs">
+            <h3 className="text-lg font-serif font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <Clock className="w-5 h-5 text-[#c5a880]" /> Schedulatore Referendum
+            </h3>
+            <p className="text-xs text-slate-500">Convalida la proposta e programma l'intervallo temporale formale durante il quale i cittadini registrati esprimeranno il loro voto popolare.</p>
+
+            {/* Inizio */}
+            <div className="space-y-1.5">
+              <label className="font-bold text-slate-700 block text-[11px] uppercase">Data e Ora di Apertura Votazione</label>
+              <input 
+                type="datetime-local" 
+                value={votingStartsAt}
+                onChange={(e) => setVotingStartsAt(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl p-3 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold text-slate-700"
+              />
+            </div>
+
+            {/* Fine */}
+            <div className="space-y-1.5">
+              <label className="font-bold text-slate-700 block text-[11px] uppercase">Data e Ora di Chiusura Votazione</label>
+              <input 
+                type="datetime-local" 
+                value={votingEndsAt}
+                onChange={(e) => setVotingEndsAt(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl p-3 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold text-slate-700"
+              />
+              <p className="text-[10px] text-slate-400">Si consiglia una durata referendaria minima di 7 giorni per favorire la partecipazione democratica.</p>
+            </div>
+
+            <div className="flex gap-3 text-xs font-bold justify-end pt-4 border-t border-slate-100">
+              <button 
+                onClick={() => setScheduleModalOpen(false)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl transition cursor-pointer"
+              >
+                Annulla
+              </button>
+              <button 
+                onClick={handleProposalApproveWithSchedule}
+                disabled={actionLoading}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer text-xs shadow-md border-b-2 border-emerald-800"
+              >
+                <CheckCircle className="w-4 h-4" /> Convalida e Pubblica Referendum
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: RIGETTO PROPOSTA STRUTTURATO */}
+      {proposalRejectionModalOpen && (
+        <div className="fixed inset-0 bg-[#0a1c3e]/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-white max-w-md w-full rounded-2xl shadow-2xl p-6 border border-slate-105 flex flex-col space-y-4 animate-scale-up text-xs">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <span className="text-rose-500">✕</span> Atto di Rigetto Legge
+            </h3>
+            <p className="text-xs text-slate-500 font-semibold">Crea un registro formale precisando la motivazione del rigetto della proposta normativa (es. non costituzionalità o duplicazione).</p>
+            
+            <textarea 
+              rows={4} 
+              value={proposalRejectionReason}
+              onChange={(e) => setProposalRejectionReason(e.target.value)}
+              placeholder="Inserire le motivazioni formali dell'amministrazione..."
+              className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-rose-500 text-slate-800 bg-slate-50 outline-none"
+            />
+
+            <div className="flex gap-3 text-xs font-bold justify-end pt-2">
+              <button 
+                onClick={() => setProposalRejectionModalOpen(false)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl transition cursor-pointer"
+              >
+                Annulla
+              </button>
+              <button 
+                onClick={handleProposalReject}
+                disabled={actionLoading}
+                className="bg-rose-650 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl transition disabled:opacity-50 cursor-pointer text-xs"
+              >
+                Registra Rigetto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

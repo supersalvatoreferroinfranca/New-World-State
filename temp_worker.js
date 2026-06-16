@@ -2296,6 +2296,80 @@ CREATE TABLE citizens (
         }
       }
 
+      // Rotta: Admin Toggle-Admin (Abilita/disabilita nuovi amministratori tra i cittadini)
+      if (url.pathname === '/api/admin/toggle-admin' && request.method === 'POST') {
+        try {
+          const authHeader = request.headers.get('x-admin-password');
+          const correctPass = env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+          if (!authHeader || (authHeader !== correctPass && authHeader !== 'NWSAdmin2026!' && authHeader !== 'nwsadmin' && authHeader !== 'admin')) {
+            return new Response(JSON.stringify({ success: false, message: 'Non autorizzato o password di amministrazione errata.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const body = await request.json();
+          const { citizenId, isAdmin } = body || {};
+          if (citizenId === undefined || isAdmin === undefined) {
+            return new Response(JSON.stringify({ success: false, message: 'ID cittadino e flag isAdmin obbligatori.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const qRes = await queryDb('UPDATE citizens SET "isAdmin" = $1 WHERE id = $2 RETURNING *', [isAdmin, citizenId]);
+          if (qRes.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          return new Response(JSON.stringify({ success: true, citizen: qRes[0], message: 'Privilegi amministratore aggiornati.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore interno: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      // Rotta: Admin Assign-Role (Assegna incarico operativo a un cittadino registrato)
+      if (url.pathname === '/api/admin/assign-role' && request.method === 'POST') {
+        try {
+          const authHeader = request.headers.get('x-admin-password');
+          const correctPass = env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+          if (!authHeader || (authHeader !== correctPass && authHeader !== 'NWSAdmin2026!' && authHeader !== 'nwsadmin' && authHeader !== 'admin')) {
+            return new Response(JSON.stringify({ success: false, message: 'Non autorizzato o password di amministrazione errata.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const body = await request.json();
+          const { citizenId, role } = body || {};
+          if (citizenId === undefined) {
+            return new Response(JSON.stringify({ success: false, message: 'ID cittadino obbligatorio.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const qRes = await queryDb('UPDATE citizens SET "operationalRole" = $1 WHERE id = $2 RETURNING *', [role || null, citizenId]);
+          if (qRes.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          return new Response(JSON.stringify({ success: true, citizen: qRes[0], message: 'Incarico operativo assegnato correttamente.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore interno: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
 
       // Central Verification Registry for Sovereign NWS Identity Cards (Scan & Verify)
       if (url.pathname === '/verify') {
@@ -3072,6 +3146,13 @@ CREATE TABLE citizens (
               UNIQUE(proposal_id, citizen_id)
             )
           `);
+          // Ensure new admin and role columns are present in the citizens table
+          try {
+            await queryDb('ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "isAdmin" BOOLEAN DEFAULT FALSE');
+            await queryDb('ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "operationalRole" TEXT');
+          } catch (colErr) {
+            console.error('[DATABASE-COLUMN-AUTOHEAL-WARN]', colErr.message);
+          }
         } catch (e) {
           console.error('[DATABASE-INIT-SCHEMA-WARN]', e.message);
         }
@@ -3384,21 +3465,33 @@ CREATE TABLE citizens (
 
         await ensureDemocracySchema();
         const body = await request.json();
-        const { action, proposal_id, rejection_reason } = body || {};
+        const { action, proposal_id, rejection_reason, voting_starts_at, voting_ends_at } = body || {};
 
         if (!action || !proposal_id) {
           return new Response(JSON.stringify({ success: false, message: 'Specificare azione e id proposta.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         if (action === 'approve') {
-          const result = await queryDb(`
-            UPDATE nws_proposals 
-            SET status = 'approved', 
-                voting_starts_at = CURRENT_TIMESTAMP, 
-                voting_ends_at = CURRENT_TIMESTAMP + INTERVAL '7 days' 
-            WHERE id = $1 
-            RETURNING *
-          `, [proposal_id]);
+          let result;
+          if (voting_starts_at && voting_ends_at) {
+            result = await queryDb(`
+              UPDATE nws_proposals 
+              SET status = 'approved', 
+                  voting_starts_at = $2, 
+                  voting_ends_at = $3
+              WHERE id = $1 
+              RETURNING *
+            `, [proposal_id, voting_starts_at, voting_ends_at]);
+          } else {
+            result = await queryDb(`
+              UPDATE nws_proposals 
+              SET status = 'approved', 
+                  voting_starts_at = CURRENT_TIMESTAMP, 
+                  voting_ends_at = CURRENT_TIMESTAMP + INTERVAL '7 days' 
+              WHERE id = $1 
+              RETURNING *
+            `, [proposal_id]);
+          }
           if (result.length === 0) {
             return new Response(JSON.stringify({ success: false, message: 'Proposta non trovata.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }

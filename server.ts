@@ -54,6 +54,9 @@ async function runMigrations() {
       await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "rejectionReason" TEXT`);
       // Ensure status column exists
       await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending'`);
+      // Ensure isAdmin and operationalRole columns exist
+      await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "isAdmin" BOOLEAN DEFAULT FALSE`);
+      await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "operationalRole" TEXT`);
       // Ensure aruba columns exist for persistent document links
       await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "arubaFrontUrl" TEXT`);
       await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "arubaBackUrl" TEXT`);
@@ -1651,6 +1654,83 @@ Ufficio dell'Anagrafe Federale del New World State
       return res.json({ success: true, message: 'Stato cittadino impostato su respinto con successo.', citizen: updated });
     });
 
+    // Toggle admin role on a citizen
+    apiRouter.post('/admin/toggle-admin', async (req, res) => {
+      const { citizenId, isAdmin } = req.body || {};
+      if (citizenId === undefined || isAdmin === undefined) {
+        return res.status(400).json({ success: false, message: 'ID cittadino e flag isAdmin obbligatori.' });
+      }
+
+      console.log(`[API] Processing toggle-admin on citizen ${citizenId} to ${isAdmin}`);
+      const parsedId = String(citizenId);
+
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query(
+            'UPDATE citizens SET "isAdmin" = $1 WHERE id = $2 RETURNING *',
+            [isAdmin, citizenId]
+          );
+          if (qRes.rows.length > 0) {
+            // Update local memory cache if present
+            const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
+            if (idx !== -1) {
+              memoryCitizens[idx].isAdmin = isAdmin;
+            }
+            return res.json({ success: true, citizen: getCitizenWithArubaUrls(qRes.rows[0]), message: `Privilegi amministratore aggiornati.` });
+          }
+        } catch (dbErr: any) {
+          console.error('[DB-TOGGLE-ADMIN-ERR]', dbErr.message);
+        }
+      }
+
+      // Memory store fallback
+      const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
+      if (idx !== -1) {
+        memoryCitizens[idx].isAdmin = isAdmin;
+        return res.json({ success: true, citizen: getCitizenWithArubaUrls(memoryCitizens[idx]), message: `Privilegi di memoria aggiornati.` });
+      }
+
+      return res.status(404).json({ success: false, message: 'Cittadino non trovato.' });
+    });
+
+    // Assign operational post/role to a citizen
+    apiRouter.post('/admin/assign-role', async (req, res) => {
+      const { citizenId, role } = req.body || {};
+      if (citizenId === undefined) {
+        return res.status(400).json({ success: false, message: 'ID cittadino obbligatorio.' });
+      }
+
+      console.log(`[API] Processing assign-role on citizen ${citizenId} to: "${role}"`);
+      const parsedId = String(citizenId);
+
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query(
+            'UPDATE citizens SET "operationalRole" = $1 WHERE id = $2 RETURNING *',
+            [role || null, citizenId]
+          );
+          if (qRes.rows.length > 0) {
+            const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
+            if (idx !== -1) {
+              memoryCitizens[idx].operationalRole = role || null;
+            }
+            return res.json({ success: true, citizen: getCitizenWithArubaUrls(qRes.rows[0]), message: `Incarico operativo assegnato correttamente.` });
+          }
+        } catch (dbErr: any) {
+          console.error('[DB-ASSIGN-ROLE-ERR]', dbErr.message);
+        }
+      }
+
+      // Memory store fallback
+      const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
+      if (idx !== -1) {
+        memoryCitizens[idx].operationalRole = role || null;
+        return res.json({ success: true, citizen: getCitizenWithArubaUrls(memoryCitizens[idx]), message: `Incarico operativo di memoria assegnato con successo.` });
+      }
+
+      return res.status(404).json({ success: false, message: 'Cittadino non trovato.' });
+    });
+
     apiRouter.get('/test-aruba', async (req, res) => {
       const uploaderUrl = process.env.ARUBA_UPLOADER_URL ? process.env.ARUBA_UPLOADER_URL.trim() : '';
       const uploaderKey = process.env.ARUBA_UPLOADER_KEY ? process.env.ARUBA_UPLOADER_KEY.trim() : '';
@@ -2274,16 +2354,34 @@ Ufficio dell'Anagrafe Federale del New World State
 
       try {
         if (action === 'approve') {
-          // Convalida proposta e avvia votazione (durata 7 giorni)
-          const startVoteSql = `
-            UPDATE nws_proposals 
-            SET status = 'approved', 
-                voting_starts_at = CURRENT_TIMESTAMP, 
-                voting_ends_at = CURRENT_TIMESTAMP + INTERVAL '7 days' 
-            WHERE id = $1 
-            RETURNING *
-          `;
-          const result = await dbPool.query(startVoteSql, [proposal_id]);
+          // Convalida proposta e avvia votazione con date facoltative personalizzate
+          const { voting_starts_at, voting_ends_at } = req.body || {};
+          let startVoteSql;
+          let params;
+
+          if (voting_starts_at && voting_ends_at) {
+            startVoteSql = `
+              UPDATE nws_proposals 
+              SET status = 'approved', 
+                  voting_starts_at = $2, 
+                  voting_ends_at = $3
+              WHERE id = $1 
+              RETURNING *
+            `;
+            params = [proposal_id, voting_starts_at, voting_ends_at];
+          } else {
+            startVoteSql = `
+              UPDATE nws_proposals 
+              SET status = 'approved', 
+                  voting_starts_at = CURRENT_TIMESTAMP, 
+                  voting_ends_at = CURRENT_TIMESTAMP + INTERVAL '7 days' 
+              WHERE id = $1 
+              RETURNING *
+            `;
+            params = [proposal_id];
+          }
+
+          const result = await dbPool.query(startVoteSql, params);
           if (result.rows.length === 0) {
             return res.status(404).json({ success: false, message: 'Proposta non trovata.' });
           }
