@@ -3093,11 +3093,8 @@ CREATE TABLE citizens (
           const qRes = await queryDb(
             `SELECT * FROM citizens WHERE 
               UPPER("citizenCode") = $1 OR 
-              UPPER(citizen_code) = $1 OR 
-              UPPER(citizencode) = $1 OR 
               UPPER(username) = $1 OR 
               UPPER(email) = $1 OR
-              (phone_number IS NOT NULL AND REPLACE(REPLACE(REPLACE(REPLACE(phone_number, ' ', ''), '-', ''), '+', ''), '(', '') = $2) OR
               ("phoneNumber" IS NOT NULL AND REPLACE(REPLACE(REPLACE(REPLACE("phoneNumber", ' ', ''), '-', ''), '+', ''), '(', '') = $2)
             `,
             [uppercaseVal, cleanPhoneVal]
@@ -3212,7 +3209,7 @@ CREATE TABLE citizens (
         const uppercaseVal = String(usernameOrCode).trim().toUpperCase();
         const qRes = await queryDb(
           `SELECT * FROM citizens WHERE 
-            (UPPER("citizenCode") = $1 OR UPPER(citizen_code) = $1 OR UPPER(citizencode) = $1 OR UPPER(username) = $1 OR UPPER(email) = $1)
+            (UPPER("citizenCode") = $1 OR UPPER(username) = $1 OR UPPER(email) = $1)
             AND password = $2`,
           [uppercaseVal, password]
         );

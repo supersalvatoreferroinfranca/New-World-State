@@ -1092,7 +1092,7 @@ Ufficio dell'Anagrafe Federale del New World State
       if (dbPool) {
         try {
           const qRes = await dbPool.query(
-            'SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR UPPER(citizen_code) = $1 OR UPPER(citizencode) = $1 OR id::text = $1', 
+            'SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR id::text = $1', 
             [cleanKey]
           );
           if (qRes.rows.length > 0) {
@@ -1939,11 +1939,8 @@ Ufficio dell'Anagrafe Federale del New World State
         const qRes = await dbPool.query(
           `SELECT * FROM citizens WHERE 
             UPPER("citizenCode") = $1 OR 
-            UPPER(citizen_code) = $1 OR 
-            UPPER(citizencode) = $1 OR 
             UPPER(username) = $1 OR 
             UPPER(email) = $1 OR
-            (phone_number IS NOT NULL AND REPLACE(REPLACE(REPLACE(REPLACE(phone_number, ' ', ''), '-', ''), '+', ''), '(', '') = $2) OR
             ("phoneNumber" IS NOT NULL AND REPLACE(REPLACE(REPLACE(REPLACE("phoneNumber", ' ', ''), '-', ''), '+', ''), '(', '') = $2)
           `,
           [uppercaseVal, cleanPhoneVal]
@@ -2067,7 +2064,7 @@ Ufficio dell'Anagrafe Federale del New World State
         // Cerca cittadino con match case-insensitive su citizenCode, username o email
         const qRes = await dbPool.query(
           `SELECT * FROM citizens WHERE 
-            (UPPER("citizenCode") = $1 OR UPPER(citizen_code) = $1 OR UPPER(citizencode) = $1 OR UPPER(username) = $1 OR UPPER(email) = $1)
+            (UPPER("citizenCode") = $1 OR UPPER(username) = $1 OR UPPER(email) = $1)
             AND password = $2`,
           [uppercaseVal, password]
         );
