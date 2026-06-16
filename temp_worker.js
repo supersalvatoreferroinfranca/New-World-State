@@ -1807,15 +1807,36 @@ CREATE TABLE citizens (
         }
 
         try {
+          // Rilevamento dinamico delle colonne dello schema reale per evitare errori PostgreSQL (column does not exist)
+          const columnsQuery = `
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'citizens'
+          `;
+          const colsRes = await queryDb(columnsQuery);
+          const existingCols = colsRes.map(c => c.column_name);
+          const existingColsLower = existingCols.map(name => name.toLowerCase());
+
           let rows = [];
           if (/^\d+$/.test(key)) {
             rows = await queryDb('SELECT * FROM citizens WHERE id = $1', [Number(key)]);
           }
           if (rows.length === 0) {
-            rows = await queryDb(
-              'SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR UPPER(citizen_code) = $1 OR UPPER(citizencode) = $1 OR id::text = $1',
-              [key.toUpperCase()]
-            );
+            const conditions = [];
+            const queryParams = [key.toUpperCase()];
+            
+            const potentialCols = ['citizenCode', 'citizencode', 'citizen_code'];
+            for (const col of potentialCols) {
+              const idx = existingColsLower.indexOf(col.toLowerCase());
+              if (idx !== -1) {
+                const realColName = existingCols[idx];
+                conditions.push(`UPPER("${realColName}") = $1`);
+              }
+            }
+            conditions.push('id::text = $1');
+            
+            const sql = `SELECT * FROM citizens WHERE ${conditions.join(' OR ')}`;
+            rows = await queryDb(sql, queryParams);
           }
 
           if (rows.length === 0) {
@@ -2335,16 +2356,38 @@ CREATE TABLE citizens (
         const safeKey = key.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         let citizen = null;
         try {
+          // Rilevamento dinamico delle colonne dello schema reale per evitare errori PostgreSQL (column does not exist)
+          const columnsQuery = `
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'citizens'
+          `;
+          const colsRes = await queryDb(columnsQuery);
+          const existingCols = colsRes.map(c => c.column_name);
+          const existingColsLower = existingCols.map(name => name.toLowerCase());
+
           let rows = [];
           if (/^\d+$/.test(safeKey)) {
             rows = await queryDb('SELECT * FROM citizens WHERE id = $1', [Number(safeKey)]);
           }
           if (rows.length === 0) {
-            rows = await queryDb(
-              'SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR UPPER(citizen_code) = $1 OR UPPER(citizencode) = $1 OR id::text = $1',
-              [safeKey.toUpperCase()]
-            );
+            const conditions = [];
+            const queryParams = [safeKey.toUpperCase()];
+            
+            const potentialCols = ['citizenCode', 'citizencode', 'citizen_code'];
+            for (const col of potentialCols) {
+              const idx = existingColsLower.indexOf(col.toLowerCase());
+              if (idx !== -1) {
+                const realColName = existingCols[idx];
+                conditions.push(`UPPER("${realColName}") = $1`);
+              }
+            }
+            conditions.push('id::text = $1');
+            
+            const sql = `SELECT * FROM citizens WHERE ${conditions.join(' OR ')}`;
+            rows = await queryDb(sql, queryParams);
           }
+
           if (rows.length > 0) {
             citizen = getCitizenWithArubaUrls(rows[0]);
           }
