@@ -58,6 +58,36 @@ async function runMigrations() {
       await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "arubaFrontUrl" TEXT`);
       await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "arubaBackUrl" TEXT`);
       await client.query(`ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "arubaPhotoUrl" TEXT`);
+
+      // Create nws_proposals table for digital democracy
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_proposals (
+          id SERIAL PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT,
+          content TEXT NOT NULL,
+          category VARCHAR(50) DEFAULT 'Generale',
+          proponent_id INT,
+          proponent_name TEXT,
+          status VARCHAR(20) DEFAULT 'pending',
+          rejection_reason TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          voting_starts_at TIMESTAMP WITH TIME ZONE,
+          voting_ends_at TIMESTAMP WITH TIME ZONE
+        )
+      `);
+
+      // Create nws_votes table for online citizen voting
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_votes (
+          id SERIAL PRIMARY KEY,
+          proposal_id INT NOT NULL,
+          citizen_id INT NOT NULL,
+          vote VARCHAR(10) NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(proposal_id, citizen_id)
+        )
+      `);
       console.log('[MIGRATION] PostgreSQL Table checked and updated successfully.');
     } finally {
       client.release();
@@ -1885,6 +1915,412 @@ Ufficio dell'Anagrafe Federale del New World State
           message: 'Errore durante la comunicazione con il Database Worker per email di test.',
           details: error.message
         });
+      }
+    });
+
+    // === ROTTE DEMOCRAZIA ONLINE NWS ===
+
+    // Pre-flight per controllo cittadino ed eventuale invio password temporanea
+    apiRouter.post('/democracy/preflight', async (req, res) => {
+      const { usernameOrCode } = req?.body || {};
+      if (!usernameOrCode) {
+        return res.status(400).json({ success: false, message: 'Specificare username, email, telefono o codice cittadino.' });
+      }
+
+      if (!dbPool) {
+        return res.status(500).json({ success: false, message: 'Database SQL locale non disponibile.' });
+      }
+
+      try {
+        const uppercaseVal = String(usernameOrCode).trim().toUpperCase();
+        const cleanPhoneVal = String(usernameOrCode).trim().replace(/[\s\-\+\(\)]/g, '');
+
+        // Cerca cittadino con match case-insensitive su citizenCode, username, email o phoneNumber
+        const qRes = await dbPool.query(
+          `SELECT * FROM citizens WHERE 
+            UPPER("citizenCode") = $1 OR 
+            UPPER(citizen_code) = $1 OR 
+            UPPER(citizencode) = $1 OR 
+            UPPER(username) = $1 OR 
+            UPPER(email) = $1 OR
+            (phone_number IS NOT NULL AND REPLACE(REPLACE(REPLACE(REPLACE(phone_number, ' ', ''), '-', ''), '+', ''), '(', '') = $2) OR
+            ("phoneNumber" IS NOT NULL AND REPLACE(REPLACE(REPLACE(REPLACE("phoneNumber", ' ', ''), '-', ''), '+', ''), '(', '') = $2)
+          `,
+          [uppercaseVal, cleanPhoneVal]
+        );
+
+        if (qRes.rows.length === 0) {
+          return res.status(404).json({ 
+            success: false, 
+            message: 'Profilo non trovato o non registrato con l\'Anagrafe Centrale del New World State.' 
+          });
+        }
+
+        const cit = qRes.rows[0];
+        if (cit.status !== 'approved') {
+          return res.status(401).json({ 
+            success: false, 
+            message: 'Il tuo profilo di cittadinanza è in stato di revisione o non approvato ("' + (cit.status || 'pending') + '"). Solo i cittadini approvati possono accedere al voto sovrano.' 
+          });
+        }
+
+        const userEmail = cit.email || '';
+        const userPhone = cit.phoneNumber || cit.phone_number || '';
+        const hasEmail = userEmail.includes('@');
+        
+        // Decidiamo il flusso
+        // Se l'input contiene '@' o se l'utente ha registrato solo l'email (manca il telefono o ha esplicitamente inserito email)
+        const inputIsEmail = String(usernameOrCode).includes('@');
+        const inputIsPhone = /^\+?[0-9\s\-]{6,16}$/.test(String(usernameOrCode).trim()) && !inputIsEmail;
+
+        if (inputIsEmail || (hasEmail && !userPhone)) {
+          // Flusso Password Temporanea via EMAIL
+          // Genera un codice casuale di 6 caratteri
+          const tempPassword = 'NWS-' + Math.floor(100000 + Math.random() * 900000);
+          
+          // Aggiorna la password nel database
+          await dbPool.query('UPDATE citizens SET password = $1 WHERE id = $2', [tempPassword, cit.id]);
+
+          // Invia email di notifica con la password temporanea
+          try {
+            const emailHtml = `
+              <div style="font-family: sans-serif; max-width: 650px; margin: 0 auto; padding: 30px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; color: #1e293b; line-height: 1.6;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                  <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.15em; color: #b45309; display: block; margin-bottom: 4px;">Regno di New World State</span>
+                  <h2 style="font-family: Georgia, serif; font-size: 24px; color: #011d4e; margin: 0;">Password Temporanea Democrazia Diretta</h2>
+                </div>
+                <p>Caro cittadino del New World State,</p>
+                <p>Su tua richiesta tramite inserimento dell'email come nome utente, abbiamo generato una password di accesso temporanea per permetterti di accedere in modo sicuro al Consiglio di Democrazia Diretta e partecipare attivamente alle consultazioni nazionali e all'esercizio del tuo voto sovrano.</p>
+                <div style="background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; margin: 25px 0;">
+                  <p style="font-size: 10px; text-transform: uppercase; font-family: monospace; letter-spacing: 0.1em; color: #64748b; margin: 0 0 8px 0;">Tua Password Temporanea (OTP):</p>
+                  <div style="font-family: monospace; font-size: 32px; letter-spacing: 0.05em; font-weight: bold; color: #0284c7; padding: 10px; border-radius: 8px;">
+                    ${tempPassword}
+                  </div>
+                  <p style="font-size: 11px; color: #64748b; margin: 8px 0 0 0;">Questo codice temporaneo ti permette di completare l'autenticazione sovrana nel secondo step.</p>
+                </div>
+                <p style="font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 25px;">
+                  Se non hai richiesto tu questa password, ignorati questo messaggio o contatta l'Anagrafe Centrale. Il tuo codice identificativo di sicurezza sovrano controlla il tuo voto directo.
+                </p>
+              </div>
+            `;
+            await sendLocalSmtpEmail({
+              to: userEmail.trim(),
+              subject: 'Password Temporanea - Democrazia Diretta New World State',
+              html: emailHtml
+            });
+            console.log(`[SMTP-OTP] Spedita pass temporanea via email a: ${userEmail}`);
+          } catch (mErr: any) {
+            console.error('[SMTP-OTP-ERROR]', mErr.message);
+          }
+
+          return res.json({
+            success: true,
+            mode: 'temp-email',
+            email: userEmail,
+            message: 'Abbiamo generato e inviato una password temporanea alla tua casella e-mail registrata. Controlla la posta!'
+          });
+
+        } else if (inputIsPhone || (!hasEmail && userPhone)) {
+          // Flusso Password Temporanea via TELEFONO / SMS
+          const tempPassword = 'SMS-' + Math.floor(100000 + Math.random() * 900000);
+          
+          // Aggiorna la password nel database
+          await dbPool.query('UPDATE citizens SET password = $1 WHERE id = $2', [tempPassword, cit.id]);
+
+          console.log(`[SMS-OTP-SIMULATOR] Codice temporaneo generato per ${userPhone}: ${tempPassword}`);
+
+          return res.json({
+            success: true,
+            mode: 'temp-phone',
+            phone: userPhone,
+            tempPassword: tempPassword,
+            message: 'SMS di test per simulazione inviato al numero registrato.'
+          });
+
+        } else {
+          // Flusso password standard
+          return res.json({
+            success: true,
+            mode: 'standard',
+            message: 'Riconosciuto utente standard. Procedi ad inserire la tua password.'
+          });
+        }
+      } catch (err: any) {
+        console.error('[DEMOCRACY-PREFLIGHT-ERR]', err);
+        return res.status(500).json({ success: false, message: 'Errore interno nel controllo cittadino: ' + err.message });
+      }
+    });
+
+    // Login cittadino della democrazia
+    apiRouter.post('/democracy/login', async (req, res) => {
+      const { usernameOrCode, password } = req?.body || {};
+      if (!usernameOrCode || !password) {
+        return res.status(400).json({ success: false, message: 'Specificare username/codice cittadino e password.' });
+      }
+
+      if (!dbPool) {
+        return res.status(500).json({ success: false, message: 'Database SQL locale non disponibile.' });
+      }
+
+      try {
+        const uppercaseVal = String(usernameOrCode).trim().toUpperCase();
+        // Cerca cittadino con match case-insensitive su citizenCode, username o email
+        const qRes = await dbPool.query(
+          `SELECT * FROM citizens WHERE 
+            (UPPER("citizenCode") = $1 OR UPPER(citizen_code) = $1 OR UPPER(citizencode) = $1 OR UPPER(username) = $1 OR UPPER(email) = $1)
+            AND password = $2`,
+          [uppercaseVal, password]
+        );
+
+        if (qRes.rows.length === 0) {
+          return res.status(401).json({ 
+            success: false, 
+            message: 'Credenziali non valide o profilo non ancora approvato dall\'Anagrafe Centrale del New World State.' 
+          });
+        }
+
+        const cit = qRes.rows[0];
+        if (cit.status !== 'approved') {
+          return res.status(401).json({ 
+            success: false, 
+            message: 'Il tuo profilo di cittadinanza è in stato "' + (cit.status || 'pending') + '". Solo i cittadini approvati possono accedere al voto della Democrazia Normativa.' 
+          });
+        }
+
+        return res.json({
+          success: true,
+          citizen: {
+            id: cit.id,
+            firstName: cit.firstName || cit.firstname,
+            surname: cit.surname,
+            username: cit.username,
+            email: cit.email,
+            citizenCode: cit.citizenCode || cit.citizencode || cit.citizen_code,
+            isAmbassador: !!(cit.isAmbassador || cit.isambassador),
+            isPeacekeeper: !!(cit.isPeacekeeper || cit.ispeacekeeper)
+          }
+        });
+      } catch (err: any) {
+        console.error('[DEMOCRACY-LOGIN-ERR]', err);
+        return res.status(500).json({ success: false, message: 'Errore interno di sicurezza: ' + err.message });
+      }
+    });
+
+    // Ottieni tutte le proposte normative (con conteggio voti real-time)
+    apiRouter.get('/democracy/proposals', async (req, res) => {
+      if (!dbPool) {
+        return res.status(500).json({ success: false, message: 'Database non disponibile.' });
+      }
+
+      try {
+        // Chiudi automaticamente eventuali votazioni scadute se lo stato è ancora 'approved' (attivo per votare)
+        const closeExpiredSql = `
+          UPDATE nws_proposals
+          SET status = CASE 
+            WHEN yes_votes_total > no_votes_total THEN 'passed'
+            ELSE 'failed'
+          END
+          FROM (
+            SELECT p2.id as p_id,
+              COALESCE(SUM(CASE WHEN v2.vote = 'yes' THEN 1 ELSE 0 END), 0) as yes_votes_total,
+              COALESCE(SUM(CASE WHEN v2.vote = 'no' THEN 1 ELSE 0 END), 0) as no_votes_total
+            FROM nws_proposals p2
+            LEFT JOIN nws_votes v2 ON p2.id = v2.proposal_id
+            GROUP BY p2.id
+          ) sub
+          WHERE id = sub.p_id 
+            AND status = 'approved' 
+            AND voting_ends_at IS NOT NULL 
+            AND voting_ends_at < CURRENT_TIMESTAMP
+        `;
+        try {
+          await dbPool.query(closeExpiredSql);
+        } catch (e: any) {
+          console.warn('[DEMOCRACY-STATUS-AUTOUPDATE-WARN]', e.message);
+        }
+
+        // Recupera le proposte con i conteggi aggiornati in tempo reale
+        const qSql = `
+          SELECT 
+            p.id,
+            p.title,
+            p.description,
+            p.content,
+            p.category,
+            p.proponent_id,
+            p.proponent_name,
+            p.status,
+            p.rejection_reason,
+            p.created_at,
+            p.voting_starts_at,
+            p.voting_ends_at,
+            COALESCE(SUM(CASE WHEN v.vote = 'yes' THEN 1 ELSE 0 END), 0)::int as yes_votes,
+            COALESCE(SUM(CASE WHEN v.vote = 'no' THEN 1 ELSE 0 END), 0)::int as no_votes,
+            COALESCE(SUM(CASE WHEN v.vote = 'abstain' THEN 1 ELSE 0 END), 0)::int as abstain_votes,
+            COUNT(v.id)::int as total_votes
+          FROM nws_proposals p
+          LEFT JOIN nws_votes v ON p.id = v.proposal_id
+          GROUP BY p.id
+          ORDER BY p.created_at DESC
+        `;
+        const qRes = await dbPool.query(qSql);
+        return res.json({ success: true, data: qRes.rows });
+      } catch (err: any) {
+        console.error('[DEMOCRACY-GET-PROPOSALS-ERR]', err);
+        return res.status(500).json({ success: false, message: 'Errore nel caricamento delle proposte: ' + err.message });
+      }
+    });
+
+    // Presenta una nuova proposta normativa
+    apiRouter.post('/democracy/proposals', async (req, res) => {
+      const { title, description, content, category, citizen_id } = req.body || {};
+      if (!title || !content || !citizen_id) {
+        return res.status(400).json({ success: false, message: 'Titolo, testo normativo e autore sono obbligatori.' });
+      }
+
+      if (!dbPool) {
+        return res.status(500).json({ success: false, message: 'Database non disponibile.' });
+      }
+
+      try {
+        // Recupera il nome del proponente
+        const citRes = await dbPool.query('SELECT * FROM citizens WHERE id = $1', [citizen_id]);
+        if (citRes.rows.length === 0) {
+          return res.status(404).json({ success: false, message: 'Cittadino non registrato o non trovato.' });
+        }
+        const cit = citRes.rows[0];
+        const proponentName = `${cit.firstName || cit.firstname || ''} ${cit.surname || ''}`.trim();
+
+        // Inserisci proposta
+        const insertSql = `
+          INSERT INTO nws_proposals (title, description, content, category, proponent_id, proponent_name, status)
+          VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+          RETURNING *
+        `;
+        const insRes = await dbPool.query(insertSql, [
+          title,
+          description || '',
+          content,
+          category || 'Generale',
+          citizen_id,
+          proponentName
+        ]);
+
+        return res.status(201).json({ success: true, data: insRes.rows[0], message: 'Proposta normativa sottomessa correttamente! In attesa di convalida amministrativa.' });
+      } catch (err: any) {
+        console.error('[DEMOCRACY-NEW-PROPOSAL-ERR]', err);
+        return res.status(500).json({ success: false, message: 'Impossibile registrare la proposta normativa: ' + err.message });
+      }
+    });
+
+    // Registra un voto del cittadino
+    apiRouter.post('/democracy/vote', async (req, res) => {
+      const { proposal_id, citizen_id, vote } = req.body || {};
+      if (!proposal_id || !citizen_id || !vote) {
+        return res.status(400).json({ success: false, message: 'Parametri del voto incompleti.' });
+      }
+
+      if (vote !== 'yes' && vote !== 'no' && vote !== 'abstain') {
+        return res.status(400).json({ success: false, message: 'Voto non valido. Consentiti: yes, no, abstain.' });
+      }
+
+      if (!dbPool) {
+        return res.status(500).json({ success: false, message: 'Database non disponibile.' });
+      }
+
+      try {
+        // 1. Controlla cittadinanza attiva approvata
+        const citRes = await dbPool.query('SELECT status FROM citizens WHERE id = $1', [citizen_id]);
+        if (citRes.rows.length === 0 || citRes.rows[0].status !== 'approved') {
+          return res.status(403).json({ success: false, message: 'Solo i cittadini approvati ed attivi del New World State hanno diritto di voto sovrano.' });
+        }
+
+        // 2. Controlla stato proposta e date di voto
+        const propRes = await dbPool.query('SELECT status, voting_ends_at FROM nws_proposals WHERE id = $1', [proposal_id]);
+        if (propRes.rows.length === 0) {
+          return res.status(404).json({ success: false, message: 'Proposta non trovata.' });
+        }
+        const prop = propRes.rows[0];
+        if (prop.status !== 'approved') {
+          return res.status(400).json({ success: false, message: 'Le votazioni per questa proposta non sono attualmente attive.' });
+        }
+
+        if (prop.voting_ends_at && new Date(prop.voting_ends_at) < new Date()) {
+          return res.status(400).json({ success: false, message: 'Le votazioni per questa proposta normativa si sono concluse.' });
+        }
+
+        // 3. Verifica duplicati
+        const voteCheck = await dbPool.query('SELECT id FROM nws_votes WHERE proposal_id = $1 AND citizen_id = $2', [proposal_id, citizen_id]);
+        if (voteCheck.rows.length > 0) {
+          return res.status(400).json({ success: false, message: 'Hai già registrato ed espresso il tuo voto sovrano per questa proposta normativa.' });
+        }
+
+        // 4. Inserimento voto
+        await dbPool.query('INSERT INTO nws_votes (proposal_id, citizen_id, vote) VALUES ($1, $2, $3)', [proposal_id, citizen_id, vote]);
+        return res.json({ success: true, message: 'Voto depositato con successo nel registro di democrazia online!' });
+      } catch (err: any) {
+        console.error('[DEMOCRACY-CAST-VOTE-ERR]', err);
+        return res.status(500).json({ success: false, message: 'Impossibile esprimere il voto: ' + err.message });
+      }
+    });
+
+    // Azione amministratore su proposte normative (Approva, Rifiuta, Elimina)
+    apiRouter.post('/democracy/admin/action', async (req, res) => {
+      const { action, proposal_id, rejection_reason } = req.body || {};
+      if (!action || !proposal_id) {
+        return res.status(400).json({ success: false, message: 'Specificare azione e id proposta.' });
+      }
+
+      if (!dbPool) {
+        return res.status(500).json({ success: false, message: 'Database non disponibile.' });
+      }
+
+      try {
+        if (action === 'approve') {
+          // Convalida proposta e avvia votazione (durata 7 giorni)
+          const startVoteSql = `
+            UPDATE nws_proposals 
+            SET status = 'approved', 
+                voting_starts_at = CURRENT_TIMESTAMP, 
+                voting_ends_at = CURRENT_TIMESTAMP + INTERVAL '7 days' 
+            WHERE id = $1 
+            RETURNING *
+          `;
+          const result = await dbPool.query(startVoteSql, [proposal_id]);
+          if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Proposta non trovata.' });
+          }
+          return res.json({ success: true, data: result.rows[0], message: 'Proposta normativa convalidata e aperta ufficialmente al voto popolare.' });
+        
+        } else if (action === 'reject') {
+          // Rifiuta proposta con motivazione
+          const rejectSql = `
+            UPDATE nws_proposals 
+            SET status = 'rejected', 
+                rejection_reason = $1 
+            WHERE id = $2 
+            RETURNING *
+          `;
+          const result = await dbPool.query(rejectSql, [rejection_reason || 'Nessuna motivazione specificata dall\'amministrazione.', proposal_id]);
+          if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Proposta non trovata.' });
+          }
+          return res.json({ success: true, data: result.rows[0], message: 'Proposta normativa respinta.' });
+        
+        } else if (action === 'delete') {
+          // Elimina proposta e relativi voti
+          await dbPool.query('DELETE FROM nws_votes WHERE proposal_id = $1', [proposal_id]);
+          const result = await dbPool.query('DELETE FROM nws_proposals WHERE id = $1 RETURNING id', [proposal_id]);
+          if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Proposta non trovata.' });
+          }
+          return res.json({ success: true, message: 'Proposta normativa eliminata con successo e voti azzerati.' });
+        }
+
+        return res.status(400).json({ success: false, message: 'Azione amministrativa non supportata o rimossa.' });
+      } catch (err: any) {
+        console.error('[DEMOCRACY-ADMIN-ACTION-ERR]', err);
+        return res.status(500).json({ success: false, message: 'Errore durante l\'esecuzione dell\'azione: ' + err.message });
       }
     });
 

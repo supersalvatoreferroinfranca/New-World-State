@@ -16,10 +16,11 @@ import PrivacyProtocolPage from './components/constitution/PrivacyProtocolPage';
 import NetworkStatusPage from './components/constitution/NetworkStatusPage';
 import VerifyCitizenPage from './components/constitution/VerifyCitizenPage';
 import DbStatus from './components/debug/DbStatus';
+import DemocracyPortal from './components/democracy/DemocracyPortal';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network'>('register');
+  const [activeTab, setActiveTab] = useState<'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy'>('democracy');
   const [isVerifyPath] = useState<boolean>(() => {
     const searchParams = new URLSearchParams(window.location.search);
     return window.location.pathname === '/verify' || 
@@ -128,6 +129,8 @@ function AppContent() {
               <PrivacyProtocolPage />
             ) : activeTab === 'network' ? (
               <NetworkStatusPage />
+            ) : activeTab === 'democracy' ? (
+              <DemocracyPortal />
             ) : (
               <CharterPage />
             )}

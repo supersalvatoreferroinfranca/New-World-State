@@ -3,8 +3,8 @@ import { useI18n } from '../../contexts/I18nContext';
 import { Globe, Menu, ShieldCheck } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab?: 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network';
-  setActiveTab?: (tab: 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network') => void;
+  activeTab?: 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy';
+  setActiveTab?: (tab: 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy') => void;
 }
 
 export default function Header({ activeTab, setActiveTab }: HeaderProps) {
@@ -36,6 +36,14 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
 
         <div className="flex items-center gap-8">
           <div className="hidden lg:flex items-center gap-8 text-[10px] uppercase tracking-[0.2em] font-tech text-gray-300">
+            <button 
+              onClick={() => setActiveTab?.('democracy')}
+              id="header-democracy-tab-btn"
+              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'democracy' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : 'text-brand-gold font-extrabold flex items-center gap-1.5'}`}
+            >
+              <span className="w-2 h-2 rounded-full bg-brand-gold animate-ping" />
+              {language === 'en' ? 'Direct Democracy' : 'Democrazia Diretta'}
+            </button>
             <button 
               onClick={() => setActiveTab?.('constitution')}
               className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'constitution' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
