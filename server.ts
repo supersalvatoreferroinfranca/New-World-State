@@ -42,6 +42,24 @@ if (process.env.DATABASE_URL) {
 // In-Memory Fallback Database for registered citizens
 const memoryCitizens: any[] = [];
 
+// Geografic Areas & Custom Roles default registers
+let memoryGeographicAreas: any[] = [
+  { id: 1, name: "Tutto il globo", countries: "Tutti i paesi" },
+  { id: 2, name: "Europa", countries: "Italia, Francia, Germania, Spagna, Austria, Svizzera" },
+  { id: 3, name: "Italia", countries: "Italia" },
+  { id: 4, name: "India", countries: "India" }
+];
+
+let memoryCustomRoles: any[] = [
+  { id: 1, name: "Console dell'Anagrafe", description: "Consente la gestione di anagrafiche e referendum", geographic_area_id: 1 },
+  { id: 2, name: "Ministro della Giustizia", description: "Vigila sull'applicazione legale e costituzionale", geographic_area_id: 1 },
+  { id: 3, name: "Garante della Costituzione", description: "Supervisiona l'integrità dei protocolli democratici", geographic_area_id: 1 },
+  { id: 4, name: "Supervisore Elettorale", description: "Gestione ed auditing delle proposte normative e voti", geographic_area_id: 1 },
+  { id: 5, name: "Ambasciatore Digitale", description: "Rappresentanza e sensibilizzazione globale", geographic_area_id: 1 },
+  { id: 6, name: "Ufficiale di Pace", description: "Risoluzione nonviolenta e mediazione diplomatica", geographic_area_id: 4 },
+  { id: 7, name: "Custode Digitale (IT)", description: "Incaricato dei registri territoriali", geographic_area_id: 3 }
+];
+
 async function runMigrations() {
   if (!dbPool) return;
   try {
@@ -91,6 +109,59 @@ async function runMigrations() {
           UNIQUE(proposal_id, citizen_id)
         )
       `);
+
+      // Create nws_geographic_areas table
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_geographic_areas (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          countries TEXT NOT NULL
+        )
+      `);
+
+      // Create nws_custom_roles table
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_custom_roles (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          geographic_area_id INT
+        )
+      `);
+
+      // Seed geographic areas if empty
+      const areaCheck = await client.query('SELECT COUNT(*) FROM nws_geographic_areas');
+      if (parseInt(areaCheck.rows[0].count) === 0) {
+        await client.query(`
+          INSERT INTO nws_geographic_areas (id, name, countries) VALUES
+          (1, 'Tutto il globo', 'Tutti i paesi'),
+          (2, 'Europa', 'Italia, Francia, Germania, Spagna, Austria, Svizzera'),
+          (3, 'Italia', 'Italia'),
+          (4, 'India', 'India')
+        `);
+        try {
+          await client.query(`SELECT setval('nws_geographic_areas_id_seq', 4)`);
+        } catch(e) {}
+      }
+
+      // Seed custom roles if empty
+      const roleCheck = await client.query('SELECT COUNT(*) FROM nws_custom_roles');
+      if (parseInt(roleCheck.rows[0].count) === 0) {
+        await client.query(`
+          INSERT INTO nws_custom_roles (id, name, description, geographic_area_id) VALUES
+          (1, 'Console dell''Anagrafe', 'Consente la gestione di anagrafiche e referendum', 1),
+          (2, 'Ministro della Giustizia', 'Vigila sull''applicazione legale e costituzionale', 1),
+          (3, 'Garante della Costituzione', 'Supervisiona l''integrità dei protocolli democratici', 1),
+          (4, 'Supervisore Elettorale', 'Gestione ed auditing delle proposte normative e voti', 1),
+          (5, 'Ambasciatore Digitale', 'Rappresentanza e sensibilizzazione globale', 1),
+          (6, 'Ufficiale di Pace', 'Risoluzione nonviolenta e mediazione diplomatica', 4),
+          (7, 'Custode Digitale (IT)', 'Incaricato dei registri territoriali', 3)
+        `);
+        try {
+          await client.query(`SELECT setval('nws_custom_roles_id_seq', 7)`);
+        } catch(e) {}
+      }
+
       console.log('[MIGRATION] PostgreSQL Table checked and updated successfully.');
     } finally {
       client.release();
@@ -1664,6 +1735,37 @@ Ufficio dell'Anagrafe Federale del New World State
       console.log(`[API] Processing toggle-admin on citizen ${citizenId} to ${isAdmin}`);
       const parsedId = String(citizenId);
 
+      let prevIsAdmin = null;
+      let targetCitizen = null;
+
+      // 1. Fetch current details to check transitions and get email
+      if (dbPool) {
+        try {
+          const checkRes = await dbPool.query('SELECT * FROM citizens WHERE id = $1', [citizenId]);
+          if (checkRes.rows.length > 0) {
+            targetCitizen = checkRes.rows[0];
+            prevIsAdmin = targetCitizen.isAdmin;
+          }
+        } catch (dbErr: any) {
+          console.error('[DB-TOGGLE-ADMIN-CHECK-ERR]', dbErr.message);
+        }
+      }
+
+      // Memory fallback if not found in db
+      if (!targetCitizen) {
+        const found = memoryCitizens.find(c => String(c.id) === parsedId);
+        if (found) {
+          targetCitizen = found;
+          prevIsAdmin = found.isAdmin;
+        }
+      }
+
+      if (!targetCitizen) {
+        return res.status(404).json({ success: false, message: 'Cittadino non trovato.' });
+      }
+
+      // 2. Perform the update
+      let updatedCitizen = null;
       if (dbPool) {
         try {
           const qRes = await dbPool.query(
@@ -1671,26 +1773,158 @@ Ufficio dell'Anagrafe Federale del New World State
             [isAdmin, citizenId]
           );
           if (qRes.rows.length > 0) {
-            // Update local memory cache if present
+            updatedCitizen = qRes.rows[0];
             const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
             if (idx !== -1) {
               memoryCitizens[idx].isAdmin = isAdmin;
             }
-            return res.json({ success: true, citizen: getCitizenWithArubaUrls(qRes.rows[0]), message: `Privilegi amministratore aggiornati.` });
           }
         } catch (dbErr: any) {
           console.error('[DB-TOGGLE-ADMIN-ERR]', dbErr.message);
         }
       }
 
-      // Memory store fallback
-      const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
-      if (idx !== -1) {
-        memoryCitizens[idx].isAdmin = isAdmin;
-        return res.json({ success: true, citizen: getCitizenWithArubaUrls(memoryCitizens[idx]), message: `Privilegi di memoria aggiornati.` });
+      if (!updatedCitizen) {
+        // Fallback update memory
+        const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
+        if (idx !== -1) {
+          memoryCitizens[idx].isAdmin = isAdmin;
+          updatedCitizen = memoryCitizens[idx];
+        }
       }
 
-      return res.status(404).json({ success: false, message: 'Cittadino non trovato.' });
+      if (!updatedCitizen) {
+        return res.status(404).json({ success: false, message: 'Impossibile aggiornare il cittadino.' });
+      }
+
+      // 3. Send email if state transitioned
+      if (prevIsAdmin !== isAdmin) {
+        const citizenEmail = updatedCitizen.email;
+        if (citizenEmail && citizenEmail.includes('@')) {
+          try {
+            const firstName = updatedCitizen.firstName || '';
+            const surname = updatedCitizen.surname || updatedCitizen.lastName || '';
+            const subject = isAdmin 
+              ? '⚖️ Nuova Nomina: Privilegi Amministrativi Concessi - New World State'
+              : '⚠️ Revoca dell\'Incarico Amministrativo - New World State';
+
+            const bgTheme = isAdmin ? '#0a1c3e' : '#7f1d1d';
+            const actionText = isAdmin 
+              ? 'Concessione dei Privilegi di Amministratore Civico'
+              : 'Revoca delle Funzioni Amministrative';
+
+            const explanationHtml = isAdmin
+              ? `
+                <div style="background-color: #f8fafc; border-left: 4px solid #c5a880; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                  <h4 style="margin: 0 0 8px 0; color: #0a1c3e; font-family: Georgia, serif; font-size: 14px; font-weight: bold;">📜 Funzioni e Responsabilità dell'Amministratore</h4>
+                  <p style="margin: 0; line-height: 1.6; color: #475569; font-size: 13px;">
+                    In qualità di Amministratore del New World State, Lei detiene il supremo mandato della fiducia civica per la tutela dell’ecosistema federale. Le Sue attribuzioni abilitano:
+                  </p>
+                  <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; font-size: 13px; line-height: 1.6;">
+                    <li><strong>Revisione delle Richieste:</strong> Esame formale dei documenti d'identità dei nuovi candidati.</li>
+                    <li><strong>Tutela dei Registri Pubblici:</strong> Approvazione ed inserimento formale anagrafico o respinta motivata.</li>
+                    <li><strong>Gestione Democratica:</strong> Vigilanza e pubblicazione ufficiale dei referendum e delle leggi della Democrazia Normativa.</li>
+                    <li><strong>Consiglio dei Ministri:</strong> Possibilità di attribuire circoscrizioni e deleghe d'incarico operativo agli altri cittadini sovrani.</li>
+                  </ul>
+                  <p style="margin: 12px 0 0 0; line-height: 1.6; color: #475569; font-size: 12px; font-style: italic;">
+                    Si rammenta che ogni decisione deve rispecchiare i canoni di massima trasparenza, equità e conformità alla Costituzione Federale.
+                  </p>
+                </div>
+              `
+              : `
+                <div style="background-color: #fef2f2; border-left: 4px solid #f87171; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                  <h4 style="margin: 0 0 8px 0; color: #991b1b; font-family: Georgia, serif; font-size: 14px; font-weight: bold;">⚙️ Status di Cittadino Ordinario Ripristinato</h4>
+                  <p style="margin: 0; line-height: 1.6; color: #7f1d1d; font-size: 13px;">
+                    Con la presente notifica ufficiale, La informiamo che i Suoi poteri di Amministrazione sul portale federale sono stati formalmente revocati. 
+                    I Suoi certificati di firma digitale relativi all'approvazione formale sono stati revocati dal Registro Centrale e la Sua utenza è passata allo status di <strong>Cittadino Ordinario</strong>. 
+                  </p>
+                  <p style="margin: 10px 0 0 0; line-height: 1.6; color: #7f1d1d; font-size: 13px;">
+                    La ringraziamo sentitamente per il tempo, l'onestà e lo sforzo profuso a servizio della comunità e dello Stato durante il Suo mandato amministrativo.
+                  </p>
+                </div>
+              `;
+
+            const emailHtml = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <title>${subject}</title>
+              </head>
+              <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5; padding: 20px 0;">
+                  <tr>
+                    <td align="center">
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e4e4e7;">
+                        <!-- HEADER -->
+                        <tr>
+                          <td style="background-color: #0c1a30; padding: 32px 24px; text-align: center; border-bottom: 3px solid #c5a880;">
+                            <h2 style="color: #ffffff; margin: 0; font-family: Georgia, serif; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">NEW WORLD STATE</h2>
+                            <p style="color: #c5a880; margin: 4px 0 0 0; font-size: 10px; font-weight: bold; letter-spacing: 2px;">CORPO DI AMMINISTRAZIONE FEDERALE</p>
+                          </td>
+                        </tr>
+                        <!-- BODY -->
+                        <tr>
+                          <td style="padding: 32px 28px;">
+                            <p style="font-size: 13px; color: #71717a; margin: 0 0 16px 0; font-family: monospace;">CODICE NOTIFICA: NWS-ADM-${updatedCitizen.citizenCode || 'N/A'}-${Date.now().toString().slice(-4)}</p>
+                            <h3 style="color: #0f172a; margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 18px; font-weight: bold;">Gentile ${firstName} ${surname},</h3>
+                            <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                              La presente comunicazione ufficiale per informarLa di un aggiornamento formale in merito ai Suoi privilegi di accesso nel registro civile sovrano del New World State.
+                            </p>
+
+                            <div style="text-align: center; margin: 24px 0; padding: 12px; background-color: ${bgTheme}; color: #ffffff; font-weight: bold; border-radius: 8px; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase;">
+                              ${actionText}
+                            </div>
+
+                            ${explanationHtml}
+
+                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 16px 0;">
+                              Per qualsiasi chiarimento o quesito in merito alle procedure di transizione del Suo account, restiamo a Sua completa disposizione sul portale ufficiale della nostra micro-nazione federale.
+                            </p>
+                            
+                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
+                              Un cordiale saluto,
+                            </p>
+                            <p style="color: #0a1c3e; font-size: 14px; font-weight: bold; font-family: Georgia, serif; margin: 0;">
+                              Il Consiglio dei Governatori
+                            </p>
+                            <p style="color: #c5a880; font-size: 11px; font-weight: bold; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">
+                              New World State
+                            </p>
+                          </td>
+                        </tr>
+                        <!-- FOOTER -->
+                        <tr>
+                          <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
+                            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
+                              New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.
+                            </p>
+                            <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
+                              Questa è una notifica di sistema generata automaticamente. Si prega di non rispondere direttamente a questa email.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+              </html>
+            `;
+
+            await sendLocalSmtpEmail({
+              to: citizenEmail.trim(),
+              subject,
+              html: emailHtml
+            });
+            console.log(`[SMTP] Inviato messaggio di aggiornamento e dettagli del ruolo di amministratore a: ${citizenEmail}`);
+          } catch (smtpErr: any) {
+            console.error('[SMTP-TOGGLE-ADMIN-ERR] Eccezione nell\'invio email toggle-admin:', smtpErr.message);
+          }
+        }
+      }
+
+      return res.json({ success: true, citizen: getCitizenWithArubaUrls(updatedCitizen), message: `Privilegi amministratore aggiornati.` });
     });
 
     // Assign operational post/role to a citizen
@@ -1703,6 +1937,30 @@ Ufficio dell'Anagrafe Federale del New World State
       console.log(`[API] Processing assign-role on citizen ${citizenId} to: "${role}"`);
       const parsedId = String(citizenId);
 
+      let targetCitizen = null;
+      if (dbPool) {
+        try {
+          const checkRes = await dbPool.query('SELECT * FROM citizens WHERE id = $1', [citizenId]);
+          if (checkRes.rows.length > 0) {
+            targetCitizen = checkRes.rows[0];
+          }
+        } catch (dbErr: any) {
+          console.error('[DB-ASSIGN-ROLE-PRECHECK-ERR]', dbErr.message);
+        }
+      }
+
+      if (!targetCitizen) {
+        targetCitizen = memoryCitizens.find(c => String(c.id) === parsedId);
+      }
+
+      if (!targetCitizen) {
+        return res.status(404).json({ success: false, message: 'Cittadino non trovato.' });
+      }
+
+      const oldOperationalRole = targetCitizen.operationalRole;
+
+      // Perform the update
+      let updatedCitizen = null;
       if (dbPool) {
         try {
           const qRes = await dbPool.query(
@@ -1710,25 +1968,410 @@ Ufficio dell'Anagrafe Federale del New World State
             [role || null, citizenId]
           );
           if (qRes.rows.length > 0) {
+            updatedCitizen = qRes.rows[0];
             const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
             if (idx !== -1) {
               memoryCitizens[idx].operationalRole = role || null;
             }
-            return res.json({ success: true, citizen: getCitizenWithArubaUrls(qRes.rows[0]), message: `Incarico operativo assegnato correttamente.` });
           }
         } catch (dbErr: any) {
           console.error('[DB-ASSIGN-ROLE-ERR]', dbErr.message);
         }
       }
 
-      // Memory store fallback
-      const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
-      if (idx !== -1) {
-        memoryCitizens[idx].operationalRole = role || null;
-        return res.json({ success: true, citizen: getCitizenWithArubaUrls(memoryCitizens[idx]), message: `Incarico operativo di memoria assegnato con successo.` });
+      if (!updatedCitizen) {
+        const idx = memoryCitizens.findIndex(c => String(c.id) === parsedId);
+        if (idx !== -1) {
+          memoryCitizens[idx].operationalRole = role || null;
+          updatedCitizen = memoryCitizens[idx];
+        }
       }
 
-      return res.status(404).json({ success: false, message: 'Cittadino non trovato.' });
+      if (!updatedCitizen) {
+        return res.status(404).json({ success: false, message: 'Impossibile aggiornare l\'incarico operativo.' });
+      }
+
+      // Check transitions and send email explication
+      const parseOperationalRoles = (roleString: string | null | undefined): any[] => {
+        if (!roleString) return [];
+        const trimmed = roleString.trim();
+        if (trimmed.startsWith('[')) {
+          try {
+            return JSON.parse(trimmed);
+          } catch (err) {
+            return [{ legacyName: roleString }];
+          }
+        }
+        return [{ legacyName: roleString }];
+      };
+
+      const previousRoles = parseOperationalRoles(oldOperationalRole);
+      const newRoles = parseOperationalRoles(role);
+
+      let customRolesList: any[] = [];
+      let areasList: any[] = [];
+
+      if (dbPool) {
+        try {
+          const rolesRes = await dbPool.query('SELECT * FROM nws_custom_roles ORDER BY id ASC');
+          const areasRes = await dbPool.query('SELECT * FROM nws_geographic_areas ORDER BY id ASC');
+          customRolesList = rolesRes.rows;
+          areasList = areasRes.rows;
+        } catch (dbErr: any) {
+          console.error('[DB-FETCH-ROLES-FOR-EMAIL-ERR]', dbErr.message);
+        }
+      }
+
+      if (customRolesList.length === 0) {
+        customRolesList = memoryCustomRoles;
+        areasList = memoryGeographicAreas;
+      }
+
+      const hasRole = (list: any[], item: any) => {
+        return list.some(r => {
+          if (item.roleId && r.roleId) {
+            return Number(item.roleId) === Number(r.roleId);
+          }
+          if (item.legacyName && r.legacyName) {
+            return item.legacyName.toLowerCase().trim() === r.legacyName.toLowerCase().trim();
+          }
+          return false;
+        });
+      };
+
+      const newlyAssigned = newRoles.filter(r => !hasRole(previousRoles, r));
+      const newlyRevoked = previousRoles.filter(r => !hasRole(newRoles, r));
+
+      const resolveRoleDetails = (item: any) => {
+        if (item.roleId) {
+          const matched = customRolesList.find(r => Number(r.id) === Number(item.roleId));
+          if (matched) {
+            const area = matched.geographic_area_id ? areasList.find(a => Number(a.id) === Number(matched.geographic_area_id)) : null;
+            return {
+              name: matched.name,
+              description: matched.description || 'Nessuna descrizione specificata.',
+              areaName: area ? area.name : 'Globale',
+              countries: area ? area.countries : 'Nessuna circoscrizione (Globale)'
+            };
+          }
+        }
+        const name = item.legacyName || (item.roleId ? `Incarico ID ${item.roleId}` : 'Incarico Governativo');
+        return {
+          name,
+          description: 'Incarico operativo o delega governativa diplomatica federale.',
+          areaName: 'Globale',
+          countries: 'Nessuna circoscrizione (Globale)'
+        };
+      };
+
+      if (process.env.SMTP_USER && (newlyAssigned.length > 0 || newlyRevoked.length > 0)) {
+        const citizenEmail = updatedCitizen.email;
+        if (citizenEmail && citizenEmail.includes('@')) {
+          try {
+            const firstName = updatedCitizen.firstName || '';
+            const surname = updatedCitizen.surname || updatedCitizen.lastName || '';
+            
+            let assignmentsHtml = '';
+            if (newlyAssigned.length > 0) {
+              assignmentsHtml += `
+                <div style="margin-bottom: 24px;">
+                  <h4 style="color: #0c1a30; font-family: Georgia, serif; font-size: 15px; margin: 0 0 12px 0; border-bottom: 2px solid #c5a880; padding-bottom: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                    🎖️ Nuovi Incarichi e Deleghe Conferite
+                  </h4>
+              `;
+              
+              for (const item of newlyAssigned) {
+                const details = resolveRoleDetails(item);
+                assignmentsHtml += `
+                  <div style="background-color: #fcfbf9; border-left: 3px solid #c5a880; padding: 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+                      <span style="font-weight: bold; color: #0c1a30; font-size: 13px; text-transform: uppercase; display: inline-block; max-width: 70%;">${details.name}</span>
+                      <span style="background-color: #f7f5f0; color: #8c7453; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5dfd5; display: inline-block;">
+                        🌍 ${details.areaName}
+                      </span>
+                    </div>
+                    <p style="margin: 0 0 6px 0; font-size: 12px; color: #475569; line-height: 1.5;">${details.description}</p>
+                    <p style="margin: 0; font-size: 10.5px; color: #94a3b8; font-family: monospace;">Territori Associati: ${details.countries}</p>
+                  </div>
+                `;
+              }
+              
+              assignmentsHtml += `
+                </div>
+              `;
+            }
+
+            let revocationsHtml = '';
+            if (newlyRevoked.length > 0) {
+              revocationsHtml += `
+                <div style="margin-bottom: 24px;">
+                  <h4 style="color: #991b1b; font-family: Georgia, serif; font-size: 15px; margin: 0 0 12px 0; border-bottom: 2px solid #ef4444; padding-bottom: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                    ⚙️ Incarichi e Funzioni Concluse o Revocate
+                  </h4>
+              `;
+              
+              for (const item of newlyRevoked) {
+                const details = resolveRoleDetails(item);
+                revocationsHtml += `
+                  <div style="background-color: #fef2f2; border-left: 3px solid #ef4444; padding: 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+                      <span style="font-weight: bold; color: #991b1b; font-size: 13px; text-transform: uppercase; display: inline-block; max-width: 70%;">${details.name}</span>
+                      <span style="background-color: #fef2f2; color: #ef4444; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #fca5a5; display: inline-block;">
+                        Concluso
+                      </span>
+                    </div>
+                    <p style="margin: 0 0 6px 0; font-size: 12px; color: #7f1d1d; line-height: 1.5;">L'esercizio delle funzioni civili ed operative legate a questo incarico si ritiene terminato.</p>
+                  </div>
+                `;
+              }
+              
+              revocationsHtml += `
+                </div>
+              `;
+            }
+
+            const emailHtml = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <title>Variazione Incarichi Istituzionali</title>
+              </head>
+              <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5; padding: 20px 0;">
+                  <tr>
+                    <td align="center">
+                      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e4e4e7;">
+                        <!-- HEADER -->
+                        <tr>
+                          <td style="background-color: #0c1a30; padding: 32px 24px; text-align: center; border-bottom: 3px solid #c5a880;">
+                            <h2 style="color: #ffffff; margin: 0; font-family: Georgia, serif; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">NEW WORLD STATE</h2>
+                            <p style="color: #c5a880; margin: 4px 0 0 0; font-size: 10px; font-weight: bold; letter-spacing: 2px;">NOTIFICAZIONE UFFICIALE DI STATO</p>
+                          </td>
+                        </tr>
+                        <!-- BODY -->
+                        <tr>
+                          <td style="padding: 32px 28px;">
+                            <p style="font-size: 13px; color: #71717a; margin: 0 0 16px 0; font-family: monospace;">DECRETO GENERATO: NWS-DEC-${updatedCitizen.citizenCode || 'N/A'}-${Date.now().toString().slice(-4)}</p>
+                            <h3 style="color: #0f172a; margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 18px; font-weight: bold;">Gentile ${firstName} ${surname},</h3>
+                            <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
+                              Con la presente comunicazione ufficiale d'ufficio, l'Anagrafe Federale di New World State La informa della modifica formale riguardante le Sue deleghe operative e gli incarichi istituzionali a Lei ascritti nel nostro registro civile.
+                            </p>
+
+                            ${assignmentsHtml}
+                            ${revocationsHtml}
+
+                            <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; padding: 14px; border-radius: 8px; margin: 24px 0;">
+                              <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.5; font-style: italic;">
+                                Nota Costituzionale: Gli incarichi operativi ad personam sono revocabili o modificabili ad nutum dal Consiglio dei Governatori federati, preposto a garantire la pace dei popoli, il benessere collettivo e l'equità d'ufficio globale.
+                              </p>
+                            </div>
+
+                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 16px 0;">
+                              Le nuove disposizioni e deleghe operative sono attive con effetto immediato e sono state collegate in modalità crittografica al Suo Certificato di Cittadinanza Digitale.
+                            </p>
+                            
+                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
+                              Un cordiale saluto,
+                            </p>
+                            <p style="color: #0a1c3e; font-size: 14px; font-weight: bold; font-family: Georgia, serif; margin: 0;">
+                              La Segreteria di Stato Federale
+                            </p>
+                            <p style="color: #c5a880; font-size: 11px; font-weight: bold; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">
+                              New World State
+                            </p>
+                          </td>
+                        </tr>
+                        <!-- FOOTER -->
+                        <tr>
+                          <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
+                            <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
+                              New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.
+                            </p>
+                            <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
+                              Questa è una notifica di sistema generata automaticamente. Si prega di non rispondere direttamente a questa email.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+              </html>
+            `;
+
+            await sendLocalSmtpEmail({
+              to: citizenEmail.trim(),
+              subject: '🎖️ Aggiornamento Nazionale: Modifica degli Incarichi Istituzionali - New World State',
+              html: emailHtml
+            });
+            console.log(`[SMTP] Inviato messaggio di variazione incarichi e spiegazione del ruolo a: ${citizenEmail}`);
+          } catch (smtpErr: any) {
+            console.error('[SMTP-ASSIGN-ROLE-ERR] Eccezione nell\'invio email assign-role:', smtpErr.message);
+          }
+        }
+      }
+
+      return res.json({ success: true, citizen: getCitizenWithArubaUrls(updatedCitizen), message: `Incarico operativo assegnato correttamente.` });
+    });
+
+    // --- GEOGRAPHIC AREAS ROUTES ---
+    apiRouter.get('/admin/geographic-areas', async (req, res) => {
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query('SELECT * FROM nws_geographic_areas ORDER BY id ASC');
+          return res.json({ success: true, data: qRes.rows });
+        } catch (err: any) {
+          console.error('[DB-GET-AREAS-ERR]', err.message);
+        }
+      }
+      return res.json({ success: true, data: memoryGeographicAreas });
+    });
+
+    apiRouter.post('/admin/geographic-areas', async (req, res) => {
+      const { id, name, countries } = req.body || {};
+      if (!name || !countries) {
+        return res.status(400).json({ success: false, message: 'Nome e stati associati obbligatori.' });
+      }
+
+      if (dbPool) {
+        try {
+          if (id) {
+            const qRes = await dbPool.query(
+              'UPDATE nws_geographic_areas SET name = $1, countries = $2 WHERE id = $3 RETURNING *',
+              [name, countries, id]
+            );
+            return res.json({ success: true, data: qRes.rows[0], message: 'Area geografica aggiornata con successo.' });
+          } else {
+            const qRes = await dbPool.query(
+              'INSERT INTO nws_geographic_areas (name, countries) VALUES ($1, $2) RETURNING *',
+              [name, countries]
+            );
+            return res.json({ success: true, data: qRes.rows[0], message: 'Area geografica creata con successo.' });
+          }
+        } catch (err: any) {
+          console.error('[DB-POST-AREAS-ERR]', err.message);
+          return res.status(500).json({ success: false, message: 'Errore durante il salvataggio sul database.' });
+        }
+      }
+
+      // Memory Fallback
+      if (id) {
+        const idx = memoryGeographicAreas.findIndex(a => a.id === Number(id));
+        if (idx !== -1) {
+          memoryGeographicAreas[idx] = { id: Number(id), name, countries };
+          return res.json({ success: true, data: memoryGeographicAreas[idx], message: 'Area geografica aggiornata in memoria.' });
+        }
+        return res.status(404).json({ success: false, message: 'Area non trovata in memoria.' });
+      } else {
+        const newId = memoryGeographicAreas.length > 0 ? Math.max(...memoryGeographicAreas.map(a => a.id)) + 1 : 1;
+        const newArea = { id: newId, name, countries };
+        memoryGeographicAreas.push(newArea);
+        return res.json({ success: true, data: newArea, message: 'Area geografica creata in memoria.' });
+      }
+    });
+
+    apiRouter.delete('/admin/geographic-areas', async (req, res) => {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ success: false, message: 'ID area obbligatorio.' });
+
+      if (dbPool) {
+        try {
+          await dbPool.query('DELETE FROM nws_geographic_areas WHERE id = $1', [id]);
+          return res.json({ success: true, message: 'Area geografica eliminata definitivamente.' });
+        } catch (err: any) {
+          console.error('[DB-DEL-AREAS-ERR]', err.message);
+          return res.status(500).json({ success: false, message: 'Errore durante la rimozione dal database.' });
+        }
+      }
+
+      const idx = memoryGeographicAreas.findIndex(a => a.id === Number(id));
+      if (idx !== -1) {
+        memoryGeographicAreas.splice(idx, 1);
+        return res.json({ success: true, message: 'Area geografica eliminata dalla memoria.' });
+      }
+      return res.status(404).json({ success: false, message: 'Area non trovata in memoria.' });
+    });
+
+    // --- CUSTOM ROLES ROUTES ---
+    apiRouter.get('/admin/custom-roles', async (req, res) => {
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query('SELECT * FROM nws_custom_roles ORDER BY id ASC');
+          return res.json({ success: true, data: qRes.rows });
+        } catch (err: any) {
+          console.error('[DB-GET-ROLES-ERR]', err.message);
+        }
+      }
+      return res.json({ success: true, data: memoryCustomRoles });
+    });
+
+    apiRouter.post('/admin/custom-roles', async (req, res) => {
+      const { id, name, description, geographic_area_id } = req.body || {};
+      if (!name) {
+        return res.status(400).json({ success: false, message: 'Nome ruolo obbligatorio.' });
+      }
+
+      const areaId = geographic_area_id ? Number(geographic_area_id) : null;
+
+      if (dbPool) {
+        try {
+          if (id) {
+            const qRes = await dbPool.query(
+              'UPDATE nws_custom_roles SET name = $1, description = $2, geographic_area_id = $3 WHERE id = $4 RETURNING *',
+              [name, description || '', areaId, id]
+            );
+            return res.json({ success: true, data: qRes.rows[0], message: 'Ruolo aggiornato con successo.' });
+          } else {
+            const qRes = await dbPool.query(
+              'INSERT INTO nws_custom_roles (name, description, geographic_area_id) VALUES ($1, $2, $3) RETURNING *',
+              [name, description || '', areaId]
+            );
+            return res.json({ success: true, data: qRes.rows[0], message: 'Ruolo creato con successo.' });
+          }
+        } catch (err: any) {
+          console.error('[DB-POST-ROLES-ERR]', err.message);
+          return res.status(500).json({ success: false, message: 'Errore durante il salvataggio sul database.' });
+        }
+      }
+
+      // Memory Fallback
+      if (id) {
+        const idx = memoryCustomRoles.findIndex(r => r.id === Number(id));
+        if (idx !== -1) {
+          memoryCustomRoles[idx] = { id: Number(id), name, description: description || '', geographic_area_id: areaId };
+          return res.json({ success: true, data: memoryCustomRoles[idx], message: 'Ruolo aggiornato in memoria.' });
+        }
+        return res.status(404).json({ success: false, message: 'Ruolo non trovato in memoria.' });
+      } else {
+        const newId = memoryCustomRoles.length > 0 ? Math.max(...memoryCustomRoles.map(r => r.id)) + 1 : 1;
+        const newRole = { id: newId, name, description: description || '', geographic_area_id: areaId };
+        memoryCustomRoles.push(newRole);
+        return res.json({ success: true, data: newRole, message: 'Ruolo creato in memoria.' });
+      }
+    });
+
+    apiRouter.delete('/admin/custom-roles', async (req, res) => {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ success: false, message: 'ID ruolo obbligatorio.' });
+
+      if (dbPool) {
+        try {
+          await dbPool.query('DELETE FROM nws_custom_roles WHERE id = $1', [id]);
+          return res.json({ success: true, message: 'Ruolo eliminato definitivamente.' });
+        } catch (err: any) {
+          console.error('[DB-DEL-ROLES-ERR]', err.message);
+          return res.status(500).json({ success: false, message: 'Errore durante la rimozione dal database.' });
+        }
+      }
+
+      const idx = memoryCustomRoles.findIndex(r => r.id === Number(id));
+      if (idx !== -1) {
+        memoryCustomRoles.splice(idx, 1);
+        return res.json({ success: true, message: 'Ruolo eliminato dalla memoria.' });
+      }
+      return res.status(404).json({ success: false, message: 'Ruolo non trovato in memoria.' });
     });
 
     apiRouter.get('/test-aruba', async (req, res) => {

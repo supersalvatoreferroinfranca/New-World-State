@@ -20,7 +20,9 @@ import {
   FileText,
   Briefcase,
   Trash,
-  Clock
+  Clock,
+  Plus,
+  Edit
 } from 'lucide-react';
 
 interface Citizen {
@@ -72,7 +74,18 @@ export default function AdminDashboard() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Core navigation state
-  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals'>('citizens');
+  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals' | 'roles'>('citizens');
+
+  // Dynamic custom roles & geographic areas state
+  const [customRoles, setCustomRoles] = useState<any[]>([]);
+  const [geographicAreas, setGeographicAreas] = useState<any[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(false);
+
+  // Editing forms state for roles & areas
+  const [editingRole, setEditingRole] = useState<{ id?: number; name: string; description: string; geographic_area_id: string } | null>(null);
+  const [editingArea, setEditingArea] = useState<{ id?: number; name: string; countries: string } | null>(null);
+  const [isRoleFormOpen, setIsRoleFormOpen] = useState(false);
+  const [isAreaFormOpen, setIsAreaFormOpen] = useState(false);
 
   // Citizens list state
   const [citizens, setCitizens] = useState<Citizen[]>([]);
@@ -103,6 +116,53 @@ export default function AdminDashboard() {
   const [proposalRejectionModalOpen, setProposalRejectionModalOpen] = useState(false);
   const [proposalRejectionId, setProposalRejectionId] = useState<number | null>(null);
   const [proposalRejectionReason, setProposalRejectionReason] = useState('');
+
+  // Custom dialog system to bypass iframe sandbox restrictions on window.confirm & alert
+  const [dialog, setDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'confirm' | 'alert';
+    onConfirm?: () => void;
+    onCancel?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'alert'
+  });
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setDialog({
+      isOpen: true,
+      title,
+      message,
+      type: 'confirm',
+      onConfirm: () => {
+        setDialog(prev => ({ ...prev, isOpen: false }));
+        onConfirm();
+      },
+      onCancel: () => {
+        setDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const showAlert = (title: string, message: string, onOk?: () => void) => {
+    setDialog({
+      isOpen: true,
+      title,
+      message,
+      type: 'alert',
+      onConfirm: () => {
+        setDialog(prev => ({ ...prev, isOpen: false }));
+        if (onOk) onOk();
+      },
+      onCancel: () => {
+        setDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
 
   const getAdminPassword = () => {
     if (typeof window !== 'undefined') {
@@ -157,11 +217,187 @@ export default function AdminDashboard() {
     }
   };
 
+  // Fetch dynamic custom roles from database/memory
+  const fetchCustomRoles = async () => {
+    setRolesLoading(true);
+    try {
+      const res = await safeFetch('/api/admin/custom-roles', {
+        headers: {
+          'x-admin-password': getAdminPassword()
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCustomRoles(data.data || []);
+      }
+    } catch (err: any) {
+      console.error('[ADMIN-DASHBOARD] Fetch custom roles failed:', err);
+    } finally {
+      setRolesLoading(false);
+    }
+  };
+
+  // Fetch dynamic geographic areas from database/memory
+  const fetchGeographicAreas = async () => {
+    try {
+      const res = await safeFetch('/api/admin/geographic-areas', {
+        headers: {
+          'x-admin-password': getAdminPassword()
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGeographicAreas(data.data || []);
+      }
+    } catch (err: any) {
+      console.error('[ADMIN-DASHBOARD] Fetch areas failed:', err);
+    }
+  };
+
+  // Save/Update Custom Operational Role
+  const handleSaveRole = async () => {
+    if (!editingRole || !editingRole.name.trim()) {
+      showAlert('Dati mancanti', 'Il nome del ruolo è obbligatorio.');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await safeFetch('/api/admin/custom-roles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': getAdminPassword()
+        },
+        body: JSON.stringify({
+          id: editingRole.id,
+          name: editingRole.name,
+          description: editingRole.description,
+          geographic_area_id: editingRole.geographic_area_id || null
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showAlert('Salvato', data.message || 'Ruolo salvato correttamente.');
+        setIsRoleFormOpen(false);
+        setEditingRole(null);
+        await fetchCustomRoles();
+      } else {
+        showAlert('Errore', data.message || 'Impossibile salvare il ruolo.');
+      }
+    } catch (err: any) {
+      showAlert('Errore di rete', err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Delete Custom Operational Role
+  const handleDeleteRole = async (id: number) => {
+    showConfirm(
+      'Elimina Ruolo',
+      'Sei sicuro di voler eliminare irrevocabilmente questo incarico operativo?',
+      async () => {
+        setActionLoading(true);
+        try {
+          const res = await safeFetch('/api/admin/custom-roles', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': getAdminPassword()
+            },
+            body: JSON.stringify({ id })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showAlert('Rimosso', data.message || 'Ruolo rimosso con successo.');
+            await fetchCustomRoles();
+          } else {
+            showAlert('Errore', data.message || 'Impossibile rimuovere il ruolo.');
+          }
+        } catch (err: any) {
+          showAlert('Errore di rete', err.message);
+        } finally {
+          setActionLoading(false);
+        }
+      }
+    );
+  };
+
+  // Save/Update Geographic Area
+  const handleSaveArea = async () => {
+    if (!editingArea || !editingArea.name.trim() || !editingArea.countries.trim()) {
+      showAlert('Dati mancanti', 'Il nome dell\'area e gli stati associati sono obbligatori.');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await safeFetch('/api/admin/geographic-areas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': getAdminPassword()
+        },
+        body: JSON.stringify({
+          id: editingArea.id,
+          name: editingArea.name,
+          countries: editingArea.countries
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showAlert('Salvato', data.message || 'Area geografica salvata correttamente.');
+        setIsAreaFormOpen(false);
+        setEditingArea(null);
+        await fetchGeographicAreas();
+      } else {
+        showAlert('Errore', data.message || 'Impossibile salvare l\'area geografica.');
+      }
+    } catch (err: any) {
+      showAlert('Errore di rete', err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Delete Geographic Area
+  const handleDeleteArea = async (id: number) => {
+    showConfirm(
+      'Elimina Area Geografica',
+      'Sei sicuro di voler eliminare irrevocabilmente questa area territoriale?',
+      async () => {
+        setActionLoading(true);
+        try {
+          const res = await safeFetch('/api/admin/geographic-areas', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': getAdminPassword()
+            },
+            body: JSON.stringify({ id })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showAlert('Rimosso', data.message || 'Area geografica rimossa con successo.');
+            await fetchGeographicAreas();
+          } else {
+            showAlert('Errore', data.message || 'Impossibile rimuovere l\'area geografica.');
+          }
+        } catch (err: any) {
+          showAlert('Errore di rete', err.message);
+        } finally {
+          setActionLoading(false);
+        }
+      }
+    );
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
+      fetchCustomRoles();
+      fetchGeographicAreas();
       if (activeTab === 'citizens') {
         fetchCitizens();
-      } else {
+      } else if (activeTab === 'proposals') {
         fetchProposals();
       }
     }
@@ -169,45 +405,49 @@ export default function AdminDashboard() {
 
   // Citizen approval action
   const handleApprove = async (id: string | number) => {
-    if (window.confirm('Sei sicuro di voler approvare questa domanda di cittadinanza? Verrà generata la ID card ufficiale e inviata via email.')) {
-      setActionLoading(true);
-      try {
-        const res = await safeFetch('/api/admin/approve', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-admin-password': getAdminPassword()
-          },
-          body: JSON.stringify({ id })
-        });
-        const data = await res.json();
-        if (data.success) {
-          alert('Pratica convalidata col massimo protocollo federale e inviata via email con successo!');
-          await fetchCitizens();
-          // Update selected view
-          if (selectedCitizen && selectedCitizen.id === id) {
-            if (data.citizen) {
-              setSelectedCitizen(data.citizen);
-            } else {
-              setSelectedCitizen({ ...selectedCitizen, status: 'approved' });
+    showConfirm(
+      'Approva Candidato',
+      'Sei sicuro di voler approvare questa domanda di cittadinanza? Verrà generata la ID card ufficiale e inviata via email.',
+      async () => {
+        setActionLoading(true);
+        try {
+          const res = await safeFetch('/api/admin/approve', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-admin-password': getAdminPassword()
+            },
+            body: JSON.stringify({ id })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showAlert('Approvato', 'Pratica convalidata col massimo protocollo federale e inviata via email con successo!');
+            await fetchCitizens();
+            // Update selected view
+            if (selectedCitizen && selectedCitizen.id === id) {
+              if (data.citizen) {
+                setSelectedCitizen(data.citizen);
+              } else {
+                setSelectedCitizen({ ...selectedCitizen, status: 'approved' });
+              }
             }
+          } else {
+            showAlert('Errore', `Errore: ${data.message}`);
           }
-        } else {
-          alert(`Errore: ${data.message}`);
+        } catch (err: any) {
+          showAlert('Errore di rete', `Errore di rete: ${err.message}`);
+        } finally {
+          setActionLoading(false);
         }
-      } catch (err: any) {
-        alert(`Errore di rete: ${err.message}`);
-      } finally {
-        setActionLoading(false);
       }
-    }
+    );
   };
 
   // Citizen rejection action
   const submitRejection = async () => {
     if (!selectedCitizen) return;
     if (!rejectionReason.trim()) {
-      alert('Inserire un motivo valido per il rifiuto.');
+      showAlert('Motivo mancante', 'Inserire un motivo valido per il rifiuto.');
       return;
     }
 
@@ -223,7 +463,7 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Pratica respinta correttamente e notifica email recapitata.');
+        showAlert('Respinto', 'Pratica respinta correttamente e notifica email recapitata.');
         setRejectionModalOpen(false);
         setRejectionReason('');
         await fetchCitizens();
@@ -232,10 +472,10 @@ export default function AdminDashboard() {
           setSelectedCitizen({ ...selectedCitizen, status: 'rejected', rejectionReason });
         }
       } else {
-        alert(`Errore: ${data.message}`);
+        showAlert('Errore', `Errore: ${data.message}`);
       }
     } catch (err: any) {
-      alert(`Errore di rete: ${err.message}`);
+      showAlert('Errore di rete', `Errore di rete: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -244,11 +484,12 @@ export default function AdminDashboard() {
   // Promote/Demote Citizen Administrator Role (Calls /api/admin/toggle-admin)
   const handleToggleAdmin = async (citizenId: string | number, currentIsAdmin: boolean) => {
     const targetVal = !currentIsAdmin;
+    const title = targetVal ? "Abilita Amministratore" : "Revoca Amministratore";
     const msg = targetVal 
       ? "Abilitare questo cittadino come Co-Amministratore di Sistema autorizzato?" 
       : "Revocare i privilegi di Amministrazione per questo cittadino?";
     
-    if (window.confirm(msg)) {
+    showConfirm(title, msg, async () => {
       setActionLoading(true);
       try {
         const res = await safeFetch('/api/admin/toggle-admin', {
@@ -261,19 +502,87 @@ export default function AdminDashboard() {
         });
         const data = await res.json();
         if (data.success) {
-          alert(data.message || 'Privilegi di Co-Amministrazione aggiornati correttamente.');
+          showAlert('Stato Aggiornato', data.message || 'Privilegi di Co-Amministrazione aggiornati correttamente.');
           await fetchCitizens();
           if (selectedCitizen && selectedCitizen.id === citizenId) {
             setSelectedCitizen({ ...selectedCitizen, isAdmin: targetVal });
           }
         } else {
-          alert(`Errore: ${data.message}`);
+          showAlert('Errore', `Errore: ${data.message}`);
         }
       } catch (err: any) {
-        alert(`Errore di rete: ${err.message}`);
+        showAlert('Errore di rete', `Errore di rete: ${err.message}`);
       } finally {
         setActionLoading(false);
       }
+    });
+  };
+
+  // Helper to parse multiple assigned roles for a citizen
+  const getCitizenAssignedRoles = (roleField: string | null | undefined): any[] => {
+    if (!roleField) return [];
+    const trimmed = roleField.trim();
+    if (trimmed.startsWith('[')) {
+      try {
+        return JSON.parse(trimmed);
+      } catch (err) {
+        return [{ legacyName: roleField }];
+      }
+    }
+    return [{ legacyName: roleField }];
+  };
+
+  // Toggle role assignment for Citizen (supporting multiple assignment)
+  const handleToggleCitizenRole = async (citizenId: string | number, roleId: number, currentRoles: any[]) => {
+    // Determine the new set of roles
+    let updated: any[] = [];
+    
+    // Convert first any name-only legacy objects into proper ID references if they match a known custom role
+    const processedCurrent = currentRoles.map((r: any) => {
+      if (r.legacyName) {
+        const found = customRoles.find(cr => cr.name === r.legacyName);
+        return found ? { roleId: found.id } : r;
+      }
+      return r;
+    });
+
+    const alreadyExists = processedCurrent.some((r: any) => r.roleId === roleId);
+    if (alreadyExists) {
+      updated = processedCurrent.filter((r: any) => r.roleId !== roleId);
+    } else {
+      updated = [...processedCurrent, { roleId }];
+    }
+
+    // Prepare payload string
+    const rolePayloadStr = updated.length > 0 ? JSON.stringify(updated) : '';
+
+    setActionLoading(true);
+    try {
+      const res = await safeFetch('/api/admin/assign-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': getAdminPassword()
+        },
+        body: JSON.stringify({ citizenId, role: rolePayloadStr })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Aggiorna localmente
+        await fetchCitizens();
+        if (selectedCitizen && selectedCitizen.id === citizenId) {
+          setSelectedCitizen({
+            ...selectedCitizen,
+            operationalRole: rolePayloadStr || null
+          });
+        }
+      } else {
+        showAlert('Errore', data.message || 'Errore durante l\'aggiornamento degli incarichi.');
+      }
+    } catch (err: any) {
+      showAlert('Errore di connessione', err.message);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -291,16 +600,16 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert(data.message || 'Incarico operativo registrato correttamente sul passaporto digitale.');
+        showAlert('Ruolo Assegnato', data.message || 'Incarico operativo registrato correttamente sul passaporto digitale.');
         await fetchCitizens();
         if (selectedCitizen && selectedCitizen.id === citizenId) {
           setSelectedCitizen({ ...selectedCitizen, operationalRole: role === "Nessuno" ? null : role });
         }
       } else {
-        alert(`Errore: ${data.message}`);
+        showAlert('Errore', `Errore: ${data.message}`);
       }
     } catch (err: any) {
-      alert(`Errore di rete: ${err.message}`);
+      showAlert('Errore di rete', `Errore di rete: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -331,12 +640,12 @@ export default function AdminDashboard() {
   const handleProposalApproveWithSchedule = async () => {
     if (!scheduleProposalId) return;
     if (!votingStartsAt || !votingEndsAt) {
-      alert('Specificare data inizio e fine del referendum federale.');
+      showAlert('Dati parziali', 'Specificare data inizio e fine del referendum federale.');
       return;
     }
 
     if (new Date(votingEndsAt) <= new Date(votingStartsAt)) {
-      alert('La data di fine del referendum deve essere successiva alla data di inizio.');
+      showAlert('Errore date', 'La data di fine del referendum deve essere successiva alla data di inizio.');
       return;
     }
 
@@ -357,17 +666,17 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Proposta normativa convalidata e votazione programmata correttamente!');
+        showAlert('Referendum Attivato', 'Proposta normativa convalidata e votazione programmata correttamente!');
         setScheduleModalOpen(false);
         await fetchProposals();
         if (selectedProposal && selectedProposal.id === scheduleProposalId) {
           setSelectedProposal(data.data);
         }
       } else {
-        alert(`Errore: ${data.message}`);
+        showAlert('Errore', `Errore: ${data.message}`);
       }
     } catch (err: any) {
-      alert(`Errore di rete: ${err.message}`);
+      showAlert('Errore di rete', `Errore di rete: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -384,7 +693,7 @@ export default function AdminDashboard() {
   const handleProposalReject = async () => {
     if (!proposalRejectionId) return;
     if (!proposalRejectionReason.trim()) {
-      alert('Specificare la motivazione del rigetto.');
+      showAlert('Motivazione mancante', 'Specificare la motivazione del rigetto.');
       return;
     }
     setActionLoading(true);
@@ -403,17 +712,17 @@ export default function AdminDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Proposta normativa respinta con motivazione inserita a archivio.');
+        showAlert('Proposta respinta', 'Proposta normativa respinta con motivazione inserita a archivio.');
         setProposalRejectionModalOpen(false);
         await fetchProposals();
         if (selectedProposal && selectedProposal.id === proposalRejectionId) {
           setSelectedProposal(data.data);
         }
       } else {
-        alert(`Errore: ${data.message}`);
+        showAlert('Errore', `Errore: ${data.message}`);
       }
     } catch (err: any) {
-      alert(`Errore di rete: ${err.message}`);
+      showAlert('Errore di rete', `Errore di rete: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -421,34 +730,38 @@ export default function AdminDashboard() {
 
   // Delete proposal action (including voting cleanup)
   const handleProposalDelete = async (pId: number) => {
-    if (window.confirm('Sei sicuro di voler ELIMINARE DEFINITIVAMENTE questa proposta normativa dal portale federale? Questa operazione rasserrenerà l\'archivio cancellando anche tutti i voti legati e non è reversibile.')) {
-      setActionLoading(true);
-      try {
-        const res = await safeFetch('/api/democracy/admin/action', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-password': getAdminPassword()
-          },
-          body: JSON.stringify({
-            action: 'delete',
-            proposal_id: pId
-          })
-        });
-        const data = await res.json();
-        if (data.success) {
-          alert('Proposta normativa purgata con successo dal registro digitale.');
-          setSelectedProposal(null);
-          await fetchProposals();
-        } else {
-          alert(`Errore: ${data.message}`);
+    showConfirm(
+      'Elimina Proposta',
+      'Sei sicuro di voler ELIMINARE DEFINITIVAMENTE questa proposta normativa dal portale federale? Questa operazione rasserrenerà l\'archivio cancellando anche tutti i voti legati e non è reversibile.',
+      async () => {
+        setActionLoading(true);
+        try {
+          const res = await safeFetch('/api/democracy/admin/action', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': getAdminPassword()
+            },
+            body: JSON.stringify({
+              action: 'delete',
+              proposal_id: pId
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showAlert('Rimosso', 'Proposta normativa purgata con successo dal registro digitale.');
+            setSelectedProposal(null);
+            await fetchProposals();
+          } else {
+            showAlert('Errore', `Errore: ${data.message}`);
+          }
+        } catch (err: any) {
+          showAlert('Errore di rete', `Errore di rete: ${err.message}`);
+        } finally {
+          setActionLoading(false);
         }
-      } catch (err: any) {
-        alert(`Errore di rete: ${err.message}`);
-      } finally {
-        setActionLoading(false);
       }
-    }
+    );
   };
 
   // Counters
@@ -606,6 +919,12 @@ export default function AdminDashboard() {
           className={`flex-1 py-4 px-6 text-center font-serif font-bold text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'proposals' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
           <FileText className="w-4 h-4 text-brand-gold" /> Democrazia Normativa ({proposals.length})
+        </button>
+        <button
+          onClick={() => { setActiveTab('roles'); }}
+          className={`flex-1 py-4 px-6 text-center font-serif font-bold text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'roles' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <Globe className="w-4 h-4 text-brand-gold" /> Ruoli & Aree Geografiche
         </button>
       </div>
 
@@ -817,6 +1136,167 @@ export default function AdminDashboard() {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB 3: GESTIONE INCARICHI & AREE GEOGRAFICHE */}
+          {activeTab === 'roles' && (
+            <div className="space-y-6 animate-fade-in text-xs">
+              <div className="bg-[#0a1c3e]/5 p-4 rounded-2xl border border-[#0a1c3e]/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-[#0a1c3e] font-serif font-bold text-base flex items-center gap-1.5">
+                    🗂️ Registro Nomine, Deleghe & Circoscrizioni
+                  </h3>
+                  <p className="text-slate-500 text-[10.5px] mt-0.5 font-medium">Configura aree geopolitiche multilaterali e associa incarichi operativi ad esse collegati.</p>
+                </div>
+                <div className="flex gap-2 font-bold select-none">
+                  <button
+                    onClick={() => {
+                      setEditingArea({ name: '', countries: '' });
+                      setIsAreaFormOpen(true);
+                      setEditingRole(null);
+                      setIsRoleFormOpen(false);
+                    }}
+                    className="bg-brand-blue hover:bg-[#071530] text-[#f7f5f0] px-3 py-2 rounded-xl flex items-center gap-1 transition text-[10px] uppercase tracking-wider"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Area
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingRole({ name: '', description: '', geographic_area_id: '' });
+                      setIsRoleFormOpen(true);
+                      setEditingArea(null);
+                      setIsAreaFormOpen(false);
+                    }}
+                    className="bg-[#c5a880] hover:bg-[#b0936b] text-white px-3 py-2 rounded-xl flex items-center gap-1 transition text-[10px] uppercase tracking-wider"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Ruolo
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* COLONNA AREE */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="font-serif font-bold text-sm text-[#0a1c3e] flex items-center gap-1.5">
+                      🗺️ Aree Geografiche Operative ({geographicAreas.length})
+                    </span>
+                  </div>
+
+                  {geographicAreas.length === 0 ? (
+                    <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl text-slate-400 font-semibold bg-slate-50/50">
+                      Nessuna area configurata. Clicca "+ Area" per creare la prima circoscrizione geopolitica.
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                      {geographicAreas.map(area => {
+                        const associatedCount = customRoles.filter(r => r.geographic_area_id === area.id).length;
+                        return (
+                          <div key={area.id} className="p-3.5 rounded-xl border border-slate-150 bg-white hover:shadow-sm space-y-1.5 transition">
+                            <div className="flex justify-between items-start gap-2">
+                              <span className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">{area.name}</span>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => {
+                                    setEditingArea({ id: area.id, name: area.name, countries: area.countries });
+                                    setIsAreaFormOpen(true);
+                                    setEditingRole(null);
+                                    setIsRoleFormOpen(false);
+                                  }}
+                                  className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-[#0a1c3e] transition"
+                                  title="Modifica Area"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteArea(area.id)}
+                                  className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-rose-600 transition"
+                                  title="Rimuovi Area"
+                                >
+                                  <Trash className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="text-[10px] text-slate-500 font-medium">
+                              <span className="font-bold text-slate-600">Stati/Territori:</span> {area.countries}
+                            </div>
+                            <div className="text-[9px] text-slate-400 font-mono">
+                              Incarichi legati a questo territorio: <span className="font-bold text-brand-gold">{associatedCount}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* COLONNA RUOLI */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <span className="font-serif font-bold text-sm text-[#0a1c3e] flex items-center gap-1.5">
+                      🎖️ Registro degli Incarichi Operativi ({customRoles.length})
+                    </span>
+                  </div>
+
+                  {rolesLoading ? (
+                    <div className="p-6 text-center text-slate-400 font-semibold">Caricamento incarichi...</div>
+                  ) : customRoles.length === 0 ? (
+                    <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl text-slate-400 font-semibold bg-slate-50/50">
+                      Nessun ruolo configurato. Clicca "+ Ruolo" per inserire un nuovo incarico.
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                      {customRoles.map(role => {
+                        const area = geographicAreas.find(a => a.id === role.geographic_area_id);
+                        return (
+                          <div key={role.id} className="p-3.5 rounded-xl border border-slate-150 bg-white hover:shadow-sm space-y-1.5 transition">
+                            <div className="flex justify-between items-start gap-2">
+                              <div>
+                                <span className="font-bold text-slate-800 text-xs">{role.name}</span>
+                                {area && (
+                                  <span className="ml-1.5 bg-[#c5a880]/15 text-[#8c7453] px-1.5 py-0.5 rounded text-[8px] font-semibold uppercase tracking-wide">
+                                    🌍 {area.name}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex gap-1 shrink-0">
+                                <button
+                                  onClick={() => {
+                                    setEditingRole({
+                                      id: role.id,
+                                      name: role.name,
+                                      description: role.description || '',
+                                      geographic_area_id: role.geographic_area_id ? String(role.geographic_area_id) : ''
+                                    });
+                                    setIsRoleFormOpen(true);
+                                    setEditingArea(null);
+                                    setIsAreaFormOpen(false);
+                                  }}
+                                  className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-[#0a1c3e] transition"
+                                  title="Modifica Ruolo"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteRole(role.id)}
+                                  className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-rose-600 transition"
+                                  title="Rimuovi Ruolo"
+                                >
+                                  <Trash className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            {role.description && (
+                              <p className="text-[10px] text-slate-500 leading-normal">{role.description}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -1060,21 +1540,79 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* Assegnazione Incarichi Operativi */}
-                    <div className="space-y-2 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                      <label className="font-bold text-slate-800 block text-[11px]">Assegna Incarico Governativo</label>
-                      <select
-                        value={selectedCitizen.operationalRole || 'Nessuno'}
-                        onChange={(e) => handleAssignRole(selectedCitizen.id, e.target.value)}
-                        disabled={actionLoading}
-                        className="w-full bg-white border border-slate-200 rounded-lg p-2 outline-none font-bold text-slate-800 cursor-pointer focus:border-[#0a1c3e] text-xs"
-                      >
-                        <option value="Nessuno">-- Nessun incarico operativo --</option>
-                        {PREDEFINED_ROLES.map(role => (
-                          <option key={role} value={role}>{role}</option>
-                        ))}
-                      </select>
-                      <p className="text-[9px] text-slate-400 font-mono leading-tight">L'assegnazione è visualizzata istantaneamente sui registri pubblici di democrazia.</p>
+                    {/* Assegnazione Incarichi Operativi Multipli */}
+                    <div className="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                      <div>
+                        <label className="font-bold text-slate-800 block text-[11px] uppercase tracking-wider">Incarichi Governativi Assegnati</label>
+                        <span className="text-[9px] text-slate-400 block leading-tight">Puoi attribuire più incarichi contemporaneamente. Vengono salvati istantaneamente sui passaporti digitali.</span>
+                      </div>
+                      
+                      {customRoles.length === 0 ? (
+                        <p className="text-[10px] text-slate-400 font-medium">Nessun incarico registrato nel sistema federale. Accedi al tab "Ruoli & Aree Geografiche" per configurarne.</p>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-1.5 max-h-52 overflow-y-auto pr-1">
+                          {customRoles.map(role => {
+                            const parsedAssigned = getCitizenAssignedRoles(selectedCitizen?.operationalRole);
+                            const isAssigned = parsedAssigned.some((r: any) => r.roleId === role.id || r.legacyName === role.name);
+                            const roleArea = geographicAreas.find(a => a.id === role.geographic_area_id);
+                            
+                            return (
+                              <label 
+                                key={role.id} 
+                                className={`flex items-start gap-2.5 p-2 rounded-lg border text-[10px] cursor-pointer transition select-none ${
+                                  isAssigned 
+                                    ? 'bg-[#0a1c3e]/5 border-[#0a1c3e]/30 text-[#0a1c3e]' 
+                                    : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isAssigned}
+                                  disabled={actionLoading}
+                                  onChange={() => handleToggleCitizenRole(selectedCitizen.id, role.id, parsedAssigned)}
+                                  className="mt-0.5 rounded border-slate-300 text-[#0a1c3e] focus:ring-[#0a1c3e] cursor-pointer"
+                                />
+                                <div className="flex-1 leading-tight">
+                                  <div className="font-bold flex items-center flex-wrap gap-1">
+                                    <span>{role.name}</span>
+                                    {roleArea && (
+                                      <span className="bg-[#c5a880]/15 text-[#8c7453] px-1 py-0.2 rounded text-[8px] font-semibold tracking-wide">
+                                        🌍 {roleArea.name}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {role.description && (
+                                    <p className="text-[9px] text-slate-400 mt-0.5 min-w-0 break-words">{role.description}</p>
+                                  )}
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                      
+                      {/* Visualizzazione Legacy o non catalogati */}
+                      {(() => {
+                        const parsedAssigned = getCitizenAssignedRoles(selectedCitizen?.operationalRole);
+                        const legacyUnmapped = parsedAssigned.filter((r: any) => 
+                          r.legacyName && !customRoles.some(cr => cr.name === r.legacyName)
+                        );
+                        if (legacyUnmapped.length > 0) {
+                          return (
+                            <div className="pt-2 border-t border-slate-200/60">
+                              <p className="text-[8px] uppercase tracking-wider font-bold text-amber-600">Incarichi Legacy rilevati:</p>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {legacyUnmapped.map((r: any, idx: number) => (
+                                  <span key={idx} className="bg-amber-50 text-amber-800 border border-amber-200/60 px-1.5 py-0.5 rounded text-[8px] font-bold">
+                                    {r.legacyName}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 )}
@@ -1194,6 +1732,139 @@ export default function AdminDashboard() {
                 <FileText className="w-12 h-12 text-slate-300 mb-3" />
                 <p className="text-sm font-semibold">Nessuna proposta esaminata</p>
                 <p className="text-xs text-slate-400 mt-1 max-w-xs">Seleziona una legge o iniziativa cittadina dal registro per aprirne i dettagli e valutarne la pubblicazione referendaria istituzionale.</p>
+              </div>
+            )
+          )}
+
+          {/* TAB 3: RENDER DETTAGLIO ED EDITIONS INCARICHI / AREE */}
+          {activeTab === 'roles' && (
+            isAreaFormOpen && editingArea ? (
+              <div className="space-y-6 animate-fade-in text-xs flex flex-col justify-between h-full">
+                <div className="space-y-6">
+                  <div>
+                    <span className="text-[9px] uppercase font-mono bg-[#c5a880]/15 text-[#8c7453] px-2 py-0.5 rounded-full font-bold">Territori Geopolitici</span>
+                    <h3 className="text-lg font-serif text-slate-900 mt-2">{editingArea.id ? 'Modifica Area Geografica' : 'Nuova Area Geografica'}</h3>
+                    <p className="text-slate-400 text-[10px]">Crea o aggiorna circoscrizioni territoriali composte da uno o più stati per deleghe diplomatiche.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 block text-[10px] uppercase">Nome dell'Area Geografica</label>
+                      <input
+                        type="text"
+                        value={editingArea.name}
+                        onChange={(e) => setEditingArea({ ...editingArea, name: e.target.value })}
+                        placeholder="es. Europa, Italia e Francia, India"
+                        className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-[#0a1c3e] text-slate-800 bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 block text-[10px] uppercase">Stati del Globo Compresi (Costituita da uno o più stati)</label>
+                      <textarea
+                        rows={5}
+                        value={editingArea.countries}
+                        onChange={(e) => setEditingArea({ ...editingArea, countries: e.target.value })}
+                        placeholder="es. Italia, Francia (oppure 'Tutto il globo' o 'Europa')"
+                        className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-[#0a1c3e] text-slate-800 bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 text-xs font-bold justify-end pt-4 border-t border-slate-100 mt-6">
+                  <button
+                    onClick={() => {
+                      setIsAreaFormOpen(false);
+                      setEditingArea(null);
+                    }}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl transition cursor-pointer"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    onClick={handleSaveArea}
+                    disabled={actionLoading}
+                    className="bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] px-5 py-2.5 rounded-xl transition disabled:opacity-50 cursor-pointer text-xs flex items-center gap-1.5"
+                  >
+                    <CheckCircle className="w-4 h-4" /> {editingArea.id ? 'Salva Modifiche' : 'Crea Area'}
+                  </button>
+                </div>
+              </div>
+            ) : isRoleFormOpen && editingRole ? (
+              <div className="space-y-6 animate-fade-in text-xs flex flex-col justify-between h-full">
+                <div className="space-y-6">
+                  <div>
+                    <span className="text-[9px] uppercase font-mono bg-[#c5a880]/15 text-[#8c7453] px-2 py-0.5 rounded-full font-bold">Delega Operativa</span>
+                    <h3 className="text-lg font-serif text-slate-900 mt-2">{editingRole.id ? 'Modifica Incarico' : 'Nuovo Incarico Operativo'}</h3>
+                    <p className="text-slate-400 text-[10px]">Crea o aggiorna cariche e attribuzioni legandole ad una specifica circoscrizione geopolitica.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 block text-[10px] uppercase">Nome Incarico Governativo</label>
+                      <input
+                        type="text"
+                        value={editingRole.name}
+                        onChange={(e) => setEditingRole({ ...editingRole, name: e.target.value })}
+                        placeholder="es. Ambasciatore Digitale, Ufficiale di Pace"
+                        className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-[#0a1c3e] text-slate-800 bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 block text-[10px] uppercase">Descrizione Funzioni</label>
+                      <textarea
+                        rows={4}
+                        value={editingRole.description}
+                        onChange={(e) => setEditingRole({ ...editingRole, description: e.target.value })}
+                        placeholder="Fornisci una descrizione dettagliata delle attribuzioni e dei poteri conferiti per questo incarico operante..."
+                        className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-[#0a1c3e] text-slate-800 bg-white opacity-95"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-slate-700 block text-[10px] uppercase">Area Geografica per questo Ruolo</label>
+                      <select
+                        value={editingRole.geographic_area_id}
+                        onChange={(e) => setEditingRole({ ...editingRole, geographic_area_id: e.target.value })}
+                        className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-[#0a1c3e] text-slate-800 bg-white cursor-pointer"
+                      >
+                        <option value="">-- Nessun vincolo territoriale (Globale) --</option>
+                        {geographicAreas.map(area => (
+                          <option key={area.id} value={area.id}>{area.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 text-xs font-bold justify-end pt-4 border-t border-slate-100 mt-6">
+                  <button
+                    onClick={() => {
+                      setIsRoleFormOpen(false);
+                      setEditingRole(null);
+                    }}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl transition cursor-pointer"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    onClick={handleSaveRole}
+                    disabled={actionLoading}
+                    className="bg-brand-blue hover:bg-[#071530] text-[#f7f5f0] px-5 py-2.5 rounded-xl transition disabled:opacity-50 cursor-pointer text-xs flex items-center gap-1.5"
+                  >
+                    <CheckCircle className="w-4 h-4" /> {editingRole.id ? 'Salva Incarico' : 'Crea Incarico'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col justify-center items-center text-center p-10 text-slate-400 h-full min-h-[400px]">
+                <Globe className="w-12 h-12 text-slate-300 mb-3" />
+                <p className="text-sm font-semibold">Pannello Deleghe & Territori</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-xs leading-normal">
+                  Seleziona un'area geografica o un incarico per aprirne il dossier istituzionale in modifica, oppure utilizza i pulsanti di creazione in alto per inserire nuove cariche governative federate.
+                </p>
               </div>
             )
           )}
@@ -1318,6 +1989,39 @@ export default function AdminDashboard() {
                 className="bg-rose-650 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl transition disabled:opacity-50 cursor-pointer text-xs"
               >
                 Registra Rigetto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Elegante Modal di Notifica / Conferma Personalizzato (Bypassa sandbox iframe e alert obsoleti) */}
+      {dialog.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in" id="custom-system-dialog">
+          <div className="bg-white rounded-2xl max-w-sm w-full border border-slate-100 shadow-2xl p-6 space-y-5 transform scale-100 transition-all">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${dialog.type === 'confirm' ? 'bg-[#0a1c3e]/10 text-[#0a1c3e]' : 'bg-brand-gold/10 text-[#c5a880]'}`}>
+                <Shield className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-serif font-bold text-[#0a1c3e] tracking-tight">{dialog.title}</h3>
+            </div>
+            
+            <p className="text-xs text-slate-500 leading-relaxed font-semibold">{dialog.message}</p>
+            
+            <div className="flex items-center justify-end gap-2 pt-2">
+              {dialog.type === 'confirm' && (
+                <button
+                  onClick={dialog.onCancel}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
+                >
+                  Annulla
+                </button>
+              )}
+              <button
+                onClick={dialog.onConfirm}
+                className="px-4 py-2 bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] border-b-2 border-[#c5a880] rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
+              >
+                {dialog.type === 'confirm' ? 'Conferma' : 'OK'}
               </button>
             </div>
           </div>
