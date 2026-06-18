@@ -2093,16 +2093,20 @@ CREATE TABLE citizens (
               const welcomeHtml = `
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 16px;">
                   <div style="background-color: ${brandColor}; padding: 40px 30px; border-radius: 12px; text-align: center; color: white; border-bottom: 4px solid ${goldColor};">
-                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: white;">Benvenuto, Cittadino!</h1>
-                    <p style="margin: 10px 0 0 0; color: ${goldColor}; font-size: 18px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">Cittadinanza NWS Approvata</p>
+                    <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: white;">Benvenuto, Cittadino! / Welcome, Citizen!</h1>
+                    <p style="margin: 10px 0 0 0; color: ${goldColor}; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px;">Cittadinanza NWS Approvata / NWS Citizenship Approved</p>
                   </div>
                   
                   <div style="padding: 30px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; line-height: 1.6;">
-                    <p style="font-size: 16px; margin-top: 0;">Gentile <strong>${firstNameVal} ${surnameVal}</strong>,</p>
+                    <p style="font-size: 15px; margin-top: 0;">Gentile / Dear <strong>${firstNameVal} ${surnameVal}</strong>,</p>
                     
-                    <p style="font-size: 15px;">Siamo onorati di darti il benvenuto ufficiale nel <strong>New World State</strong>. Il nostro comitato di validatori ha completato con successo la verifica della tua anagrafica e dei tuoi documenti.</p>
+                    <p style="font-size: 14px; margin-bottom: 12px;">
+                      <strong>[IT]</strong> Siamo onorati di darti il benvenuto ufficiale nel <strong>New World State</strong>. Il nostro comitato di validatori ha completato con successo la verifica della tua anagrafica e dei tuoi documenti. La tua registrazione è ora formalmente inserita nel Registro Federale di NWS.
+                    </p>
                     
-                    <p style="font-size: 15px;">La tua registrazione è ora formalmente inserita nel Registro Fedele della Federazione Mondiale di NWS.</p>
+                    <p style="font-size: 14px; margin-bottom: 24px; color: #475569;">
+                      <strong>[EN]</strong> We are deeply honored to officially welcome you to the <strong>New World State</strong>. Our validation committee has successfully completed the review of your personal registries and documentation. Your registration is now formally recorded in the NWS Federal Civil Registry.
+                    </p>
   
                     <!-- TABELLA DOCUMENTO DI IDENTITA DIGITALE -->
                     <div style="margin: 30px 0; background-color: ${brandColor}; color: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(10,28,62,0.25); border: 2px solid ${goldColor};">
@@ -2138,7 +2142,7 @@ CREATE TABLE citizens (
                             </td>
                             <td style="width: 30%; vertical-align: middle; text-align: center;">
                               <div style="border: 2px solid ${goldColor}; width: 85px; height: 105px; background-color: #071530; border-radius: 8px; overflow: hidden; display: inline-block;">
-                                ${photoUrlVal ? `<img src="${photoUrlVal}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto" />` : `<div style="padding-top: 35px; font-size: 9px; color: #475569; text-align: center;">FOTO<br/>VALIDA</div>`}
+                                ${photoUrlVal ? `<img src="${photoUrlVal}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Foto" />` : `<div style="padding-top: 35px; font-size: 9px; color: #475569; text-align: center;">FOTO / PHOTO<br/>VALID</div>`}
                               </div>
                             </td>
                           </tr>
@@ -2160,18 +2164,23 @@ CREATE TABLE citizens (
                       </div>
                     </div>
   
-                    <p style="font-size: 14px; margin-top: 24px;">Il documento digitale generato qui sopra rappresenta il tuo identificativo provvisorio valido ed idoneo per l'esercizio di tutti i diritti federati e per il futuro rilascio del passaporto fisico anagrafico.</p>
+                    <p style="font-size: 13px; margin-top: 24px;">
+                      <strong>[IT]</strong> Il documento digitale generato sopra rappresenta il tuo identificativo federato valido ed idoneo a norma di legge. Ricevi in allegato il tuo certificato di cittadinanza ufficiale in formato PDF.
+                    </p>
+                    <p style="font-size: 13px; color: #475569; margin-top: 8px; margin-bottom: 24px;">
+                      <strong>[EN]</strong> The digital identity document generated above represents your official federated identification. Please find your official digital citizenship certificate attached as a PDF file.
+                    </p>
                     
                     <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
                     
                     <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 0;">
-                      <em>"Uniti nello spazio, legati per diritto."</em><br/>
-                      <strong>Ufficio dell'Anagrafe Federale del New World State</strong>
+                      <em>"Uniti nello spazio, legati per diritto. / United in space, bound by law."</em><br/>
+                      <strong>Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Department</strong>
                     </p>
                   </div>
                   
-                  <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8;">
-                    Ricevi questa email perché la tua domanda di cittadinanza è stata accolta favorevolmente dal Comitato.
+                  <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8; line-height: 1.4;">
+                    Ricevi questa email perché la tua domanda di cittadinanza è stata accolta favorevolmente dal Comitato. / You receive this email because your citizenship application was favorably accepted by the Committee.
                   </div>
                 </div>
               `;
@@ -2184,7 +2193,7 @@ CREATE TABLE citizens (
                   contentType: 'application/pdf'
                 }
               ];
-              await sendEmail(email.trim(), 'CONGRATULAZIONI! La tua cittadinanza New World State è approvata', welcomeHtml, env, attachments);
+              await sendEmail(email.trim(), 'CONGRATULAZIONI! La tua cittadinanza New World State è approvata / CONGRATULATIONS! Your New World State citizenship is approved', welcomeHtml, env, attachments);
             } catch (smtpErr) {
               console.error('[SMTP-APPROVE-ERR] Eccezione nell\'invio email approvazione dal Worker:', smtpErr);
             }
@@ -2266,37 +2275,47 @@ CREATE TABLE citizens (
               const textHtml = `
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #f8fafc; border-radius: 16px;">
                   <div style="background-color: #ef4444; padding: 30px; border-radius: 12px; text-align: center; color: white;">
-                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: white;">Aggiornamento Registrazione</h1>
-                    <p style="margin: 5px 0 0 0; color: #fee2e2; font-size: 15px;">Domanda di Cittadinanza Respinta</p>
+                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: white;">Aggiornamento Registrazione / Application Status Update</h1>
+                    <p style="margin: 5px 0 0 0; color: #fee2e2; font-size: 15px;">Domanda di Cittadinanza Non Accolta / Citizenship Request Not Approved</p>
                   </div>
                   
                   <div style="padding: 30px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; line-height: 1.6;">
-                    <p style="font-size: 16px; margin-top: 0;">Gentile <strong>${firstNameVal} ${surnameVal}</strong>,</p>
+                    <p style="font-size: 15px; margin-top: 0;">Gentile / Dear <strong>${firstNameVal} ${surnameVal}</strong>,</p>
                     
-                    <p style="font-size: 15px;">Ti informiamo che, a seguito di un controllo attento da parte del comitato d'esame dell'Anagrafe del New World State, la tua richiesta di iscrizione <strong>non è stata accolta</strong>.</p>
+                    <p style="font-size: 14px; margin-bottom: 12px;">
+                      <strong>[IT]</strong> Ti informiamo che, a seguito di un controllo attento da parte del comitato d'esame dell'Anagrafe del New World State, la tua richiesta di iscrizione <strong>non è stata accolta</strong> nel suo stato attuale.
+                    </p>
+                    <p style="font-size: 14px; margin-bottom: 24px; color: #475569;">
+                      <strong>[EN]</strong> We regret to inform you that following a meticulous review by the New World State civil registry review board, your application has <strong>not been accepted</strong> in its current state.
+                    </p>
                     
                     <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 18px; border-radius: 8px; margin: 24px 0;">
-                      <h4 style="margin: 0 0 5px 0; color: #991b1b; font-size: 13px; font-weight: bold; text-transform: uppercase;">MOTIVAZIONE DEL RIFIUTO / REJECTION REASONS</h4>
+                      <h4 style="margin: 0 0 5px 0; color: #991b1b; font-size: 13px; font-weight: bold; text-transform: uppercase;">MOTIVAZIONE DEL RIFIUTO / REJECTION REASON</h4>
                       <p style="margin: 0; color: #b91c1c; font-size: 14px; font-style: italic; white-space: pre-line;">"${reason}"</p>
                     </div>
   
-                    <p style="font-size: 14px;">La discrepanza riscontrata deve essere risolta affinché l'iscrizione possa procedere. Puoi ricompilare il modulo di registrazione sul portale correggendo le incongruenze evidenziate.</p>
+                    <p style="font-size: 13px; margin-top: 20px;">
+                      <strong>[IT]</strong> Le discrepanze riscontrate devono essere risolute per procedere. Puoi registrare nuovamente una nuova domanda correggendo le incongruenze evidenziate sopra.
+                    </p>
+                    <p style="font-size: 13px; color: #475569; margin-top: 8px; margin-bottom: 24px;">
+                      <strong>[EN]</strong> The highlighted discrepancies must be resolved to proceed. You may submit a new application on the portal ensuring that all details and uploaded documents conform to regulatory guidelines.
+                    </p>
                     
                     <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
                     
                     <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 0;">
-                      <em>"Uniti nello spazio, legati per diritto."</em><br/>
-                      <strong>Ufficio dell'Anagrafe Federale del New World State</strong>
+                      <em>"Uniti nello spazio, legati per diritto. / United in space, bound by law."</em><br/>
+                      <strong>Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Department</strong>
                     </p>
                   </div>
                   
-                  <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8;">
-                    Ricevi questa email in conformità alle norme di revisione e trasparenza anagrafica di New World State.
+                  <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8; line-height: 1.4;">
+                    Ricevi questa email in conformità alle norme di revisione e trasparenza anagrafica di New World State. / You receive this email in accordance with the feedback and revision regulations of the New World State registry.
                   </div>
                 </div>
               `;
 
-              await sendEmail(email.trim(), 'Stato domanda di cittadinanza New World State (Non accetta)', textHtml, env);
+              await sendEmail(email.trim(), 'Stato domanda di cittadinanza New World State (Non accetta) / Citizenship request update (Not accepted)', textHtml, env);
             } catch (smtpErr) {
               console.error('[SMTP-REJECT-ERR] Errore invio rifiuto:', smtpErr);
             }
@@ -3913,24 +3932,36 @@ CREATE TABLE citizens (
               const emailHtml = `
                 <div style="font-family: sans-serif; max-width: 650px; margin: 0 auto; padding: 30px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; color: #1e293b; line-height: 1.6;">
                   <div style="text-align: center; margin-bottom: 24px;">
-                    <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.15em; color: #b45309; display: block; margin-bottom: 4px;">Regno di New World State</span>
-                    <h2 style="font-family: Georgia, serif; font-size: 24px; color: #011d4e; margin: 0;">Password Temporanea Democrazia Diretta</h2>
+                    <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.15em; color: #b45309; display: block; margin-bottom: 4px;">Federazione di New World State / New World State Federation</span>
+                    <h2 style="font-family: Georgia, serif; font-size: 22px; color: #011d4e; margin: 0;">Password Temporanea Democrazia Diretta / Direct Democracy Passcode</h2>
                   </div>
-                  <p>Caro cittadino del New World State,</p>
-                  <p>Su tua richiesta tramite inserimento dell'email come nome utente, abbiamo generato una password di accesso temporanea per permetterti di accedere in modo sicuro al Consiglio di Democrazia Diretta e partecipare attivamente alle consultazioni nazionali e all'esercizio del tuo voto sovrano.</p>
+                  <p style="font-size: 15px; margin-top: 10px;">Caro cittadino del New World State / Dear Citizen of the New World State,</p>
+                  
+                  <p style="font-size: 14px; margin-bottom: 12px;">
+                    <strong>[IT]</strong> Su tua richiesta di accesso, abbiamo generato una password temporanea per consentirti di effettuare l'accesso sicuro alla piattaforma federale di Democrazia Diretta, partecipare alle deliberazioni nazionali ed esercitare il tuo diritto di voto sovrano.
+                  </p>
+                  
+                  <p style="font-size: 14px; margin-bottom: 24px; color: #475569;">
+                    <strong>[EN]</strong> Upon your login request, we have generated a temporary passcode to grant you secure access to the federal Direct Democracy platform, permitting active participation in national consultations and the exercise of your sovereign voting rights.
+                  </p>
+
                   <div style="background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; margin: 25px 0;">
-                    <p style="font-size: 10px; text-transform: uppercase; font-family: monospace; letter-spacing: 0.1em; color: #64748b; margin: 0 0 8px 0;">Tua Password Temporanea (OTP):</p>
+                    <p style="font-size: 10px; text-transform: uppercase; font-family: monospace; letter-spacing: 0.1em; color: #64748b; margin: 0 0 8px 0;">Tua Password Temporanea (OTP) / Your Temporary OTP Passcode:</p>
                     <div style="font-family: monospace; font-size: 32px; letter-spacing: 0.05em; font-weight: bold; color: #0284c7; padding: 10px; border-radius: 8px;">
                       ${tempPassword}
                     </div>
-                    <p style="font-size: 11px; color: #64748b; margin: 8px 0 0 0;">Questo codice temporaneo ti permette di completare l'autenticazione sovrana nel secondo step.</p>
+                    <p style="font-size: 11px; color: #64748b; margin: 8px 0 0 0;">
+                      Questo codice temporaneo ti permette di completare l'autenticazione sovrana. / This temporary code allows you to complete the sovereign authentication.
+                    </p>
                   </div>
-                  <p style="font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 25px;">
-                    Se non hai richiesto tu questa password, ignorati questo messaggio o contatta l'Anagrafe Centrale. Il tuo codice identificativo di sicurezza sovrano controlla il tuo voto directo.
+                  
+                  <p style="font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 25px; line-height: 1.5;">
+                    <strong>[IT]</strong> Se non hai richiesto questa password, ignora questa comunicazione. Il tuo codice identificativo controlla in modo sicuro l'accesso al tuo voto diretto.<br/>
+                    <strong>[EN]</strong> If you did not request this passcode, please ignore this email. Your sovereign identity code securely controls access to your direct voting features.
                   </p>
                 </div>
               `;
-              await sendEmail(userEmail.trim(), 'Password Temporanea - Democrazia Diretta New World State', emailHtml, env);
+              await sendEmail(userEmail.trim(), 'Password Temporanea - Democrazia Diretta / Temporary OTP Passcode - Direct Democracy New World State', emailHtml, env);
               console.log(`[SMTP-OTP-WORKER] Spedita pass temporanea via email a: ${userEmail}`);
             } catch (mErr) {
               console.error('[SMTP-OTP-WORKER-ERROR]', mErr.message);
@@ -4545,42 +4576,63 @@ CREATE TABLE citizens (
           
           const citizenHtml = `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: ${lightBg}; border-radius: 16px;">
-              <div style="background-color: ${brandColor}; padding: 40px 30px; border-radius: 12px; text-align: center; color: white;">
-                <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">Richiesta Registrata!</h1>
-                <p style="margin: 10px 0 0 0; color: #93c5fd; font-size: 16px;">Benvenuto nel registro mondiale del New World State</p>
+              <div style="background-color: ${brandColor}; padding: 40px 30px; border-radius: 12px; text-align: center; color: white; border-bottom: 3px solid #c5a880;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: white;">Richiesta Registrata! / Registration Received!</h1>
+                <p style="margin: 10px 0 0 0; color: #c5a880; font-size: 15px; font-weight: 600; letter-spacing: 1px;">NEW WORLD STATE</p>
               </div>
               
-              <div style="padding: 30px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); line-height: 1.6;">
-                <p style="font-size: 16px; margin-top: 0;">Caro/a <strong>${displayFullNameCitizen}</strong>,</p>
+              <div style="padding: 30px; background-color: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; line-height: 1.6;">
+                <p style="font-size: 15px; margin-top: 0;">Caro/a / Dear <strong>${displayFullNameCitizen}</strong>,</p>
                 
-                <p style="font-size: 15px;">Siamo felici di comunicarti che la tua richiesta per ottenere la cittadinanza del <strong>New World State</strong> è stata correttamente acquisita dal nostro sistema anagrafico.</p>
-                
-                <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; border-radius: 8px; margin: 24px 0;">
-                  <h3 style="margin: 0 0 5px 0; color: #14532d; font-size: 14px; font-weight: 700;">PROSSIMO PASSO: VALIDAZIONE</h3>
-                  <p style="margin: 0; color: #166534; font-size: 13px;">Un cittadino incaricato (Validatore NWS) verificherà la conformità delle informazioni fornite e l'hash di firma del documento di identità da te registrato.</p>
+                <p style="font-size: 14px; margin-bottom: 12px;">
+                  <strong>[IT]</strong> Siamo felici di comunicarti che la tua richiesta per ottenere la cittadinanza del <strong>New World State</strong> è stata correttamente acquisita dal nostro sistema anagrafico.
+                </p>
+                <p style="font-size: 14px; margin-bottom: 24px; color: #475569;">
+                  <strong>[EN]</strong> We are delighted to inform you that your application for citizenship in the <strong>New World State</strong> has been successfully received by our civil registry system.
+                </p>
+
+                <div style="background-color: #fffbeb; border-left: 4px solid #d97706; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                  <h3 style="margin: 0 0 5px 0; color: #78350f; font-size: 13px; font-weight: bold; text-transform: uppercase;">CODICE RISERVATO / RESERVED CITIZEN CODE</h3>
+                  <p style="margin: 0; font-family: monospace; font-size: 16px; font-weight: bold; color: #b45309; letter-spacing: 1px;">${citizenCode || ''}</p>
                 </div>
 
-                <h3 style="font-size: 15px; color: ${brandColor}; margin-top: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">Riepilogo Dati Registrati</h3>
-                <ul style="padding-left: 20px; margin: 10px 0; font-size: 14px; color: #475569;">
-                  <li><strong>Plus Code Posizione:</strong> <span style="font-family: monospace; color: #0f766e; font-weight: 600;">${check(plusCode, 'Non rilevato')}</span></li>
-                  <li><strong>Luogo e Nazione:</strong> ${displayBirthPlace}</li>
-                  <li><strong>Stato Cittadinanza Richiesta:</strong> ${check(citizenship, 'Non inserita')}</li>
-                  <li><strong>Indirizzo Residenza:</strong> ${displayCitizenResidence}</li>
-                  <li><strong>Tipologia Documento Fornito:</strong> ${check(documentType, 'Non specificato')}</li>
+                <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                  <h3 style="margin: 0 0 5px 0; color: #14532d; font-size: 13px; font-weight: bold; text-transform: uppercase;">PROSSIMO PASSO: VALIDAZIONE / NEXT STEP: VALIDATION</h3>
+                  <p style="margin: 0 0 6px 0; color: #166534; font-size: 13px;">
+                    <strong>[IT]</strong> Un cittadino incaricato (Validatore NWS) verificherà la conformità delle informazioni fornite e l'hash di firma del documento di identità da te registrato.
+                  </p>
+                  <p style="margin: 0; color: #1f2937; font-size: 13px;">
+                    <strong>[EN]</strong> An authorized official (NWS Validator) will verify the compliance of the provided information and the checksum hash of your identity document.
+                  </p>
+                </div>
+
+                <h3 style="font-size: 14px; color: ${brandColor}; margin-top: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; text-transform: uppercase;">Riepilogo Dati / Application Summary</h3>
+                <ul style="padding-left: 20px; margin: 10px 0; font-size: 13px; color: #475569; line-height: 1.8;">
+                  <li><strong>Codice Identificativo / Citizen Code:</strong> <span style="font-family: monospace; color: #b45309; font-weight: bold;">${citizenCode || ''}</span></li>
+                  <li><strong>Plus Code Posizione / Location Plus Code:</strong> <span style="font-family: monospace; color: #0f766e; font-weight: 600;">${check(plusCode, 'Non rilevato')}</span></li>
+                  <li><strong>Nascita / Birthplace:</strong> ${displayBirthPlace}</li>
+                  <li><strong>Cittadinanza Richiesta / Target Citizenship:</strong> ${check(citizenship, 'Non inserita')}</li>
+                  <li><strong>Residenza / Residence Address:</strong> ${displayCitizenResidence}</li>
+                  <li><strong>Tipologia Documento / Document Type:</strong> ${check(documentType, 'Non specificato')}</li>
                 </ul>
                 
-                <p style="font-size: 14px; margin-top: 24px;">Al termine della procedura di verifica dei dati, riceverai una seconda comunicazione email di inserimento definitivo nel registro, contenente il link per scaricare il tuo **Certificato di Cittadinanza Digitale**.</p>
+                <p style="font-size: 13px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                  <strong>[IT]</strong> Al termine della procedura di verifica dei dati, riceverai una seconda comunicazione email di inserimento definitivo nel registro, contenente il link per scaricare il tuo <strong>Certificato di Cittadinanza Digitale</strong>.
+                </p>
+                <p style="font-size: 13px; color: #475569; margin-top: 8px;">
+                  <strong>[EN]</strong> Upon completion of the verification process, you will receive a second email notification with the secure link to download your <strong>Digital Citizenship Certificate</strong>.
+                </p>
                 
                 <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
                 
                 <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 0;">
-                  <em>"Uniti nello spazio, legati per diritto."</em><br/>
-                  <strong>Ufficio dell'Anagrafe Federale del New World State</strong>
+                  <em>"Uniti nello spazio, legati per diritto. / United in space, bound by law."</em><br/>
+                  <strong>Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Department</strong>
                 </p>
               </div>
               
-              <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8;">
-                Ricevi questa email perché hai espresso la volontà di registrararti sul portale ufficiale di New World State. Se non eri tu, puoi ignorare questo messaggio.
+              <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #94a3b8; line-height: 1.4;">
+                Ricevi questa email perché hai espresso la volontà di registrarli sul portale ufficiale di New World State. / You receive this email because you initiated registration on the official New World State portal.
               </div>
             </div>
           `;
@@ -4592,7 +4644,7 @@ CREATE TABLE citizens (
           
           // Invia all'utente
           if (email && email.includes('@')) {
-            emailPromises.push(sendEmail(email.trim(), `Registrazione ricevuta - New World State`, citizenHtml, env));
+            emailPromises.push(sendEmail(email.trim(), `Registrazione ricevuta / Registration Received - New World State`, citizenHtml, env));
           }
           
           await Promise.all(emailPromises);
