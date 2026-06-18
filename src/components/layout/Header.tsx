@@ -3,8 +3,8 @@ import { useI18n } from '../../contexts/I18nContext';
 import { Globe, Menu, ShieldCheck } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab?: 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy';
-  setActiveTab?: (tab: 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy') => void;
+  activeTab?: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy';
+  setActiveTab?: (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy') => void;
 }
 
 export default function Header({ activeTab, setActiveTab }: HeaderProps) {
@@ -14,7 +14,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
     <header className="fixed top-0 left-0 right-0 z-50 bg-brand-blue/98 backdrop-blur-md border-b border-brand-gold/30 text-white shadow-2xl">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div 
-          onClick={() => setActiveTab?.('register')} 
+          onClick={() => setActiveTab?.('welcome')} 
           className="flex items-center gap-5 cursor-pointer"
         >
           <div className="relative group">
@@ -36,6 +36,12 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
 
         <div className="flex items-center gap-8">
           <div className="hidden lg:flex items-center gap-8 text-[10px] uppercase tracking-[0.2em] font-tech text-gray-300">
+            <button 
+              onClick={() => setActiveTab?.('welcome')}
+              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'welcome' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
+            >
+              📊 {language === 'en' ? 'Home/Intro' : 'Home/Intro'}
+            </button>
             <button 
               onClick={() => setActiveTab?.('democracy')}
               id="header-democracy-tab-btn"
@@ -61,18 +67,6 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'governance' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
             >
               {language === 'en' ? 'Governance' : 'Governance'}
-            </button>
-            <button 
-              onClick={() => setActiveTab?.('privacy')}
-              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'privacy' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
-            >
-              {language === 'en' ? 'Privacy' : 'Privacy'}
-            </button>
-            <button 
-              onClick={() => setActiveTab?.('network')}
-              className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'network' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
-            >
-              {language === 'en' ? 'Network' : 'Network'}
             </button>
           </div>
 

@@ -459,19 +459,23 @@ export default function DemocracyPortal() {
             <Lock className="w-6 h-6 text-brand-gold" />
           </div>
           <h3 className="text-xl font-serif text-brand-blue font-bold tracking-tight mb-2">
-            Autenticazione Sovrana Richiesta
+            {language === 'en' ? 'Sovereign Authentication Required' : 'Autenticazione Sovrana Richiesta'}
           </h3>
           <p className="text-slate-500 text-xs leading-relaxed mb-6">
-            Per garantire la genuinità della delibera e impedire il voto plurimo, inserisci le credenziali create durante la tua domanda di cittadinanza del New World State.
+            {language === 'en'
+              ? 'To guarantee the authenticity of the vote and prevent multiple voting, please enter the credentials created during your New World State citizenship application.'
+              : 'Per garantire la genuinità della delibera e impedire il voto plurimo, inserisci le credenziali create durante la tua domanda di cittadinanza del New World State.'}
           </p>
 
           <form onSubmit={loginStep === 'username' ? handlePreflight : handleLogin} className="space-y-4 text-left">
             {loginStep === 'username' ? (
               <div>
-                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Codice Cittadino, Username, Email o Telefono</label>
+                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">
+                  {language === 'en' ? 'Citizen Code, Username, Email or Phone' : 'Codice Cittadino, Username, Email o Telefono'}
+                </label>
                 <input 
                   type="text"
-                  placeholder="es: nome@dominio.it o +39 333..."
+                  placeholder={language === 'en' ? 'e.g. name@domain.com or +44 777...' : 'es: nome@dominio.it o +39 333...'}
                   id="democracy-login-username"
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
@@ -479,7 +483,9 @@ export default function DemocracyPortal() {
                   autoFocus
                 />
                 <span className="text-[10px] text-slate-500 mt-2 block leading-normal">
-                  Se ti sei registrato solo con email o solo con telefono, riceverai una password temporanea valida per questa sessione.
+                  {language === 'en'
+                    ? 'If you registered only with email or phone, you will receive a temporary password valid for this session.'
+                    : 'Se ti sei registrato solo con email o solo con telefono, riceverai una password temporanea valida per questa sessione.'}
                 </span>
               </div>
             ) : (
@@ -487,7 +493,9 @@ export default function DemocracyPortal() {
                 {/* Visual state indicator/header for step 2 */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-slate-400 uppercase font-mono">UTENTE RILEVATO</span>
+                    <span className="text-[9px] text-slate-400 uppercase font-mono">
+                      {language === 'en' ? 'DETECTED USER' : 'UTENTE RILEVATO'}
+                    </span>
                     <span className="text-xs font-bold font-mono text-[#0a1c3e] truncate max-w-[200px]">{usernameInput}</span>
                   </div>
                   <button
@@ -511,15 +519,23 @@ export default function DemocracyPortal() {
 
                 <div>
                   <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">
-                    {loginMode === 'temp-email' 
-                      ? 'Inserisci Password Temporanea (inviata via Email)' 
-                      : loginMode === 'temp-phone' 
-                      ? 'Inserisci Password Temporanea (inviata via SMS)' 
-                      : 'Password di Registrazione'}
+                    {language === 'en' ? (
+                      loginMode === 'temp-email' 
+                        ? 'Enter Temporary Password (sent via Email)' 
+                        : loginMode === 'temp-phone' 
+                        ? 'Enter Temporary Password (sent via SMS)' 
+                        : 'Registration Password'
+                    ) : (
+                      loginMode === 'temp-email' 
+                        ? 'Inserisci Password Temporanea (inviata via Email)' 
+                        : loginMode === 'temp-phone' 
+                        ? 'Inserisci Password Temporanea (inviata via SMS)' 
+                        : 'Password di Registrazione'
+                    )}
                   </label>
                   <input 
                     type="password"
-                    placeholder="La tua password"
+                    placeholder={language === 'en' ? 'Your password' : 'La tua password'}
                     id="democracy-login-password"
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
@@ -533,9 +549,25 @@ export default function DemocracyPortal() {
                   <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl flex items-start gap-3 animate-pulse mt-1">
                     <Smartphone className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                     <div className="text-left">
-                      <div className="font-semibold text-[9px] text-emerald-400 uppercase tracking-widest font-mono">SIMULATORE SMS (Ricevuto Ora)</div>
+                      <div className="font-semibold text-[9px] text-emerald-400 uppercase tracking-widest font-mono">
+                        {language === 'en' ? 'SMS SIMULATOR (Received Just Now)' : 'SIMULATORE SMS (Ricevuto Ora)'}
+                      </div>
                       <p className="text-[11px] text-slate-300 font-mono mt-1 leading-normal">
-                        [New World State Anagrafe] La tua password temporanea per la Democrazia Online è: <strong className="text-white underline font-bold bg-slate-800 px-2 py-1 rounded inline-block select-all cursor-pointer">{tempPhoneCode}</strong>.
+                        {language === 'en' ? (
+                          <>
+                            [New World State Registry] Your temporary password for Online Democracy is:{' '}
+                            <strong className="text-white underline font-bold bg-slate-800 px-2 py-1 rounded inline-block select-all cursor-pointer">
+                              {tempPhoneCode}
+                            </strong>.
+                          </>
+                        ) : (
+                          <>
+                            [New World State Anagrafe] La tua password temporanea per la Democrazia Online è:{' '}
+                            <strong className="text-white underline font-bold bg-slate-800 px-2 py-1 rounded inline-block select-all cursor-pointer">
+                              {tempPhoneCode}
+                            </strong>.
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -573,7 +605,9 @@ export default function DemocracyPortal() {
           {isAdmin && (
             <div className="mt-8 pt-6 border-t border-slate-100">
               <p className="text-xs text-slate-400">
-                Sei autenticato come Amministratore nel sistema. Per validare o rifiutare le proposte in sospeso senza un account cittadino, accedi comunque con un account sovrano di test o approvato.
+                {language === 'en'
+                  ? 'You are authenticated as an Administrator in this system. To validate or reject pending proposals without a citizen account, you still need to log in with a test or approved sovereign citizen account.'
+                  : 'Sei autenticato come Amministratore nel sistema. Per validare o rifiutare le proposte in sospeso senza un account cittadino, accedi comunque con un account sovrano di test o approvato.'}
               </p>
             </div>
           )}

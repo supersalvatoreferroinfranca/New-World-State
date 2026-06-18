@@ -17,10 +17,11 @@ import NetworkStatusPage from './components/constitution/NetworkStatusPage';
 import VerifyCitizenPage from './components/constitution/VerifyCitizenPage';
 import DbStatus from './components/debug/DbStatus';
 import DemocracyPortal from './components/democracy/DemocracyPortal';
+import WelcomePage from './components/home/WelcomePage';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy'>('democracy');
+  const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy'>('welcome');
   const [isVerifyPath] = useState<boolean>(() => {
     const searchParams = new URLSearchParams(window.location.search);
     return window.location.pathname === '/verify' || 
@@ -80,6 +81,13 @@ function AppContent() {
             <div className="flex justify-center pt-6">
               <div className="inline-flex bg-[#0a1c3e]/5 backdrop-blur-sm p-1.5 rounded-2xl border border-[#0a1c3e]/10 flex-wrap justify-center gap-1">
                 <button 
+                  onClick={() => setActiveTab('welcome')}
+                  id="tab-welcome-btn"
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'welcome' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                >
+                  🌟 {language === 'en' ? 'Start Here/Home' : 'Inizia Qui/Home'}
+                </button>
+                <button 
                   onClick={() => setActiveTab('register')}
                   id="tab-register-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'register' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
@@ -117,7 +125,9 @@ function AppContent() {
               <p className="writing-vertical-rl rotate-180 text-[10px] uppercase tracking-[0.5em] font-tech text-muted opacity-30">Authenticity • Integrity • Sovereignty</p>
             </div>
             
-            {activeTab === 'register' ? (
+            {activeTab === 'welcome' ? (
+              <WelcomePage onStartRegistration={() => setActiveTab('register')} onGoToDemocracy={() => setActiveTab('democracy')} />
+            ) : activeTab === 'register' ? (
               <RegisterForm />
             ) : activeTab === 'admin' ? (
               <AdminDashboard />
