@@ -30,6 +30,39 @@ function AppContent() {
   });
   const { language } = useI18n();
 
+  React.useEffect(() => {
+    document.documentElement.lang = language;
+    if (language === 'en') {
+      document.title = "New World State 1.0 | Global Citizenship Registry";
+      
+      const metaTitle = document.querySelector('meta[name="title"]');
+      if (metaTitle) metaTitle.setAttribute('content', 'New World State 1.0 | Global Citizenship Registry');
+      
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) metaDesc.setAttribute('content', 'Join the global digital community. Official citizenship registration under the New World State.');
+      
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', 'New World State 1.0 | Global Citizenship Registry');
+      
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute('content', 'Join the global digital community. Official citizenship registration.');
+    } else {
+      document.title = "New World State 1.0 | Registro Mondiale della Cittadinanza";
+      
+      const metaTitle = document.querySelector('meta[name="title"]');
+      if (metaTitle) metaTitle.setAttribute('content', 'New World State 1.0 | Registro Mondiale della Cittadinanza');
+      
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) metaDesc.setAttribute('content', 'Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State, basata su trasparenza, pace e progresso tecnologico.');
+      
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', 'New World State 1.0 | Registro Mondiale della Cittadinanza');
+      
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute('content', 'Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State.');
+    }
+  }, [language]);
+
   if (isVerifyPath) {
     return (
       <div className="min-h-screen bg-brand-parchment font-sans text-brand-blue selection:bg-brand-gold selection:text-brand-blue overflow-x-hidden pt-12">
