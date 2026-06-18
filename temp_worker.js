@@ -7,6 +7,23 @@
 // @ts-ignore
 import { connect } from 'cloudflare:sockets';
 
+let memoryGeographicAreas = [
+  { id: 1, name: 'Tutto il globo', countries: 'Tutti i paesi' },
+  { id: 2, name: 'Europa', countries: 'Italia, Francia, Germania, Spagna, Austria, Svizzera' },
+  { id: 3, name: 'Italia', countries: 'Italia' },
+  { id: 4, name: 'India', countries: 'India' }
+];
+
+let memoryCustomRoles = [
+  { id: 1, name: "Console dell'Anagrafe", description: "Consente la gestione di anagrafiche e referendum", geographic_area_id: 1 },
+  { id: 2, name: "Ministro della Giustizia", description: "Vigila sull'applicazione legale e costituzionale", geographic_area_id: 1 },
+  { id: 3, name: "Garante della Costituzione", description: "Supervisiona l'integrità dei protocolli democratici", geographic_area_id: 1 },
+  { id: 4, name: "Supervisore Elettorale", description: "Gestione ed auditing delle proposte normative e voti", geographic_area_id: 1 },
+  { id: 5, name: "Ambasciatore Digitale", description: "Rappresentanza e sensibilizzazione globale", geographic_area_id: 1 },
+  { id: 6, name: "Ufficiale di Pace", description: "Risoluzione nonviolenta e mediazione diplomatica", geographic_area_id: 4 },
+  { id: 7, name: "Custode Digitale (IT)", description: "Incaricato dei registri territoriali", geographic_area_id: 3 }
+];
+
 const worker = {
   async fetch(request, rawEnv) {
     const env = new Proxy(rawEnv || {}, {
@@ -2314,6 +2331,16 @@ CREATE TABLE citizens (
             });
           }
 
+          const prevRes = await queryDb('SELECT * FROM citizens WHERE id = $1', [citizenId]);
+          if (prevRes.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const previousCitizen = prevRes[0];
+          const prevIsAdmin = previousCitizen.isAdmin || previousCitizen.operationalRole === 'admin' || false;
+
           const qRes = await queryDb('UPDATE citizens SET "isAdmin" = $1 WHERE id = $2 RETURNING *', [isAdmin, citizenId]);
           if (qRes.length === 0) {
             return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato.' }), {
@@ -2322,7 +2349,134 @@ CREATE TABLE citizens (
             });
           }
 
-          return new Response(JSON.stringify({ success: true, citizen: qRes[0], message: 'Privilegi amministratore aggiornati.' }), {
+          const updatedCitizen = qRes[0];
+
+          // Send email if state transitioned
+          if (prevIsAdmin !== isAdmin) {
+            const citizenEmail = updatedCitizen.email;
+            if (citizenEmail && citizenEmail.includes('@')) {
+              try {
+                const firstName = updatedCitizen.firstName || '';
+                const surname = updatedCitizen.surname || updatedCitizen.lastName || '';
+                const subject = isAdmin 
+                  ? '⚖️ Nuova Nomina / New Appointment: Privilegi Amministrativi / Admin Privileges - New World State'
+                  : '⚠️ Variazione Status / Account Update: Revoca Privilegi Amministrativi / Admin Revocation - New World State';
+
+                const bgTheme = isAdmin ? '#0a1c3e' : '#7f1d1d';
+                const actionText = isAdmin 
+                  ? 'Concessione dei Privilegi di Amministratore Civico / Civic Administrator Privileges Granted'
+                  : 'Revoca delle Funzioni Amministrative / Revocation of Administrative Functions';
+
+                const explanationHtml = isAdmin
+                  ? `
+                    <div style="background-color: #f8fafc; border-left: 4px solid #c5a880; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                      <h4 style="margin: 0 0 8px 0; color: #0a1c3e; font-family: Georgia, serif; font-size: 14px; font-weight: bold;">📜 Funzioni e Responsabilità dell'Amministratore / Roles and Responsibilities</h4>
+                      <p style="margin: 0 0 10px 0; line-height: 1.6; color: #475569; font-size: 13px;">
+                        <strong>[IT]</strong> In qualità di Amministratore del New World State, Lei detiene il supremo mandato della fiducia civica per la tutela dell’ecosistema federale. Le Sue attribuzioni abilitano la gestione di anagrafiche, referendum, e assegnazione ruoli.
+                      </p>
+                      <p style="margin: 0 0 12px 0; line-height: 1.6; color: #475569; font-size: 13px;">
+                        <strong>[EN]</strong> As an Administrator of the New World State, you hold the supreme mandate of civic trust to safeguard the federal ecosystem. Your privileges enable the management of civil registrations, referendums, and portfolio assignments.
+                      </p>
+                      <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; font-size: 13px; line-height: 1.6;">
+                        <li><strong>Review & Approvals / Revisione Anagrafiche:</strong> Reviewing and approving identity documents of applicants.</li>
+                        <li><strong>Direct Democracy / Democrazia Diretta:</strong> Managing and publishing referendums and federal normative laws.</li>
+                        <li><strong>Administrative Cabinet / Consiglio dei Ministri:</strong> Assigning geopolitical districts and operational roles to sovereign citizens.</li>
+                      </ul>
+                    </div>
+                  `
+                  : `
+                    <div style="background-color: #fef2f2; border-left: 4px solid #f87171; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                      <h4 style="margin: 0 0 8px 0; color: #991b1b; font-family: Georgia, serif; font-size: 14px; font-weight: bold;">⚙️ Status di Cittadino Ordinario Ripristinato / Ordinary Citizen Status Restored</h4>
+                      <p style="margin: 0 0 10px 0; line-height: 1.6; color: #7f1d1d; font-size: 13px;">
+                        <strong>[IT]</strong> Con la presente notifica, La informiamo che i Suoi poteri amministrativi federati sono stati conclusi. Il Suo account è passato allo status di <strong>Cittadino Ordinario</strong>. La ringraziamo per lo sforzo eccezionale profuso per la nostra nazione.
+                      </p>
+                      <p style="margin: 0; line-height: 1.6; color: #7f1d1d; font-size: 13px;">
+                        <strong>[EN]</strong> With this official notice, we inform you that your administrative access has been concluded. Your account has returned to <strong>Ordinary Citizen</strong> status. We sincerely thank you for your exceptional support and service to our nation.
+                      </p>
+                    </div>
+                  `;
+
+                const emailHtml = `
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                    <meta charset="utf-8">
+                    <title>${subject}</title>
+                  </head>
+                  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5; padding: 20px 0;">
+                      <tr>
+                        <td align="center">
+                          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e4e4e7;">
+                            <!-- HEADER -->
+                            <tr>
+                              <td style="background-color: #0c1a30; padding: 32px 24px; text-align: center; border-bottom: 3px solid #c5a880;">
+                                <h2 style="color: #ffffff; margin: 0; font-family: Georgia, serif; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">NEW WORLD STATE</h2>
+                                <p style="color: #c5a880; margin: 4px 0 0 0; font-size: 10px; font-weight: bold; letter-spacing: 2px;">CORPO DI AMMINISTRAZIONE FEDERALE / FEDERAL ADMIN BODY</p>
+                              </td>
+                            </tr>
+                            <!-- BODY -->
+                            <tr>
+                              <td style="padding: 32px 28px;">
+                                <p style="font-size: 13px; color: #71717a; margin: 0 0 16px 0; font-family: monospace;">CODICE / CODE: NWS-ADM-${updatedCitizen.citizenCode || 'N/A'}-${Date.now().toString().slice(-4)}</p>
+                                <h3 style="color: #0f172a; margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 18px; font-weight: bold;">Gentile / Dear ${firstName} ${surname},</h3>
+                                
+                                <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
+                                  <strong>[IT]</strong> La presente comunicazione ufficiale per informarLa di un aggiornamento formale in merito ai Suoi privilegi di accesso nel registro civile sovrano del New World State.
+                                </p>
+                                <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                                  <strong>[EN]</strong> This official communication is to notify you of a formal update regarding your administrative access credentials within the sovereign registry of the New World State.
+                                </p>
+
+                                <div style="text-align: center; margin: 24px 0; padding: 14px 12px; background-color: ${bgTheme}; color: #ffffff; font-weight: bold; border-radius: 8px; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.4;">
+                                  ${actionText}
+                                </div>
+
+                                ${explanationHtml}
+
+                                <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 10px 0;">
+                                  <strong>[IT]</strong> Per qualsiasi chiarimento o quesito in merito alle procedure di transizione, restiamo a Sua completa disposizione sul portale ufficiale della nostra micro-nazione federale.
+                                </p>
+                                <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
+                                  <strong>[EN]</strong> If you have any inquiries regarding these transition steps, our support desks remain fully available on the official micronation portal.
+                                </p>
+                                
+                                <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
+                                  Cordiali saluti / Warm regards,<br/>
+                                  <span style="color: #0a1c3e; font-size: 14px; font-weight: bold; font-family: Georgia, serif;">Il Consiglio dei Governatori / Council of Governors</span><br/>
+                                  <span style="color: #c5a880; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">New World State</span>
+                                </p>
+                              </td>
+                            </tr>
+                            <!-- FOOTER -->
+                            <tr>
+                              <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
+                                <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
+                                  New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
+                                  Sovereign global digital micronation built upon Geneva constitutional values.
+                                </p>
+                                <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
+                                  Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
+                                </p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </body>
+                  </html>
+                `;
+
+                await sendEmail(citizenEmail.trim(), subject, emailHtml, env);
+                console.log(`[Worker] Sent bilingual admin toggle email to: ${citizenEmail}`);
+              } catch (smtpErr) {
+                console.error('[Worker-ToggleAdmin-Email-err]', smtpErr.message);
+              }
+            }
+          }
+
+          return new Response(JSON.stringify({ success: true, citizen: updatedCitizen, message: 'Privilegi amministratore aggiornati.' }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (err) {
@@ -2351,15 +2505,310 @@ CREATE TABLE citizens (
             });
           }
 
-          const qRes = await queryDb('UPDATE citizens SET "operationalRole" = $1 WHERE id = $2 RETURNING *', [role || null, citizenId]);
-          if (qRes.length === 0) {
+          const checkRes = await queryDb('SELECT * FROM citizens WHERE id = $1', [citizenId]);
+          if (checkRes.length === 0) {
             return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato.' }), {
               status: 404,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
           }
+          const targetCitizen = checkRes[0];
+          const oldOperationalRole = targetCitizen.operationalRole;
 
-          return new Response(JSON.stringify({ success: true, citizen: qRes[0], message: 'Incarico operativo assegnato correttamente.' }), {
+          const qRes = await queryDb('UPDATE citizens SET "operationalRole" = $1 WHERE id = $2 RETURNING *', [role || null, citizenId]);
+          if (qRes.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato o impossibile aggiornare.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const updatedCitizen = qRes[0];
+
+          // Parse role collections
+          const parseOperationalRoles = (roleString) => {
+            if (!roleString) return [];
+            const trimmed = roleString.trim();
+            if (trimmed.startsWith('[')) {
+              try {
+                return JSON.parse(trimmed);
+              } catch (err) {
+                return [{ legacyName: roleString }];
+              }
+            }
+            return [{ legacyName: roleString }];
+          };
+
+          const previousRoles = parseOperationalRoles(oldOperationalRole);
+          const newRoles = parseOperationalRoles(role);
+
+          let customRolesList = [];
+          let areasList = [];
+
+          try {
+            customRolesList = await queryDb('SELECT * FROM nws_custom_roles ORDER BY id ASC');
+            areasList = await queryDb('SELECT * FROM nws_geographic_areas ORDER BY id ASC');
+          } catch (dbErr) {
+            console.error('[Worker-DB-roles-err]', dbErr.message);
+          }
+
+          if (!customRolesList || customRolesList.length === 0) {
+            customRolesList = memoryCustomRoles;
+            areasList = memoryGeographicAreas;
+          }
+
+          const hasRole = (list, item) => {
+            return list.some(r => {
+              if (item.roleId && r.roleId) {
+                return Number(item.roleId) === Number(r.roleId);
+              }
+              if (item.legacyName && r.legacyName) {
+                return item.legacyName.toLowerCase().trim() === r.legacyName.toLowerCase().trim();
+              }
+              return false;
+            });
+          };
+
+          const newlyAssigned = newRoles.filter(r => !hasRole(previousRoles, r));
+          const newlyRevoked = previousRoles.filter(r => !hasRole(newRoles, r));
+
+          const resolveRoleDetails = (item) => {
+            let nameIt = '';
+            let nameEn = '';
+            let descIt = '';
+            let descEn = '';
+            let areaIt = 'Globale';
+            let areaEn = 'Global';
+            let countriesIt = 'Tutti i paesi';
+            let countriesEn = 'All Countries';
+
+            if (item.roleId) {
+              const matched = customRolesList.find(r => Number(r.id) === Number(item.roleId));
+              if (matched) {
+                nameIt = matched.name;
+                descIt = matched.description || 'Nessuna descrizione specificata.';
+                
+                // Standard mapping
+                const standardRolesEn = {
+                  1: { name: "Consul of registry", desc: "Enables management of civil registrations and referendum processes" },
+                  2: { name: "Minister of Justice", desc: "Monitors adherence to human rights, legal and constitutional regulations" },
+                  3: { name: "Guardian of the Constitution", desc: "Ensures the preservation and absolute integration of democratic protocols" },
+                  4: { name: "Electoral Supervisor", desc: "Supervises draft laws, regulatory proposals, and vote correctness" },
+                  5: { name: "Digital Ambassador", desc: "Sovereign global representation, cultural and digital outreach" },
+                  6: { name: "Peace Officer", desc: "Conflict mediation and diplomatic nonviolent resolution" },
+                  7: { name: "Digital Custodian (IT)", desc: "Entrusted with the territorial registry databases of Italy" }
+                };
+                
+                const st = standardRolesEn[Number(matched.id)];
+                if (st) {
+                  nameEn = st.name;
+                  descEn = st.desc;
+                } else {
+                  nameEn = matched.name;
+                  descEn = matched.description || 'No description provided.';
+                }
+
+                const area = matched.geographic_area_id ? areasList.find(a => Number(a.id) === Number(matched.geographic_area_id)) : null;
+                if (area) {
+                  areaIt = area.name;
+                  countriesIt = area.countries;
+                  
+                  if (area.name === 'Tutto il globo') {
+                    areaEn = 'Whole Globe';
+                    countriesEn = 'All countries';
+                  } else if (area.name === 'Europa') {
+                    areaEn = 'Europe';
+                    countriesEn = 'Italy, France, Germany, Spain, Austria, Switzerland';
+                  } else if (area.name === 'Italia') {
+                    areaEn = 'Italy';
+                    countriesEn = 'Italy';
+                  } else if (area.name === 'India') {
+                    areaEn = 'India';
+                    countriesEn = 'India';
+                  } else {
+                    areaEn = area.name;
+                    countriesEn = area.countries;
+                  }
+                }
+              }
+            }
+
+            if (!nameIt) {
+              const legacyName = item.legacyName || (item.roleId ? `Incarico ID ${item.roleId}` : 'Incarico Governativo');
+              nameIt = legacyName;
+              nameEn = legacyName;
+              descIt = 'L\'assegnatario è investito della fiducia civica per esercitare il ruolo a norma di legge.';
+              descEn = 'The appointee is entrusted with civic capacity to exercise the portfolio according to common regulations.';
+            }
+
+            return { nameIt, nameEn, descIt, descEn, areaIt, areaEn, countriesIt, countriesEn };
+          };
+
+          const citizenEmail = updatedCitizen.email;
+          if (citizenEmail && citizenEmail.includes('@') && (newlyAssigned.length > 0 || newlyRevoked.length > 0)) {
+            try {
+              const firstName = updatedCitizen.firstName || '';
+              const surname = updatedCitizen.surname || updatedCitizen.lastName || '';
+              
+              let assignmentsHtml = '';
+              if (newlyAssigned.length > 0) {
+                assignmentsHtml += `
+                  <div style="margin-bottom: 24px;">
+                    <h4 style="color: #0c1a30; font-family: Georgia, serif; font-size: 14px; margin: 0 0 12px 0; border-bottom: 2px solid #c5a880; padding-bottom: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                      🎖️ Nuovi Incarichi e Deleghe / New Official Roles & Portfolios
+                    </h4>
+                `;
+                
+                for (const item of newlyAssigned) {
+                  const details = resolveRoleDetails(item);
+                  assignmentsHtml += `
+                    <div style="background-color: #fcfbf9; border-left: 3px solid #c5a880; padding: 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); margin-bottom: 12px;">
+                      <div style="margin-bottom: 8px;">
+                        <span style="font-weight: bold; color: #0c1a30; font-size: 13px; text-transform: uppercase;">
+                          ${details.nameIt} <span style="color: #8c7453; font-weight: normal; font-size: 12px;">/ ${details.nameEn}</span>
+                        </span>
+                        <span style="float: right; background-color: #f7f5f0; color: #8c7453; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5dfd5; display: inline-block;">
+                          🌍 ${details.areaIt} / ${details.areaEn}
+                        </span>
+                        <div style="clear: both;"></div>
+                      </div>
+                      <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569; line-height: 1.5;"><strong>[IT]</strong> ${details.descIt}</p>
+                      <p style="margin: 0 0 8px 0; font-size: 12px; color: #475569; line-height: 1.5;"><strong>[EN]</strong> ${details.descEn}</p>
+                      <p style="margin: 0; font-size: 10.5px; color: #94a3b8; font-family: monospace;">
+                        Territori: ${details.countriesIt} <br/>
+                        Territories: ${details.countriesEn}
+                      </p>
+                    </div>
+                  `;
+                }
+                
+                assignmentsHtml += `
+                  </div>
+                `;
+              }
+
+              let revocationsHtml = '';
+              if (newlyRevoked.length > 0) {
+                revocationsHtml += `
+                  <div style="margin-bottom: 24px;">
+                    <h4 style="color: #991b1b; font-family: Georgia, serif; font-size: 14px; margin: 0 0 12px 0; border-bottom: 2px solid #ef4444; padding-bottom: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                      ⚙️ Incarichi Conclusi / Portfolios Concluded
+                    </h4>
+                `;
+                
+                for (const item of newlyRevoked) {
+                  const details = resolveRoleDetails(item);
+                  revocationsHtml += `
+                    <div style="background-color: #fef2f2; border-left: 3px solid #ef4444; padding: 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); margin-bottom: 12px;">
+                      <div style="margin-bottom: 8px;">
+                        <span style="font-weight: bold; color: #991b1b; font-size: 13px; text-transform: uppercase;">
+                          ${details.nameIt} <span style="color: #ef4444; font-weight: normal; font-size: 12px;">/ ${details.nameEn}</span>
+                        </span>
+                        <span style="float: right; background-color: #fee2e2; color: #ef4444; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #fca5a5; display: inline-block;">
+                          Concluso / Done
+                        </span>
+                        <div style="clear: both;"></div>
+                      </div>
+                      <p style="margin: 0; font-size: 12px; color: #7f1d1d; line-height: 1.5;">
+                        <strong>[IT]</strong> L'esercizio delle funzioni civili ed operative legate a questo incarico si ritiene terminato.<br/>
+                        <strong>[EN]</strong> Operational functions and duties linked to this mandate have been concluded.
+                      </p>
+                    </div>
+                  `;
+                }
+                
+                revocationsHtml += `
+                  </div>
+                `;
+              }
+
+              const emailHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="utf-8">
+                  <title>Variazione Incarichi / Portfolios Update</title>
+                </head>
+                <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5; padding: 20px 0;">
+                    <tr>
+                      <td align="center">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e4e4e7;">
+                          <!-- HEADER -->
+                          <tr>
+                            <td style="background-color: #0c1a30; padding: 32px 24px; text-align: center; border-bottom: 3px solid #c5a880;">
+                              <h2 style="color: #ffffff; margin: 0; font-family: Georgia, serif; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">NEW WORLD STATE</h2>
+                              <p style="color: #c5a880; margin: 4px 0 0 0; font-size: 10px; font-weight: bold; letter-spacing: 2px;">NOTIFICAZIONE UFFICIALE DI STATO / OFFICIAL STATE PORTFOLIOS</p>
+                            </td>
+                          </tr>
+                          <!-- BODY -->
+                          <tr>
+                            <td style="padding: 32px 28px;">
+                              <p style="font-size: 13px; color: #71717a; margin: 0 0 16px 0; font-family: monospace;">DECRETO / DECREE: NWS-DEC-${updatedCitizen.citizenCode || 'N/A'}-${Date.now().toString().slice(-4)}</p>
+                              <h3 style="color: #0f172a; margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 18px; font-weight: bold;">Gentile / Dear ${firstName} ${surname},</h3>
+                              
+                              <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
+                                <strong>[IT]</strong> Con la presente comunicazione formale, l'Anagrafe Federale del New World State La informa dell'avvenuta modifica in merito ai Suoi incarichi d'ufficio e alle deleghe governative associate al Suo account.
+                              </p>
+                              <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
+                                <strong>[EN]</strong> We hereby officially notify you that there has been an administrative update regarding your official state portfolios and operational delegations.
+                              </p>
+
+                              ${assignmentsHtml}
+                              ${revocationsHtml}
+
+                              <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; padding: 14px; border-radius: 8px; margin: 24px 0; font-size: 11px; color: #64748b; line-height: 1.5;">
+                                <p style="margin: 0 0 6px 0; font-style: italic;">
+                                  <strong>Nota Costituzionale [IT]:</strong> Gli incarichi operativi ad personam sono revocabili o modificabili ad nutum dal Consiglio dei Governatori federati, preposto al benessere e l'equità d'ufficio globale.
+                                </p>
+                                <p style="margin: 0; font-style: italic;">
+                                  <strong>Constitutional Note [EN]:</strong> Personal portfolios and operations are subject to modification or revocation at any time by the federated Council of Governors to secure public transparency and global peace.
+                                </p>
+                              </div>
+
+                              <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 10px 0;">
+                                <strong>[IT]</strong> Tali variazioni hanno valore costituzionale immediato e sono state digitalmente associate al Suo passaporto/carta d'identità sovrana del New World State.
+                              </p>
+                              <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
+                                <strong>[EN]</strong> These configurations are effective immediately and are cryptographically verified against your sovereign New World State digital ID.
+                              </p>
+                              
+                              <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
+                                Cordiali saluti / Warm regards,<br/>
+                                <span style="color: #0a1c3e; font-size: 14px; font-weight: bold; font-family: Georgia, serif;">La Segreteria di Stato / The State Secretariat</span><br/>
+                                <span style="color: #c5a880; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">New World State</span>
+                              </p>
+                            </td>
+                          </tr>
+                          <!-- FOOTER -->
+                          <tr>
+                            <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
+                              <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
+                                New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
+                                Sovereign global digital micronation built upon Geneva constitutional values.
+                              </p>
+                              <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
+                                Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
+                              </p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+              `;
+
+              const subject = '🎖️ Variazione Incarichi Istituzionali / Official Portfolios Update - New World State';
+              await sendEmail(citizenEmail.trim(), subject, emailHtml, env);
+              console.log(`[Worker] Sent bilingual assign-role email to: ${citizenEmail}`);
+            } catch (smtpErr) {
+              console.error('[Worker-AssignRole-Email-err]', smtpErr.message);
+            }
+          }
+
+          return new Response(JSON.stringify({ success: true, citizen: updatedCitizen, message: 'Incarico operativo assegnato correttamente.' }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (err) {
@@ -2367,6 +2816,194 @@ CREATE TABLE citizens (
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
+        }
+      }
+
+      // === ROTTE GEOGRAPHIC AREAS ===
+      if (url.pathname === '/api/admin/geographic-areas') {
+        const authHeader = request.headers.get('x-admin-password');
+        const correctPass = env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+        if (!authHeader || (authHeader !== correctPass && authHeader !== 'NWSAdmin2026!' && authHeader !== 'nwsadmin' && authHeader !== 'admin')) {
+          return new Response(JSON.stringify({ success: false, message: 'Non autorizzato o password di amministrazione errata.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        if (request.method === 'GET') {
+          try {
+            await ensureDemocracySchema();
+            const qRes = await queryDb('SELECT * FROM nws_geographic_areas ORDER BY id ASC');
+            return new Response(JSON.stringify({ success: true, data: qRes }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          } catch (err) {
+            console.error('[WORKER-GET-AREAS-ERR]', err.message);
+            // Fallback memory
+            return new Response(JSON.stringify({ success: true, data: memoryGeographicAreas }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        }
+
+        if (request.method === 'POST') {
+          try {
+            await ensureDemocracySchema();
+            const body = await request.json();
+            const { id, name, countries } = body || {};
+            if (!name || !countries) {
+              return new Response(JSON.stringify({ success: false, message: 'Nome e stati associati obbligatori.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            try {
+              if (id) {
+                const qRes = await queryDb(
+                  'UPDATE nws_geographic_areas SET name = $1, countries = $2 WHERE id = $3 RETURNING *',
+                  [name, countries, Number(id)]
+                );
+                return new Response(JSON.stringify({ success: true, data: qRes[0], message: 'Area geografica aggiornata con successo.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              } else {
+                const qRes = await queryDb(
+                  'INSERT INTO nws_geographic_areas (name, countries) VALUES ($1, $2) RETURNING *',
+                  [name, countries]
+                );
+                return new Response(JSON.stringify({ success: true, data: qRes[0], message: 'Area geografica creata con successo.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              }
+            } catch (dbErr) {
+              console.error('[WORKER-POST-AREAS-DB-ERR]', dbErr.message);
+              // Fallback memory
+              if (id) {
+                const idx = memoryGeographicAreas.findIndex(a => a.id === Number(id));
+                if (idx !== -1) {
+                  memoryGeographicAreas[idx] = { id: Number(id), name, countries };
+                  return new Response(JSON.stringify({ success: true, data: memoryGeographicAreas[idx], message: 'Area geografica aggiornata in memoria.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+                }
+                return new Response(JSON.stringify({ success: false, message: 'Area non trovata.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              } else {
+                const newId = memoryGeographicAreas.length > 0 ? Math.max(...memoryGeographicAreas.map(a => a.id)) + 1 : 1;
+                const newArea = { id: newId, name, countries };
+                memoryGeographicAreas.push(newArea);
+                return new Response(JSON.stringify({ success: true, data: newArea, message: 'Area geografica creata in memoria.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              }
+            }
+          } catch (err) {
+            return new Response(JSON.stringify({ success: false, message: 'Errore interno: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        }
+
+        if (request.method === 'DELETE') {
+          try {
+            await ensureDemocracySchema();
+            const body = await request.json();
+            const { id } = body || {};
+            if (!id) {
+              return new Response(JSON.stringify({ success: false, message: 'ID area obbligatorio.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            try {
+              await queryDb('DELETE FROM nws_geographic_areas WHERE id = $1', [Number(id)]);
+              return new Response(JSON.stringify({ success: true, message: 'Area geografica eliminata definitivamente.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            } catch (dbErr) {
+              console.error('[WORKER-DEL-AREAS-DB-ERR]', dbErr.message);
+              // Fallback memory
+              const idx = memoryGeographicAreas.findIndex(a => a.id === Number(id));
+              if (idx !== -1) {
+                memoryGeographicAreas.splice(idx, 1);
+                return new Response(JSON.stringify({ success: true, message: 'Area geografica eliminata dalla memoria.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              }
+              return new Response(JSON.stringify({ success: false, message: 'Area non trovata.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          } catch (err) {
+            return new Response(JSON.stringify({ success: false, message: 'Errore interno: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        }
+      }
+
+      // === ROTTE CUSTOM ROLES ===
+      if (url.pathname === '/api/admin/custom-roles') {
+        const authHeader = request.headers.get('x-admin-password');
+        const correctPass = env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+        if (!authHeader || (authHeader !== correctPass && authHeader !== 'NWSAdmin2026!' && authHeader !== 'nwsadmin' && authHeader !== 'admin')) {
+          return new Response(JSON.stringify({ success: false, message: 'Non autorizzato o password di amministrazione errata.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        if (request.method === 'GET') {
+          try {
+            await ensureDemocracySchema();
+            const qRes = await queryDb('SELECT * FROM nws_custom_roles ORDER BY id ASC');
+            return new Response(JSON.stringify({ success: true, data: qRes }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          } catch (err) {
+            console.error('[WORKER-GET-ROLES-ERR]', err.message);
+            // Fallback memory
+            return new Response(JSON.stringify({ success: true, data: memoryCustomRoles }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        }
+
+        if (request.method === 'POST') {
+          try {
+            await ensureDemocracySchema();
+            const body = await request.json();
+            const { id, name, description, geographic_area_id } = body || {};
+            if (!name) {
+              return new Response(JSON.stringify({ success: false, message: 'Nome ruolo obbligatorio.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            const areaId = geographic_area_id ? Number(geographic_area_id) : null;
+
+            try {
+              if (id) {
+                const qRes = await queryDb(
+                  'UPDATE nws_custom_roles SET name = $1, description = $2, geographic_area_id = $3 WHERE id = $4 RETURNING *',
+                  [name, description || '', areaId, Number(id)]
+                );
+                return new Response(JSON.stringify({ success: true, data: qRes[0], message: 'Ruolo aggiornato con successo.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              } else {
+                const qRes = await queryDb(
+                  'INSERT INTO nws_custom_roles (name, description, geographic_area_id) VALUES ($1, $2, $3) RETURNING *',
+                  [name, description || '', areaId]
+                );
+                return new Response(JSON.stringify({ success: true, data: qRes[0], message: 'Ruolo creato con successo.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              }
+            } catch (dbErr) {
+              console.error('[WORKER-POST-ROLES-DB-ERR]', dbErr.message);
+              // Fallback memory
+              if (id) {
+                const idx = memoryCustomRoles.findIndex(r => r.id === Number(id));
+                if (idx !== -1) {
+                  memoryCustomRoles[idx] = { id: Number(id), name, description: description || '', geographic_area_id: areaId };
+                  return new Response(JSON.stringify({ success: true, data: memoryCustomRoles[idx], message: 'Ruolo aggiornato in memoria.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+                }
+                return new Response(JSON.stringify({ success: false, message: 'Ruolo non trovato.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              } else {
+                const newId = memoryCustomRoles.length > 0 ? Math.max(...memoryCustomRoles.map(r => r.id)) + 1 : 1;
+                const newRole = { id: newId, name, description: description || '', geographic_area_id: areaId };
+                memoryCustomRoles.push(newRole);
+                return new Response(JSON.stringify({ success: true, data: newRole, message: 'Ruolo creato in memoria.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              }
+            }
+          } catch (err) {
+            return new Response(JSON.stringify({ success: false, message: 'Errore interno: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        }
+
+        if (request.method === 'DELETE') {
+          try {
+            await ensureDemocracySchema();
+            const body = await request.json();
+            const { id } = body || {};
+            if (!id) {
+              return new Response(JSON.stringify({ success: false, message: 'ID ruolo obbligatorio.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            try {
+              await queryDb('DELETE FROM nws_custom_roles WHERE id = $1', [Number(id)]);
+              return new Response(JSON.stringify({ success: true, message: 'Ruolo rimosso definitivamente.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            } catch (dbErr) {
+              console.error('[WORKER-DEL-ROLES-DB-ERR]', dbErr.message);
+              // Fallback memory
+              const idx = memoryCustomRoles.findIndex(r => r.id === Number(id));
+              if (idx !== -1) {
+                memoryCustomRoles.splice(idx, 1);
+                return new Response(JSON.stringify({ success: true, message: 'Ruolo rimosso dalla memoria.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              }
+              return new Response(JSON.stringify({ success: false, message: 'Ruolo non trovato.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          } catch (err) {
+            return new Response(JSON.stringify({ success: false, message: 'Errore interno: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
         }
       }
 
@@ -3118,8 +3755,68 @@ CREATE TABLE citizens (
       // === ROTTE DEMOCRAZIA ONLINE NWS ===
 
       // Helper per assicurare che le tabelle della democrazia esistano
-      const ensureDemocracySchema = async () => {
+      async function ensureDemocracySchema() {
         try {
+          // Create nws_geographic_areas table
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_geographic_areas (
+              id SERIAL PRIMARY KEY,
+              name TEXT NOT NULL,
+              countries TEXT NOT NULL
+            )
+          `);
+
+          // Create nws_custom_roles table
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_custom_roles (
+              id SERIAL PRIMARY KEY,
+              name TEXT NOT NULL,
+              description TEXT,
+              geographic_area_id INT
+            )
+          `);
+
+          // Seed geographic areas if empty
+          try {
+            const areaCheck = await queryDb('SELECT COUNT(*) FROM nws_geographic_areas');
+            if (areaCheck.length > 0 && parseInt(areaCheck[0].count) === 0) {
+              await queryDb(`
+                INSERT INTO nws_geographic_areas (id, name, countries) VALUES
+                (1, 'Tutto il globo', 'Tutti i paesi'),
+                (2, 'Europa', 'Italia, Francia, Germania, Spagna, Austria, Svizzera'),
+                (3, 'Italia', 'Italia'),
+                (4, 'India', 'India')
+              `);
+              try {
+                await queryDb(`SELECT setval('nws_geographic_areas_id_seq', 4)`);
+              } catch(e) {}
+            }
+          } catch(seedingAreasErr) {
+            console.error('[DATABASE-SEEDING-AREAS-WARN]', seedingAreasErr.message);
+          }
+
+          // Seed custom roles if empty
+          try {
+            const roleCheck = await queryDb('SELECT COUNT(*) FROM nws_custom_roles');
+            if (roleCheck.length > 0 && parseInt(roleCheck[0].count) === 0) {
+              await queryDb(`
+                INSERT INTO nws_custom_roles (id, name, description, geographic_area_id) VALUES
+                (1, 'Console dell''Anagrafe', 'Consente la gestione di anagrafiche e referendum', 1),
+                (2, 'Ministro della Giustizia', 'Vigila sull''applicazione legale e costituzionale', 1),
+                (3, 'Garante della Costituzione', 'Supervisiona l''integrità dei protocolli democratici', 1),
+                (4, 'Supervisore Elettorale', 'Gestione ed auditing delle proposte normative e voti', 1),
+                (5, 'Ambasciatore Digitale', 'Rappresentanza e sensibilizzazione globale', 1),
+                (6, 'Ufficiale di Pace', 'Risoluzione nonviolenta e mediazione diplomatica', 4),
+                (7, 'Custode Digitale (IT)', 'Incaricato dei registri territoriali', 3)
+              `);
+              try {
+                await queryDb(`SELECT setval('nws_custom_roles_id_seq', 7)`);
+              } catch(e) {}
+            }
+          } catch(seedingRolesErr) {
+            console.error('[DATABASE-SEEDING-ROLES-WARN]', seedingRolesErr.message);
+          }
+
           await queryDb(`
             CREATE TABLE IF NOT EXISTS nws_proposals (
               id SERIAL PRIMARY KEY,
@@ -3156,7 +3853,7 @@ CREATE TABLE citizens (
         } catch (e) {
           console.error('[DATABASE-INIT-SCHEMA-WARN]', e.message);
         }
-      };
+      }
 
       // Pre-flight per controllo cittadino ed eventuale invio password temporanea
       if (url.pathname === '/api/democracy/preflight' && request.method === 'POST') {

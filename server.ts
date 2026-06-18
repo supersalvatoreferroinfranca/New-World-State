@@ -1805,41 +1805,39 @@ Ufficio dell'Anagrafe Federale del New World State
             const firstName = updatedCitizen.firstName || '';
             const surname = updatedCitizen.surname || updatedCitizen.lastName || '';
             const subject = isAdmin 
-              ? '⚖️ Nuova Nomina: Privilegi Amministrativi Concessi - New World State'
-              : '⚠️ Revoca dell\'Incarico Amministrativo - New World State';
+              ? '⚖️ Nuova Nomina / New Appointment: Privilegi Amministrativi / Admin Privileges - New World State'
+              : '⚠️ Variazione Status / Account Update: Revoca Privilegi Amministrativi / Admin Revocation - New World State';
 
             const bgTheme = isAdmin ? '#0a1c3e' : '#7f1d1d';
             const actionText = isAdmin 
-              ? 'Concessione dei Privilegi di Amministratore Civico'
-              : 'Revoca delle Funzioni Amministrative';
+              ? 'Concessione dei Privilegi di Amministratore Civico / Civic Administrator Privileges Granted'
+              : 'Revoca delle Funzioni Amministrative / Revocation of Administrative Functions';
 
             const explanationHtml = isAdmin
               ? `
                 <div style="background-color: #f8fafc; border-left: 4px solid #c5a880; padding: 16px; margin: 20px 0; border-radius: 4px;">
-                  <h4 style="margin: 0 0 8px 0; color: #0a1c3e; font-family: Georgia, serif; font-size: 14px; font-weight: bold;">📜 Funzioni e Responsabilità dell'Amministratore</h4>
-                  <p style="margin: 0; line-height: 1.6; color: #475569; font-size: 13px;">
-                    In qualità di Amministratore del New World State, Lei detiene il supremo mandato della fiducia civica per la tutela dell’ecosistema federale. Le Sue attribuzioni abilitano:
+                  <h4 style="margin: 0 0 8px 0; color: #0a1c3e; font-family: Georgia, serif; font-size: 14px; font-weight: bold;">📜 Funzioni e Responsabilità dell'Amministratore / Roles and Responsibilities</h4>
+                  <p style="margin: 0 0 10px 0; line-height: 1.6; color: #475569; font-size: 13px;">
+                    <strong>[IT]</strong> In qualità di Amministratore del New World State, Lei detiene il supremo mandato della fiducia civica per la tutela dell’ecosistema federale. Le Sue attribuzioni abilitano la gestione di anagrafiche, referendum, e assegnazione ruoli.
+                  </p>
+                  <p style="margin: 0 0 12px 0; line-height: 1.6; color: #475569; font-size: 13px;">
+                    <strong>[EN]</strong> As an Administrator of the New World State, you hold the supreme mandate of civic trust to safeguard the federal ecosystem. Your privileges enable the management of civil registrations, referendums, and portfolio assignments.
                   </p>
                   <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #475569; font-size: 13px; line-height: 1.6;">
-                    <li><strong>Revisione delle Richieste:</strong> Esame formale dei documenti d'identità dei nuovi candidati.</li>
-                    <li><strong>Tutela dei Registri Pubblici:</strong> Approvazione ed inserimento formale anagrafico o respinta motivata.</li>
-                    <li><strong>Gestione Democratica:</strong> Vigilanza e pubblicazione ufficiale dei referendum e delle leggi della Democrazia Normativa.</li>
-                    <li><strong>Consiglio dei Ministri:</strong> Possibilità di attribuire circoscrizioni e deleghe d'incarico operativo agli altri cittadini sovrani.</li>
+                    <li><strong>Review & Approvals / Revisione Anagrafiche:</strong> Reviewing and approving identity documents of applicants.</li>
+                    <li><strong>Direct Democracy / Democrazia Diretta:</strong> Managing and publishing referendums and federal normative laws.</li>
+                    <li><strong>Administrative Cabinet / Consiglio dei Ministri:</strong> Assigning geopolitical districts and operational roles to sovereign citizens.</li>
                   </ul>
-                  <p style="margin: 12px 0 0 0; line-height: 1.6; color: #475569; font-size: 12px; font-style: italic;">
-                    Si rammenta che ogni decisione deve rispecchiare i canoni di massima trasparenza, equità e conformità alla Costituzione Federale.
-                  </p>
                 </div>
               `
               : `
                 <div style="background-color: #fef2f2; border-left: 4px solid #f87171; padding: 16px; margin: 20px 0; border-radius: 4px;">
-                  <h4 style="margin: 0 0 8px 0; color: #991b1b; font-family: Georgia, serif; font-size: 14px; font-weight: bold;">⚙️ Status di Cittadino Ordinario Ripristinato</h4>
-                  <p style="margin: 0; line-height: 1.6; color: #7f1d1d; font-size: 13px;">
-                    Con la presente notifica ufficiale, La informiamo che i Suoi poteri di Amministrazione sul portale federale sono stati formalmente revocati. 
-                    I Suoi certificati di firma digitale relativi all'approvazione formale sono stati revocati dal Registro Centrale e la Sua utenza è passata allo status di <strong>Cittadino Ordinario</strong>. 
+                  <h4 style="margin: 0 0 8px 0; color: #991b1b; font-family: Georgia, serif; font-size: 14px; font-weight: bold;">⚙️ Status di Cittadino Ordinario Ripristinato / Ordinary Citizen Status Restored</h4>
+                  <p style="margin: 0 0 10px 0; line-height: 1.6; color: #7f1d1d; font-size: 13px;">
+                    <strong>[IT]</strong> Con la presente notifica, La informiamo che i Suoi poteri amministrativi federati sono stati conclusi. Il Suo account è passato allo status di <strong>Cittadino Ordinario</strong>. La ringraziamo per lo sforzo eccezionale profuso per la nostra nazione.
                   </p>
-                  <p style="margin: 10px 0 0 0; line-height: 1.6; color: #7f1d1d; font-size: 13px;">
-                    La ringraziamo sentitamente per il tempo, l'onestà e lo sforzo profuso a servizio della comunità e dello Stato durante il Suo mandato amministrativo.
+                  <p style="margin: 0; line-height: 1.6; color: #7f1d1d; font-size: 13px;">
+                    <strong>[EN]</strong> With this official notice, we inform you that your administrative access has been concluded. Your account has returned to <strong>Ordinary Citizen</strong> status. We sincerely thank you for your exceptional support and service to our nation.
                   </p>
                 </div>
               `;
@@ -1860,36 +1858,39 @@ Ufficio dell'Anagrafe Federale del New World State
                         <tr>
                           <td style="background-color: #0c1a30; padding: 32px 24px; text-align: center; border-bottom: 3px solid #c5a880;">
                             <h2 style="color: #ffffff; margin: 0; font-family: Georgia, serif; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">NEW WORLD STATE</h2>
-                            <p style="color: #c5a880; margin: 4px 0 0 0; font-size: 10px; font-weight: bold; letter-spacing: 2px;">CORPO DI AMMINISTRAZIONE FEDERALE</p>
+                            <p style="color: #c5a880; margin: 4px 0 0 0; font-size: 10px; font-weight: bold; letter-spacing: 2px;">CORPO DI AMMINISTRAZIONE FEDERALE / FEDERAL ADMIN BODY</p>
                           </td>
                         </tr>
                         <!-- BODY -->
                         <tr>
                           <td style="padding: 32px 28px;">
-                            <p style="font-size: 13px; color: #71717a; margin: 0 0 16px 0; font-family: monospace;">CODICE NOTIFICA: NWS-ADM-${updatedCitizen.citizenCode || 'N/A'}-${Date.now().toString().slice(-4)}</p>
-                            <h3 style="color: #0f172a; margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 18px; font-weight: bold;">Gentile ${firstName} ${surname},</h3>
+                            <p style="font-size: 13px; color: #71717a; margin: 0 0 16px 0; font-family: monospace;">CODICE / CODE: NWS-ADM-${updatedCitizen.citizenCode || 'N/A'}-${Date.now().toString().slice(-4)}</p>
+                            <h3 style="color: #0f172a; margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 18px; font-weight: bold;">Gentile / Dear ${firstName} ${surname},</h3>
+                            
+                            <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
+                              <strong>[IT]</strong> La presente comunicazione ufficiale per informarLa di un aggiornamento formale in merito ai Suoi privilegi di accesso nel registro civile sovrano del New World State.
+                            </p>
                             <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
-                              La presente comunicazione ufficiale per informarLa di un aggiornamento formale in merito ai Suoi privilegi di accesso nel registro civile sovrano del New World State.
+                              <strong>[EN]</strong> This official communication is to notify you of a formal update regarding your administrative access credentials within the sovereign registry of the New World State.
                             </p>
 
-                            <div style="text-align: center; margin: 24px 0; padding: 12px; background-color: ${bgTheme}; color: #ffffff; font-weight: bold; border-radius: 8px; font-size: 14px; letter-spacing: 0.5px; text-transform: uppercase;">
+                            <div style="text-align: center; margin: 24px 0; padding: 14px 12px; background-color: ${bgTheme}; color: #ffffff; font-weight: bold; border-radius: 8px; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.4;">
                               ${actionText}
                             </div>
 
                             ${explanationHtml}
 
-                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 16px 0;">
-                              Per qualsiasi chiarimento o quesito in merito alle procedure di transizione del Suo account, restiamo a Sua completa disposizione sul portale ufficiale della nostra micro-nazione federale.
+                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 10px 0;">
+                              <strong>[IT]</strong> Per qualsiasi chiarimento o quesito in merito alle procedure di transizione, restiamo a Sua completa disposizione sul portale ufficiale della nostra micro-nazione federale.
+                            </p>
+                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
+                              <strong>[EN]</strong> If you have any inquiries regarding these transition steps, our support desks remain fully available on the official micronation portal.
                             </p>
                             
                             <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
-                              Un cordiale saluto,
-                            </p>
-                            <p style="color: #0a1c3e; font-size: 14px; font-weight: bold; font-family: Georgia, serif; margin: 0;">
-                              Il Consiglio dei Governatori
-                            </p>
-                            <p style="color: #c5a880; font-size: 11px; font-weight: bold; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">
-                              New World State
+                              Cordiali saluti / Warm regards,<br/>
+                              <span style="color: #0a1c3e; font-size: 14px; font-weight: bold; font-family: Georgia, serif;">Il Consiglio dei Governatori / Council of Governors</span><br/>
+                              <span style="color: #c5a880; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">New World State</span>
                             </p>
                           </td>
                         </tr>
@@ -1897,10 +1898,11 @@ Ufficio dell'Anagrafe Federale del New World State
                         <tr>
                           <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                             <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                              New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.
+                              New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
+                              Sovereign global digital micronation built upon Geneva constitutional values.
                             </p>
                             <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
-                              Questa è una notifica di sistema generata automaticamente. Si prega di non rispondere direttamente a questa email.
+                              Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
                             </p>
                           </td>
                         </tr>
@@ -2043,25 +2045,75 @@ Ufficio dell'Anagrafe Federale del New World State
       const newlyRevoked = previousRoles.filter(r => !hasRole(newRoles, r));
 
       const resolveRoleDetails = (item: any) => {
+        let nameIt = '';
+        let nameEn = '';
+        let descIt = '';
+        let descEn = '';
+        let areaIt = 'Globale';
+        let areaEn = 'Global';
+        let countriesIt = 'Tutti i paesi';
+        let countriesEn = 'All Countries';
+
         if (item.roleId) {
           const matched = customRolesList.find(r => Number(r.id) === Number(item.roleId));
           if (matched) {
-            const area = matched.geographic_area_id ? areasList.find(a => Number(a.id) === Number(matched.geographic_area_id)) : null;
-            return {
-              name: matched.name,
-              description: matched.description || 'Nessuna descrizione specificata.',
-              areaName: area ? area.name : 'Globale',
-              countries: area ? area.countries : 'Nessuna circoscrizione (Globale)'
+            nameIt = matched.name;
+            descIt = matched.description || 'Nessuna descrizione specificata.';
+            
+            // Standard mapping
+            const standardRolesEn: Record<number, { name: string, desc: string }> = {
+              1: { name: "Consul of registry", desc: "Enables management of civil registrations and referendum processes" },
+              2: { name: "Minister of Justice", desc: "Monitors adherence to human rights, legal and constitutional regulations" },
+              3: { name: "Guardian of the Constitution", desc: "Ensures the preservation and absolute integration of democratic protocols" },
+              4: { name: "Electoral Supervisor", desc: "Supervises draft laws, regulatory proposals, and vote correctness" },
+              5: { name: "Digital Ambassador", desc: "Sovereign global representation, cultural and digital outreach" },
+              6: { name: "Peace Officer", desc: "Conflict mediation and diplomatic nonviolent resolution" },
+              7: { name: "Digital Custodian (IT)", desc: "Entrusted with the territorial registry databases of Italy" }
             };
+            
+            const st = standardRolesEn[Number(matched.id)];
+            if (st) {
+              nameEn = st.name;
+              descEn = st.desc;
+            } else {
+              nameEn = matched.name;
+              descEn = matched.description || 'No description provided.';
+            }
+
+            const area = matched.geographic_area_id ? areasList.find(a => Number(a.id) === Number(matched.geographic_area_id)) : null;
+            if (area) {
+              areaIt = area.name;
+              countriesIt = area.countries;
+              
+              if (area.name === 'Tutto il globo') {
+                areaEn = 'Whole Globe';
+                countriesEn = 'All countries';
+              } else if (area.name === 'Europa') {
+                areaEn = 'Europe';
+                countriesEn = 'Italy, France, Germany, Spain, Austria, Switzerland';
+              } else if (area.name === 'Italia') {
+                areaEn = 'Italy';
+                countriesEn = 'Italy';
+              } else if (area.name === 'India') {
+                areaEn = 'India';
+                countriesEn = 'India';
+              } else {
+                areaEn = area.name;
+                countriesEn = area.countries;
+              }
+            }
           }
         }
-        const name = item.legacyName || (item.roleId ? `Incarico ID ${item.roleId}` : 'Incarico Governativo');
-        return {
-          name,
-          description: 'Incarico operativo o delega governativa diplomatica federale.',
-          areaName: 'Globale',
-          countries: 'Nessuna circoscrizione (Globale)'
-        };
+
+        if (!nameIt) {
+          const legacyName = item.legacyName || (item.roleId ? `Incarico ID ${item.roleId}` : 'Incarico Governativo');
+          nameIt = legacyName;
+          nameEn = legacyName;
+          descIt = 'Delega operativa o incarico governativo ufficiale.';
+          descEn = 'Official operational delegation or government-assigned portfolio.';
+        }
+
+        return { nameIt, nameEn, descIt, descEn, areaIt, areaEn, countriesIt, countriesEn };
       };
 
       if (process.env.SMTP_USER && (newlyAssigned.length > 0 || newlyRevoked.length > 0)) {
@@ -2075,8 +2127,8 @@ Ufficio dell'Anagrafe Federale del New World State
             if (newlyAssigned.length > 0) {
               assignmentsHtml += `
                 <div style="margin-bottom: 24px;">
-                  <h4 style="color: #0c1a30; font-family: Georgia, serif; font-size: 15px; margin: 0 0 12px 0; border-bottom: 2px solid #c5a880; padding-bottom: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                    🎖️ Nuovi Incarichi e Deleghe Conferite
+                  <h4 style="color: #0c1a30; font-family: Georgia, serif; font-size: 14px; margin: 0 0 12px 0; border-bottom: 2px solid #c5a880; padding-bottom: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                    🎖️ Nuovi Incarichi e Deleghe / New Official Roles & Portfolios
                   </h4>
               `;
               
@@ -2084,14 +2136,21 @@ Ufficio dell'Anagrafe Federale del New World State
                 const details = resolveRoleDetails(item);
                 assignmentsHtml += `
                   <div style="background-color: #fcfbf9; border-left: 3px solid #c5a880; padding: 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
-                      <span style="font-weight: bold; color: #0c1a30; font-size: 13px; text-transform: uppercase; display: inline-block; max-width: 70%;">${details.name}</span>
-                      <span style="background-color: #f7f5f0; color: #8c7453; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5dfd5; display: inline-block;">
-                        🌍 ${details.areaName}
+                    <div style="margin-bottom: 8px;">
+                      <span style="font-weight: bold; color: #0c1a30; font-size: 13px; text-transform: uppercase;">
+                        ${details.nameIt} <span style="color: #8c7453; font-weight: normal; font-size: 12px;">/ ${details.nameEn}</span>
                       </span>
+                      <span style="float: right; background-color: #f7f5f0; color: #8c7453; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5dfd5; display: inline-block;">
+                        🌍 ${details.areaIt} / ${details.areaEn}
+                      </span>
+                      <div style="clear: both;"></div>
                     </div>
-                    <p style="margin: 0 0 6px 0; font-size: 12px; color: #475569; line-height: 1.5;">${details.description}</p>
-                    <p style="margin: 0; font-size: 10.5px; color: #94a3b8; font-family: monospace;">Territori Associati: ${details.countries}</p>
+                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #475569; line-height: 1.5;"><strong>[IT]</strong> ${details.descIt}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #475569; line-height: 1.5;"><strong>[EN]</strong> ${details.descEn}</p>
+                    <p style="margin: 0; font-size: 10.5px; color: #94a3b8; font-family: monospace;">
+                      Territori: ${details.countriesIt} <br/>
+                      Territories: ${details.countriesEn}
+                    </p>
                   </div>
                 `;
               }
@@ -2105,8 +2164,8 @@ Ufficio dell'Anagrafe Federale del New World State
             if (newlyRevoked.length > 0) {
               revocationsHtml += `
                 <div style="margin-bottom: 24px;">
-                  <h4 style="color: #991b1b; font-family: Georgia, serif; font-size: 15px; margin: 0 0 12px 0; border-bottom: 2px solid #ef4444; padding-bottom: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                    ⚙️ Incarichi e Funzioni Concluse o Revocate
+                  <h4 style="color: #991b1b; font-family: Georgia, serif; font-size: 14px; margin: 0 0 12px 0; border-bottom: 2px solid #ef4444; padding-bottom: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                    ⚙️ Incarichi Conclusi / Portfolios Concluded
                   </h4>
               `;
               
@@ -2114,13 +2173,19 @@ Ufficio dell'Anagrafe Federale del New World State
                 const details = resolveRoleDetails(item);
                 revocationsHtml += `
                   <div style="background-color: #fef2f2; border-left: 3px solid #ef4444; padding: 14px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
-                      <span style="font-weight: bold; color: #991b1b; font-size: 13px; text-transform: uppercase; display: inline-block; max-width: 70%;">${details.name}</span>
-                      <span style="background-color: #fef2f2; color: #ef4444; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #fca5a5; display: inline-block;">
-                        Concluso
+                    <div style="margin-bottom: 8px;">
+                      <span style="font-weight: bold; color: #991b1b; font-size: 13px; text-transform: uppercase;">
+                        ${details.nameIt} <span style="color: #ef4444; font-weight: normal; font-size: 12px;">/ ${details.nameEn}</span>
                       </span>
+                      <span style="float: right; background-color: #fee2e2; color: #ef4444; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #fca5a5; display: inline-block;">
+                        Concluso / Done
+                      </span>
+                      <div style="clear: both;"></div>
                     </div>
-                    <p style="margin: 0 0 6px 0; font-size: 12px; color: #7f1d1d; line-height: 1.5;">L'esercizio delle funzioni civili ed operative legate a questo incarico si ritiene terminato.</p>
+                    <p style="margin: 0; font-size: 12px; color: #7f1d1d; line-height: 1.5;">
+                      <strong>[IT]</strong> L'esercizio delle funzioni civili ed operative legate a questo incarico si ritiene terminato.<br/>
+                      <strong>[EN]</strong> Operational functions and duties linked to this mandate have been concluded.
+                    </p>
                   </div>
                 `;
               }
@@ -2135,7 +2200,7 @@ Ufficio dell'Anagrafe Federale del New World State
               <html>
               <head>
                 <meta charset="utf-8">
-                <title>Variazione Incarichi Istituzionali</title>
+                <title>Variazione Incarichi / Portfolios Update</title>
               </head>
               <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
                 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5; padding: 20px 0;">
@@ -2146,39 +2211,45 @@ Ufficio dell'Anagrafe Federale del New World State
                         <tr>
                           <td style="background-color: #0c1a30; padding: 32px 24px; text-align: center; border-bottom: 3px solid #c5a880;">
                             <h2 style="color: #ffffff; margin: 0; font-family: Georgia, serif; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">NEW WORLD STATE</h2>
-                            <p style="color: #c5a880; margin: 4px 0 0 0; font-size: 10px; font-weight: bold; letter-spacing: 2px;">NOTIFICAZIONE UFFICIALE DI STATO</p>
+                            <p style="color: #c5a880; margin: 4px 0 0 0; font-size: 10px; font-weight: bold; letter-spacing: 2px;">NOTIFICAZIONE UFFICIALE DI STATO / OFFICIAL STATE PORTFOLIOS</p>
                           </td>
                         </tr>
                         <!-- BODY -->
                         <tr>
                           <td style="padding: 32px 28px;">
-                            <p style="font-size: 13px; color: #71717a; margin: 0 0 16px 0; font-family: monospace;">DECRETO GENERATO: NWS-DEC-${updatedCitizen.citizenCode || 'N/A'}-${Date.now().toString().slice(-4)}</p>
-                            <h3 style="color: #0f172a; margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 18px; font-weight: bold;">Gentile ${firstName} ${surname},</h3>
+                            <p style="font-size: 13px; color: #71717a; margin: 0 0 16px 0; font-family: monospace;">DECRETO / DECREE: NWS-DEC-${updatedCitizen.citizenCode || 'N/A'}-${Date.now().toString().slice(-4)}</p>
+                            <h3 style="color: #0f172a; margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 18px; font-weight: bold;">Gentile / Dear ${firstName} ${surname},</h3>
+                            
+                            <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 10px 0;">
+                              <strong>[IT]</strong> Con la presente comunicazione formale, l'Anagrafe Federale del New World State La informa dell'avvenuta modifica in merito ai Suoi incarichi d'ufficio e alle deleghe governative associate al Suo account.
+                            </p>
                             <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
-                              Con la presente comunicazione ufficiale d'ufficio, l'Anagrafe Federale di New World State La informa della modifica formale riguardante le Sue deleghe operative e gli incarichi istituzionali a Lei ascritti nel nostro registro civile.
+                              <strong>[EN]</strong> We hereby officially notify you that there has been an administrative update regarding your official state portfolios and operational delegations.
                             </p>
 
                             ${assignmentsHtml}
                             ${revocationsHtml}
 
-                            <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; padding: 14px; border-radius: 8px; margin: 24px 0;">
-                              <p style="margin: 0; font-size: 11px; color: #64748b; line-height: 1.5; font-style: italic;">
-                                Nota Costituzionale: Gli incarichi operativi ad personam sono revocabili o modificabili ad nutum dal Consiglio dei Governatori federati, preposto a garantire la pace dei popoli, il benessere collettivo e l'equità d'ufficio globale.
+                            <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; padding: 14px; border-radius: 8px; margin: 24px 0; font-size: 11px; color: #64748b; line-height: 1.5;">
+                              <p style="margin: 0 0 6px 0; font-style: italic;">
+                                <strong>Nota Costituzionale [IT]:</strong> Gli incarichi operativi ad personam sono revocabili o modificabili ad nutum dal Consiglio dei Governatori federati, preposto al benessere e l'equità d'ufficio globale.
+                              </p>
+                              <p style="margin: 0; font-style: italic;">
+                                <strong>Constitutional Note [EN]:</strong> Personal portfolios and operations are subject to modification or revocation at any time by the federated Council of Governors to secure public transparency and global peace.
                               </p>
                             </div>
 
-                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 16px 0;">
-                              Le nuove disposizioni e deleghe operative sono attive con effetto immediato e sono state collegate in modalità crittografica al Suo Certificato di Cittadinanza Digitale.
+                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 10px 0;">
+                              <strong>[IT]</strong> Tali variazioni hanno valore costituzionale immediato e sono state digitalmente associate al Suo passaporto/carta d'identità sovrana del New World State.
+                            </p>
+                            <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
+                              <strong>[EN]</strong> These configurations are effective immediately and are cryptographically verified against your sovereign New World State digital ID.
                             </p>
                             
                             <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
-                              Un cordiale saluto,
-                            </p>
-                            <p style="color: #0a1c3e; font-size: 14px; font-weight: bold; font-family: Georgia, serif; margin: 0;">
-                              La Segreteria di Stato Federale
-                            </p>
-                            <p style="color: #c5a880; font-size: 11px; font-weight: bold; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">
-                              New World State
+                              Cordiali saluti / Warm regards,<br/>
+                              <span style="color: #0a1c3e; font-size: 14px; font-weight: bold; font-family: Georgia, serif;">La Segreteria di Stato / The State Secretariat</span><br/>
+                              <span style="color: #c5a880; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">New World State</span>
                             </p>
                           </td>
                         </tr>
@@ -2186,10 +2257,11 @@ Ufficio dell'Anagrafe Federale del New World State
                         <tr>
                           <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                             <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                              New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.
+                              New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
+                              Sovereign global digital micronation built upon Geneva constitutional values.
                             </p>
                             <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
-                              Questa è una notifica di sistema generata automaticamente. Si prega di non rispondere direttamente a questa email.
+                              Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
                             </p>
                           </td>
                         </tr>
@@ -2203,7 +2275,7 @@ Ufficio dell'Anagrafe Federale del New World State
 
             await sendLocalSmtpEmail({
               to: citizenEmail.trim(),
-              subject: '🎖️ Aggiornamento Nazionale: Modifica degli Incarichi Istituzionali - New World State',
+              subject: '🎖️ Variazione Incarichi Istituzionali / Official Portfolios Update - New World State',
               html: emailHtml
             });
             console.log(`[SMTP] Inviato messaggio di variazione incarichi e spiegazione del ruolo a: ${citizenEmail}`);
