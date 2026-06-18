@@ -1016,13 +1016,52 @@ export default function AdminDashboard() {
                             </td>
                             <td className="py-3.5 px-4 text-xs space-y-1">
                               {cit.isAdmin && (
-                                <span className="inline-flex items-center gap-0.5 bg-brand-blue text-[#f7f5f0] text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
-                                  <Shield className="w-2.5 h-2.5" /> Admin
-                                </span>
+                                <div className="mb-1">
+                                  <span className="inline-flex items-center gap-0.5 bg-brand-blue text-[#f7f5f0] text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">
+                                    <Shield className="w-2.5 h-2.5" /> Admin
+                                  </span>
+                                </div>
                               )}
                               {cit.operationalRole ? (
-                                <div className="text-emerald-700 font-bold text-[10px] flex items-center gap-0.5">
-                                  <Briefcase className="w-2.5 h-2.5" /> {cit.operationalRole}
+                                <div className="space-y-1">
+                                  {(() => {
+                                    const assignedList = getCitizenAssignedRoles(cit.operationalRole);
+                                    if (assignedList.length === 0) return !cit.isAdmin && <span className="text-slate-400 text-[10px]">-</span>;
+                                    
+                                    return assignedList.map((assigned: any, idx: number) => {
+                                      let roleName = "";
+                                      let areaTag = "";
+                                      
+                                      if (assigned.roleId) {
+                                        const matched = customRoles.find(cr => cr.id === assigned.roleId);
+                                        if (matched) {
+                                          roleName = matched.name;
+                                          const area = matched.geographic_area_id ? geographicAreas.find(a => a.id === matched.geographic_area_id) : null;
+                                          if (area) {
+                                            areaTag = area.name;
+                                          }
+                                        } else {
+                                          roleName = `Incarico #${assigned.roleId}`;
+                                        }
+                                      } else if (assigned.legacyName) {
+                                        roleName = assigned.legacyName;
+                                      }
+                                      
+                                      if (!roleName) return null;
+                                      
+                                      return (
+                                        <div key={idx} className="flex items-center gap-1 bg-[#c5a880]/10 text-[#8c7453] px-1.5 py-0.5 rounded text-[9.5px] font-bold border border-[#c5a880]/20 w-fit">
+                                          <Briefcase className="w-2.5 h-2.5 text-[#c5a880]" />
+                                          <span>{roleName}</span>
+                                          {areaTag && (
+                                            <span className="text-[7.5px] font-bold bg-[#0a1c3e]/5 text-[#0a1c3e] px-1 rounded uppercase">
+                                              🌍 {areaTag}
+                                            </span>
+                                          )}
+                                        </div>
+                                      );
+                                    });
+                                  })()}
                                 </div>
                               ) : (
                                 !cit.isAdmin && <span className="text-slate-400 text-[10px]">-</span>
