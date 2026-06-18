@@ -19,6 +19,7 @@ import DbStatus from './components/debug/DbStatus';
 import DemocracyPortal from './components/democracy/DemocracyPortal';
 import WelcomePage from './components/home/WelcomePage';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
+import { ArrowUp } from 'lucide-react';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy'>('welcome');
@@ -29,6 +30,25 @@ function AppContent() {
            searchParams.get('verify') === 'true';
   });
   const { language } = useI18n();
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   React.useEffect(() => {
     document.documentElement.lang = language;
@@ -224,6 +244,19 @@ function AppContent() {
           </div>
         </div>
       </footer>
+
+      {/* FLOAT SCROLL TO TOP BUTTON */}
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-6 right-6 z-50 p-3 h-12 w-12 rounded-full bg-[#0a1c3e] hover:bg-[#c5a880] text-[#f7f5f0] hover:text-[#0a1c3e] shadow-lg hover:shadow-2xl transition-all duration-300 border border-[#c5a880]/30 flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 ${
+          showScrollTop ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-75 pointer-events-none'
+        }`}
+        id="scroll-to-top-btn"
+        aria-label={language === 'en' ? 'Back to top' : 'Torna su'}
+        title={language === 'en' ? 'Back to top' : 'Torna su'}
+      >
+        <ArrowUp className="w-5 h-5 stroke-[2.5]" />
+      </button>
     </div>
   );
 }
