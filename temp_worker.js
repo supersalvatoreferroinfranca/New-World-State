@@ -4343,7 +4343,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           let serviceMessage = 'Proposta normativa convalidata e aperta ufficialmente al voto popolare.';
           
           try {
-            const citizensRes = await queryDb('SELECT email, "firstName", firstname, surname, "citizenCode" FROM citizens');
+            const citizensRes = await queryDb('SELECT * FROM citizens');
             const validCitizens = (citizensRes || []).filter(cit => cit.email && cit.email.trim() !== '');
             
             console.log(`[VOTING-BROADCAST] Avvio invio email a ${validCitizens.length} cittadini per la proposta convalidata.`);
@@ -4364,6 +4364,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
               const name = cit.firstName || cit.firstname || 'Cittadino';
               const surname = cit.surname || 'Sovrano';
               const email = cit.email.trim();
+              const citizenCodeVal = cit.citizenCode || cit.citizencode || cit.citizen_code || 'NWS';
               
               const subject = `🏛️ New World State - Notifica di Votazione Popolare: ${approvedProposal.title}`;
               const html = `
@@ -4373,7 +4374,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                     <div style="font-size: 11px; color: #f59e0b; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">CONSIGLIO DI DEMOCRAZIA DIRETTA</div>
                   </div>
                   <div style="padding: 24px; background-color: #ffffff; color: #334155;">
-                    <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${name} ${surname}</strong> (Codice: ${cit.citizenCode || 'NWS'}),</p>
+                    <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${name} ${surname}</strong> (Codice: ${citizenCodeVal}),</p>
                     <p style="font-size: 14px; line-height: 1.5;">Il Consiglio Esecutivo ha convalidato e formalmente calendarizzato una nuova consultazione popolare/referendum nel registro elettorale sovrano.</p>
                     
                     <div style="background-color: #f8fafc; border-left: 4px solid #d97706; padding: 16px; margin: 20px 0; border-radius: 4px;">
