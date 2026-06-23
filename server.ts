@@ -8,10 +8,30 @@ import nodemailer from 'nodemailer';
 import pg from 'pg';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import { GoogleGenAI, Type } from '@google/genai';
 
 const { Pool } = pg;
 
 dotenv.config();
+
+let aiClient: GoogleGenAI | null = null;
+function getGenAIClient() {
+  if (!aiClient) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY is not defined. Please add it to your secrets.');
+    }
+    aiClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build'
+        }
+      }
+    });
+  }
+  return aiClient;
+}
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -107,6 +127,18 @@ async function runMigrations() {
           vote VARCHAR(10) NOT NULL,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           UNIQUE(proposal_id, citizen_id)
+        )
+      `);
+
+      // Create nws_albo table for official notice board of convalidated/scheduled votings
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_albo (
+          id SERIAL PRIMARY KEY,
+          proposal_id INT NOT NULL,
+          title TEXT NOT NULL,
+          voting_starts_at TIMESTAMP WITH TIME ZONE NOT NULL,
+          voting_ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
+          published_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         )
       `);
 
@@ -1938,10 +1970,10 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
                             ${explanationHtml}
 
                             <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 10px 0;">
-                              <strong>[IT]</strong> Per qualsiasi chiarimento o quesito in merito alle procedure di transizione, restiamo a Sua completa disposizione sul portale ufficiale della nostra micro-nazione federale.
+                              <strong>[IT]</strong> Per qualsiasi chiarimento o quesito in merito alle procedure di transizione, restiamo a Sua completa disposizione sul portale ufficiale della nostra nazione federale.
                             </p>
                             <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
-                              <strong>[EN]</strong> If you have any inquiries regarding these transition steps, our support desks remain fully available on the official micronation portal.
+                              <strong>[EN]</strong> If you have any inquiries regarding these transition steps, our support desks remain fully available on the official nation portal.
                             </p>
                             
                             <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
@@ -1955,8 +1987,8 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
                         <tr>
                           <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                             <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                              New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
-                              Sovereign global digital micronation built upon Geneva constitutional values.
+                              New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
+                              Sovereign global digital nation built upon Geneva constitutional values.
                             </p>
                             <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
                               Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
@@ -2314,8 +2346,8 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
                         <tr>
                           <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                             <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                              New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
-                              Sovereign global digital micronation built upon Geneva constitutional values.
+                              New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
+                              Sovereign global digital nation built upon Geneva constitutional values.
                             </p>
                             <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
                               Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
@@ -2967,6 +2999,20 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
       }
     });
 
+    // Ottieni tutti gli avvisi pubblicati nell'albo pretorio ufficiale
+    apiRouter.get('/democracy/albo', async (req, res) => {
+      if (!dbPool) {
+        return res.status(500).json({ success: false, message: 'Database non disponibile.' });
+      }
+      try {
+        const result = await dbPool.query('SELECT * FROM nws_albo ORDER BY published_at DESC');
+        return res.json({ success: true, data: result.rows });
+      } catch (err: any) {
+        console.error('[DEMOCRACY-ALBO-ERR]', err);
+        return res.status(500).json({ success: false, message: 'Errore durante il recupero dall\'albo pretorio: ' + err.message });
+      }
+    });
+
     // Ottieni tutte le proposte normative (con conteggio voti real-time)
     apiRouter.get('/democracy/proposals', async (req, res) => {
       if (!dbPool) {
@@ -3029,6 +3075,66 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
       } catch (err: any) {
         console.error('[DEMOCRACY-GET-PROPOSALS-ERR]', err);
         return res.status(500).json({ success: false, message: 'Errore nel caricamento delle proposte: ' + err.message });
+      }
+    });
+
+    // Assistente AI legislativo per la redazione della proposta guidata (for dummies)
+    apiRouter.post('/democracy/ai-draft-proposal', async (req, res) => {
+      const { problem, solution, benefits, category } = req.body || {};
+      if (!solution) {
+        return res.status(400).json({ success: false, message: 'La descrizione della tua soluzione/idea è obbligatoria per procedere con l\'elaborazione.' });
+      }
+
+      try {
+        const ai = getGenAIClient();
+        const prompt = `Crea una bozza di proposta legislativa formale per lo "New World State" (una nazione digitale sovrana e globale basata sul libero arbitrio dei popoli e sulla Costituzione di Ginevra).
+La proposta appartiene alla categoria: "${category || 'Generale'}".
+
+Informazioni fornite dal cittadino (for dummies):
+- Problema da risolvere: ${problem || 'Non specificato'}
+- Soluzione proposta: ${solution}
+- Benefici attesi: ${benefits || 'Non specificato'}
+
+Genera una risposta in formato JSON contenente tre campi:
+1. "title": un titolo formale, solenne e chiaro per l'iniziativa legislativa. Deve essere in italiano (es. "Legge sulla Trasparenza dell'Identità Digitale").
+2. "description": una sintesi esplicativa di 1 o 2 righe (massimo 150 caratteri) che spieghi l'essenza della proposta.
+3. "content": Il testo normativo completo, strutturato formalmente in articoli (es. Articolo 1 - Oggetto e finalità, Articolo 2 - Ambito di applicazione, Articolo 3 - ... ecc.) in lingua italiana. Deve avere un tono formale, legale, preciso e utilizzare riferimenti tipici delle nazioni digitali sovrane, focalizzandosi sul rispetto dei diritti e della libertà di scelta. Aggiungi alla fine una sezione di analisi dell'impatto o copertura finanziaria/amministrativa.
+
+Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.5-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+                content: { type: Type.STRING }
+              },
+              required: ['title', 'description', 'content']
+            }
+          }
+        });
+
+        const jsonText = response.text;
+        if (!jsonText) {
+          throw new Error('Nessuna risposta ricevuta dall\'Intelligenza Artificiale.');
+        }
+
+        const parsed = JSON.parse(jsonText.trim());
+        return res.json({ success: true, data: parsed });
+      } catch (err: any) {
+        console.error('[DEMOCRACY-AI-DRAFT-ERR]', err);
+        const isKeyError = err.message && (err.message.includes('GEMINI_API_KEY') || err.message.includes('API key'));
+        return res.status(500).json({
+          success: false,
+          message: isKeyError
+            ? 'La chiave API di Gemini ("GEMINI_API_KEY") non è configurata nei segreti del portale. Configura la chiave nei segreti del pannello di controllo per sbloccare l\'assistente legislativo AI!'
+            : 'Impossibile sbloccare l\'assistente legislativo AI: ' + err.message
+        });
       }
     });
 
@@ -3169,6 +3275,85 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
           if (result.rows.length === 0) {
             return res.status(404).json({ success: false, message: 'Proposta non trovata.' });
           }
+
+          const approvedProposal: any = result.rows[0];
+
+          // 1. Pubblica le informazioni relative al titolo della votazione e ai termini temporali in un apposito albo
+          try {
+            await dbPool.query(
+              'INSERT INTO nws_albo (proposal_id, title, voting_starts_at, voting_ends_at) VALUES ($1, $2, $3, $4)',
+              [approvedProposal.id, approvedProposal.title, approvedProposal.voting_starts_at, approvedProposal.voting_ends_at]
+            );
+            console.log(`[ALBO-PRETORIO] Pubblicato nell'albo pretorio l'annuncio per: "${approvedProposal.title}"`);
+          } catch (alboErr) {
+            console.error('[ALBO-PRETORIO-ERR]', alboErr);
+          }
+
+          // 2. Invia una email a tutti i cittadini del New World State
+          try {
+            const citizensRes = await dbPool.query('SELECT email, "firstName", firstname, surname, "citizenCode" FROM citizens');
+            const validCitizens = citizensRes.rows.filter(cit => cit.email && cit.email.trim() !== '');
+            
+            console.log(`[VOTING-BROADCAST] Avvio invio email a ${validCitizens.length} cittadini per la proposta convalidata.`);
+            
+            const startStr = new Date(approvedProposal.voting_starts_at).toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
+            const endStr = new Date(approvedProposal.voting_ends_at).toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
+
+            // Send sequentially or concurrently. To avoid timing out request, we can fire and forget or proceed
+            // Let's do a map promise or simple loop. Since there are few citizens in workspace, a prompt loop is great.
+            // Let's wrap each email send in a try/catch.
+            for (const cit of validCitizens) {
+              const name = cit.firstName || cit.firstname || 'Cittadino';
+              const surname = cit.surname || 'Sovrano';
+              const email = cit.email.trim();
+              
+              const subject = `🏛️ New World State - Notifica di Votazione Popolare: ${approvedProposal.title}`;
+              const html = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                  <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #d97706;">
+                    <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em;">NEW WORLD STATE</h1>
+                    <div style="font-size: 11px; color: #f59e0b; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">CONSIGLIO DI DEMOCRAZIA DIRETTA</div>
+                  </div>
+                  <div style="padding: 24px; background-color: #ffffff; color: #334155;">
+                    <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${name} ${surname}</strong> (Codice: ${cit.citizenCode || 'NWS'}),</p>
+                    <p style="font-size: 14px; line-height: 1.5;">Il Consiglio Esecutivo ha convalidato e formalmente calendarizzato una nuova consultazione popolare/referendum nel registro elettorale sovrano.</p>
+                    
+                    <div style="background-color: #f8fafc; border-left: 4px solid #d97706; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                      <h3 style="margin: 0 0 10px 0; color: #0a1c3e; font-size: 14px; text-transform: uppercase; letter-spacing: 0.02em;">Dati della Votazione</h3>
+                      <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Titolo Referendum:</strong> ${approvedProposal.title}</p>
+                      <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Categoria:</strong> ${approvedProposal.category || 'Generale'}</p>
+                      <p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Termini Temporali:</strong></p>
+                      <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #0f172a;">
+                        <li><strong>Inizio:</strong> ${startStr}</li>
+                        <li><strong>Scadenza:</strong> ${endStr}</li>
+                      </ul>
+                    </div>
+
+                    <p style="font-size: 13px; line-height: 1.5; color: #64748b;">
+                      Ti ricordiamo che l'esercizio del voto diretto garantisce l'attuazione dei principi liberali su cui si fonda la nostra nazione. Puoi esprimere la tua preferenza e consultare l'apposita deliberazione normata in articoli collegandoti al Portale Federale.
+                    </p>
+
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="${process.env.APP_URL || 'https://newworldstate.org'}/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">ACCEDI AL PORTALE DI VOTO</a>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                    <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 0;">
+                      Generato automaticamente dal Registro dei Referendum del New World State.<br />
+                      Per favore non rispondere a questa comunicazione.
+                    </p>
+                  </div>
+                </div>
+              `;
+
+              sendLocalSmtpEmail({ to: email, subject, html })
+                .then(() => console.log(`[VOTING-EMAIL] Email inviata a: ${email}`))
+                .catch(err => console.warn(`[VOTING-EMAIL-FAILED] Errore invio a ${email}: ${err.message}`));
+            }
+          } catch (citErr: any) {
+            console.error('[VOTING-BROADCAST-CIT-FETCH-ERR]', citErr);
+          }
+
           return res.json({ success: true, data: result.rows[0], message: 'Proposta normativa convalidata e aperta ufficialmente al voto popolare.' });
         
         } else if (action === 'reject') {

@@ -22,8 +22,13 @@ import {
   Activity,
   Calendar,
   ArrowRight,
-  Smartphone
+  Smartphone,
+  Sparkles,
+  BookOpen,
+  Lightbulb,
+  PenTool
 } from 'lucide-react';
+
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -67,6 +72,15 @@ interface Proposal {
   total_votes: number;
 }
 
+interface AlboItem {
+  id: number;
+  proposal_id: number;
+  title: string;
+  voting_starts_at: string;
+  voting_ends_at: string;
+  published_at: string;
+}
+
 export default function DemocracyPortal() {
   const { language } = useI18n();
 
@@ -102,8 +116,13 @@ export default function DemocracyPortal() {
   const [proposalsLoading, setProposalsLoading] = useState(true);
   const [proposalsError, setProposalsError] = useState<string | null>(null);
 
+  // Albo pretorio states
+  const [alboItems, setAlboItems] = useState<AlboItem[]>([]);
+  const [alboLoading, setAlboLoading] = useState(false);
+  const [alboError, setAlboError] = useState<string | null>(null);
+
   // Filter and navigation states
-  const [subTab, setSubTab] = useState<'active' | 'new' | 'archive' | 'admin'>('active');
+  const [subTab, setSubTab] = useState<'active' | 'new' | 'archive' | 'admin' | 'albo'>('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -115,6 +134,16 @@ export default function DemocracyPortal() {
   const [newContent, setNewContent] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // New Guided/Dummies Drafting States
+  const [draftMode, setDraftMode] = useState<'ai' | 'simple' | 'manual'>('ai');
+  const [simpleIdeaText, setSimpleIdeaText] = useState('');
+  const [aiProblem, setAiProblem] = useState('');
+  const [aiSolution, setAiSolution] = useState('');
+  const [aiBenefits, setAiBenefits] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
 
   // Action states (voting, admin approval/rejection)
   const [actionLoading, setActionLoading] = useState<number | null>(null); // Proposal ID being voted or modified
@@ -142,8 +171,29 @@ export default function DemocracyPortal() {
     }
   };
 
+  const fetchAlbo = async () => {
+    setAlboLoading(true);
+    setAlboError(null);
+    try {
+      const res = await safeFetch('/api/democracy/albo');
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      if (data.success) {
+        setAlboItems(data.data || []);
+      } else {
+        throw new Error(data.message || 'La lettura dell\'Albo Pretorio è fallita.');
+      }
+    } catch (err: any) {
+      console.error('[FETCH-ALBO-ERR]', err);
+      setAlboError(err.message || 'Impossibile connettersi all\'Albo delle Votazioni convalidate.');
+    } finally {
+      setAlboLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchProposals();
+    fetchAlbo();
   }, []);
 
   // Handle pre-check for citizen identification and generate temporary password if needed
@@ -247,13 +297,102 @@ export default function DemocracyPortal() {
     setPasswordInput('');
   };
 
+  // AI-Assisted Proposal Drafting using Gemini API on Server
+  const handleGenerateAIDraft = async () => {
+    if (!aiSolution.trim()) {
+      setAiError(language === 'en' 
+        ? 'Please describe your solution or idea to proceed.' 
+        : 'Per favore, descrivi la tua idea o soluzione proposta per procedere.');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError(null);
+    setSubmitMessage(null);
+
+    try {
+      const res = await safeFetch('/api/democracy/ai-draft-proposal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          problem: aiProblem.trim(),
+          solution: aiSolution.trim(),
+          benefits: aiBenefits.trim(),
+          category: newCategory
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setNewTitle(data.data.title || '');
+        setNewDescription(data.data.description || '');
+        setNewContent(data.data.content || '');
+        setDraftMode('manual'); // Switch to editor mode so they can review and modify it!
+        setSubmitMessage({
+          type: 'success',
+          text: language === 'en'
+            ? '🪄 Proposal drafted successfully by Gemini! We formatted it into formal articles below. Feel free to revise, edit and sponsor it!'
+            : '🪄 Bozza legislativa strutturata dall\'AI con successo! Abbiamo articolato la tua idea in moduli normativi formali. Controllala qui sotto, modificala se vuoi, e depositala ufficialmente!'
+        });
+      } else {
+        setAiError(data.message || 'Errore di elaborazione da parte dell\'AI.');
+      }
+    } catch (err: any) {
+      setAiError(language === 'en'
+        ? 'Connection error: ' + (err.message || 'AI service down.')
+        : 'Errore di connessione: ' + (err.message || 'Servizio AI non raggiungibile.'));
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   // Submit law proposal
   const handleSubmitProposal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!citizen) return;
 
-    if (!newTitle.trim() || !newContent.trim()) {
-      setSubmitMessage({ type: 'error', text: 'Compilare il titolo e il testo legislativo completo.' });
+    const contentToSubmit = draftMode === 'simple'
+      ? `======================================================
+PROPOSTA POPOLARE DIRETTA (FORMATO SEMPLICE ED IMMEDIATO)
+======================================================
+
+AUTORE PROPONENTE: ${citizen.firstName || citizen.firstname} ${citizen.surname}
+CATEGORIA: ${newCategory}
+
+DESCRIZIONE SINTETICA:
+${newDescription.trim() || 'Nessuna descrizione specificata'}
+
+TESTO DELLA PROPOSTA (IDEA PRINCIPALE):
+${simpleIdeaText.trim()}
+
+------------------------------------------------------
+Nota: Questa proposta è stata presentata in modalità semplificata.
+I cittadini della nazione possono discuterne e raffinarla direttamente nel forum sovrano.
+======================================================`
+      : newContent.trim();
+
+    const titleToSubmit = newTitle.trim();
+    if (!titleToSubmit) {
+      setSubmitMessage({ 
+        type: 'error', 
+        text: language === 'en' ? 'Proposal Title is required.' : 'Il titolo dell\'iniziativa è obbligatorio.' 
+      });
+      return;
+    }
+
+    if (draftMode === 'simple' && !simpleIdeaText.trim()) {
+      setSubmitMessage({ 
+        type: 'error', 
+        text: language === 'en' ? 'Proposal idea text is required.' : 'Il testo dell\'idea semplificata è obbligatorio.' 
+      });
+      return;
+    }
+
+    if (draftMode !== 'simple' && !contentToSubmit) {
+      setSubmitMessage({ 
+        type: 'error', 
+        text: language === 'en' ? 'Full legislative content is required.' : 'È richiesto il testo legislativo completo suddiviso in articoli.' 
+      });
       return;
     }
 
@@ -265,9 +404,9 @@ export default function DemocracyPortal() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: newTitle.trim(),
-          description: newDescription.trim(),
-          content: newContent.trim(),
+          title: titleToSubmit,
+          description: newDescription.trim() || (draftMode === 'simple' ? 'Proposta semplificata presentata da cittadino sovrano' : ''),
+          content: contentToSubmit,
           category: newCategory,
           citizen_id: citizen.id
         })
@@ -277,12 +416,18 @@ export default function DemocracyPortal() {
       if (res.ok && data.success) {
         setSubmitMessage({ 
           type: 'success', 
-          text: 'La tua iniziativa popolare è stata inserita nel registro sovrano ed è ora in attesa di convalida!' 
+          text: language === 'en' 
+            ? 'Your initiative has been submitted successfully in the Sovereign Ledger and is awaiting administrative validation!'
+            : 'La tua iniziativa popolare è stata inserita nel registro sovrano ed è ora in attesa di convalida!' 
         });
         // Clear fields
         setNewTitle('');
         setNewDescription('');
         setNewContent('');
+        setSimpleIdeaText('');
+        setAiProblem('');
+        setAiSolution('');
+        setAiBenefits('');
         // Refresh proposals list in background
         fetchProposals();
       } else {
@@ -377,6 +522,7 @@ export default function DemocracyPortal() {
         setAdminRejectionReason('');
         setSelectedProposal(null);
         await fetchProposals();
+        await fetchAlbo();
       } else {
         alert(data.message || 'Errore durante la convalida amministrativa.');
       }
@@ -650,6 +796,18 @@ export default function DemocracyPortal() {
                   {language === 'en' ? 'Sovereign Archive' : 'Archivio Referendum'}
                 </button>
 
+                <button
+                  onClick={() => { setSubTab('albo'); setSelectedProposal(null); fetchAlbo(); }}
+                  id="tab-democracy-albo-btn"
+                  className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 flex items-center gap-1.5 cursor-pointer ${subTab === 'albo' ? 'bg-[#0a1c3e] text-white shadow' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-brand-gold" />
+                  {language === 'en' ? 'Official Albo Gazette' : 'Albo delle Votazioni'}
+                  {alboItems.length > 0 && (
+                    <span className="bg-brand-gold text-[#0a1c3e] text-[9px] px-1.5 py-0.5 rounded-full font-bold font-sans ml-1">{alboItems.length}</span>
+                  )}
+                </button>
+
                 {isAdmin && (
                   <button
                     onClick={() => { setSubTab('admin'); setSelectedProposal(null); }}
@@ -666,7 +824,7 @@ export default function DemocracyPortal() {
               </div>
 
               {/* Barra di Ricerca e Categoria */}
-              {subTab !== 'new' && (
+              {subTab !== 'new' && subTab !== 'albo' && (
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -1052,96 +1210,481 @@ export default function DemocracyPortal() {
               </div>
             )}
 
+            {/* SUBTAB: ALBO PRETORIO */}
+            {subTab === 'albo' && (
+              <div className="max-w-4xl mx-auto space-y-6 text-left animate-fade-in" id="albo-pretorio-pane">
+                {/* Header d'effetto */}
+                <div className="bg-gradient-to-br from-[#0a1c3e] to-[#040c1a] border-2 border-brand-gold/40 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden shadow-xl">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                  
+                  <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-brand-gold text-[10px] font-bold uppercase tracking-widest font-tech">
+                        <Award className="w-4 h-4 text-brand-gold animate-bounce" /> Registro Federale Pubblico dello "New World State"
+                      </div>
+                      <h3 className="font-serif text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-tight">
+                        {language === 'en' ? 'Official Voting Bulletin Notice Board' : 'Albo delle Votazioni convalidate'}
+                      </h3>
+                      <p className="text-slate-300 text-xs mt-1 max-w-xl leading-relaxed">
+                        Ai sensi della Costituzione di Ginevra, in questa sezione vengono solennemente pubblicati i decreti di indizione referendaria, i quesiti convalidati e i precisi termini temporali delle votazioni approvate dal Consiglio.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-brand-gold/10 text-brand-gold border border-brand-gold/30 px-4 py-3 rounded-xl text-center flex-shrink-0">
+                      <div className="font-tech text-[10px] font-bold uppercase tracking-wider">{language === 'en' ? 'STATE BULLETIN' : 'BOLLETTINO UFFICIALE'}</div>
+                      <div className="text-xl font-serif font-extrabold tracking-tight mt-1">NWS-GAZETTE</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Loading o Errore */}
+                {alboLoading ? (
+                  <div className="py-16 text-center text-slate-400">
+                    <Loader2 className="w-8 h-8 animate-spin text-brand-gold mx-auto mb-3" />
+                    <p className="font-serif italic text-xs">{language === 'en' ? 'Loading Gazette entries...' : 'Caricamento dell\'Albo Pretorio in corso...'}</p>
+                  </div>
+                ) : alboError ? (
+                  <div className="bg-rose-50 border border-rose-100 text-rose-600 p-4 rounded-xl text-xs flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{alboError}</span>
+                  </div>
+                ) : alboItems.length === 0 ? (
+                  <div className="border border-dashed border-slate-200 bg-slate-50 p-12 rounded-2xl text-center text-slate-400">
+                    <Inbox className="w-8 h-8 mx-auto mb-3 text-slate-300" />
+                    <p className="text-xs font-serif italic mb-1">{language === 'en' ? 'Notice Board Empty' : 'Albo delle Votazioni Libero da Annunci'}</p>
+                    <p className="text-[11px] text-slate-400">{language === 'en' ? 'No votings have been scheduled or convalidated yet.' : 'Nessuna votazione è stata ancora programmata o convalidata.'}</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {alboItems.map((item) => {
+                      const now = new Date();
+                      const starts = new Date(item.voting_starts_at);
+                      const ends = new Date(item.voting_ends_at);
+                      
+                      let statusBadge = (
+                        <span className="bg-amber-100/85 text-amber-800 border border-amber-200 text-[10px] font-extrabold uppercase font-tech px-2.5 py-1 rounded-md tracking-wider">
+                          {language === 'en' ? 'Scheduled' : 'Programmata'}
+                        </span>
+                      );
+                      
+                      if (now >= starts && now <= ends) {
+                        statusBadge = (
+                          <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold uppercase font-tech px-2.5 py-1 rounded-md tracking-wider animate-pulse flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block"></span>
+                            {language === 'en' ? 'Voting Live' : 'In Corso'}
+                          </span>
+                        );
+                      } else if (now > ends) {
+                        statusBadge = (
+                          <span className="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-bold uppercase font-tech px-2.5 py-1 rounded-md tracking-wider">
+                            {language === 'en' ? 'Completed' : 'Votazione Conclusa'}
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <div 
+                          key={item.id} 
+                          className="bg-[#faf9f6] border border-brand-gold/25 rounded-xl p-5 shadow-sm hover:shadow relative overflow-hidden flex flex-col justify-between"
+                          style={{ backgroundImage: 'radial-gradient(rgba(217, 119, 6, 0.02) 1px, transparent 0)', backgroundSize: '24px 24px' }}
+                        >
+                          {/* Top Border Accent */}
+                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-brand-gold/40"></div>
+
+                          {/* Stamp di Validità */}
+                          <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-brand-gold/5 rounded-full border border-dashed border-brand-gold/10 flex items-center justify-center -rotate-12 pointer-events-none select-none">
+                            <span className="text-[10px] font-tech font-extrabold text-brand-gold/20 tracking-widest uppercase">PUBBLICATO</span>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="text-[10px] font-mono font-bold text-brand-gold uppercase tracking-wider block">
+                                REGISTRO ATTI: #{item.id} • NWS-{item.proposal_id}
+                              </div>
+                              {statusBadge}
+                            </div>
+
+                            <div>
+                              <h4 className="font-serif text-base font-bold text-brand-blue tracking-tight leading-snug">
+                                {item.title}
+                              </h4>
+                              <p className="text-[10px] text-slate-400 mt-1 italic">
+                                {language === 'en' ? 'Announced on: ' : 'Pubblicato il: '} 
+                                {new Date(item.published_at).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}
+                              </p>
+                            </div>
+
+                            <hr className="border-brand-gold/15" />
+
+                            <div className="space-y-2 bg-white/70 p-3 rounded-lg border border-slate-100">
+                              <h5 className="text-[9px] font-bold uppercase tracking-widest text-[#475569] font-tech">CONDIZIONI E LIMITI DI TEMPO:</h5>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <span className="text-slate-400 text-[10px] block font-medium">{language === 'en' ? 'Start Date:' : 'Apertura Seggio:'}</span>
+                                  <span className="font-mono text-brand-blue font-bold text-[11px]">
+                                    {starts.toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-slate-400 text-[10px] block font-medium">{language === 'en' ? 'End Date:' : 'Chiusura Seggio:'}</span>
+                                  <span className="font-mono text-brand-blue font-bold text-[11px]">
+                                    {ends.toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-5 pt-3 border-t border-slate-150 flex justify-between items-center text-[10px] font-medium text-slate-400">
+                            <span>REGISTRO ELETTORALE NWS</span>
+                            <span className="flex items-center gap-1 text-slate-500 font-bold uppercase tracking-wide">
+                              <Clock className="w-3 h-3" /> {starts > now ? (language === 'en' ? 'Scheduled' : 'In Attesa') : ends < now ? (language === 'en' ? 'Completed' : 'Concluso') : (language === 'en' ? 'Vote Now' : 'Vota Adesso')}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* SUBTAB: SUBMIT NEW PROPOSAL */}
             {subTab === 'new' && (
               <div className="max-w-2xl mx-auto bg-slate-50 rounded-2xl border border-slate-150 p-6 md:p-8 text-left animate-fade-in" id="submit-proposal-pane">
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 rounded-full bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold">
                     <PlusCircle className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-serif text-lg font-bold text-brand-blue tracking-tight leading-none">{language === 'en' ? 'Draft Bill Initiative' : 'Disegna una Nuova Iniziativa Legislativa'}</h3>
-                    <p className="text-slate-500 text-[11px] mt-1">Presenta e redigi una proposta di legge da sottoporre all'intera cittadinanza del New World State.</p>
+                    <h3 className="font-serif text-lg font-bold text-brand-blue tracking-tight leading-none">
+                      {language === 'en' ? 'Sovereign Proposal Initiative' : 'Disegna una Nuova Iniziativa Legislativa'}
+                    </h3>
+                    <p className="text-slate-500 text-[11px] mt-1">
+                      {language === 'en' 
+                        ? 'Present your idea or draft a legislative proposal to the citizens of New World State.' 
+                        : 'Presenta una semplice idea o redigi una proposta strutturata da sottoporre all\'intera cittadinanza.'}
+                    </p>
                   </div>
                 </div>
 
+                {/* DRAFTING MODE TABS (FOR DUMMIES WIZARD SELECTOR) */}
+                <div className="bg-slate-200/60 p-1 rounded-xl flex gap-1 mb-5" id="draft-mode-selector">
+                  <button
+                    type="button"
+                    onClick={() => setDraftMode('ai')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                      draftMode === 'ai' 
+                        ? 'bg-brand-blue text-white shadow font-bold' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                    <span>AI Co-Pilot</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDraftMode('simple')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                      draftMode === 'simple' 
+                        ? 'bg-brand-blue text-white shadow font-bold' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Lightbulb className="w-3.5 h-3.5 shrink-0" />
+                    <span>{language === 'en' ? 'Simple Idea' : 'Idea Semplice'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDraftMode('manual')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-150 cursor-pointer ${
+                      draftMode === 'manual' 
+                        ? 'bg-brand-blue text-white shadow font-bold' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <PenTool className="w-3.5 h-3.5 shrink-0" />
+                    <span>{language === 'en' ? 'Manual Draft' : 'Bozza Manuale'}</span>
+                  </button>
+                </div>
+
                 <form onSubmit={handleSubmitProposal} className="space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Categoria della Delibera</label>
-                      <select
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                        className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue cursor-pointer"
+                  {/* WIZARD SCENARIO A: AI-CO-PILOT WIZARD */}
+                  {draftMode === 'ai' && (
+                    <div className="space-y-4 bg-white p-5 rounded-xl border border-dashed border-slate-300 shadow-sm" id="ai-wizard-pane">
+                      <div className="flex items-center gap-2 mb-2 text-brand-gold">
+                        <Sparkles className="w-4 h-4 shrink-0 animate-pulse" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest font-tech">Processo Guidato AI "For Dummies"</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Categoria della Delibera</label>
+                          <select
+                            value={newCategory}
+                            onChange={(e) => setNewCategory(e.target.value)}
+                            className="w-full bg-slate-50 border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue cursor-pointer"
+                          >
+                            <option value="Costituzionale">Costituzionale (Revisione Carta)</option>
+                            <option value="Diritti Civili">Diritti Civili & Welfare</option>
+                            <option value="Tecnologia & Rete">Tecnologia, Identità & Digitale</option>
+                            <option value="Ambiente & Clima">Ambiente, Clima & Sostenibilità</option>
+                            <option value="Politica Estera">Diplomazia & Politica Estera</option>
+                            <option value="Generale">Amministrazione Generale</option>
+                          </select>
+                        </div>
+                        <div className="flex items-end text-slate-400 text-[11px] pb-2 italic">
+                          <span>Seleziona l'argomento principale della tua iniziativa.</span>
+                        </div>
+                      </div>
+
+                      <hr className="border-slate-100" />
+
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-[10px] text-brand-blue font-bold uppercase tracking-wider mb-1">
+                            1. Che problema o esigenza vuoi risolvere nella nostra nazione digitale?
+                          </label>
+                          <span className="block text-[10px] text-slate-400 mb-1.5">Spiega semplicemente di cosa si tratta, in parole tue.</span>
+                          <textarea 
+                            placeholder="es: I cittadini viaggiano molto ma non hanno un modo facile per mostrare la propria nazionalità digitale all'estero tramite API sicure e NFC..."
+                            value={aiProblem}
+                            onChange={(e) => setAiProblem(e.target.value)}
+                            rows={2}
+                            className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl p-3 text-xs outline-none transition text-brand-blue placeholder-slate-400 leading-relaxed"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] text-brand-blue font-bold uppercase tracking-wider mb-1">
+                            2. Qual è la tua idea o soluzione proposta? <span className="text-rose-500 font-bold">*</span>
+                          </label>
+                          <span className="block text-[10px] text-slate-400 mb-1.5">Spiega brevemente la tua idea. L'AI la tradurrà in veri articoli normativi per te.</span>
+                          <textarea 
+                            required={draftMode === 'ai'}
+                            placeholder="es: Suggerisco di aggiungere un modulo ID crittografico esportabile e integrabile con Apple/Google Wallet con chiavi asimmetriche anonime..."
+                            value={aiSolution}
+                            onChange={(e) => setAiSolution(e.target.value)}
+                            rows={3}
+                            className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl p-3 text-xs outline-none transition text-brand-blue placeholder-slate-400 leading-relaxed"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] text-brand-blue font-bold uppercase tracking-wider mb-1">
+                            3. Quali saranno i vantaggi pratici per la comunità?
+                          </label>
+                          <span className="block text-[10px] text-slate-400 mb-1.5">Quali benefici speri di portare con questo cambiamento?</span>
+                          <textarea 
+                            placeholder="es: Trasparenza, facilità nei viaggi con passaporto elettronico sovrano, zero tracciamento dei cittadini e integrazioni automatiche..."
+                            value={aiBenefits}
+                            onChange={(e) => setAiBenefits(e.target.value)}
+                            rows={2}
+                            className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl p-3 text-xs outline-none transition text-brand-blue placeholder-slate-400 leading-relaxed"
+                          />
+                        </div>
+                      </div>
+
+                      {aiError && (
+                        <div className="p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0" />
+                          <span>{aiError}</span>
+                        </div>
+                      )}
+
+                      {submitMessage && (
+                        <div className={`p-4 rounded-xl border text-xs flex items-start gap-2 ${submitMessage.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-500'}`}>
+                          {submitMessage.type === 'success' ? <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                          <span>{submitMessage.text}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleGenerateAIDraft}
+                        disabled={aiLoading}
+                        className="w-full bg-brand-gold hover:bg-amber-400 text-brand-blue py-3.5 rounded-xl font-bold text-xs tracking-wider uppercase transition-all duration-150 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow border-b-4 border-amber-600 font-tech"
                       >
-                        <option value="Costituzionale">Costituzionale (Revisione Carta)</option>
-                        <option value="Diritti Civili">Diritti Civili & Welfare</option>
-                        <option value="Tecnologia & Rete">Tecnologia, Identità & Digitale</option>
-                        <option value="Ambiente & Clima">Ambiente, Clima & Sostenibilità</option>
-                        <option value="Politica Estera">Diplomazia & Politica Estera</option>
-                        <option value="Generale">Amministrazione Generale</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Titolo dell'Iniziativa</label>
-                      <input 
-                        type="text"
-                        required
-                        placeholder="es: Carta dei Diritti del Cittadino Digitale..."
-                        value={newTitle}
-                        onChange={(e) => setNewTitle(e.target.value)}
-                        id="new-proposal-title"
-                        className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue placeholder-slate-400"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Introduzione Breve (Sintesi)</label>
-                    <input 
-                      type="text"
-                      placeholder="Fornisci un riassunto di 1-2 righe per descrivere lo scopo essenziale del documento"
-                      value={newDescription}
-                      onChange={(e) => setNewDescription(e.target.value)}
-                      id="new-proposal-desc"
-                      className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue placeholder-slate-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Testo Legislativo Integrale (Articoli ed effetti)</label>
-                    <textarea 
-                      required
-                      placeholder="Specifica in modo preciso il testo normativo in articoli (es: Articolo 1 - Ogni cittadino...). Sii formale, esaustivo e chiaro."
-                      value={newContent}
-                      onChange={(e) => setNewContent(e.target.value)}
-                      id="new-proposal-content"
-                      rows={8}
-                      className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl p-4 text-xs outline-none transition text-brand-blue placeholder-slate-400 font-sans whitespace-pre-wrap leading-relaxed"
-                    />
-                  </div>
-
-                  {submitMessage && (
-                    <div className={`p-4 rounded-xl border text-xs flex items-start gap-2 ${submitMessage.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-500'}`}>
-                      {submitMessage.type === 'success' ? <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
-                      <span>{submitMessage.text}</span>
+                        {aiLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Generazione Bozza in Articoli...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 shrink-0" />
+                            <span>Genera Bozza in Articoli con AI</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   )}
 
-                  <button
-                    type="submit"
-                    disabled={submitLoading}
-                    id="submit-proposal-btn"
-                    className="w-full bg-brand-blue hover:bg-[#071530] text-white py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border-b-4 border-brand-gold"
-                  >
-                    {submitLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> {language === 'en' ? 'Submitting Initiative...' : 'Registrazione Proposta nel Registro...'}
-                      </>
-                    ) : (
-                      language === 'en' ? 'Sponsor & Propose Bill' : 'Sottoscrivi e Deposita Proposta di Legge'
-                    )}
-                  </button>
+                  {/* WIZARD SCENARIO B: SIMPLE IDEA (PETITION) */}
+                  {draftMode === 'simple' && (
+                    <div className="space-y-4" id="simple-idea-pane">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Categoria della Delibera</label>
+                          <select
+                            value={newCategory}
+                            onChange={(e) => setNewCategory(e.target.value)}
+                            className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue cursor-pointer"
+                          >
+                            <option value="Costituzionale">Costituzionale (Revisione Carta)</option>
+                            <option value="Diritti Civili">Diritti Civili & Welfare</option>
+                            <option value="Tecnologia & Rete">Tecnologia, Identità & Digitale</option>
+                            <option value="Ambiente & Clima">Ambiente, Clima & Sostenibilità</option>
+                            <option value="Politica Estera">Diplomazia & Politica Estera</option>
+                            <option value="Generale">Amministrazione Generale</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Titolo Semplice dell'Iniziativa</label>
+                          <input 
+                            type="text"
+                            required
+                            placeholder="es: Semplificare i requisiti di voto elettronico..."
+                            value={newTitle}
+                            onChange={(e) => setNewTitle(e.target.value)}
+                            className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue placeholder-slate-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Sintesi Breve (1 riga)</label>
+                        <input 
+                          type="text"
+                          placeholder="Fornisci una sintesi lampo della tua idea."
+                          value={newDescription}
+                          onChange={(e) => setNewDescription(e.target.value)}
+                          className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue placeholder-slate-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">La tua idea in poche righe d'effetto</label>
+                        <textarea 
+                          required
+                          placeholder="Esponi liberamente e semplicemente la tua idea. Non preoccuparti del formato legale o delle formule in articoli: qui basta descrivere onestamente il bene comune che vuoi realizzare."
+                          value={simpleIdeaText}
+                          onChange={(e) => setSimpleIdeaText(e.target.value)}
+                          rows={8}
+                          className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl p-4 text-xs outline-none transition text-brand-blue placeholder-slate-400 font-sans whitespace-pre-wrap leading-relaxed focus:ring-brand-gold/30"
+                        />
+                      </div>
+
+                      {submitMessage && (
+                        <div className={`p-4 rounded-xl border text-xs flex items-start gap-2 ${submitMessage.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-500'}`}>
+                          {submitMessage.type === 'success' ? <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                          <span>{submitMessage.text}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={submitLoading}
+                        className="w-full bg-brand-blue hover:bg-[#071530] text-white py-3.5 rounded-xl font-bold text-xs tracking-widest uppercase transition-all duration-150 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border-b-4 border-brand-gold"
+                      >
+                        {submitLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" /> {language === 'en' ? 'Submitting Idea...' : 'Sottomissione Bozza Semplificata...'}
+                          </>
+                        ) : (
+                          language === 'en' ? 'Submit Simple Idea' : 'Sottoscrivi e Deposita Idea Semplice'
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* WIZARD SCENARIO C: MANUAL BILL DRAFTING */}
+                  {draftMode === 'manual' && (
+                    <div className="space-y-4" id="manual-articles-pane">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Categoria della Delibera</label>
+                          <select
+                            value={newCategory}
+                            onChange={(e) => setNewCategory(e.target.value)}
+                            className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue cursor-pointer"
+                          >
+                            <option value="Costituzionale">Costituzionale (Revisione Carta)</option>
+                            <option value="Diritti Civili">Diritti Civili & Welfare</option>
+                            <option value="Tecnologia & Rete">Tecnologia, Identità & Digitale</option>
+                            <option value="Ambiente & Clima">Ambiente, Clima & Sostenibilità</option>
+                            <option value="Politica Estera">Diplomazia & Politica Estera</option>
+                            <option value="Generale">Amministrazione Generale</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Titolo dell'Iniziativa Legislativa</label>
+                          <input 
+                            type="text"
+                            required
+                            placeholder="es: Carta dei Diritti del Cittadino Digitale..."
+                            value={newTitle}
+                            onChange={(e) => setNewTitle(e.target.value)}
+                            className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue placeholder-slate-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">Introduzione Breve (Sintesi)</label>
+                        <input 
+                          type="text"
+                          placeholder="Fornisci un riassunto di 1-2 righe per descrivere lo scopo essenziale del documento"
+                          value={newDescription}
+                          onChange={(e) => setNewDescription(e.target.value)}
+                          className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue placeholder-slate-400"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest font-tech font-bold text-brand-gold flex items-center gap-1">
+                            <span>Testo Legislativo Integrale (Articoli ed effetti)</span>
+                          </label>
+                          {newContent && (
+                            <span className="text-[9px] bg-brand-gold/15 text-brand-gold/80 px-2 py-0.5 rounded uppercase font-bold tracking-wider font-tech animate-pulse">
+                              🪄 Elaborato/Modificabile da AI
+                            </span>
+                          )}
+                        </div>
+                        <textarea 
+                          required
+                          placeholder="Specifica in modo preciso il testo normativo codificato in articoli (es: Articolo 1 - Ogni cittadino...). Sii formale, esaustivo e chiaro."
+                          value={newContent}
+                          onChange={(e) => setNewContent(e.target.value)}
+                          rows={10}
+                          className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl p-4 text-xs outline-none transition text-brand-blue placeholder-slate-400 font-sans whitespace-pre-wrap leading-relaxed focus:ring-brand-gold/30"
+                        />
+                      </div>
+
+                      {submitMessage && (
+                        <div className={`p-4 rounded-xl border text-xs flex items-start gap-2 ${submitMessage.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-500'}`}>
+                          {submitMessage.type === 'success' ? <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                          <span>{submitMessage.text}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={submitLoading}
+                        className="w-full bg-brand-blue hover:bg-[#071530] text-white py-3.5 rounded-xl font-bold text-xs tracking-widest uppercase transition-all duration-150 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border-b-4 border-brand-gold"
+                      >
+                        {submitLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" /> {language === 'en' ? 'Submitting Bill...' : 'Registrazione Proposta nel Registro...'}
+                          </>
+                        ) : (
+                          language === 'en' ? 'Sponsor & Propose Bill' : 'Sottoscrivi e Deposita Testo in Articoli'
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </form>
               </div>
             )}
