@@ -391,9 +391,12 @@ export default function RegisterForm() {
   
   const [photoMode, setPhotoMode] = useState<'camera' | 'upload'>('camera');
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraActiveType, setCameraActiveType] = useState<'front' | 'back' | 'photo' | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoFrontRef = useRef<HTMLVideoElement | null>(null);
+  const videoBackRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     return () => {
@@ -409,24 +412,40 @@ export default function RegisterForm() {
     }
   }, [step]);
 
-  const startCamera = async () => {
+  const startCamera = async (type: 'front' | 'back' | 'photo' = 'photo') => {
     setCameraError(null);
+    stopCamera();
+    setCameraActiveType(type);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'user',
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        } 
-      });
+      const isDocument = type === 'front' || type === 'back';
+      const constraints = {
+        video: {
+          facingMode: isDocument ? 'environment' : 'user',
+          width: { ideal: isDocument ? 1280 : 640 },
+          height: { ideal: isDocument ? 720 : 480 }
+        }
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       setCameraStream(stream);
       setIsCameraActive(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
     } catch (err: any) {
       console.error('Errore avvio fotocamera:', err);
-      setCameraError('Impossibile accedere alla fotocamera. Verifica i permessi o carica un file.');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+        setCameraStream(stream);
+        setIsCameraActive(true);
+      } catch (errFallback) {
+        console.error('Fallback fotocamera fallito:', errFallback);
+        setCameraError(language === 'en' 
+          ? 'Unable to access camera. Please check permissions or upload a file.' 
+          : 'Impossibile accedere alla fotocamera. Verifica i permessi o carica un file.');
+      }
     }
   };
 
@@ -436,6 +455,7 @@ export default function RegisterForm() {
       setCameraStream(null);
     }
     setIsCameraActive(false);
+    setCameraActiveType(null);
   };
 
   const capturePhoto = () => {
@@ -495,11 +515,44 @@ export default function RegisterForm() {
     }
   };
 
-  useEffect(() => {
-    if (isCameraActive && cameraStream && videoRef.current) {
-      videoRef.current.srcObject = cameraStream;
+  const captureDocumentPhoto = (type: 'front' | 'back') => {
+    const videoElement = type === 'front' ? videoFrontRef.current : videoBackRef.current;
+    if (videoElement) {
+      const originalW = videoElement.videoWidth || 1280;
+      const originalH = videoElement.videoHeight || 720;
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = originalW;
+      canvas.height = originalH;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Draw unmirrored so ID reading/OCR text goes from left to right properly
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        if (type === 'front') {
+          setPreviews(prev => ({ ...prev, front: dataUrl }));
+          setFormData(prev => ({ ...prev, documentFront: null }));
+        } else {
+          setPreviews(prev => ({ ...prev, back: dataUrl }));
+          setFormData(prev => ({ ...prev, documentBack: null }));
+        }
+        stopCamera();
+      }
     }
-  }, [isCameraActive, cameraStream]);
+  };
+
+  useEffect(() => {
+    if (isCameraActive && cameraStream) {
+      if (cameraActiveType === 'front' && videoFrontRef.current) {
+        videoFrontRef.current.srcObject = cameraStream;
+      } else if (cameraActiveType === 'back' && videoBackRef.current) {
+        videoBackRef.current.srcObject = cameraStream;
+      } else if (cameraActiveType === 'photo' && videoRef.current) {
+        videoRef.current.srcObject = cameraStream;
+      }
+    }
+  }, [isCameraActive, cameraStream, cameraActiveType]);
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const calculateFileHash = async (file: File): Promise<string> => {
@@ -964,12 +1017,16 @@ export default function RegisterForm() {
         }
         return true;
       case 5:
-        if (!formData.documentFront) {
-          setError('È necessario caricare almeno il fronte del documento.');
+        if (!formData.documentFront && !previews.front) {
+          setError(language === 'en' 
+            ? 'It is required to upload or capture the front of the document.' 
+            : 'È necessario caricare o scattare una foto del fronte del documento.');
           return false;
         }
-        if (formData.documentType !== 'PASSPORT' && !formData.documentBack) {
-          setError('Per questo tipo di documento è richiesto anche il caricamento del retro.');
+        if (formData.documentType !== 'PASSPORT' && !formData.documentBack && !previews.back) {
+          setError(language === 'en'
+            ? 'For this document type, it is also required to upload or capture the back.'
+            : 'Per questo tipo di documento è richiesto anche il caricamento o lo scatto del retro.');
           return false;
         }
         if (!formData.documentPhoto && !previews.photo) {
@@ -1126,10 +1183,16 @@ export default function RegisterForm() {
       if (formData.documentFront) {
         documentFrontData = await fileToBase64(formData.documentFront);
         documentFrontName = formData.documentFront.name;
+      } else if (previews.front) {
+        documentFrontData = previews.front;
+        documentFrontName = 'fronte_scatto.jpg';
       }
       if (formData.documentBack) {
         documentBackData = await fileToBase64(formData.documentBack);
         documentBackName = formData.documentBack.name;
+      } else if (previews.back) {
+        documentBackData = previews.back;
+        documentBackName = 'retro_scatto.jpg';
       }
       if (formData.documentPhoto) {
         const converted = await photoFileToJpegBase64(formData.documentPhoto);
@@ -2231,102 +2294,216 @@ export default function RegisterForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('uploadFront')}</label>
-                    <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && !formData.documentFront ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
-                      <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
-                        <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-brand-blue truncate px-2">
-                          {formData.documentFront 
-                            ? formData.documentFront.name 
-                            : (language === 'en' ? 'Select Front' : 'Seleziona Fronte')}
-                        </p>
-                        <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
-                      </div>
-                      <input 
-                        type="file" 
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={async e => {
-                          const file = e.target.files?.[0] || null;
-                          if (file) {
-                            const hash = await calculateFileHash(file);
-                            setFormData({ ...formData, documentFront: file, documentHash: hash });
-                            if (file.type.startsWith('image/')) {
-                              setPreviews(prev => ({ ...prev, front: URL.createObjectURL(file) }));
-                            }
-                          } else {
-                            setFormData({ ...formData, documentFront: null, documentHash: '' });
-                            setPreviews(prev => ({ ...prev, front: null }));
-                          }
-                        }}
-                      />
-                      {previews.front && (
-                        <div className="mt-2 relative h-32 w-full rounded-lg overflow-hidden border border-brand-gold/20">
-                          <img src={previews.front} alt="Fronte" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                          <button 
-                            className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviews(prev => ({ ...prev, front: null }));
-                              setFormData(prev => ({ ...prev, documentFront: null, documentHash: '' }));
-                            }}
-                          >
-                            <AlertCircle className="w-3 h-3" />
-                          </button>
-                        </div>
+                    <div className="flex justify-between items-center px-1">
+                      <label className="text-[10px] uppercase font-bold text-muted">{t('uploadFront')}</label>
+                      {(!previews.front && cameraActiveType !== 'front') && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startCamera('front');
+                          }}
+                          className="text-[10px] font-bold text-brand-blue hover:text-brand-gold flex items-center gap-1 bg-brand-blue/5 px-2.5 py-1 rounded-lg transition-colors border border-brand-blue/10"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          {language === 'en' ? 'Take Photo' : 'Scatta Foto'}
+                        </button>
                       )}
                     </div>
+
+                    {cameraActiveType === 'front' ? (
+                      <div className="relative border-2 border-brand-gold rounded-2xl overflow-hidden h-48 bg-black flex flex-col justify-end">
+                        <video
+                          ref={videoFrontRef}
+                          autoPlay
+                          playsInline
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="relative z-10 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              captureDocumentPhoto('front');
+                            }}
+                            className="px-3.5 py-1.5 bg-brand-gold text-brand-blue text-[10px] font-bold rounded-lg shadow-md hover:bg-brand-gold/90 flex items-center gap-1"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            {language === 'en' ? 'Capture' : 'Scatta'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              stopCamera();
+                            }}
+                            className="px-3 py-1.5 bg-gray-800 text-white text-[10px] font-medium rounded-lg shadow-md hover:bg-gray-700"
+                          >
+                            {language === 'en' ? 'Cancel' : 'Annulla'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && !formData.documentFront && !previews.front ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
+                        {!previews.front ? (
+                          <>
+                            <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
+                              <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-brand-blue truncate px-2">
+                                {language === 'en' ? 'Select Front' : 'Seleziona Fronte'}
+                              </p>
+                              <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
+                            </div>
+                            <input 
+                              type="file" 
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={async e => {
+                                const file = e.target.files?.[0] || null;
+                                if (file) {
+                                  const hash = await calculateFileHash(file);
+                                  setFormData({ ...formData, documentFront: file, documentHash: hash });
+                                  if (file.type.startsWith('image/')) {
+                                    setPreviews(prev => ({ ...prev, front: URL.createObjectURL(file) }));
+                                  }
+                                } else {
+                                  setFormData({ ...formData, documentFront: null, documentHash: '' });
+                                  setPreviews(prev => ({ ...prev, front: null }));
+                                }
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <div className="relative h-32 w-full rounded-lg overflow-hidden border border-brand-gold/20">
+                            <img src={previews.front} alt="Fronte" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <button 
+                              type="button"
+                              className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 hover:scale-105 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviews(prev => ({ ...prev, front: null }));
+                                setFormData(prev => ({ ...prev, documentFront: null, documentHash: '' }));
+                              }}
+                            >
+                              <AlertCircle className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        {previews.front && !formData.documentFront && previews.front.startsWith('data:') && (
+                          <p className="text-[9px] text-green-600 font-medium">
+                            {language === 'en' ? 'Snapshot saved in memory' : 'Istantanea salvata in memoria'}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('uploadBack')}</label>
-                    <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && formData.documentType !== 'PASSPORT' && !formData.documentBack ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
-                      <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
-                        <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-brand-blue truncate px-2">
-                          {formData.documentBack 
-                            ? formData.documentBack.name 
-                            : (language === 'en' ? 'Select Back' : 'Seleziona Retro')}
-                        </p>
-                        <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
-                      </div>
-                      <input 
-                        type="file" 
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={e => {
-                          const file = e.target.files?.[0] || null;
-                          if (file) {
-                            setFormData({ ...formData, documentBack: file });
-                            if (file.type.startsWith('image/')) {
-                              setPreviews(prev => ({ ...prev, back: URL.createObjectURL(file) }));
-                            }
-                          } else {
-                            setFormData({ ...formData, documentBack: null });
-                            setPreviews(prev => ({ ...prev, back: null }));
-                          }
-                        }}
-                      />
-                      {previews.back && (
-                        <div className="mt-2 relative h-32 w-full rounded-lg overflow-hidden border border-brand-gold/20">
-                          <img src={previews.back} alt="Retro" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                          <button 
-                            className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviews(prev => ({ ...prev, back: null }));
-                              setFormData(prev => ({ ...prev, documentBack: null }));
-                            }}
-                          >
-                            <AlertCircle className="w-3 h-3" />
-                          </button>
-                        </div>
+                    <div className="flex justify-between items-center px-1">
+                      <label className="text-[10px] uppercase font-bold text-muted">{t('uploadBack')}</label>
+                      {(!previews.back && cameraActiveType !== 'back' && formData.documentType !== 'PASSPORT') && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startCamera('back');
+                          }}
+                          className="text-[10px] font-bold text-brand-blue hover:text-brand-gold flex items-center gap-1 bg-brand-blue/5 px-2.5 py-1 rounded-lg transition-colors border border-brand-blue/10"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          {language === 'en' ? 'Take Photo' : 'Scatta Foto'}
+                        </button>
                       )}
                     </div>
+
+                    {cameraActiveType === 'back' ? (
+                      <div className="relative border-2 border-brand-gold rounded-2xl overflow-hidden h-48 bg-black flex flex-col justify-end">
+                        <video
+                          ref={videoBackRef}
+                          autoPlay
+                          playsInline
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="relative z-10 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              captureDocumentPhoto('back');
+                            }}
+                            className="px-3.5 py-1.5 bg-brand-gold text-brand-blue text-[10px] font-bold rounded-lg shadow-md hover:bg-brand-gold/90 flex items-center gap-1"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            {language === 'en' ? 'Capture' : 'Scatta'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              stopCamera();
+                            }}
+                            className="px-3 py-1.5 bg-gray-800 text-white text-[10px] font-medium rounded-lg shadow-md hover:bg-gray-700"
+                          >
+                            {language === 'en' ? 'Cancel' : 'Annulla'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && formData.documentType !== 'PASSPORT' && !formData.documentBack && !previews.back ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
+                        {!previews.back ? (
+                          <>
+                            <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
+                              <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-brand-blue truncate px-2">
+                                {language === 'en' ? 'Select Back' : 'Seleziona Retro'}
+                              </p>
+                              <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
+                            </div>
+                            <input 
+                              type="file" 
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={e => {
+                                const file = e.target.files?.[0] || null;
+                                if (file) {
+                                  setFormData({ ...formData, documentBack: file });
+                                  if (file.type.startsWith('image/')) {
+                                    setPreviews(prev => ({ ...prev, back: URL.createObjectURL(file) }));
+                                  }
+                                } else {
+                                  setFormData({ ...formData, documentBack: null });
+                                  setPreviews(prev => ({ ...prev, back: null }));
+                                }
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <div className="relative h-32 w-full rounded-lg overflow-hidden border border-brand-gold/20">
+                            <img src={previews.back} alt="Retro" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <button 
+                              type="button"
+                              className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 hover:scale-105 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviews(prev => ({ ...prev, back: null }));
+                                setFormData(prev => ({ ...prev, documentBack: null }));
+                              }}
+                            >
+                              <AlertCircle className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        {previews.back && !formData.documentBack && previews.back.startsWith('data:') && (
+                          <p className="text-[9px] text-green-600 font-medium">
+                            {language === 'en' ? 'Snapshot saved in memory' : 'Istantanea salvata in memoria'}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

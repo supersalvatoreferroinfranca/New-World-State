@@ -2454,10 +2454,10 @@ CREATE TABLE citizens (
                                 ${explanationHtml}
 
                                 <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 24px 0 10px 0;">
-                                  <strong>[IT]</strong> Per qualsiasi chiarimento o quesito in merito alle procedure di transizione, restiamo a Sua completa disposizione sul portale ufficiale della nostra micro-nazione federale.
+                                  <strong>[IT]</strong> Per qualsiasi chiarimento o quesito in merito alle procedure di transizione, restiamo a Sua completa disposizione sul portale ufficiale della nostra nazione federale.
                                 </p>
                                 <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
-                                  <strong>[EN]</strong> If you have any inquiries regarding these transition steps, our support desks remain fully available on the official micronation portal.
+                                  <strong>[EN]</strong> If you have any inquiries regarding these transition steps, our support desks remain fully available on the official nation portal.
                                 </p>
                                 
                                 <p style="color: #475569; font-size: 13px; line-height: 1.6; margin: 0 0 24px 0;">
@@ -2471,8 +2471,8 @@ CREATE TABLE citizens (
                             <tr>
                               <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                                 <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                                  New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
-                                  Sovereign global digital micronation built upon Geneva constitutional values.
+                                  New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
+                                  Sovereign global digital nation built upon Geneva constitutional values.
                                 </p>
                                 <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
                                   Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
@@ -2803,8 +2803,8 @@ CREATE TABLE citizens (
                           <tr>
                             <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                               <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                                New World State &copy; 2026. Micro-nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
-                                Sovereign global digital micronation built upon Geneva constitutional values.
+                                New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
+                                Sovereign global digital nation built upon Geneva constitutional values.
                               </p>
                               <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
                                 Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
