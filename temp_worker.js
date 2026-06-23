@@ -24,6 +24,8 @@ let memoryCustomRoles = [
   { id: 7, name: "Custode Digitale (IT)", description: "Incaricato dei registri territoriali", geographic_area_id: 3 }
 ];
 
+let memoryBroadcasts = [];
+
 const worker = {
   async fetch(request, rawEnv) {
     const env = new Proxy(rawEnv || {}, {
@@ -3870,6 +3872,17 @@ CREATE TABLE citizens (
               voting_starts_at TIMESTAMP WITH TIME ZONE NOT NULL,
               voting_ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
               published_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_broadcasts (
+              id SERIAL PRIMARY KEY,
+              title TEXT NOT NULL,
+              content TEXT NOT NULL,
+              target VARCHAR(50) DEFAULT 'all',
+              sent_by TEXT DEFAULT 'Amministratore',
+              sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              email_count INT DEFAULT 0
             )
           `);
           // Ensure new admin and role columns are present in the citizens table
