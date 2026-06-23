@@ -55,6 +55,19 @@ export async function registerPWAResources() {
     return;
   }
   
+  // Safe-guard to prevent security exceptions in sandboxed iframes (e.g. AI Studio preview)
+  try {
+    const isIframe = window.self !== window.top;
+    if (isIframe) {
+      console.log('[PWA-SW] Service Worker registration skipped inside preview iframe.');
+      return;
+    }
+  } catch (e) {
+    // In extremely sandboxed iframes, accessing window.top might throw a security error directly
+    console.log('[PWA-SW] Context is sandboxed, skipping Service Worker registration.');
+    return;
+  }
+  
   try {
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/'
