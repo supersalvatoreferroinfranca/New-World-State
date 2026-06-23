@@ -14,6 +14,7 @@ import {
   Info
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
+import PWANotifierBanner from '../pwa/PWANotifierBanner';
 
 interface WelcomePageProps {
   onStartRegistration: () => void;
@@ -135,6 +136,9 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
           </div>
         </div>
       </div>
+
+      {/* PWA AND BROWSER NOTIFICATIONS SYSTEM PANEL */}
+      <PWANotifierBanner />
 
       {/* SPIEGATO FACILE: LE 3 REGOLE D'ORO */}
       <div className="space-y-6">

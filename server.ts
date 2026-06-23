@@ -3289,6 +3289,8 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             console.error('[ALBO-PRETORIO-ERR]', alboErr);
           }
 
+          let serviceMessage = 'Proposta normativa convalidata e aperta ufficialmente al voto popolare.';
+          
           // 2. Invia una email a tutti i cittadini del New World State
           try {
             const citizensRes = await dbPool.query('SELECT email, "firstName", firstname, surname, "citizenCode" FROM citizens');
@@ -3298,6 +3300,15 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             
             const startStr = new Date(approvedProposal.voting_starts_at).toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
             const endStr = new Date(approvedProposal.voting_ends_at).toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
+
+            const smtpConfigured = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+            if (!smtpConfigured) {
+              serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! ATTENZIONE: le notifiche email non sono state inviate poiché le credenziali SMTP (SMTP_USER/SMTP_PASS) non sono configurate nel file delle impostazioni.';
+            } else if (validCitizens.length === 0) {
+              serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! Nota: non è presente alcun cittadino con indirizzo email valido nel database a cui inviare la notifica.';
+            } else {
+              serviceMessage = `Proposta convalidata e pubblicata nell'Albo delle Votazioni! Avviata la coda di notifica email per tutti i ${validCitizens.length} cittadini registrati.`;
+            }
 
             // Send sequentially or concurrently. To avoid timing out request, we can fire and forget or proceed
             // Let's do a map promise or simple loop. Since there are few citizens in workspace, a prompt loop is great.
@@ -3330,7 +3341,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                     </div>
 
                     <p style="font-size: 13px; line-height: 1.5; color: #64748b;">
-                      Ti ricordiamo che l'esercizio del voto diretto garantisce l'attuazione dei principi liberali su cui si fonda la nostra nazione. Puoi esprimere la tua preferenza e consultare l'apposita deliberazione normata in articoli collegandoti al Portale Federale.
+                      Ti ricordiamo che l'esercizio del voto diretto garantisce l'attuazione dei principi liberali su cui si fonda la nostra nazione. Puoi expresar la tua preferenza e consultare l'apposita deliberazione normata in articoli collegandoti al Portale Federale.
                     </p>
 
                     <div style="text-align: center; margin: 28px 0;">
@@ -3352,9 +3363,10 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             }
           } catch (citErr: any) {
             console.error('[VOTING-BROADCAST-CIT-FETCH-ERR]', citErr);
+            serviceMessage = `Proposta convalidata e pubblicata nell'albo, ma si è verificato un errore locale durante il recupero dei cittadini: ${citErr.message}`;
           }
 
-          return res.json({ success: true, data: result.rows[0], message: 'Proposta normativa convalidata e aperta ufficialmente al voto popolare.' });
+          return res.json({ success: true, data: result.rows[0], message: serviceMessage });
         
         } else if (action === 'reject') {
           // Rifiuta proposta con motivazione

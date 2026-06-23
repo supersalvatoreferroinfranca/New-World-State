@@ -1,0 +1,19 @@
+{
+  "name": "New World State",
+  "short_name": "NWS",
+  "description": "Portale della Democrazia Diretta e Registro dei Cittadini del New World State",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f5f0",
+  "theme_color": "#0a1c3e",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/nws-logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

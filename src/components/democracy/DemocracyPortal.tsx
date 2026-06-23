@@ -41,6 +41,8 @@ import {
   Pie
 } from 'recharts';
 import { useI18n } from '../../contexts/I18nContext';
+import { startBackgroundSync, stopBackgroundSync } from '../../services/notifications';
+import PWANotifierBanner from '../pwa/PWANotifierBanner';
 
 interface CitizenSession {
   id: number;
@@ -87,7 +89,7 @@ export default function DemocracyPortal() {
   // Citizen auth states
   const [citizen, setCitizen] = useState<CitizenSession | null>(() => {
     if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('nws_democracy_citizen');
+      const saved = localStorage.getItem('nws_democracy_citizen') || sessionStorage.getItem('nws_democracy_citizen');
       return saved ? JSON.parse(saved) : null;
     }
     return null;
@@ -106,7 +108,7 @@ export default function DemocracyPortal() {
   // Administrative verification credentials
   const [isAdmin, setIsAdmin] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('nws_admin_auth') === 'true';
+      return localStorage.getItem('nws_admin_auth') === 'true' || sessionStorage.getItem('nws_admin_auth') === 'true';
     }
     return false;
   });
@@ -196,6 +198,21 @@ export default function DemocracyPortal() {
     fetchAlbo();
   }, []);
 
+  useEffect(() => {
+    // Avvia la sincronizzazione in background per notifiche di voto e modifiche anagrafe personale
+    startBackgroundSync(citizen ? citizen.id : null, (newStatus) => {
+      setCitizen(prev => {
+        if (prev && prev.status !== newStatus) {
+          return { ...prev, status: newStatus };
+        }
+        return prev;
+      });
+    });
+    return () => {
+      stopBackgroundSync();
+    };
+  }, [citizen?.id]);
+
   // Handle pre-check for citizen identification and generate temporary password if needed
   const handlePreflight = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -266,6 +283,7 @@ export default function DemocracyPortal() {
       if (res.ok && data.success) {
         setCitizen(data.citizen);
         sessionStorage.setItem('nws_democracy_citizen', JSON.stringify(data.citizen));
+        localStorage.setItem('nws_democracy_citizen', JSON.stringify(data.citizen));
         // Reset inputs & login state
         setUsernameInput('');
         setPasswordInput('');
@@ -289,6 +307,7 @@ export default function DemocracyPortal() {
   const handleLogout = () => {
     setCitizen(null);
     sessionStorage.removeItem('nws_democracy_citizen');
+    localStorage.removeItem('nws_democracy_citizen');
     setLoginStep('username');
     setLoginMode('standard');
     setTempPhoneCode(null);
@@ -1199,10 +1218,13 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                         </div>
                       </div>
                     ) : (
-                      <div className="border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl p-16 text-center text-slate-400 flex flex-col items-center justify-center min-h-[300px]">
-                        <Inbox className="w-10 h-10 text-slate-300 mb-4" />
-                        <h4 className="font-serif italic text-sm text-slate-500 mb-1">Nessuna proposta selezionata</h4>
-                        <p className="text-xs max-w-xs">{language === 'en' ? 'Click on a legislative bill card to view full textual provisions, proponent, and real-time voter turnout and distribution' : 'Seleziona una scheda legislativa dall\'elenco per leggerne il testo integrale, l\'autore e le percentuali di voto.'}</p>
+                      <div className="space-y-6">
+                        <div className="border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl p-8 text-center text-slate-400 flex flex-col items-center justify-center">
+                          <Inbox className="w-8 h-8 text-slate-300 mb-3" />
+                          <h4 className="font-serif italic text-sm text-slate-500 mb-1">Nessuna proposta selezionata</h4>
+                          <p className="text-xs max-w-xs">{language === 'en' ? 'Click on a legislative bill card to view full textual provisions, proponent, and real-time voter turnout and distribution' : 'Seleziona una scheda legislativa dall\'elenco per leggerne il testo integrale, l\'autore e le percentuali di voto.'}</p>
+                        </div>
+                        <PWANotifierBanner />
                       </div>
                     )}
                   </div>

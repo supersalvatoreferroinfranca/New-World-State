@@ -3862,6 +3862,16 @@ CREATE TABLE citizens (
               UNIQUE(proposal_id, citizen_id)
             )
           `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_albo (
+              id SERIAL PRIMARY KEY,
+              proposal_id INT NOT NULL,
+              title TEXT NOT NULL,
+              voting_starts_at TIMESTAMP WITH TIME ZONE NOT NULL,
+              voting_ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
+              published_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
           // Ensure new admin and role columns are present in the citizens table
           try {
             await queryDb('ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "isAdmin" BOOLEAN DEFAULT FALSE');
@@ -4053,6 +4063,96 @@ CREATE TABLE citizens (
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
+      // 1b. Ottieni Albo delle Votazioni
+      if (url.pathname === '/api/democracy/albo' && request.method === 'GET') {
+        await ensureDemocracySchema();
+        try {
+          const rows = await queryDb('SELECT * FROM nws_albo ORDER BY published_at DESC');
+          return new Response(JSON.stringify({ success: true, data: rows }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore nel recupero dell\'Albo: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
+      // 1c. AI-Assisted Proposal Drafting (Gemini REST API fetch)
+      if (url.pathname === '/api/democracy/ai-draft-proposal' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          const { problem, solution, benefits, category } = body || {};
+          if (!solution) {
+            return new Response(JSON.stringify({ success: false, message: 'La descrizione della tua soluzione/idea è obbligatoria.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const apiKey = env.GEMINI_API_KEY;
+          if (!apiKey) {
+            return new Response(JSON.stringify({
+              success: false,
+              message: 'La chiave API di Gemini ("GEMINI_API_KEY") non è configurata nell\'ambiente del Cloudflare Worker. Assicurati di impostarla nelle credenziali/segreti di Cloudflare.'
+            }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const prompt = `Crea una bozza di proposta legislativa formale per lo "New World State" (una nazione digitale sovrana e globale basata sul libero arbitrio dei popoli e sulla Costituzione di Ginevra).
+La proposta appartiene alla categoria: "${category || 'Generale'}".
+
+Informazioni fornite dal cittadino (for dummies):
+- Problema da risolvere: ${problem || 'Non specificato'}
+- Soluzione proposta: ${solution}
+- Benefici attesi: ${benefits || 'Non specificato'}
+
+Genera una risposta in formato JSON contenente tre campi:
+1. "title": un titolo formale, solenne e chiaro per l'iniziativa legislativa. Deve essere in italiano (es. "Legge sulla Trasparenza dell'Identità Digitale").
+2. "description": una sintesi esplicativa di 1 o 2 righe (massimo 150 caratteri) che spieghi l'essenza della proposta.
+3. "content": Il testo normativo completo, strutturato formalmente in articoli (es. Articolo 1 - Oggetto e finalità, Articolo 2 - Ambito di applicazione, Articolo 3 - ... ecc.) in lingua italiana. Deve avere un tono formale, legale, preciso e utilizzare riferimenti tipici delle nazioni digitali sovrane, focalizzandosi sul rispetto dei diritti e della libertà di scelta. Aggiungi alla fine una sezione di analisi dell'impatto o copertura finanziaria/amministrativa.
+
+Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
+
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: prompt
+                    }
+                  ]
+                }
+              ],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                  type: 'OBJECT',
+                  properties: {
+                    title: { type: 'STRING' },
+                    description: { type: 'STRING' },
+                    content: { type: 'STRING' }
+                  },
+                  required: ['title', 'description', 'content']
+                }
+              }
+            })
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Gemini API error (HTTP ${response.status}): ${errText}`);
+          }
+
+          const resData = await response.json();
+          const jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!jsonText) {
+            throw new Error('Nessuna risposta valida ricevuta da Gemini REST API.');
+          }
+
+          const parsed = JSON.parse(jsonText.trim());
+          return new Response(JSON.stringify({ success: true, data: parsed }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (e) {
+          console.error('[WORKER-AI-DRAFT-ERR]', e);
+          return new Response(JSON.stringify({ success: false, message: 'Impossibile sbloccare l\'assistente legislativo AI sul worker: ' + e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
       // 2. Ottieni Proposte Normative
       if (url.pathname === '/api/democracy/proposals' && request.method === 'GET') {
         await ensureDemocracySchema();
@@ -4223,7 +4323,97 @@ CREATE TABLE citizens (
           if (result.length === 0) {
             return new Response(JSON.stringify({ success: false, message: 'Proposta non trovata.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
-          return new Response(JSON.stringify({ success: true, data: result[0], message: 'Proposta normativa convalidata e aperta ufficialmente al voto popolare.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+          const approvedProposal = result[0];
+          try {
+            await ensureDemocracySchema();
+            await queryDb(`
+              INSERT INTO nws_albo (proposal_id, title, voting_starts_at, voting_ends_at)
+              VALUES ($1, $2, $3, $4)
+            `, [
+              approvedProposal.id,
+              approvedProposal.title,
+              approvedProposal.voting_starts_at,
+              approvedProposal.voting_ends_at
+            ]);
+          } catch (alboErr) {
+            console.error('[ALBO-PRETORIO-ERR]', alboErr);
+          }
+
+          let serviceMessage = 'Proposta normativa convalidata e aperta ufficialmente al voto popolare.';
+          
+          try {
+            const citizensRes = await queryDb('SELECT email, "firstName", firstname, surname, "citizenCode" FROM citizens');
+            const validCitizens = (citizensRes || []).filter(cit => cit.email && cit.email.trim() !== '');
+            
+            console.log(`[VOTING-BROADCAST] Avvio invio email a ${validCitizens.length} cittadini per la proposta convalidata.`);
+            
+            const startStr = approvedProposal.voting_starts_at ? new Date(approvedProposal.voting_starts_at).toLocaleString('it-IT', { timeZone: 'Europe/Rome' }) : 'N/A';
+            const endStr = approvedProposal.voting_ends_at ? new Date(approvedProposal.voting_ends_at).toLocaleString('it-IT', { timeZone: 'Europe/Rome' }) : 'N/A';
+
+            const smtpConfigured = !!(env.SMTP_USER && env.SMTP_PASS) || !!env.RESEND_API_KEY || !!env.BREVO_API_KEY;
+            if (!smtpConfigured) {
+              serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! ATTENZIONE: le notifiche email non sono state inviate poiché le credenziali email (SMTP_USER / RESEND_API_KEY / BREVO_API_KEY) non sono configurate nel Cloudflare Worker.';
+            } else if (validCitizens.length === 0) {
+              serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! Nota: non è presente alcun cittadino con indirizzo email valido nel database a cui inviare la notifica.';
+            } else {
+              serviceMessage = `Proposta convalidata e pubblicata nell'Albo delle Votazioni! Avviata la coda di notifica email per tutti i ${validCitizens.length} cittadini registrati con il worker.`;
+            }
+
+            for (const cit of validCitizens) {
+              const name = cit.firstName || cit.firstname || 'Cittadino';
+              const surname = cit.surname || 'Sovrano';
+              const email = cit.email.trim();
+              
+              const subject = `🏛️ New World State - Notifica di Votazione Popolare: ${approvedProposal.title}`;
+              const html = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                  <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #d97706;">
+                    <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em;">NEW WORLD STATE</h1>
+                    <div style="font-size: 11px; color: #f59e0b; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">CONSIGLIO DI DEMOCRAZIA DIRETTA</div>
+                  </div>
+                  <div style="padding: 24px; background-color: #ffffff; color: #334155;">
+                    <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${name} ${surname}</strong> (Codice: ${cit.citizenCode || 'NWS'}),</p>
+                    <p style="font-size: 14px; line-height: 1.5;">Il Consiglio Esecutivo ha convalidato e formalmente calendarizzato una nuova consultazione popolare/referendum nel registro elettorale sovrano.</p>
+                    
+                    <div style="background-color: #f8fafc; border-left: 4px solid #d97706; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                      <h3 style="margin: 0 0 10px 0; color: #0a1c3e; font-size: 14px; text-transform: uppercase; letter-spacing: 0.02em;">Dati della Votazione</h3>
+                      <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Titolo Referendum:</strong> ${approvedProposal.title}</p>
+                      <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Categoria:</strong> ${approvedProposal.category || 'Generale'}</p>
+                      <p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Termini Temporali:</strong></p>
+                      <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #0f172a;">
+                        <li><strong>Inizio:</strong> ${startStr}</li>
+                        <li><strong>Scadenza:</strong> ${endStr}</li>
+                      </ul>
+                    </div>
+
+                    <p style="font-size: 13px; line-height: 1.5; color: #64748b;">
+                      Ti ricordiamo che l'esercizio del voto directo garantisce l'attuazione dei principi liberali su cui si fonda la nostra nazione. Puoi esprimere la tua preferenza e consultare l'apposita deliberazione normata in articoli collegandoti al Portale Federale.
+                    </p>
+
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="https://newworldstate.org/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">ACCEDI AL PORTALE DI VOTO</a>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                    <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 0;">
+                      Generato automaticamente dal Registro dei Referendum del New World State.<br />
+                      Per favore non rispondere a questa comunicazione.
+                    </p>
+                  </div>
+                </div>
+              `;
+
+              sendEmail(email, subject, html, env)
+                .then(() => console.log(`[VOTING-EMAIL] Email inviata a: ${email}`))
+                .catch((err) => console.warn(`[VOTING-EMAIL-FAILED] Errore invio a ${email}:`, err.message));
+            }
+          } catch (citErr) {
+            console.error('[VOTING-BROADCAST-CIT-FETCH-ERR]', citErr);
+            serviceMessage = `Proposta convalidata e pubblicata nell'albo, ma si è verificato un errore locale durante il recupero dei cittadini: ${citErr.message}`;
+          }
+
+          return new Response(JSON.stringify({ success: true, data: approvedProposal, message: serviceMessage }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         
         } else if (action === 'reject') {
           const result = await queryDb(`
@@ -4658,7 +4848,7 @@ CREATE TABLE citizens (
         });
       }
 
-      return new Response('Not Found', { status: 404, headers: corsHeaders });
+      return new Response(JSON.stringify({ success: false, message: 'Endpoint non trovato sul Worker: ' + url.pathname }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     } catch (err) {
       return new Response(JSON.stringify({ status: 'error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }

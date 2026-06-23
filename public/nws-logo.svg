@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bg-grad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+      <stop offset="0%" stop-color="#152b54" />
+      <stop offset="100%" stop-color="#051026" />
+    </radialGradient>
+    
+    <!-- Gold Gradient -->
+    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf0cd" />
+      <stop offset="35%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#92400e" />
+    </linearGradient>
+
+    <!-- Aura Glow Ring -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Rounded Square Background to fit PWA maskable standard beautifully -->
+  <rect width="512" height="512" rx="112" fill="url(#bg-grad)" />
+
+  <!-- Outer Laurel/Aura Golden Circle -->
+  <circle cx="256" cy="256" r="190" fill="none" stroke="url(#gold-grad)" stroke-width="3" opacity="0.3" stroke-dasharray="10 6" />
+  <circle cx="256" cy="256" r="176" fill="none" stroke="url(#gold-grad)" stroke-width="1.5" opacity="0.5" />
+
+  <!-- Core Golden Emblem Group -->
+  <g id="core-emblem">
+    <!-- Concentric Grid lines (Wireframe Globe representing Globalism) -->
+    <!-- Equator -->
+    <line x1="100" y1="256" x2="412" y2="256" stroke="url(#gold-grad)" stroke-width="4" stroke-linecap="round" />
+    
+    <!-- Latitudes -->
+    <path d="M 125,190 A 180,90 0 0,0 387,190" fill="none" stroke="url(#gold-grad)" stroke-width="2" stroke-linecap="round" opacity="0.8" />
+    <path d="M 125,322 A 180,90 0 0,1 387,322" fill="none" stroke="url(#gold-grad)" stroke-width="2" stroke-linecap="round" opacity="0.8" />
+    
+    <!-- Longitudes / Meridians -->
+    <path d="M 256,80 A 90,176 0 0,0 256,432" fill="none" stroke="url(#gold-grad)" stroke-width="3" stroke-linecap="round" />
+    <path d="M 256,80 A 90,176 0 0,1 256,432" fill="none" stroke="url(#gold-grad)" stroke-width="3" stroke-linecap="round" />
+    <path d="M 256,80 A 176,176 0 0,0 256,432" fill="none" stroke="url(#gold-grad)" stroke-width="4.5" stroke-linecap="round" />
+    
+    <!-- Outer Shield Ring -->
+    <circle cx="256" cy="256" r="160" fill="none" stroke="url(#gold-grad)" stroke-width="7" />
+
+    <!-- Central Monogram: NWS -->
+    <rect x="216" y="226" width="80" height="60" rx="10" fill="#051026" stroke="url(#gold-grad)" stroke-width="3" filter="url(#glow)" />
+    <text x="256" y="263" font-family="'Space Grotesk', 'Inter', 'Helvetica', sans-serif" font-weight="900" font-size="28" fill="url(#gold-grad)" text-anchor="middle" letter-spacing="1">NWS</text>
+    
+    <!-- Sovereign Stars (Crescent above the shield) -->
+    <!-- Five stars placed along a perfect arc to represent the 5 Continents -->
+    <!-- Star 1 -->
+    <polygon points="144,115 149,125 160,125 151,132 154,142 144,136 134,142 137,132 128,125 139,125" fill="url(#gold-grad)" />
+    <!-- Star 2 -->
+    <polygon points="200,85 205,95 216,95 207,102 210,112 200,106 190,112 193,102 184,95 195,95" fill="url(#gold-grad)" />
+    <!-- Star 3 (Center Star - Largest) -->
+    <polygon points="256,66 262,78 275,78 264,86 268,99 256,92 244,99 248,86 237,78 250,78" fill="url(#gold-grad)" />
+    <!-- Star 4 -->
+    <polygon points="312,85 317,95 328,95 319,102 322,112 312,106 302,112 305,102 296,95 307,95" fill="url(#gold-grad)" />
+    <!-- Star 5 -->
+    <polygon points="368,115 373,125 384,125 375,132 378,142 368,136 358,142 361,132 352,125 363,125" fill="url(#gold-grad)" />
+  </g>
+</svg>

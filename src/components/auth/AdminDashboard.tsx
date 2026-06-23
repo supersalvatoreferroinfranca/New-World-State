@@ -66,7 +66,7 @@ const PREDEFINED_ROLES = [
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('nws_admin_auth') === 'true';
+      return localStorage.getItem('nws_admin_auth') === 'true' || sessionStorage.getItem('nws_admin_auth') === 'true';
     }
     return false;
   });
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
 
   const getAdminPassword = () => {
     if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('nws_admin_password') || '';
+      return localStorage.getItem('nws_admin_password') || sessionStorage.getItem('nws_admin_password') || '';
     }
     return '';
   };
@@ -794,6 +794,8 @@ export default function AdminDashboard() {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('nws_admin_auth', 'true');
         sessionStorage.setItem('nws_admin_password', passwordInput);
+        localStorage.setItem('nws_admin_auth', 'true');
+        localStorage.setItem('nws_admin_password', passwordInput);
       }
     } else {
       setPasswordError('Password di amministrazione non corretta. Riprova con credenziali autorizzate.');
