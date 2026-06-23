@@ -74,7 +74,77 @@ export default function AdminDashboard() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Core navigation state
-  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals' | 'roles'>('citizens');
+  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals' | 'roles' | 'broadcasts'>('citizens');
+
+  // Broadcast state & handlers
+  const [broadcasts, setBroadcasts] = useState<any[]>([]);
+  const [broadcastsLoading, setBroadcastsLoading] = useState(false);
+  const [newBroadcastTitle, setNewBroadcastTitle] = useState('');
+  const [newBroadcastContent, setNewBroadcastContent] = useState('');
+  const [newBroadcastTarget, setNewBroadcastTarget] = useState<'all' | 'approved' | 'pending'>('all');
+
+  const fetchBroadcasts = async () => {
+    setBroadcastsLoading(true);
+    try {
+      const res = await safeFetch('/api/admin/broadcasts', {
+        headers: {
+          'x-admin-password': getAdminPassword()
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBroadcasts(data.data || []);
+      }
+    } catch (err) {
+      console.error('[BROADCASTS-FETCH-ERR]', err);
+    } finally {
+      setBroadcastsLoading(false);
+    }
+  };
+
+  const handleSendBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBroadcastTitle.trim() || !newBroadcastContent.trim()) {
+      showAlert('Campi vuoti', 'Oggetto e testo del messaggio sono obbligatori.');
+      return;
+    }
+
+    showConfirm(
+      'Invia Messaggio Broadcast',
+      `Sei sicuro di voler inviare questo messaggio broadcast ai destinatari selezionati? Verrà inviata una notifica via email (e push per gli utenti con notifiche abilitate) e archiviata l'operazione.`,
+      async () => {
+        setActionLoading(true);
+        try {
+          const res = await safeFetch('/api/admin/broadcasts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': getAdminPassword()
+            },
+            body: JSON.stringify({
+              title: newBroadcastTitle,
+              content: newBroadcastContent,
+              target: newBroadcastTarget
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showAlert('Messaggio Inviato', data.message || 'Messaggio inviato e archiviato con successo!');
+            setNewBroadcastTitle('');
+            setNewBroadcastContent('');
+            setNewBroadcastTarget('all');
+            await fetchBroadcasts();
+          } else {
+            showAlert('Errore', data.message || 'Impossibile inviare il messaggio.');
+          }
+        } catch (err: any) {
+          showAlert('Errore di rete', err.message);
+        } finally {
+          setActionLoading(false);
+        }
+      }
+    );
+  };
 
   // Dynamic custom roles & geographic areas state
   const [customRoles, setCustomRoles] = useState<any[]>([]);
@@ -399,6 +469,8 @@ export default function AdminDashboard() {
         fetchCitizens();
       } else if (activeTab === 'proposals') {
         fetchProposals();
+      } else if (activeTab === 'broadcasts') {
+        fetchBroadcasts();
       }
     }
   }, [isAuthenticated, activeTab]);
@@ -909,24 +981,30 @@ export default function AdminDashboard() {
       </div>
 
       {/* SELETTORE TAB */}
-      <div className="flex border-b border-slate-200 bg-slate-50/50">
+      <div className="flex flex-wrap border-b border-slate-200 bg-slate-50/50">
         <button
           onClick={() => { setActiveTab('citizens'); setSelectedCitizen(null); }}
-          className={`flex-1 py-4 px-6 text-center font-serif font-bold text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'citizens' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+          className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'citizens' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
-          <Users className="w-4 h-4 text-brand-gold" /> Anagrafe & Incarichi Governativi
+          <Users className="w-4 h-4 text-brand-gold" /> Anagrafe & Incarichi
         </button>
         <button
           onClick={() => { setActiveTab('proposals'); setSelectedProposal(null); }}
-          className={`flex-1 py-4 px-6 text-center font-serif font-bold text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'proposals' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+          className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'proposals' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
           <FileText className="w-4 h-4 text-brand-gold" /> Democrazia Normativa ({proposals.length})
         </button>
         <button
           onClick={() => { setActiveTab('roles'); }}
-          className={`flex-1 py-4 px-6 text-center font-serif font-bold text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'roles' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+          className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'roles' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
-          <Globe className="w-4 h-4 text-brand-gold" /> Ruoli & Aree Geografiche
+          <Globe className="w-4 h-4 text-brand-gold" /> Ruoli & Aree
+        </button>
+        <button
+          onClick={() => { setActiveTab('broadcasts'); }}
+          className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'broadcasts' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <Mail className="w-4 h-4 text-brand-gold" /> Broadcast Messaggi
         </button>
       </div>
 
@@ -1338,6 +1416,83 @@ export default function AdminDashboard() {
                   )}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* TAB 4: COMPOSER BROADCAST */}
+          {activeTab === 'broadcasts' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="border-b border-slate-100 pb-4">
+                <span className="text-[10px] uppercase font-mono bg-brand-gold/15 text-brand-gold px-2.5 py-1 rounded-full font-bold">Distribuzione Informazioni</span>
+                <h2 className="text-2xl font-serif font-black text-[#0a1c3e] mt-2">Nuova Comunicazione Broadcast</h2>
+                <p className="text-slate-500 text-xs mt-1 leading-relaxed">
+                  Redigi e distribuisci comunicati ufficiali dell'amministrazione. I messaggi verranno archiviati, notificati via email e inoltrati come notifica push istantanea a tutti i cittadini del target prescelto.
+                </p>
+              </div>
+
+              <form onSubmit={handleSendBroadcast} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-700 block text-[10px] uppercase tracking-wide">Oggetto del Messaggio (Oggetto)</label>
+                  <input
+                    type="text"
+                    required
+                    value={newBroadcastTitle}
+                    onChange={(e) => setNewBroadcastTitle(e.target.value)}
+                    placeholder="es. Convocazione Assemblea Costituente o Aggiornamento Protocollo Firma"
+                    className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-[#0a1c3e] text-slate-800 bg-white shadow-sm"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-700 block text-[10px] uppercase tracking-wide">Cittadini Destinatari (Target Audience)</label>
+                  <select
+                    value={newBroadcastTarget}
+                    onChange={(e: any) => setNewBroadcastTarget(e.target.value)}
+                    className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-[#0a1c3e] text-slate-800 bg-white shadow-sm cursor-pointer"
+                  >
+                    <option value="all">Tutti i cittadini registrati (Approvati + In Attesa)</option>
+                    <option value="approved">Solo Cittadini Convalidati / Approvati</option>
+                    <option value="pending">Solo Cittadini con Pratica in Sospeso / In Attesa</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-700 block text-[10px] uppercase tracking-wide">Testo del Messaggio</label>
+                  <textarea
+                    rows={8}
+                    required
+                    value={newBroadcastContent}
+                    onChange={(e) => setNewBroadcastContent(e.target.value)}
+                    placeholder="Scrivi qui il comunicato ufficiale da distribuire ai cittadini del New World State..."
+                    className="w-full text-xs border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-1 focus:ring-[#0a1c3e] text-slate-800 bg-white shadow-sm"
+                  />
+                </div>
+
+                <div className="bg-slate-50 border border-slate-150 rounded-xl p-4 flex flex-col space-y-2">
+                  <span className="text-[9px] uppercase font-mono text-slate-400 font-bold">Canali di Distribuzione Attivi</span>
+                  <div className="flex gap-4 text-xs font-semibold text-slate-600">
+                    <span className="flex items-center gap-1.5 text-emerald-700">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      📧 Notifica Email SMTP
+                    </span>
+                    <span className="flex items-center gap-1.5 text-[#0a1c3e]">
+                      <span className="w-2 h-2 rounded-full bg-[#0a1c3e] animate-pulse"></span>
+                      📱 Browser Push API (PWA)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="bg-[#0a1c3e] hover:bg-[#071530] text-white py-3 px-6 rounded-xl font-bold text-xs tracking-wide transition shadow-md active:scale-95 border-b-2 border-[#c5a880] disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                  >
+                    <Mail className="w-4 h-4 text-brand-gold" />
+                    {actionLoading ? 'Invio in corso...' : 'Invia Comunicato Broadcast'}
+                  </button>
+                </div>
+              </form>
             </div>
           )}
 
@@ -1908,6 +2063,78 @@ export default function AdminDashboard() {
                 </p>
               </div>
             )
+          )}
+          {/* TAB 4: HISTORICAL BROADCASTS ARCHIVE */}
+          {activeTab === 'broadcasts' && (
+            <div className="space-y-6 animate-fade-in text-xs flex flex-col h-full justify-between">
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[9px] uppercase font-mono bg-brand-gold/15 text-brand-gold px-2 py-0.5 rounded-full font-bold">Archivio Storico Invii</span>
+                  <h3 className="text-lg font-serif text-slate-900 mt-2">Comunicazioni Inviate ({broadcasts.length})</h3>
+                  <p className="text-slate-400 text-[10px] leading-relaxed">Registro completo dei messaggi istituzionali trasmessi alla popolazione federale.</p>
+                </div>
+
+                {broadcastsLoading ? (
+                  <div className="flex justify-center py-10">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#0a1c3e]"></div>
+                  </div>
+                ) : broadcasts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center text-center py-12 text-slate-400 bg-white border border-dashed border-slate-200 rounded-2xl p-6">
+                    <Mail className="w-8 h-8 text-slate-300 mb-2" />
+                    <p className="font-semibold text-xs text-slate-600">Nessun Broadcast Rilevato</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5 max-w-[200px]">I messaggi inviati appariranno qui come archivio permanente.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                    {broadcasts.map((broadcast) => {
+                      const date = new Date(broadcast.sent_at).toLocaleString('it-IT', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      });
+
+                      const getTargetLabel = (t: string) => {
+                        if (t === 'approved') return 'Cittadini Approvati';
+                        if (t === 'pending') return 'In Attesa';
+                        return 'Tutti i Cittadini';
+                      };
+
+                      return (
+                        <div key={broadcast.id} className="bg-white border border-slate-150 rounded-xl p-3.5 space-y-2.5 shadow-xs hover:border-slate-300 transition">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold border border-slate-200">
+                              ID #{broadcast.id}
+                            </span>
+                            <span className="text-[9px] text-slate-400 font-mono">{date}</span>
+                          </div>
+
+                          <div className="space-y-1">
+                            <h4 className="font-serif font-bold text-slate-800 text-sm leading-tight">{broadcast.title}</h4>
+                            <p className="text-slate-500 text-[11px] leading-relaxed whitespace-pre-wrap line-clamp-4">{broadcast.content}</p>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-500 font-semibold">
+                            <span className="bg-brand-gold/10 text-brand-gold px-2 py-0.5 rounded font-bold">
+                              {getTargetLabel(broadcast.target)}
+                            </span>
+                            <span className="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold">
+                              📧 {broadcast.email_count} recapitate
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-150/60 flex items-center gap-2 text-slate-400 text-[10px] mt-auto">
+                <Shield className="w-3.5 h-3.5 text-brand-gold" />
+                <span>Consolle di Amministrazione Certificata</span>
+              </div>
+            </div>
           )}
 
         </div>

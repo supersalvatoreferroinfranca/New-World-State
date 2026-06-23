@@ -80,6 +80,8 @@ let memoryCustomRoles: any[] = [
   { id: 7, name: "Custode Digitale (IT)", description: "Incaricato dei registri territoriali", geographic_area_id: 3 }
 ];
 
+let memoryBroadcasts: any[] = [];
+
 async function runMigrations() {
   if (!dbPool) return;
   try {
@@ -193,6 +195,19 @@ async function runMigrations() {
           await client.query(`SELECT setval('nws_custom_roles_id_seq', 7)`);
         } catch(e) {}
       }
+
+      // Create nws_broadcasts table for admin announcements
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_broadcasts (
+          id SERIAL PRIMARY KEY,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL,
+          target VARCHAR(50) DEFAULT 'all',
+          sent_by TEXT DEFAULT 'Amministratore',
+          sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          email_count INT DEFAULT 0
+        )
+      `);
 
       console.log('[MIGRATION] PostgreSQL Table checked and updated successfully.');
     } finally {
@@ -2533,6 +2548,152 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
         return res.json({ success: true, message: 'Ruolo eliminato dalla memoria.' });
       }
       return res.status(404).json({ success: false, message: 'Ruolo non trovato in memoria.' });
+    });
+
+    // GET /api/admin/broadcasts - Ottiene l'archivio dei messaggi inviati
+    apiRouter.get('/admin/broadcasts', async (req, res) => {
+      console.log('[API] Processing /api/admin/broadcasts request');
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query('SELECT * FROM nws_broadcasts ORDER BY id DESC');
+          return res.json({ success: true, data: qRes.rows });
+        } catch (err: any) {
+          console.error('[DB-BROADCASTS-GET-ERR]', err.message);
+          return res.status(500).json({ success: false, message: 'Errore durante il recupero dei messaggi dal database.' });
+        }
+      }
+      return res.json({ success: true, data: [...memoryBroadcasts].reverse() });
+    });
+
+    // POST /api/admin/broadcasts - Invia e archivia un nuovo messaggio broadcast
+    apiRouter.post('/admin/broadcasts', async (req, res) => {
+      console.log('[API] Processing /api/admin/broadcasts creation');
+      const { title, content, target } = req.body || {};
+      if (!title || !title.trim() || !content || !content.trim()) {
+        return res.status(400).json({ success: false, message: 'Oggetto e testo del messaggio sono obbligatori.' });
+      }
+
+      const selectedTarget = target || 'all';
+
+      // 1. Cerca i cittadini destinatari
+      let recipients: any[] = [];
+      if (dbPool) {
+        try {
+          let query = 'SELECT email, "firstName", firstname, surname, "citizenCode" FROM citizens';
+          const params: any[] = [];
+          if (selectedTarget === 'approved') {
+            query += " WHERE status = 'approved'";
+          } else if (selectedTarget === 'pending') {
+            query += " WHERE status = 'pending'";
+          }
+          const citRes = await dbPool.query(query, params);
+          recipients = citRes.rows.filter(c => c.email && c.email.trim() !== '');
+        } catch (dbErr: any) {
+          console.error('[DB-BROADCAST-RECIPIENTS-ERR]', dbErr.message);
+        }
+      } else {
+        recipients = memoryCitizens.filter(c => {
+          if (selectedTarget === 'approved') return c.status === 'approved';
+          if (selectedTarget === 'pending') return c.status === 'pending';
+          return true;
+        }).filter(c => c.email && c.email.trim() !== '');
+      }
+
+      // 2. Invia email sequenziali tramite SMTP (con gestione errori robusta)
+      let emailSuccessCount = 0;
+      const smtpConfigured = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+
+      if (smtpConfigured && recipients.length > 0) {
+        console.log(`[SMTP-BROADCAST] Avvio invio email a ${recipients.length} cittadini.`);
+        for (const recipient of recipients) {
+          const name = recipient.firstName || recipient.firstname || 'Cittadino';
+          const surname = recipient.surname || 'Sovrano';
+          const email = recipient.email.trim();
+          const citizenCode = recipient.citizenCode || 'NWS';
+
+          const subject = `📢 New World State - Comunicazione Ufficiale: ${title}`;
+          const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+              <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #c5a880;">
+                <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em;">NEW WORLD STATE</h1>
+                <div style="font-size: 11px; color: #c5a880; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">COMUNICAZIONE UFFICIALE AI CITTADINI</div>
+              </div>
+              <div style="padding: 24px; background-color: #ffffff; color: #334155; line-height: 1.6;">
+                <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${name} ${surname}</strong> (Codice: ${citizenCode}),</p>
+                
+                <div style="background-color: #f8fafc; border-left: 4px solid #0a1c3e; padding: 18px; margin: 20px 0; border-radius: 4px;">
+                  <h3 style="margin: 0 0 10px 0; color: #0a1c3e; font-size: 16px;">${title}</h3>
+                  <p style="margin: 0; font-size: 14px; white-space: pre-wrap; color: #1e293b;">${content}</p>
+                </div>
+
+                <p style="font-size: 12px; line-height: 1.5; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 25px;">
+                  Questa è una notifica broadcast ufficiale inviata tramite il portale federale del New World State. Non rispondere a questa email.
+                </p>
+              </div>
+            </div>
+          `;
+
+          try {
+            await sendLocalSmtpEmail({ to: email, subject, html });
+            emailSuccessCount++;
+          } catch (smtpErr: any) {
+            console.error(`[SMTP-BROADCAST-ERR] Errore invio a ${email}:`, smtpErr.message);
+          }
+        }
+      } else if (!smtpConfigured) {
+        console.warn('[SMTP-BROADCAST] SMTP non configurato. Salto invio email reali.');
+      }
+
+      // 3. Archivia il messaggio nel Database o in memoria
+      let savedBroadcast: any = null;
+      if (dbPool) {
+        try {
+          const insertRes = await dbPool.query(
+            `INSERT INTO nws_broadcasts (title, content, target, sent_by, email_count) 
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [title, content, selectedTarget, 'Amministratore', emailSuccessCount]
+          );
+          savedBroadcast = insertRes.rows[0];
+        } catch (dbErr: any) {
+          console.error('[DB-BROADCAST-SAVE-ERR]', dbErr.message);
+          return res.status(500).json({ success: false, message: 'Errore nel salvataggio del messaggio nel database.' });
+        }
+      } else {
+        const newId = memoryBroadcasts.length > 0 ? Math.max(...memoryBroadcasts.map(b => b.id)) + 1 : 1;
+        savedBroadcast = {
+          id: newId,
+          title,
+          content,
+          target: selectedTarget,
+          sent_by: 'Amministratore',
+          sent_at: new Date().toISOString(),
+          email_count: emailSuccessCount
+        };
+        memoryBroadcasts.push(savedBroadcast);
+      }
+
+      let message = `Messaggio d'annuncio "${title}" archiviato con successo.`;
+      if (smtpConfigured) {
+        message += ` Email inviate correttamente a ${emailSuccessCount} su ${recipients.length} cittadini destinatari.`;
+      } else {
+        message += ` NOTA: le notifiche email non sono state inviate poiché SMTP non è configurato.`;
+      }
+
+      return res.json({ success: true, data: savedBroadcast, message });
+    });
+
+    // GET /api/broadcasts/latest - Endpoint pubblico per recuperare gli ultimi broadcast (usato dal client per notifiche push)
+    apiRouter.get('/broadcasts/latest', async (req, res) => {
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query('SELECT id, title, content, target, sent_at FROM nws_broadcasts ORDER BY id DESC LIMIT 10');
+          return res.json({ success: true, data: qRes.rows });
+        } catch (err: any) {
+          console.error('[DB-LATEST-BROADCASTS-ERR]', err.message);
+          return res.status(500).json({ success: false, message: 'Errore interno.' });
+        }
+      }
+      return res.json({ success: true, data: memoryBroadcasts.slice(-10).reverse() });
     });
 
     apiRouter.get('/test-aruba', async (req, res) => {

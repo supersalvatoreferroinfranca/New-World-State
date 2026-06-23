@@ -262,4 +262,35 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
       console.debug('[SYNC-CITIZEN-FAILED]', e);
     }
   }
+
+  // 3. Scan for new broadcast messages
+  try {
+    const res = await fetch('/api/broadcasts/latest');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        const lastSeenIdStr = localStorage.getItem('nws_last_seen_broadcast_id');
+        const lastSeenId = lastSeenIdStr ? parseInt(lastSeenIdStr, 10) : 0;
+        
+        // Filter for broadcasts newer than lastSeenId
+        const newBroadcasts = data.data.filter((b: any) => b.id > lastSeenId);
+        if (newBroadcasts.length > 0) {
+          // Sort ascending so they are triggered in order
+          const sortedNew = [...newBroadcasts].sort((a: any, b: any) => a.id - b.id);
+          for (const b of sortedNew) {
+            triggerNotification(
+              `📢 ${b.title}`,
+              b.content.length > 100 ? b.content.substring(0, 97) + '...' : b.content,
+              'news'
+            );
+          }
+          // Save max ID
+          const maxId = Math.max(...newBroadcasts.map((b: any) => b.id));
+          localStorage.setItem('nws_last_seen_broadcast_id', String(maxId));
+        }
+      }
+    }
+  } catch (e) {
+    console.debug('[SYNC-BROADCASTS-FAILED]', e);
+  }
 }
