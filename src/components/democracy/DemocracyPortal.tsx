@@ -131,7 +131,7 @@ export default function DemocracyPortal() {
 
   // Submit proposal form states
   const [newTitle, setNewTitle] = useState('');
-  const [newCategory, setNewCategory] = useState('Costituzionale');
+  const [newCategory, setNewCategory] = useState('Diritti Civili');
   const [newDescription, setNewDescription] = useState('');
   const [newContent, setNewContent] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -858,7 +858,6 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                     className="bg-white border border-slate-200 outline-none text-xs rounded-xl px-3 py-2 text-brand-blue cursor-pointer focus:border-brand-gold"
                   >
                     <option value="all">{language === 'en' ? 'All Categories' : 'Tutte le Categorie'}</option>
-                    <option value="Costituzionale">{language === 'en' ? 'Constitutional' : 'Costituzionale'}</option>
                     <option value="Diritti Civili">{language === 'en' ? 'Civil Rights' : 'Diritti Civili'}</option>
                     <option value="Tecnologia & Rete">{language === 'en' ? 'Technology & Net' : 'Tecnologia & Rete'}</option>
                     <option value="Ambiente & Clima">{language === 'en' ? 'Environment' : 'Ambiente & Clima'}</option>
@@ -1445,7 +1444,6 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                             onChange={(e) => setNewCategory(e.target.value)}
                             className="w-full bg-slate-50 border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue cursor-pointer"
                           >
-                            <option value="Costituzionale">Costituzionale (Revisione Carta)</option>
                             <option value="Diritti Civili">Diritti Civili & Welfare</option>
                             <option value="Tecnologia & Rete">Tecnologia, Identità & Digitale</option>
                             <option value="Ambiente & Clima">Ambiente, Clima & Sostenibilità</option>
@@ -1551,7 +1549,6 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                             onChange={(e) => setNewCategory(e.target.value)}
                             className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue cursor-pointer"
                           >
-                            <option value="Costituzionale">Costituzionale (Revisione Carta)</option>
                             <option value="Diritti Civili">Diritti Civili & Welfare</option>
                             <option value="Tecnologia & Rete">Tecnologia, Identità & Digitale</option>
                             <option value="Ambiente & Clima">Ambiente, Clima & Sostenibilità</option>
@@ -1629,7 +1626,6 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                             onChange={(e) => setNewCategory(e.target.value)}
                             className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-2.5 text-xs outline-none transition text-brand-blue cursor-pointer"
                           >
-                            <option value="Costituzionale">Costituzionale (Revisione Carta)</option>
                             <option value="Diritti Civili">Diritti Civili & Welfare</option>
                             <option value="Tecnologia & Rete">Tecnologia, Identità & Digitale</option>
                             <option value="Ambiente & Clima">Ambiente, Clima & Sostenibilità</option>
