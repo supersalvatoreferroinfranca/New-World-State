@@ -53,10 +53,12 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const origin = self.location ? self.location.origin : '';
+  const iconUrl = origin ? `${origin}/android-chrome-192x192.png` : '/android-chrome-192x192.png';
   const options = {
     body: data.body,
-    icon: '/android-chrome-192x192.png',
-    badge: '/android-chrome-192x192.png',
+    icon: iconUrl,
+    badge: iconUrl,
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/'

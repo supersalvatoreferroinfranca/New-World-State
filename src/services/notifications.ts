@@ -151,13 +151,16 @@ export async function triggerNotification(title: string, body: string, type: 're
   // Standard web browser notification implementation
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
     try {
+      const origin = window.location.origin || '';
+      const iconUrl = origin ? `${origin}/android-chrome-192x192.png` : '/android-chrome-192x192.png';
+
       // Direct via service worker if possible
       if ('serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.ready;
         reg.showNotification(title, {
           body,
-          icon: '/android-chrome-192x192.png',
-          badge: '/android-chrome-192x192.png',
+          icon: iconUrl,
+          badge: iconUrl,
           vibrate: [150, 80, 150],
           data: { url }
         } as any);
@@ -165,7 +168,7 @@ export async function triggerNotification(title: string, body: string, type: 're
         // Fallback to absolute standard browser window popup
         new Notification(title, {
           body,
-          icon: '/android-chrome-192x192.png'
+          icon: iconUrl
         });
       }
     } catch (apiErr) {
