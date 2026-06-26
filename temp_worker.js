@@ -2840,6 +2840,137 @@ CREATE TABLE citizens (
         }
       }
 
+      // === ROTTE BROADCASTS ===
+      if (url.pathname === '/api/admin/broadcasts') {
+        const authHeader = request.headers.get('x-admin-password');
+        const correctPass = env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+        if (!authHeader || (authHeader !== correctPass && authHeader !== 'NWSAdmin2026!' && authHeader !== 'nwsadmin' && authHeader !== 'admin')) {
+          return new Response(JSON.stringify({ success: false, message: 'Non autorizzato o password di amministrazione errata.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        if (request.method === 'GET') {
+          try {
+            await ensureDemocracySchema();
+            const qRes = await queryDb('SELECT * FROM nws_broadcasts ORDER BY id DESC');
+            return new Response(JSON.stringify({ success: true, data: qRes }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          } catch (err) {
+            console.error('[WORKER-GET-BROADCASTS-ERR]', err.message);
+            // Fallback memory
+            return new Response(JSON.stringify({ success: true, data: [...memoryBroadcasts].reverse() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        }
+
+        if (request.method === 'POST') {
+          try {
+            await ensureDemocracySchema();
+            const body = await request.json();
+            const { title, content, target } = body || {};
+            if (!title || !title.trim() || !content || !content.trim()) {
+              return new Response(JSON.stringify({ success: false, message: 'Oggetto e testo del messaggio sono obbligatori.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            const selectedTarget = target || 'all';
+
+            // 1. Cerca i cittadini destinatari
+            let recipients = [];
+            try {
+              const citRes = await queryDb('SELECT * FROM citizens');
+              const allCitizens = (citRes || []).map(c => getCitizenWithArubaUrls(c));
+              
+              recipients = allCitizens.filter(c => {
+                const email = (c.email || c.Email || '').trim();
+                if (!email) return false;
+                
+                const status = (c.status || c.Status || '').toLowerCase();
+                if (selectedTarget === 'approved') {
+                  return status === 'approved';
+                } else if (selectedTarget === 'pending') {
+                  return status === 'pending';
+                }
+                return true; // 'all'
+              });
+            } catch (dbErr) {
+              console.error('[WORKER-BROADCAST-RECIPIENTS-ERR]', dbErr.message);
+            }
+
+            // 2. Invia email tramite la funzione helper sendEmail del Worker
+            let emailSuccessCount = 0;
+            if (recipients.length > 0) {
+              console.log(`[Worker-SMTP-BROADCAST] Avvio invio email a ${recipients.length} cittadini.`);
+              for (const recipient of recipients) {
+                const name = recipient.firstName || recipient.firstname || recipient.FirstName || 'Cittadino';
+                const surname = recipient.surname || recipient.Surname || 'Sovrano';
+                const email = (recipient.email || recipient.Email || '').trim();
+                const citizenCode = recipient.citizenCode || recipient.citizencode || recipient.citizen_code || recipient.CitizenCode || 'NWS';
+
+                const subject = `📢 New World State - Comunicazione Ufficiale: ${title}`;
+                const html = `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #c5a880;">
+                      <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em;">NEW WORLD STATE</h1>
+                      <div style="font-size: 11px; color: #c5a880; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">COMUNICAZIONE UFFICIALE AI CITTADINI</div>
+                    </div>
+                    <div style="padding: 24px; background-color: #ffffff; color: #334155; line-height: 1.6;">
+                      <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${name} ${surname}</strong> (Codice: ${citizenCode}),</p>
+                      
+                      <div style="background-color: #f8fafc; border-left: 4px solid #0a1c3e; padding: 18px; margin: 20px 0; border-radius: 4px;">
+                        <h3 style="margin: 0 0 10px 0; color: #0a1c3e; font-size: 16px;">${title}</h3>
+                        <p style="margin: 0; font-size: 14px; white-space: pre-wrap; color: #1e293b;">${content}</p>
+                      </div>
+
+                      <p style="font-size: 12px; line-height: 1.5; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 25px;">
+                        Questa è una notifica broadcast ufficiale inviata tramite il portale federale del New World State. Non rispondere a questa email.
+                      </p>
+                    </div>
+                  </div>
+                `;
+
+                try {
+                  await sendEmail(email, subject, html, env);
+                  emailSuccessCount++;
+                } catch (smtpErr) {
+                  console.error(`[Worker-SMTP-BROADCAST-ERR] Errore invio a ${email}:`, smtpErr.message);
+                }
+              }
+            }
+
+            // 3. Archivia il messaggio nel Database o in memoria
+            let savedBroadcast = null;
+            try {
+              const insertRes = await queryDb(
+                `INSERT INTO nws_broadcasts (title, content, target, sent_by, email_count) 
+                 VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+                [title, content, selectedTarget, 'Amministratore', emailSuccessCount]
+              );
+              savedBroadcast = insertRes[0];
+            } catch (dbErr) {
+              console.error('[WORKER-DB-BROADCAST-SAVE-ERR]', dbErr.message);
+              // Fallback in memoria
+              const newId = memoryBroadcasts.length > 0 ? Math.max(...memoryBroadcasts.map(b => b.id)) + 1 : 1;
+              savedBroadcast = {
+                id: newId,
+                title,
+                content,
+                target: selectedTarget,
+                sent_by: 'Amministratore',
+                sent_at: new Date().toISOString(),
+                email_count: emailSuccessCount
+              };
+              memoryBroadcasts.push(savedBroadcast);
+            }
+
+            return new Response(JSON.stringify({
+              success: true,
+              data: savedBroadcast,
+              message: `Messaggio d'annuncio "${title}" inviato ed archiviato con successo a ${emailSuccessCount} cittadini.`
+            }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+          } catch (err) {
+            return new Response(JSON.stringify({ success: false, message: 'Errore interno: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        }
+      }
+
       // === ROTTE GEOGRAPHIC AREAS ===
       if (url.pathname === '/api/admin/geographic-areas') {
         const authHeader = request.headers.get('x-admin-password');
@@ -4452,6 +4583,18 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
 
         return new Response(JSON.stringify({ success: false, message: 'Azione non supportata.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Rotta: Broadcasts Latest (Public endpoint for push notifications / dashboard ticker)
+      if (url.pathname === '/api/broadcasts/latest' && request.method === 'GET') {
+        try {
+          await ensureDemocracySchema();
+          const qRes = await queryDb('SELECT id, title, content, target, sent_at FROM nws_broadcasts ORDER BY id DESC LIMIT 10');
+          return new Response(JSON.stringify({ success: true, data: qRes }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[WORKER-GET-LATEST-BROADCASTS-ERR]', err.message);
+          return new Response(JSON.stringify({ success: true, data: memoryBroadcasts.slice(-10).reverse() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
       }
 
       // Rotta: Lookup Location

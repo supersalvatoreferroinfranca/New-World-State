@@ -19,6 +19,7 @@ import DemocracyPortal from './components/democracy/DemocracyPortal';
 import WelcomePage from './components/home/WelcomePage';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp } from 'lucide-react';
+import { startBackgroundSync } from './services/notifications';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy'>('welcome');
@@ -44,6 +45,34 @@ function AppContent() {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  React.useEffect(() => {
+    let citizenId: number | null = null;
+    try {
+      const saved = localStorage.getItem('nws_democracy_citizen') || sessionStorage.getItem('nws_democracy_citizen');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.id) {
+          citizenId = parsed.id;
+        }
+      }
+    } catch (e) {
+      console.error('[GLOBAL-SYNC-INIT-ERR]', e);
+    }
+
+    // Avvia la sincronizzazione globale per le notifiche
+    startBackgroundSync(citizenId);
+
+    // Forza check istantaneo quando la finestra riprende il focus
+    const handleFocus = () => {
+      startBackgroundSync(citizenId);
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [activeTab]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -208,9 +208,6 @@ export default function DemocracyPortal() {
         return prev;
       });
     });
-    return () => {
-      stopBackgroundSync();
-    };
   }, [citizen?.id]);
 
   // Handle pre-check for citizen identification and generate temporary password if needed

@@ -156,8 +156,8 @@ export async function triggerNotification(title: string, body: string, type: 're
         const reg = await navigator.serviceWorker.ready;
         reg.showNotification(title, {
           body,
-          icon: '/nws-logo.svg',
-          badge: '/nws-logo.svg',
+          icon: '/android-chrome-192x192.png',
+          badge: '/android-chrome-192x192.png',
           vibrate: [150, 80, 150],
           data: { url }
         } as any);
@@ -165,7 +165,7 @@ export async function triggerNotification(title: string, body: string, type: 're
         // Fallback to absolute standard browser window popup
         new Notification(title, {
           body,
-          icon: '/nws-logo.svg'
+          icon: '/android-chrome-192x192.png'
         });
       }
     } catch (apiErr) {
