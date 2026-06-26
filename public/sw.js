@@ -1,5 +1,5 @@
-// New World State PWA Service Worker
-const CACHE_NAME = 'nws-cache-v1';
+// New World State PWA Service Worker - v2
+const CACHE_NAME = 'nws-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -54,7 +54,7 @@ self.addEventListener('push', (event) => {
   }
 
   const origin = self.location ? self.location.origin : '';
-  const iconUrl = origin ? `${origin}/android-chrome-192x192.png` : '/android-chrome-192x192.png';
+  const iconUrl = origin ? `${origin}/android-chrome-192x192.png?v=3` : '/android-chrome-192x192.png?v=3';
   const options = {
     body: data.body,
     icon: iconUrl,

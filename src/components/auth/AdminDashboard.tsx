@@ -187,6 +187,35 @@ export default function AdminDashboard() {
   const [proposalRejectionId, setProposalRejectionId] = useState<number | null>(null);
   const [proposalRejectionReason, setProposalRejectionReason] = useState('');
 
+  // Cron states
+  const [cronLoading, setCronLoading] = useState(false);
+  const [cronMessage, setCronMessage] = useState<{ success: boolean; text: string } | null>(null);
+
+  const handleTriggerCron = async () => {
+    setCronLoading(true);
+    setCronMessage(null);
+    try {
+      const res = await safeFetch('/api/democracy/cron', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': getAdminPassword()
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCronMessage({ success: true, text: data.message || 'Sincronizzazione completata con successo!' });
+        await fetchProposals();
+      } else {
+        setCronMessage({ success: false, text: data.message || 'Impossibile completare il controllo dello schedulatore.' });
+      }
+    } catch (err: any) {
+      setCronMessage({ success: false, text: 'Errore di connessione al server: ' + err.message });
+    } finally {
+      setCronLoading(false);
+    }
+  };
+
   // Custom dialog system to bypass iframe sandbox restrictions on window.confirm & alert
   const [dialog, setDialog] = useState<{
     isOpen: boolean;
@@ -1193,6 +1222,40 @@ export default function AdminDashboard() {
                     <option value="failed">Respinte dal Popolo</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Schedulatore automatico & Monitor Notifiche Referendum */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <h4 className="font-serif text-[#0a1c3e] font-semibold text-sm flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-[#c5a880]" /> Schedulatore & Monitoraggio Notifiche Referendum
+                    </h4>
+                    <p className="text-xs text-slate-400 max-w-xl">
+                      Il sistema esegue periodicamente controlli automatici sulle date dei referendum. Puoi forzare l'esecuzione immediata per inviare i <strong>promemoria email/push (3 giorni prima)</strong> e i <strong>rapporti di scrutinio finale completi</strong> ai cittadini.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleTriggerCron}
+                    disabled={cronLoading}
+                    className="inline-flex items-center gap-2 bg-[#0a1c3e] hover:bg-slate-800 disabled:bg-slate-300 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition duration-200 cursor-pointer shadow-sm whitespace-nowrap animate-pulse"
+                  >
+                    {cronLoading ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
+                    Esegui Controllo Schedulatore
+                  </button>
+                </div>
+
+                {cronMessage && (
+                  <div className={`p-3 rounded-xl border text-xs flex items-start gap-2 animate-fade-in ${
+                    cronMessage.success ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-red-50 border-red-100 text-red-800'
+                  }`}>
+                    {cronMessage.success ? <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" /> : <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />}
+                    <div>
+                      <p className="font-medium">{cronMessage.success ? 'Esecuzione Schedulatore Riuscita!' : 'Errore Schedulatore'}</p>
+                      <p className="mt-0.5 opacity-90">{cronMessage.text}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Registro delle Proposte */}

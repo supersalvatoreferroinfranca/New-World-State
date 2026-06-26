@@ -4028,6 +4028,262 @@ CREATE TABLE citizens (
         }
       }
 
+      // Helper per gestire lo stato dei referendum, inviare promemoria 3 giorni prima e rapporti finali al termine
+      async function runDemocracyCron() {
+        console.log('[CRON-DEMOCRACY] Avvio controllo scadenze e scadenziario referendum...');
+        await ensureDemocracySchema();
+
+        try {
+          // Assicura le colonne per il tracciamento degli invii di notifiche
+          try {
+            await queryDb('ALTER TABLE nws_proposals ADD COLUMN IF NOT EXISTS reminder_3d_sent BOOLEAN DEFAULT FALSE');
+            await queryDb('ALTER TABLE nws_proposals ADD COLUMN IF NOT EXISTS final_report_sent BOOLEAN DEFAULT FALSE');
+          } catch (alterErr) {
+            console.warn('[CRON-DEMOCRACY-ALTER-WARN] Errore aggiunta colonne tracciamento:', alterErr.message);
+          }
+
+          // Trova tutte le proposte attualmente in stato 'approved' (votazioni aperte)
+          const activeProposals = await queryDb("SELECT * FROM nws_proposals WHERE status = 'approved'");
+          if (!activeProposals || activeProposals.length === 0) {
+            console.log('[CRON-DEMOCRACY] Nessun referendum attivo o programmato trovato.');
+            return;
+          }
+
+          // Trova tutti i cittadini validi con indirizzo email per le notifiche
+          const citizensRes = await queryDb('SELECT * FROM citizens');
+          const validCitizens = (citizensRes || []).filter(cit => cit.email && cit.email.trim() !== '');
+          const now = new Date();
+
+          for (const proposal of activeProposals) {
+            if (!proposal.voting_ends_at) continue;
+
+            const endsAt = new Date(proposal.voting_ends_at);
+            const diffMs = endsAt.getTime() - now.getTime();
+            const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+            console.log(`[CRON-DEMOCRACY] Analisi referendum: "${proposal.title}". Giorni rimanenti: ${diffDays.toFixed(2)}`);
+
+            // --- CASO 1: Promemoria 3 giorni prima della conclusione ---
+            if (diffDays <= 3.0 && diffDays > 0.0 && !proposal.reminder_3d_sent) {
+              console.log(`[CRON-DEMOCRACY-REMINDER] Il referendum "${proposal.title}" chiude tra ${diffDays.toFixed(2)} giorni. Invio promemoria...`);
+
+              // Invio email a tutti i cittadini
+              for (const cit of validCitizens) {
+                const name = cit.firstName || cit.firstname || 'Cittadino';
+                const surname = cit.surname || 'Sovrano';
+                const email = cit.email.trim();
+                const citizenCode = cit.citizenCode || cit.citizencode || cit.citizen_code || 'NWS';
+
+                const subject = `⚠️ ATTENZIONE: Mancano 3 giorni alla conclusione del Referendum "${proposal.title}"`;
+                const html = `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #f59e0b;">
+                      <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em;">NEW WORLD STATE</h1>
+                      <div style="font-size: 11px; color: #f59e0b; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">CONSIGLIO DI DEMOCRAZIA DIRETTA</div>
+                    </div>
+                    <div style="padding: 24px; background-color: #ffffff; color: #334155;">
+                      <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${name} ${surname}</strong> (Codice: ${citizenCode}),</p>
+                      <p style="font-size: 14px; line-height: 1.5;">La consultazione popolare per il seguente referendum sta per giungere a conclusione:</p>
+                      
+                      <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 18px; margin: 20px 0; border-radius: 4px;">
+                        <h3 style="margin: 0 0 10px 0; color: #0a1c3e; font-size: 15px;">"${proposal.title}"</h3>
+                        <p style="margin: 0 0 4px 0; font-size: 13px;"><strong>Categoria:</strong> ${proposal.category || 'Generale'}</p>
+                        <p style="margin: 0; font-size: 13px; color: #9a3412;"><strong>Termine Ultimo Voto:</strong> ${endsAt.toLocaleString('it-IT', { timeZone: 'Europe/Rome' })} (Ora Italiana)</p>
+                      </div>
+
+                      <p style="font-size: 13px; line-height: 1.5; color: #475569;">
+                        Se non hai ancora depositato il tuo voto digitale e sicuro, ti invitiamo calorosamente a farlo ora per contribuire alle decisioni legislative della nostra Federazione. Ogni voto fa la differenza ed esprime la sovranità diretta della cittadinanza.
+                      </p>
+
+                      <div style="text-align: center; margin: 28px 0;">
+                        <a href="https://newworldstate.org/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.2);">ACCEDI AL PORTALE DI VOTO</a>
+                      </div>
+
+                      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                      <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 0;">
+                        Ricevi questa comunicazione istituzionale in quanto cittadino registrato del New World State.<br />
+                        Non rispondere a questa email.
+                      </p>
+                    </div>
+                  </div>
+                `;
+
+                sendEmail(email, subject, html, env)
+                  .then(() => console.log(`[CRON-REMINDER-EMAIL-OK] Promemoria inviato a: ${email}`))
+                  .catch((err) => console.warn(`[CRON-REMINDER-EMAIL-ERR] Fallito invio a ${email}:`, err.message));
+              }
+
+              // Crea un broadcast ufficiale in DB per fare scattare le notifiche push via PWA background-sync
+              try {
+                const broadcastTitle = `Promemoria: Referendum in chiusura`;
+                const broadcastContent = `Mancano meno di 3 giorni per esprimere il tuo voto per il referendum: "${proposal.title}". Fai sentire la tua voce sovrana!`;
+                
+                await queryDb(
+                  `INSERT INTO nws_broadcasts (title, content, target, sent_by, email_count) 
+                   VALUES ($1, $2, $3, $4, $5)`,
+                  [broadcastTitle, broadcastContent, 'all', 'Consiglio di Democrazia', validCitizens.length]
+                );
+                console.log('[CRON-DEMOCRACY-REMINDER-BROADCAST] Notifica push registrata con successo.');
+              } catch (bErr) {
+                console.error('[CRON-DEMOCRACY-REMINDER-BROADCAST-ERR]', bErr.message);
+              }
+
+              // Segna il promemoria come inviato per non ripeterlo
+              await queryDb('UPDATE nws_proposals SET reminder_3d_sent = TRUE WHERE id = $1', [proposal.id]);
+              console.log(`[CRON-DEMOCRACY-REMINDER-SUCCESS] Promemoria 3 giorni impostato a TRUE per ID: ${proposal.id}`);
+            }
+
+            // --- CASO 2: Votazione conclusa (Termine temporale superato) ---
+            if (diffDays <= 0.0 && !proposal.final_report_sent) {
+              console.log(`[CRON-DEMOCRACY-REPORT] Il referendum "${proposal.title}" si è ufficialmente concluso il ${endsAt.toLocaleString()}. Elaborazione risultati...`);
+
+              // Conta i voti depositati per questo referendum
+              const votesCount = await queryDb('SELECT vote, COUNT(*) as vote_count FROM nws_votes WHERE proposal_id = $1 GROUP BY vote', [proposal.id]);
+              
+              let yesVotes = 0;
+              let noVotes = 0;
+              let abstainVotes = 0;
+
+              for (const r of (votesCount || [])) {
+                const voteVal = String(r.vote).toLowerCase();
+                const count = parseInt(r.vote_count, 10) || 0;
+                if (voteVal === 'yes') yesVotes = count;
+                else if (voteVal === 'no') noVotes = count;
+                else if (voteVal === 'abstain') abstainVotes = count;
+              }
+
+              const totalVotes = yesVotes + noVotes + abstainVotes;
+              const passed = yesVotes > noVotes;
+              const finalStatus = passed ? 'passed' : 'failed';
+
+              // Aggiorna lo stato della proposta normativa e imposta final_report_sent = TRUE
+              await queryDb(`
+                UPDATE nws_proposals 
+                SET status = $1, 
+                    final_report_sent = TRUE 
+                WHERE id = $2
+              `, [finalStatus, proposal.id]);
+
+              console.log(`[CRON-DEMOCRACY-REPORT-DB] Stato aggiornato a "${finalStatus}" per referendum ID: ${proposal.id}. (Sì: ${yesVotes}, No: ${noVotes}, Astenuti: ${abstainVotes})`);
+
+              // Invio email di rapporto completo a tutti i cittadini
+              for (const cit of validCitizens) {
+                const name = cit.firstName || cit.firstname || 'Cittadino';
+                const surname = cit.surname || 'Sovrano';
+                const email = cit.email.trim();
+                const citizenCode = cit.citizenCode || cit.citizencode || cit.citizen_code || 'NWS';
+
+                const outcomeBadge = passed
+                  ? `<span style="background-color: #d1fae5; color: #065f46; padding: 8px 16px; border-radius: 9999px; font-weight: bold; font-size: 13px; text-transform: uppercase; border: 1px solid #10b981;">APPROVATO CON SUCCESSO 🏛️</span>`
+                  : `<span style="background-color: #fee2e2; color: #991b1b; padding: 8px 16px; border-radius: 9999px; font-weight: bold; font-size: 13px; text-transform: uppercase; border: 1px solid #f87171;">RESPINTO DAL POPOLO ❌</span>`;
+
+                const yesPerc = totalVotes > 0 ? ((yesVotes / totalVotes) * 100).toFixed(1) : '0';
+                const noPerc = totalVotes > 0 ? ((noVotes / totalVotes) * 100).toFixed(1) : '0';
+                const absPerc = totalVotes > 0 ? ((abstainVotes / totalVotes) * 100).toFixed(1) : '0';
+
+                const subject = `📊 RAPPORTO SCRUTINIO FINALE: Risultati del Referendum "${proposal.title}"`;
+                const html = `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #c5a880;">
+                      <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em;">NEW WORLD STATE</h1>
+                      <div style="font-size: 11px; color: #c5a880; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">VERBALE SCRUTINIO POPOLARE FEDERALE</div>
+                    </div>
+                    <div style="padding: 24px; background-color: #ffffff; color: #334155;">
+                      <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${name} ${surname}</strong> (Codice: ${citizenCode}),</p>
+                      <p style="font-size: 14px; line-height: 1.5;">Il Consiglio di Democrazia Diretta ha completato ufficialmente lo scrutinio elettronico per la seguente consultazione:</p>
+                      
+                      <h2 style="font-size: 18px; color: #0a1c3e; margin: 15px 0 5px 0; font-family: Georgia, serif;">"${proposal.title}"</h2>
+                      <p style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 25px;">Proposta normata presentata da: ${proposal.proponent_name || 'Iniziativa Popolare'}</p>
+
+                      <div style="text-align: center; margin: 30px 0;">
+                        <p style="margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Esito Definitivo Votazione</p>
+                        ${outcomeBadge}
+                      </div>
+
+                      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 6px; margin: 25px 0;">
+                        <h3 style="margin: 0 0 15px 0; font-size: 13px; color: #0a1c3e; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Dettaglio dei Voti</h3>
+                        
+                        <div style="margin-bottom: 15px;">
+                          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                            <span><strong>Sì (Favorevoli):</strong> ${yesVotes} voti</span>
+                            <span style="font-weight: bold; color: #059669;">${yesPerc}%</span>
+                          </div>
+                          <div style="background-color: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                            <div style="background-color: #10b981; height: 100%; width: ${yesPerc}%;"></div>
+                          </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                            <span><strong>No (Contrari):</strong> ${noVotes} voti</span>
+                            <span style="font-weight: bold; color: #dc2626;">${noPerc}%</span>
+                          </div>
+                          <div style="background-color: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                            <div style="background-color: #ef4444; height: 100%; width: ${noPerc}%;"></div>
+                          </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                            <span><strong>Astenuti:</strong> ${abstainVotes} voti</span>
+                            <span style="font-weight: bold; color: #4b5563;">${absPerc}%</span>
+                          </div>
+                          <div style="background-color: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                            <div style="background-color: #94a3b8; height: 100%; width: ${absPerc}%;"></div>
+                          </div>
+                        </div>
+
+                        <div style="font-size: 12px; color: #64748b; margin-top: 20px; display: flex; justify-content: space-between; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+                          <span><strong>Affluenza Totale:</strong></span>
+                          <span><strong>${totalVotes} schede digitali</strong></span>
+                        </div>
+                      </div>
+
+                      <p style="font-size: 13px; line-height: 1.6; color: #475569;">
+                        In forza delle regole del suffragio universale del New World State, la presente deliberazione normativa è da ritenersi <strong>${passed ? 'approvata ed ufficialmente inserita nel corpus giuridico federale' : 'respinta e archiviata'}.</strong>
+                      </p>
+
+                      <div style="text-align: center; margin: 28px 0;">
+                        <a href="https://newworldstate.org/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">ARCHIVIO STORICO CONSULTAZIONI</a>
+                      </div>
+
+                      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                      <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 0;">
+                        Documento registrato pubblicamente e autenticato con crittografia nei registri di voto del New World State.<br />
+                        Non rispondere a questa comunicazione.
+                      </p>
+                    </div>
+                  </div>
+                `;
+
+                sendEmail(email, subject, html, env)
+                  .then(() => console.log(`[CRON-DEMOCRACY-REPORT-EMAIL-OK] Rapporto inviato a: ${email}`))
+                  .catch((err) => console.warn(`[CRON-DEMOCRACY-REPORT-EMAIL-ERR] Fallito invio esiti a ${email}:`, err.message));
+              }
+
+              // Crea un broadcast ufficiale in DB per fare scattare le notifiche push via PWA background-sync
+              try {
+                const bTitle = passed ? `🏛️ Referendum Concluso: APPROVATO` : `❌ Referendum Concluso: RESPINTO`;
+                const bContent = `Scrutinio finale completato per "${proposal.title}". Esito: ${passed ? 'Approvata' : 'Respinta'} con ${yesVotes} voti favorevoli e ${noVotes} contrari (totale: ${totalVotes} voti).`;
+                
+                await queryDb(
+                  `INSERT INTO nws_broadcasts (title, content, target, sent_by, email_count) 
+                   VALUES ($1, $2, $3, $4, $5)`,
+                  [bTitle, bContent, 'all', 'Consiglio di Democrazia', validCitizens.length]
+                );
+                console.log('[CRON-DEMOCRACY-REPORT-BROADCAST] Notifica push per esito referendum registrata.');
+              } catch (bErr) {
+                console.error('[CRON-DEMOCRACY-REPORT-BROADCAST-ERR]', bErr.message);
+              }
+
+              console.log(`[CRON-DEMOCRACY-REPORT-SUCCESS] Rapporto finale completo registrato per Referendum ID: ${proposal.id}`);
+            }
+          }
+        } catch (cronErr) {
+          console.error('[CRON-DEMOCRACY-GLOBAL-ERR] Errore critico nel controllo scadenze referendum:', cronErr);
+        }
+      }
+
       // Pre-flight per controllo cittadino ed eventuale invio password temporanea
       if (url.pathname === '/api/democracy/preflight' && request.method === 'POST') {
         const body = await request.json();
@@ -4297,33 +4553,33 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
       }
 
+      // Schedulatore / Cron di Democrazia Diretta (promemoria e verbale scrutinio finale)
+      if (url.pathname === '/api/democracy/cron' && (request.method === 'GET' || request.method === 'POST')) {
+        await ensureDemocracySchema();
+        try {
+          await runDemocracyCron();
+          return new Response(JSON.stringify({ 
+            success: true, 
+            message: 'Cron di democrazia eseguito con successo. I controlli sulle scadenze dei referendum, i promemoria (3 giorni prima) e i rapporti di scrutinio finale sono stati elaborati.' 
+          }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          return new Response(JSON.stringify({ 
+            success: false, 
+            message: 'Errore nell\'esecuzione manuale del cron di democrazia: ' + err.message 
+          }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
       // 2. Ottieni Proposte Normative
       if (url.pathname === '/api/democracy/proposals' && request.method === 'GET') {
         await ensureDemocracySchema();
 
-        // Autoclose expired
-        const closeExpiredSql = `
-          UPDATE nws_proposals
-          SET status = CASE 
-            WHEN yes_votes_total > no_votes_total THEN 'passed'
-            ELSE 'failed'
-          END
-          FROM (
-            SELECT p2.id as p_id,
-              COALESCE(SUM(CASE WHEN v2.vote = 'yes' THEN 1 ELSE 0 END), 0) as yes_votes_total,
-              COALESCE(SUM(CASE WHEN v2.vote = 'no' THEN 1 ELSE 0 END), 0) as no_votes_total
-            FROM nws_proposals p2
-            LEFT JOIN nws_votes v2 ON p2.id = v2.proposal_id
-            GROUP BY p2.id
-          ) sub
-          WHERE id = sub.p_id 
-            AND status = 'approved' 
-            AND voting_ends_at IS NOT NULL 
-            AND voting_ends_at < CURRENT_TIMESTAMP
-        `;
+        // Esegue il cron per aggiornare scadenze, inviare promemoria 3 giorni prima e rapporti finali
         try {
-          await queryDb(closeExpiredSql);
-        } catch(e) {}
+          await runDemocracyCron();
+        } catch(e) {
+          console.error('[CRON-AUTO-RUN-WARN]', e.message);
+        }
 
         const qSql = `
           SELECT 

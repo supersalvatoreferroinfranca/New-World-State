@@ -152,7 +152,7 @@ export async function triggerNotification(title: string, body: string, type: 're
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
     try {
       const origin = window.location.origin || '';
-      const iconUrl = origin ? `${origin}/android-chrome-192x192.png` : '/android-chrome-192x192.png';
+      const iconUrl = origin ? `${origin}/android-chrome-192x192.png?v=3` : '/android-chrome-192x192.png?v=3';
 
       // Direct via service worker if possible
       if ('serviceWorker' in navigator) {
