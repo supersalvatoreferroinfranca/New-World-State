@@ -106,10 +106,10 @@ const worker = {
           schemaTest: { ok: false, count: null, error: null },
           postGisTest: { ok: false, error: null },
           latestEntries: [],
-          emailProvider: env.SMTP_USER ? 'Aruba SMTP' : (env.RESEND_API_KEY ? 'Resend' : (env.BREVO_API_KEY ? 'Brevo' : 'Nessuno')),
-          emailApiKeyConfigured: !!(env.SMTP_USER || env.RESEND_API_KEY || env.BREVO_API_KEY),
+          emailProvider: env.SMTP_USER ? 'Aruba SMTP' : 'Nessuno',
+          emailApiKeyConfigured: !!env.SMTP_USER,
           adminEmail: env.ADMIN_EMAIL || 'supersalvatoreferroinfranca@gmail.com',
-          fromEmail: env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || 'onboarding@resend.dev',
+          fromEmail: env.SMTP_FROM || env.SMTP_USER || 'onboarding@resend.dev',
           arubaConfigured: !!env.ARUBA_UPLOADER_URL,
           arubaUrl: env.ARUBA_UPLOADER_URL || 'Non configurata',
           arubaTest: { ok: false, writeOk: false, readOk: false, message: 'Non avviato o non configurato', url: null, error: null }
@@ -509,11 +509,11 @@ CREATE TABLE citizens (
                     </div>
                 </div>
 
-                <!-- check 5 -->
+                 <!-- check 5 -->
                 <div class="flex gap-4 p-4 rounded-2xl border bg-slate-950/50 ${dbStatus.emailApiKeyConfigured ? 'border-emerald-500/10' : 'border-yellow-500/10'}">
                     <div class="text-2xl select-none">${dbStatus.emailApiKeyConfigured ? '🟢' : '🟡'}</div>
                     <div class="space-y-1 flex-grow">
-                        <h3 class="text-sm font-semibold text-white">2.5 Configurazione Invio Email (Aruba SMTP / Resend / Brevo)</h3>
+                        <h3 class="text-sm font-semibold text-white">2.5 Configurazione Invio Email (Aruba SMTP)</h3>
                         <p class="text-xs text-slate-400 font-sans">Gestisce l'invio automatico delle notifiche email sia al nuovo cittadino che all'amministratore ad ogni registrazione.</p>
                         
                         <div class="bg-slate-950 text-xs font-mono p-3 rounded border border-slate-850 mt-2 space-y-1.5 text-slate-300">
@@ -524,11 +524,10 @@ CREATE TABLE citizens (
 
                         ${!dbStatus.emailApiKeyConfigured ? `
                         <div class="bg-amber-950/25 border border-amber-500/20 text-amber-300 rounded-xl p-3 text-xs mt-3 space-y-2 font-sans text-left">
-                            <span class="block font-semibold">💡 Come abilitare le email automatiche (Aruba SMTP, Resend o Brevo):</span>
+                            <span class="block font-semibold">💡 Come abilitare le email automatiche (Aruba SMTP):</span>
                             <p class="text-[11px] text-slate-400 my-0.5">Inserisci le variabili d'ambiente nella Dashboard Cloudflare del tuo Worker:</p>
                             <ul class="list-disc list-inside space-y-1 text-slate-400 text-[11px] mt-1 pl-1">
                                 <li><strong>Opzione SMTP Aruba (Consigliata):</strong> Imposta <code>SMTP_USER</code> (la tua email Aruba), <code>SMTP_PASS</code> (la tua password), <code>SMTP_HOST</code> (es. <code>smtps.aruba.it</code>), <code>SMTP_PORT</code> (es. <code>465</code>), <code>SMTP_FROM</code> (mittente, solitamente coincide con SMTP_USER), e <code>SMTP_FROM_NAME</code> (es. <code>Anagrafe New World State</code>).</li>
-                                <li><strong>Opzione Resend:</strong> Imposta <code>RESEND_API_KEY</code>, <code>RESEND_FROM_EMAIL</code> e <code>ADMIN_EMAIL</code>.</li>
                             </ul>
                         </div>
                         ` : `
@@ -1460,126 +1459,20 @@ CREATE TABLE citizens (
         }
       };
 
-      // Funzione helper per l'invio delle email (SMTP Aruba / Resend / Brevo)
+      // Funzione helper per l'invio delle email (SMTP Aruba)
       const sendEmail = async (to, subject, html, env, attachments = []) => {
-        const fromEmail = env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || "onboarding@resend.dev";
-        const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
-        
         console.log(`[EMAIL] Tentativo di invio a: ${to} (Oggetto: "${subject}", Allegati: ${attachments.length})`);
  
-        // 0. Autodetect SMTP: Se configurato Aruba, proviamo sempre come prima opzione
         if (env.SMTP_USER && env.SMTP_PASS) {
           try {
-            const success = await sendSmtpSocketEmail(to, subject, html, env, attachments);
-            if (success) return true;
+            return await sendSmtpSocketEmail(to, subject, html, env, attachments);
           } catch (smtpErr) {
-            console.error('[EMAIL] Errore riscontrato con SMTP Direct Aruba. Proverò API alternative se presenti.', smtpErr);
+            console.error('[EMAIL] Errore riscontrato con SMTP Direct Aruba.', smtpErr);
+            throw smtpErr;
           }
         }
         
-        // 1. Resend API
-        if (env.RESEND_API_KEY) {
-          try {
-            const payload = {
-              from: `New World State <${fromEmail}>`,
-              to: Array.isArray(to) ? to : [to],
-              subject: subject,
-              html: html
-            };
-
-            if (attachments && attachments.length > 0) {
-              payload.attachments = attachments.map(att => {
-                let base64Content = '';
-                if (att.content instanceof Uint8Array) {
-                  if (typeof Buffer !== 'undefined') {
-                    base64Content = Buffer.from(att.content).toString('base64');
-                  } else {
-                    let binary = '';
-                    for (let i = 0; i < att.content.byteLength; i++) {
-                      binary += String.fromCharCode(att.content[i]);
-                    }
-                    base64Content = btoa(binary);
-                  }
-                } else if (typeof att.content === 'string') {
-                  base64Content = att.content;
-                } else {
-                  base64Content = btoa(String.fromCharCode.apply(null, att.content));
-                }
-                return {
-                  filename: att.filename,
-                  content: base64Content
-                };
-              });
-            }
-
-            const response = await fetch('https://api.resend.com/emails', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${env.RESEND_API_KEY.trim()}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(payload)
-            });
-            const resultMsg = await response.text();
-            console.log(`[EMAIL] Risposta Resend: [${response.status}] ${resultMsg}`);
-            return response.ok;
-          } catch (e) {
-            console.error('[EMAIL] Errore di invio tramite Resend:', e);
-          }
-        }
-        
-        // 2. Brevo API
-        if (env.BREVO_API_KEY) {
-          try {
-            const payload = {
-              sender: { name: "New World State", email: fromEmail.includes('@') ? fromEmail : "onboarding@newworldstate.cloud" },
-              to: (Array.isArray(to) ? to : [to]).map(addr => ({ email: addr })),
-              subject: subject,
-              htmlContent: html
-            };
-
-            if (attachments && attachments.length > 0) {
-              payload.attachment = attachments.map(att => {
-                let base64Content = '';
-                if (att.content instanceof Uint8Array) {
-                  if (typeof Buffer !== 'undefined') {
-                    base64Content = Buffer.from(att.content).toString('base64');
-                  } else {
-                    let binary = '';
-                    for (let i = 0; i < att.content.byteLength; i++) {
-                      binary += String.fromCharCode(att.content[i]);
-                    }
-                    base64Content = btoa(binary);
-                  }
-                } else if (typeof att.content === 'string') {
-                  base64Content = att.content;
-                } else {
-                  base64Content = btoa(String.fromCharCode.apply(null, att.content));
-                }
-                return {
-                  name: att.filename,
-                  content: base64Content
-                };
-              });
-            }
-
-            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-              method: 'POST',
-              headers: {
-                'api-key': env.BREVO_API_KEY.trim(),
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(payload)
-            });
-            const resultMsg = await response.text();
-            console.log(`[EMAIL] Risposta Brevo: [${response.status}] ${resultMsg}`);
-            return response.ok;
-          } catch (e) {
-            console.error('[EMAIL] Errore di invio tramite Brevo:', e);
-          }
-        }
-        
-        console.warn('[EMAIL] Configura SMTP_USER/SMTP_PASS, RESEND_API_KEY o BREVO_API_KEY nella dashboard di Cloudflare.');
+        console.warn('[EMAIL] Configura SMTP_USER/SMTP_PASS nella dashboard di Cloudflare.');
         return false;
       };
 
@@ -1593,13 +1486,11 @@ CREATE TABLE citizens (
       if (url.pathname === '/api/test-email') {
         const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
         const isSmtp = !!env.SMTP_USER;
-        const isResend = !!env.RESEND_API_KEY;
-        const isBrevo = !!env.BREVO_API_KEY;
         
-        if (!isSmtp && !isResend && !isBrevo) {
+        if (!isSmtp) {
           return new Response(JSON.stringify({ 
             success: false, 
-            message: 'Nessun servizio email configurato nel Cloudflare Worker. Imposta i parametri SMTP o inserisci una chiave API per Resend/Brevo.' 
+            message: 'Nessun servizio email configurato nel Cloudflare Worker. Imposta i parametri SMTP di Aruba (SMTP_USER/SMTP_PASS).' 
           }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
         
@@ -1610,8 +1501,8 @@ CREATE TABLE citizens (
             <div style="background-color: #f1f5f9; padding: 15px; border-radius: 8px; font-size: 13px; margin: 15px 0;">
               <strong style="display: block; margin-bottom: 5px; color: #0a1c3e;">Configurazione Rilevata sul Cloudflare Edge:</strong>
               <ul style="margin: 0; padding-left: 20px; color: #475569;">
-                <li><strong>Canale Principale:</strong> ${isSmtp ? 'SMTP Aruba Direct' : (isResend ? 'Resend' : 'Brevo')}</li>
-                <li><strong>Email Mittente:</strong> ${env.SMTP_FROM || env.SMTP_USER || env.RESEND_FROM_EMAIL || env.BREVO_FROM_EMAIL || 'onboarding@resend.dev'}</li>
+                <li><strong>Canale Principale:</strong> SMTP Aruba Direct</li>
+                <li><strong>Email Mittente:</strong> ${env.SMTP_FROM || env.SMTP_USER || 'onboarding@resend.dev'}</li>
                 <li><strong>Destinatario Amministratore:</strong> ${adminEmail}</li>
               </ul>
             </div>
@@ -1621,10 +1512,9 @@ CREATE TABLE citizens (
         
         const ok = await sendEmail(adminEmail, "Test Invio Email - New World State Status", testHtml, env);
         if (ok) {
-          const activeChannel = isSmtp ? 'SMTP Aruba Direct' : (isResend ? 'Resend' : 'Brevo');
           return new Response(JSON.stringify({ 
             success: true, 
-            message: `Email di test recapitata correttamente a ${adminEmail} via ${activeChannel}!` 
+            message: `Email di test recapitata correttamente a ${adminEmail} via SMTP Aruba Direct!` 
           }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } else {
           return new Response(JSON.stringify({ 
@@ -4639,7 +4529,96 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           proponentName
         ]);
 
-        return new Response(JSON.stringify({ success: true, data: insRes[0], message: 'Proposta normativa sottomessa! In attesa di convalida amministrativa.' }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const newProposal = insRes[0];
+
+        // Invio Email di Riepilogo all'Autore e all'Amministratore
+        try {
+          const authorEmail = cit.email ? cit.email.trim() : '';
+          const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
+          
+          if (authorEmail) {
+            const authorSubject = `🏛️ New World State - Ricevuta di Sottomissione Proposta Normativa: ${title}`;
+            const authorHtml = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #d97706;">
+                  <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em; color: #ffffff;">NEW WORLD STATE</h1>
+                  <div style="font-size: 11px; color: #f59e0b; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">CONSIGLIO DI DEMOCRAZIA DIRETTA</div>
+                </div>
+                <div style="padding: 24px; background-color: #ffffff; color: #334155;">
+                  <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${proponentName}</strong>,</p>
+                  <p style="font-size: 14px; line-height: 1.5;">La tua proposta normativa è stata sottomessa con successo ed è ora in attesa di essere esaminata e convalidata dall'amministrazione per l'apertura delle votazioni popolari.</p>
+                  
+                  <div style="background-color: #f8fafc; border-left: 4px solid #d97706; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                    <h3 style="margin: 0 0 10px 0; color: #0a1c3e; font-size: 14px; text-transform: uppercase; letter-spacing: 0.02em;">Riepilogo della Proposta</h3>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Titolo:</strong> ${title}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Categoria:</strong> ${category || 'Generale'}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Descrizione:</strong> ${description || 'Nessuna descrizione fornita.'}</p>
+                  </div>
+
+                  <p style="font-size: 13px; line-height: 1.5; color: #64748b;">
+                    Riceverai una notifica email e push non appena la tua proposta sarà esaminata e convalidata dall'amministrazione per la votazione pubblica.
+                  </p>
+
+                  <div style="text-align: center; margin: 28px 0;">
+                    <a href="https://newworldstate.org/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">PORTALE DI DEMOCRAZIA</a>
+                  </div>
+
+                  <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                  <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 0;">
+                    Generato automaticamente dal Registro dei Referendum del New World State.<br />
+                    Per favore non rispondere a questa comunicazione.
+                  </p>
+                </div>
+              </div>
+            `;
+            sendEmail(authorEmail, authorSubject, authorHtml, env)
+              .catch(e => console.error('[EMAIL-AUTHOR-PROPOSAL-FAILED]', e.message));
+          }
+
+          if (adminEmail) {
+            const adminSubject = `🔔 Nuova Proposta Normativa da Convalidare: ${title}`;
+            const adminHtml = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #d97706;">
+                  <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em; color: #ffffff;">NEW WORLD STATE</h1>
+                  <div style="font-size: 11px; color: #f59e0b; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">CONSIGLIO DI DEMOCRAZIA DIRETTA - ADMIN</div>
+                </div>
+                <div style="padding: 24px; background-color: #ffffff; color: #334155;">
+                  <p style="font-size: 15px; margin-top: 0;">Gentile Amministratore,</p>
+                  <p style="font-size: 14px; line-height: 1.5;">Una nuova proposta normativa è stata sottomessa dal cittadino <strong>${proponentName}</strong> ed è in attesa di tua approvazione/convalida per l'apertura delle votazioni popolari.</p>
+                  
+                  <div style="background-color: #f8fafc; border-left: 4px solid #d97706; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                    <h3 style="margin: 0 0 10px 0; color: #0a1c3e; font-size: 14px; text-transform: uppercase; letter-spacing: 0.02em;">Riepilogo della Proposta</h3>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Autore:</strong> ${proponentName} (${cit.email || 'N/A'})</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Titolo:</strong> ${title}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Categoria:</strong> ${category || 'Generale'}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Descrizione:</strong> ${description || 'Nessuna descrizione fornita.'}</p>
+                  </div>
+
+                  <p style="font-size: 13px; line-height: 1.5; color: #64748b;">
+                    Puoi convalidare, modificare o respingere questa proposta accedendo direttamente alla Console di Amministrazione del Portale.
+                  </p>
+
+                  <div style="text-align: center; margin: 28px 0;">
+                    <a href="https://newworldstate.org/admin" style="display: inline-block; background-color: #d97706; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(217,119,6,0.25);">ACCEDI AL PORTALE AMMINISTRATORE</a>
+                  </div>
+
+                  <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                  <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 0;">
+                    Generato automaticamente dal Registro dei Referendum del New World State.<br />
+                    Per favore non rispondere a questa comunicazione.
+                  </p>
+                </div>
+              </div>
+            `;
+            sendEmail(adminEmail, adminSubject, adminHtml, env)
+              .catch(e => console.error('[EMAIL-ADMIN-PROPOSAL-FAILED]', e.message));
+          }
+        } catch (mailErr) {
+          console.error('[DEMOCRACY-PROPOSAL-EMAIL-ERR]', mailErr);
+        }
+
+        return new Response(JSON.stringify({ success: true, data: newProposal, message: 'Proposta normativa sottomessa! In attesa di convalida amministrativa.' }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
       // 4. Registra un Voto

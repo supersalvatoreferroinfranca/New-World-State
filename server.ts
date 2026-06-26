@@ -580,6 +580,12 @@ async function startServer() {
       return info;
     }
 
+    // Helper universale per inviare email tramite SMTP (Nodemailer) di Aruba
+    async function sendLocalEmail({ to, subject, html, text, attachments = [] }: { to: string; subject: string; html: string; text?: string; attachments?: any[] }) {
+      console.log(`[EMAIL] Tentativo di invio a: ${to} (Oggetto: "${subject}")`);
+      return await sendLocalSmtpEmail({ to, subject, html, text, attachments });
+    }
+
     // API Router
     const apiRouter = express.Router();
 
@@ -3334,7 +3340,96 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           proponentName
         ]);
 
-        return res.status(201).json({ success: true, data: insRes.rows[0], message: 'Proposta normativa sottomessa correttamente! In attesa di convalida amministrativa.' });
+        const newProposal = insRes.rows[0];
+
+        // Invio Email di Riepilogo all'Autore e all'Amministratore
+        try {
+          const authorEmail = cit.email ? cit.email.trim() : '';
+          const adminEmail = process.env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
+          
+          if (authorEmail) {
+            const authorSubject = `🏛️ New World State - Ricevuta di Sottomissione Proposta Normativa: ${title}`;
+            const authorHtml = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #d97706;">
+                  <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em; color: #ffffff;">NEW WORLD STATE</h1>
+                  <div style="font-size: 11px; color: #f59e0b; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">CONSIGLIO DI DEMOCRAZIA DIRETTA</div>
+                </div>
+                <div style="padding: 24px; background-color: #ffffff; color: #334155;">
+                  <p style="font-size: 15px; margin-top: 0;">Gentile cittadino/a <strong>${proponentName}</strong>,</p>
+                  <p style="font-size: 14px; line-height: 1.5;">La tua proposta normativa è stata sottomessa con successo ed è ora in attesa di essere esaminata e convalidata dall'amministrazione per l'apertura delle votazioni popolari.</p>
+                  
+                  <div style="background-color: #f8fafc; border-left: 4px solid #d97706; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                    <h3 style="margin: 0 0 10px 0; color: #0a1c3e; font-size: 14px; text-transform: uppercase; letter-spacing: 0.02em;">Riepilogo della Proposta</h3>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Titolo:</strong> ${title}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Categoria:</strong> ${category || 'Generale'}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Descrizione:</strong> ${description || 'Nessuna descrizione fornita.'}</p>
+                  </div>
+
+                  <p style="font-size: 13px; line-height: 1.5; color: #64748b;">
+                    Riceverai una notifica email e push non appena la tua proposta sarà esaminata e convalidata dall'amministrazione per la votazione pubblica.
+                  </p>
+
+                  <div style="text-align: center; margin: 28px 0;">
+                    <a href="${process.env.APP_URL || 'https://newworldstate.org'}/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">PORTALE DI DEMOCRAZIA</a>
+                  </div>
+
+                  <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                  <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 0;">
+                    Generato automaticamente dal Registro dei Referendum del New World State.<br />
+                    Per favore non rispondere a questa comunicazione.
+                  </p>
+                </div>
+              </div>
+            `;
+            sendLocalEmail({ to: authorEmail, subject: authorSubject, html: authorHtml })
+              .catch(e => console.error('[EMAIL-AUTHOR-PROPOSAL-FAILED]', e.message));
+          }
+
+          if (adminEmail) {
+            const adminSubject = `🔔 Nuova Proposta Normativa da Convalidare: ${title}`;
+            const adminHtml = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #d97706;">
+                  <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em; color: #ffffff;">NEW WORLD STATE</h1>
+                  <div style="font-size: 11px; color: #f59e0b; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">CONSIGLIO DI DEMOCRAZIA DIRETTA - ADMIN</div>
+                </div>
+                <div style="padding: 24px; background-color: #ffffff; color: #334155;">
+                  <p style="font-size: 15px; margin-top: 0;">Gentile Amministratore,</p>
+                  <p style="font-size: 14px; line-height: 1.5;">Una nuova proposta normativa è stata sottomessa dal cittadino <strong>${proponentName}</strong> ed è in attesa di tua approvazione/convalida per l'apertura delle votazioni popolari.</p>
+                  
+                  <div style="background-color: #f8fafc; border-left: 4px solid #d97706; padding: 16px; margin: 20px 0; border-radius: 4px;">
+                    <h3 style="margin: 0 0 10px 0; color: #0a1c3e; font-size: 14px; text-transform: uppercase; letter-spacing: 0.02em;">Riepilogo della Proposta</h3>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Autore:</strong> ${proponentName} (${cit.email || 'N/A'})</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Titolo:</strong> ${title}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Categoria:</strong> ${category || 'Generale'}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Descrizione:</strong> ${description || 'Nessuna descrizione fornita.'}</p>
+                  </div>
+
+                  <p style="font-size: 13px; line-height: 1.5; color: #64748b;">
+                    Puoi convalidare, modificare o respingere questa proposta accedendo direttamente alla Console di Amministrazione del Portale.
+                  </p>
+
+                  <div style="text-align: center; margin: 28px 0;">
+                    <a href="${process.env.APP_URL || 'https://newworldstate.org'}/admin" style="display: inline-block; background-color: #d97706; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(217,119,6,0.25);">ACCEDI ALLA CONSOLE AMMINISTRATORE</a>
+                  </div>
+
+                  <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                  <p style="font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 0;">
+                    Generato automaticamente dal Registro dei Referendum del New World State.<br />
+                    Per favore non rispondere a questa comunicazione.
+                  </p>
+                </div>
+              </div>
+            `;
+            sendLocalEmail({ to: adminEmail, subject: adminSubject, html: adminHtml })
+              .catch(e => console.error('[EMAIL-ADMIN-PROPOSAL-FAILED]', e.message));
+          }
+        } catch (mailErr: any) {
+          console.error('[DEMOCRACY-PROPOSAL-EMAIL-ERR]', mailErr.message);
+        }
+
+        return res.status(201).json({ success: true, data: newProposal, message: 'Proposta normativa sottomessa correttamente! In attesa di convalida amministrativa.' });
       } catch (err: any) {
         console.error('[DEMOCRACY-NEW-PROPOSAL-ERR]', err);
         return res.status(500).json({ success: false, message: 'Impossibile registrare la proposta normativa: ' + err.message });
@@ -3464,7 +3559,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
 
             const smtpConfigured = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
             if (!smtpConfigured) {
-              serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! ATTENZIONE: le notifiche email non sono state inviate poiché le credenziali SMTP (SMTP_USER/SMTP_PASS) non sono configurate nel file delle impostazioni.';
+              serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! ATTENZIONE: le notifiche email non sono state inviate poiché le credenziali SMTP (SMTP_USER/SMTP_PASS) di Aruba non sono configurate.';
             } else if (validCitizens.length === 0) {
               serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! Nota: non è presente alcun cittadino con indirizzo email valido nel database a cui inviare la notifica.';
             } else {
@@ -3483,7 +3578,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
               const html = `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                   <div style="background-color: #0a1c3e; color: #ffffff; padding: 24px; text-align: center; border-bottom: 4px solid #d97706;">
-                    <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em;">NEW WORLD STATE</h1>
+                    <h1 style="margin: 0; font-size: 22px; letter-spacing: 0.05em; color: #ffffff;">NEW WORLD STATE</h1>
                     <div style="font-size: 11px; color: #f59e0b; margin-top: 4px; letter-spacing: 0.15em; font-family: monospace;">CONSIGLIO DI DEMOCRAZIA DIRETTA</div>
                   </div>
                   <div style="padding: 24px; background-color: #ffffff; color: #334155;">
@@ -3502,7 +3597,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                     </div>
 
                     <p style="font-size: 13px; line-height: 1.5; color: #64748b;">
-                      Ti ricordiamo che l'esercizio del voto diretto garantisce l'attuazione dei principi liberali su cui si fonda la nostra nazione. Puoi expresar la tua preferenza e consultare l'apposita deliberazione normata in articoli collegandoti al Portale Federale.
+                      Ti ricordiamo che l'esercizio del voto diretto garantisce l'attuazione dei principi liberali su cui si fonda la nostra nazione. Puoi esprimere la tua preferenza e consultare l'apposita deliberazione normata in articoli collegandoti al Portale Federale.
                     </p>
 
                     <div style="text-align: center; margin: 28px 0;">
@@ -3518,7 +3613,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                 </div>
               `;
 
-              sendLocalSmtpEmail({ to: email, subject, html })
+              sendLocalEmail({ to: email, subject, html })
                 .then(() => console.log(`[VOTING-EMAIL] Email inviata a: ${email}`))
                 .catch(err => console.warn(`[VOTING-EMAIL-FAILED] Errore invio a ${email}: ${err.message}`));
             }
