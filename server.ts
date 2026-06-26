@@ -3346,6 +3346,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         try {
           const authorEmail = cit.email ? cit.email.trim() : '';
           const adminEmail = process.env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
+          const mailPromises: Promise<any>[] = [];
           
           if (authorEmail) {
             const authorSubject = `🏛️ New World State - Ricevuta di Sottomissione Proposta Normativa: ${title}`;
@@ -3382,8 +3383,10 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                 </div>
               </div>
             `;
-            sendLocalEmail({ to: authorEmail, subject: authorSubject, html: authorHtml })
-              .catch(e => console.error('[EMAIL-AUTHOR-PROPOSAL-FAILED]', e.message));
+            mailPromises.push(
+              sendLocalEmail({ to: authorEmail, subject: authorSubject, html: authorHtml })
+                .catch(e => console.error('[EMAIL-AUTHOR-PROPOSAL-FAILED]', e.message))
+            );
           }
 
           if (adminEmail) {
@@ -3422,8 +3425,15 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                 </div>
               </div>
             `;
-            sendLocalEmail({ to: adminEmail, subject: adminSubject, html: adminHtml })
-              .catch(e => console.error('[EMAIL-ADMIN-PROPOSAL-FAILED]', e.message));
+            mailPromises.push(
+              sendLocalEmail({ to: adminEmail, subject: adminSubject, html: adminHtml })
+                .catch(e => console.error('[EMAIL-ADMIN-PROPOSAL-FAILED]', e.message))
+            );
+          }
+
+          if (mailPromises.length > 0) {
+            await Promise.all(mailPromises);
+            console.log(`[PROPOSAL-SUBMISSION-EMAIL-OK] Spedite ${mailPromises.length} email relative alla proposta.`);
           }
         } catch (mailErr: any) {
           console.error('[DEMOCRACY-PROPOSAL-EMAIL-ERR]', mailErr.message);
@@ -3566,9 +3576,23 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
               serviceMessage = `Proposta convalidata e pubblicata nell'Albo delle Votazioni! Avviata la coda di notifica email per tutti i ${validCitizens.length} cittadini registrati.`;
             }
 
-            // Send sequentially or concurrently. To avoid timing out request, we can fire and forget or proceed
-            // Let's do a map promise or simple loop. Since there are few citizens in workspace, a prompt loop is great.
-            // Let's wrap each email send in a try/catch.
+            // Inserisci anche una riga in nws_broadcasts per far scattare la notifica push persistente su entrambi gli smartphone
+            try {
+              const bTitle = `🏛️ Nuovo Referendum Convalidato!`;
+              const bContent = `È aperta ufficialmente la votazione popolare per il referendum: "${approvedProposal.title}". Esprimi la tua preferenza entro il termine stabilito!`;
+              
+              await dbPool.query(
+                `INSERT INTO nws_broadcasts (title, content, target, sent_by, email_count) 
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [bTitle, bContent, 'all', 'Consiglio di Democrazia', validCitizens.length]
+              );
+              console.log('[VOTING-BROADCAST-PUSH] Registrata notifica push in nws_broadcasts per la proposta convalidata.');
+            } catch (pushErr: any) {
+              console.error('[VOTING-BROADCAST-PUSH-ERR]', pushErr.message);
+            }
+
+            // Await all email sends concurrently so the worker doesn't shut down before completion
+            const emailPromises: Promise<any>[] = [];
             for (const cit of validCitizens) {
               const name = cit.firstName || cit.firstname || 'Cittadino';
               const surname = cit.surname || 'Sovrano';
@@ -3613,9 +3637,18 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                 </div>
               `;
 
-              sendLocalEmail({ to: email, subject, html })
-                .then(() => console.log(`[VOTING-EMAIL] Email inviata a: ${email}`))
-                .catch(err => console.warn(`[VOTING-EMAIL-FAILED] Errore invio a ${email}: ${err.message}`));
+              if (smtpConfigured) {
+                emailPromises.push(
+                  sendLocalEmail({ to: email, subject, html })
+                    .then(() => console.log(`[VOTING-EMAIL] Email inviata a: ${email}`))
+                    .catch(err => console.warn(`[VOTING-EMAIL-FAILED] Errore invio a ${email}: ${err.message}`))
+                );
+              }
+            }
+
+            if (emailPromises.length > 0) {
+              await Promise.all(emailPromises);
+              console.log(`[VOTING-EMAIL-OK] Spedite con successo ${emailPromises.length} email di votazione.`);
             }
           } catch (citErr: any) {
             console.error('[VOTING-BROADCAST-CIT-FETCH-ERR]', citErr);

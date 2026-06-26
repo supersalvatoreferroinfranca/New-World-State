@@ -4535,6 +4535,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         try {
           const authorEmail = cit.email ? cit.email.trim() : '';
           const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
+          const mailPromises = [];
           
           if (authorEmail) {
             const authorSubject = `🏛️ New World State - Ricevuta di Sottomissione Proposta Normativa: ${title}`;
@@ -4571,8 +4572,10 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                 </div>
               </div>
             `;
-            sendEmail(authorEmail, authorSubject, authorHtml, env)
-              .catch(e => console.error('[EMAIL-AUTHOR-PROPOSAL-FAILED]', e.message));
+            mailPromises.push(
+              sendEmail(authorEmail, authorSubject, authorHtml, env)
+                .catch(e => console.error('[EMAIL-AUTHOR-PROPOSAL-FAILED]', e.message))
+            );
           }
 
           if (adminEmail) {
@@ -4611,8 +4614,15 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                 </div>
               </div>
             `;
-            sendEmail(adminEmail, adminSubject, adminHtml, env)
-              .catch(e => console.error('[EMAIL-ADMIN-PROPOSAL-FAILED]', e.message));
+            mailPromises.push(
+              sendEmail(adminEmail, adminSubject, adminHtml, env)
+                .catch(e => console.error('[EMAIL-ADMIN-PROPOSAL-FAILED]', e.message))
+            );
+          }
+
+          if (mailPromises.length > 0) {
+            await Promise.all(mailPromises);
+            console.log(`[PROPOSAL-SUBMISSION-EMAIL-OK] Spedite ${mailPromises.length} email relative alla proposta.`);
           }
         } catch (mailErr) {
           console.error('[DEMOCRACY-PROPOSAL-EMAIL-ERR]', mailErr);
@@ -4730,15 +4740,32 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             const startStr = approvedProposal.voting_starts_at ? new Date(approvedProposal.voting_starts_at).toLocaleString('it-IT', { timeZone: 'Europe/Rome' }) : 'N/A';
             const endStr = approvedProposal.voting_ends_at ? new Date(approvedProposal.voting_ends_at).toLocaleString('it-IT', { timeZone: 'Europe/Rome' }) : 'N/A';
 
-            const smtpConfigured = !!(env.SMTP_USER && env.SMTP_PASS) || !!env.RESEND_API_KEY || !!env.BREVO_API_KEY;
+            const smtpConfigured = !!(env.SMTP_USER && env.SMTP_PASS);
             if (!smtpConfigured) {
-              serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! ATTENZIONE: le notifiche email non sono state inviate poiché le credenziali email (SMTP_USER / RESEND_API_KEY / BREVO_API_KEY) non sono configurate nel Cloudflare Worker.';
+              serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! ATTENZIONE: le notifiche email non sono state inviate poiché le credenziali SMTP (SMTP_USER/SMTP_PASS) di Aruba non sono configurate nel Cloudflare Worker.';
             } else if (validCitizens.length === 0) {
               serviceMessage = 'Proposta convalidata e pubblicata nell\'Albo delle Votazioni! Nota: non è presente alcun cittadino con indirizzo email valido nel database a cui inviare la notifica.';
             } else {
               serviceMessage = `Proposta convalidata e pubblicata nell'Albo delle Votazioni! Avviata la coda di notifica email per tutti i ${validCitizens.length} cittadini registrati con il worker.`;
             }
 
+            // Inserisci anche una riga in nws_broadcasts per far scattare la notifica push persistente su entrambi gli smartphone
+            try {
+              const bTitle = `🏛️ Nuovo Referendum Convalidato!`;
+              const bContent = `È aperta ufficialmente la votazione popolare per il referendum: "${approvedProposal.title}". Esprimi la tua preferenza entro il termine stabilito!`;
+              
+              await queryDb(
+                `INSERT INTO nws_broadcasts (title, content, target, sent_by, email_count) 
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [bTitle, bContent, 'all', 'Consiglio di Democrazia', validCitizens.length]
+              );
+              console.log('[VOTING-BROADCAST-PUSH] Registrata notifica push in nws_broadcasts per la proposta convalidata.');
+            } catch (pushErr) {
+              console.error('[VOTING-BROADCAST-PUSH-ERR]', pushErr);
+            }
+
+            // Await all email sends concurrently so the worker doesn't shut down before completion
+            const emailPromises = [];
             for (const cit of validCitizens) {
               const name = cit.firstName || cit.firstname || 'Cittadino';
               const surname = cit.surname || 'Sovrano';
@@ -4784,9 +4811,18 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                 </div>
               `;
 
-              sendEmail(email, subject, html, env)
-                .then(() => console.log(`[VOTING-EMAIL] Email inviata a: ${email}`))
-                .catch((err) => console.warn(`[VOTING-EMAIL-FAILED] Errore invio a ${email}:`, err.message));
+              if (smtpConfigured) {
+                emailPromises.push(
+                  sendEmail(email, subject, html, env)
+                    .then(() => console.log(`[VOTING-EMAIL] Email inviata a: ${email}`))
+                    .catch((err) => console.warn(`[VOTING-EMAIL-FAILED] Errore invio a ${email}:`, err.message))
+                );
+              }
+            }
+
+            if (emailPromises.length > 0) {
+              await Promise.all(emailPromises);
+              console.log(`[VOTING-EMAIL-OK] Spedite con successo ${emailPromises.length} email di votazione.`);
             }
           } catch (citErr) {
             console.error('[VOTING-BROADCAST-CIT-FETCH-ERR]', citErr);
