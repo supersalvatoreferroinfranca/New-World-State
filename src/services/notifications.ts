@@ -73,6 +73,25 @@ export async function registerPWAResources() {
       scope: '/'
     });
     console.log('[PWA-SW] Service Worker registrato con successo. Scopo:', registration.scope);
+
+    // Register Periodic Background Sync if supported and permitted
+    if ('periodicSync' in registration) {
+      try {
+        const status = await navigator.permissions.query({
+          name: 'periodic-background-sync' as any
+        });
+        if (status.state === 'granted') {
+          await (registration as any).periodicSync.register('nws-sync', {
+            minInterval: 15 * 60 * 1000 // 15 minuti (minimo consentito dai browser)
+          });
+          console.log('[PWA-SW] Periodic Background Sync registrato con successo!');
+        } else {
+          console.log('[PWA-SW] Permesso per Periodic Sync non concesso o in attesa di installazione PWA.');
+        }
+      } catch (pErr) {
+        console.debug('[PWA-SW] Periodic Sync non configurato (necessita installazione PWA sulla home screen).');
+      }
+    }
   } catch (err) {
     console.warn('[PWA-SW] Registrazione Service Worker non riuscita:', err);
   }
