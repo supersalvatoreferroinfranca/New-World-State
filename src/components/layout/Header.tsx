@@ -47,7 +47,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
             <div className="relative group">
               <div className="absolute -inset-1 bg-brand-gold/20 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
               <img 
-                src="https://www.newworldstate.org/wp-content/uploads/2025/03/NEW-WORLD-STATE-768x512.jpg" 
+                src="/LOGO_NEW-WORLD-STATE.jpg" 
                 alt="New World State Logo" 
                 className="h-14 w-auto object-contain relative"
               />
@@ -147,7 +147,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               <div className="h-20 px-6 border-b border-white/10 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
                   <img 
-                    src="https://www.newworldstate.org/wp-content/uploads/2025/03/NEW-WORLD-STATE-768x512.jpg" 
+                    src="/LOGO_NEW-WORLD-STATE.jpg" 
                     alt="Logo" 
                     className="h-10 w-auto object-contain"
                   />
