@@ -43,6 +43,7 @@ import {
 import { useI18n } from '../../contexts/I18nContext';
 import { startBackgroundSync, stopBackgroundSync } from '../../services/notifications';
 import PWANotifierBanner from '../pwa/PWANotifierBanner';
+import { LegislativeTextRenderer } from './LegislativeTextRenderer';
 
 interface CitizenSession {
   id: number;
@@ -136,6 +137,7 @@ export default function DemocracyPortal() {
   const [newContent, setNewContent] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editorTab, setEditorTab] = useState<'edit' | 'preview'>('edit');
 
   // New Guided/Dummies Drafting States
   const [draftMode, setDraftMode] = useState<'ai' | 'simple' | 'manual'>('ai');
@@ -344,6 +346,7 @@ export default function DemocracyPortal() {
         setNewDescription(data.data.description || '');
         setNewContent(data.data.content || '');
         setDraftMode('manual'); // Switch to editor mode so they can review and modify it!
+        setEditorTab('preview'); // Set tab to preview so they see the gorgeous rendered document!
         setSubmitMessage({
           type: 'success',
           text: language === 'en'
@@ -1023,8 +1026,8 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                           {/* Testo Normativo */}
                           <div className="space-y-3 mb-6">
                             <p className="text-[10px] uppercase tracking-wider font-mono font-bold text-slate-400">{language === 'en' ? 'Full law bill content' : 'Articolato normativo ufficiale'}:</p>
-                            <div className="bg-white border border-slate-150 p-4 rounded-xl max-h-52 overflow-y-auto text-xs text-slate-705 leading-relaxed font-sans whitespace-pre-wrap">
-                              {selectedProposal.content}
+                            <div className="max-h-110 overflow-y-auto rounded-2xl border border-slate-100 shadow-sm bg-slate-50/50">
+                              <LegislativeTextRenderer content={selectedProposal.content} className="border-0 shadow-none bg-transparent p-5 md:p-6" />
                             </div>
                           </div>
 
@@ -1658,24 +1661,54 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                       </div>
 
                       <div>
-                        <div className="flex justify-between items-center mb-1.5">
+                        <div className="flex justify-between items-center mb-3">
                           <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest font-tech font-bold text-brand-gold flex items-center gap-1">
                             <span>Testo Legislativo Integrale (Articoli ed effetti)</span>
                           </label>
                           {newContent && (
-                            <span className="text-[9px] bg-brand-gold/15 text-brand-gold/80 px-2 py-0.5 rounded uppercase font-bold tracking-wider font-tech animate-pulse">
-                              🪄 Elaborato/Modificabile da AI
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setEditorTab('edit')}
+                                className={`text-[9px] px-2.5 py-1 rounded font-bold uppercase tracking-wider font-tech transition-all cursor-pointer ${
+                                  editorTab === 'edit'
+                                    ? 'bg-brand-blue text-white shadow-sm'
+                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                }`}
+                              >
+                                {language === 'en' ? 'Edit Draft' : 'Modifica Bozza'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditorTab('preview')}
+                                className={`text-[9px] px-2.5 py-1 rounded font-bold uppercase tracking-wider font-tech transition-all cursor-pointer ${
+                                  editorTab === 'preview'
+                                    ? 'bg-brand-gold text-brand-blue shadow-sm'
+                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                }`}
+                              >
+                                {language === 'en' ? 'Anteprima' : 'Anteprima'}
+                              </button>
+                              <span className="text-[9px] bg-brand-gold/15 text-brand-gold/80 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider font-tech animate-pulse">
+                                🪄 AI
+                              </span>
+                            </div>
                           )}
                         </div>
-                        <textarea 
-                          required
-                          placeholder="Specifica in modo preciso il testo normativo codificato in articoli (es: Articolo 1 - Ogni cittadino...). Sii formale, esaustivo e chiaro."
-                          value={newContent}
-                          onChange={(e) => setNewContent(e.target.value)}
-                          rows={10}
-                          className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl p-4 text-xs outline-none transition text-brand-blue placeholder-slate-400 font-sans whitespace-pre-wrap leading-relaxed focus:ring-brand-gold/30"
-                        />
+                        {editorTab === 'preview' && newContent ? (
+                          <div className="w-full bg-slate-50 border border-slate-200 rounded-xl p-1 max-h-110 overflow-y-auto mb-4">
+                            <LegislativeTextRenderer content={newContent} title={newTitle || 'Proposta Normativa'} className="border-0 shadow-none bg-transparent p-4 md:p-5" />
+                          </div>
+                        ) : (
+                          <textarea 
+                            required
+                            placeholder="Specifica in modo preciso il testo normativo codificato in articoli (es: Articolo 1 - Ogni cittadino...). Sii formale, esaustivo e chiaro."
+                            value={newContent}
+                            onChange={(e) => setNewContent(e.target.value)}
+                            rows={12}
+                            className="w-full bg-white border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl p-4 text-xs outline-none transition text-brand-blue placeholder-slate-400 font-sans whitespace-pre-wrap leading-relaxed focus:ring-brand-gold/30 mb-4"
+                          />
+                        )}
                       </div>
 
                       {submitMessage && (

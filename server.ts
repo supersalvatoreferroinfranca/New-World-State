@@ -3254,7 +3254,7 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
 
       try {
         const ai = getGenAIClient();
-        const prompt = `Crea una bozza di proposta legislativa formale per lo "New World State" (una nazione digitale sovrana e globale basata sul libero arbitrio dei popoli e sulla Costituzione di Ginevra).
+        const prompt = `Crea una bozza di proposta legislativa formale per lo "New World State" (una nazione digitale sovrana e globale basata sul libero arbitrio dei popoli e sulla Costituzione del New World State). La proposta deve richiamare esplicitamente e basarsi sui principi, diritti e doveri garantiti dalla Costituzione del New World State.
 La proposta appartiene alla categoria: "${category || 'Generale'}".
 
 Informazioni fornite dal cittadino (for dummies):
@@ -3268,10 +3268,11 @@ Genera una risposta in formato JSON contenente tre campi:
 3. "content": Il testo normativo completo, strutturato formalmente in articoli in lingua italiana.
 
 Segui SCRUPOLOSAMENTE le seguenti linee guida di formattazione, chiarezza ed eleganza per il campo "content":
-- STRUTTURA ED ELEGANZA VISIVA: Utilizza Markdown formattato in modo eccellente. Usa titoli chiari con '###' per ciascun articolo o sezione importante. Usa grassetti per evidenziare i concetti chiave e i termini definiti.
-- PREAMBOLO SOLENNE: Inizia il testo con una breve premessa o preambolo ("PREAMBOLO: Considerato che...") che spieghi la ratio, i principi ispiratori della proposta e la sua conformità con lo spirito di libertà individuale e sovranità digitale del New World State.
-- ARTICOLI CHIARI E COMPRENSIBILI: Suddividi la legge in articoli ben definiti (es. "### Articolo 1 - Oggetto e finalità", "### Articolo 2 - Ambito di applicazione", "### Articolo 3 - ..."). Ogni articolo deve essere scritto in un linguaggio giuridico ma moderno, chiaro, comprensibile a qualsiasi cittadino, evitando tecnicismi bizantini non necessari.
-- PARAGRAFI NUMERATI: All'interno di ciascun articolo, organizza le disposizioni in commi/paragrafi numerati (es. "1. Il presente articolo...", "2. Al fine di garantire...") per facilitarne il riferimento e la lettura.
+- SPAZIATURA E INTERLINEE (CRITICO): Utilizza SEMPRE doppi a capo ("\n\n") tra il titolo principale, il preambolo, ciascun articolo e ciascun comma/paragrafo numerato. Non unire mai il testo in un unico blocco continuo o privo di righe vuote.
+- STRUTTURA ED ELEGANZA VISIVA: Utilizza Markdown formattato in modo eccellente. Usa titoli chiari con '###' per ciascun articolo o sezione importante (ad esempio "### PREAMBOLO", "### Articolo 1 - Oggetto e finalità", ecc.). Usa il grassetto con '**' per evidenziare i concetti chiave e i termini definiti (es. "**New World State**" o "**Costituzione del New World State**").
+- PREAMBOLO SOLENNE: Inizia il testo con la sezione "### PREAMBOLO" seguita da una breve premessa ("Considerato che...") che spieghi la ratio, i principi ispiratori della proposta e la sua conformità con lo spirito di libertà individuale, la sovranità digitale e le tutele sancite nella Costituzione del New World State. Il preambolo deve contenere un riferimento esplicito, formale e solenne alla Costituzione del New World State.
+- ARTICOLI CHIARI E COMPRENSIBILI: Suddividi la legge in articoli ben definiti (es. "### Articolo 1 - Oggetto e finalità", "### Articolo 2 - Ambito di applicazione", "### Articolo 3 - ..."). Ogni articolo deve essere scritto in un linguaggio giuridico ma moderno, chiaro, comprensibile a qualsiasi cittadino, evitando tecnicismi inutili. Ogni articolo deve conformarsi e contribuire all'attuazione della Costituzione del New World State.
+- PARAGRAFI NUMERATI: All'interno di ciascun articolo, organizza le disposizioni in commi/paragrafi numerati su linee separate inizianti per numero (es. "1. La presente legge...", "2. Al fine di garantire...") per facilitarne il riferimento e la lettura.
 - SEZIONE ANALISI IMPATTO: Inserisci alla fine una sezione intitolata "### Analisi dell'Impatto e Sostenibilità" strutturata con punti elenco per descrivere l'impatto sociale, tecnologico e amministrativo.
 - SEZIONE DISPOSIZIONI FINALI: Includi un articolo finale sulle modalità e tempistiche di entrata in vigore (es. "### Articolo X - Entrata in vigore").
 
