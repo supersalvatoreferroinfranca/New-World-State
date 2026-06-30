@@ -3265,7 +3265,15 @@ Informazioni fornite dal cittadino (for dummies):
 Genera una risposta in formato JSON contenente tre campi:
 1. "title": un titolo formale, solenne e chiaro per l'iniziativa legislativa. Deve essere in italiano (es. "Legge sulla Trasparenza dell'Identità Digitale").
 2. "description": una sintesi esplicativa di 1 o 2 righe (massimo 150 caratteri) che spieghi l'essenza della proposta.
-3. "content": Il testo normativo completo, strutturato formalmente in articoli (es. Articolo 1 - Oggetto e finalità, Articolo 2 - Ambito di applicazione, Articolo 3 - ... ecc.) in lingua italiana. Deve avere un tono formale, legale, preciso e utilizzare riferimenti tipici delle nazioni digitali sovrane, focalizzandosi sul rispetto dei diritti e della libertà di scelta. Aggiungi alla fine una sezione di analisi dell'impatto o copertura finanziaria/amministrativa.
+3. "content": Il testo normativo completo, strutturato formalmente in articoli in lingua italiana.
+
+Segui SCRUPOLOSAMENTE le seguenti linee guida di formattazione, chiarezza ed eleganza per il campo "content":
+- STRUTTURA ED ELEGANZA VISIVA: Utilizza Markdown formattato in modo eccellente. Usa titoli chiari con '###' per ciascun articolo o sezione importante. Usa grassetti per evidenziare i concetti chiave e i termini definiti.
+- PREAMBOLO SOLENNE: Inizia il testo con una breve premessa o preambolo ("PREAMBOLO: Considerato che...") che spieghi la ratio, i principi ispiratori della proposta e la sua conformità con lo spirito di libertà individuale e sovranità digitale del New World State.
+- ARTICOLI CHIARI E COMPRENSIBILI: Suddividi la legge in articoli ben definiti (es. "### Articolo 1 - Oggetto e finalità", "### Articolo 2 - Ambito di applicazione", "### Articolo 3 - ..."). Ogni articolo deve essere scritto in un linguaggio giuridico ma moderno, chiaro, comprensibile a qualsiasi cittadino, evitando tecnicismi bizantini non necessari.
+- PARAGRAFI NUMERATI: All'interno di ciascun articolo, organizza le disposizioni in commi/paragrafi numerati (es. "1. Il presente articolo...", "2. Al fine di garantire...") per facilitarne il riferimento e la lettura.
+- SEZIONE ANALISI IMPATTO: Inserisci alla fine una sezione intitolata "### Analisi dell'Impatto e Sostenibilità" strutturata con punti elenco per descrivere l'impatto sociale, tecnologico e amministrativo.
+- SEZIONE DISPOSIZIONI FINALI: Includi un articolo finale sulle modalità e tempistiche di entrata in vigore (es. "### Articolo X - Entrata in vigore").
 
 Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
 
