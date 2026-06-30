@@ -26,7 +26,8 @@ import {
   Sparkles,
   BookOpen,
   Lightbulb,
-  PenTool
+  PenTool,
+  Share2
 } from 'lucide-react';
 
 import { 
@@ -44,6 +45,7 @@ import { useI18n } from '../../contexts/I18nContext';
 import { startBackgroundSync, stopBackgroundSync } from '../../services/notifications';
 import PWANotifierBanner from '../pwa/PWANotifierBanner';
 import { LegislativeTextRenderer } from './LegislativeTextRenderer';
+import { NWSShareWidget } from './NWSShareWidget';
 
 interface CitizenSession {
   id: number;
@@ -125,7 +127,7 @@ export default function DemocracyPortal() {
   const [alboError, setAlboError] = useState<string | null>(null);
 
   // Filter and navigation states
-  const [subTab, setSubTab] = useState<'active' | 'new' | 'archive' | 'admin' | 'albo'>('active');
+  const [subTab, setSubTab] = useState<'active' | 'new' | 'archive' | 'admin' | 'albo' | 'share'>('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -827,6 +829,15 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                   )}
                 </button>
 
+                <button
+                  onClick={() => { setSubTab('share'); setSelectedProposal(null); }}
+                  id="tab-democracy-share-btn"
+                  className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 flex items-center gap-1.5 cursor-pointer ${subTab === 'share' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  <Share2 className="w-3.5 h-3.5 text-brand-gold" />
+                  {language === 'en' ? 'Invite & Share' : 'Divulga e Invita'}
+                </button>
+
                 {isAdmin && (
                   <button
                     onClick={() => { setSubTab('admin'); setSelectedProposal(null); }}
@@ -1223,6 +1234,29 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                           <h4 className="font-serif italic text-sm text-slate-500 mb-1">Nessuna proposta selezionata</h4>
                           <p className="text-xs max-w-xs">{language === 'en' ? 'Click on a legislative bill card to view full textual provisions, proponent, and real-time voter turnout and distribution' : 'Seleziona una scheda legislativa dall\'elenco per leggerne il testo integrale, l\'autore e le percentuali di voto.'}</p>
                         </div>
+
+                        {/* CALLOUT DIVULGAZIONE COSTO ZERO */}
+                        <div className="bg-gradient-to-br from-[#0a1c3e] to-[#11254c] text-white rounded-2xl p-6 border border-brand-gold/30 shadow-md space-y-4 text-left">
+                          <div className="flex items-center gap-2">
+                            <Share2 className="w-5 h-5 text-brand-gold animate-bounce" />
+                            <h4 className="font-serif font-bold text-sm tracking-wide text-white">
+                              {language === 'en' ? 'Invite friends & family!' : 'Cresciamo Insieme! 🌍'}
+                            </h4>
+                          </div>
+                          <p className="text-xs text-white/80 leading-relaxed">
+                            {language === 'en' 
+                              ? 'The best way to build a free society is to invite your loved ones. Send preformatted invites via WhatsApp, Telegram, and Email at zero cost.'
+                              : 'Offri ai tuoi cari l\'opportunità di far parte di una società digitale pacifica e ottenere un passaporto gratuito. Invia inviti pronti via WhatsApp, Telegram o Email.'}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setSubTab('share')}
+                            className="w-full bg-brand-gold hover:bg-brand-gold/95 text-[#0a1c3e] py-2.5 rounded-xl font-bold text-xs tracking-wider uppercase transition active:scale-95 cursor-pointer text-center flex items-center justify-center gap-1.5"
+                          >
+                            <span>{language === 'en' ? 'Start Inviting Now 🚀' : 'Invia Inviti Adesso 🚀'}</span>
+                          </button>
+                        </div>
+
                         <PWANotifierBanner />
                       </div>
                     )}
@@ -1368,6 +1402,13 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                     })}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* SUBTAB: SHARE & INVITE */}
+            {subTab === 'share' && (
+              <div className="max-w-4xl mx-auto space-y-6 text-left animate-fade-in" id="share-invite-pane">
+                <NWSShareWidget />
               </div>
             )}
 

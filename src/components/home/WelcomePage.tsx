@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 import PWANotifierBanner from '../pwa/PWANotifierBanner';
+import { NWSShareWidget } from '../democracy/NWSShareWidget';
 
 interface WelcomePageProps {
   onStartRegistration: () => void;
@@ -336,6 +337,9 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
           )}
         </div>
       </div>
+
+      {/* STRUMENTI DI DIVULGAZIONE COSTO ZERO */}
+      <NWSShareWidget />
 
       {/* COSA PUOI TROVARE SUL SITO: GUIDA CON INTERFACCIA COMPLETA */}
       <div className="space-y-6">
