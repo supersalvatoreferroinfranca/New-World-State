@@ -9,8 +9,11 @@ interface LegislativeTextRendererProps {
 export function formatLegislativeText(text: string): string {
   if (!text) return '';
   
+  // Replace literal '\n' sequences (e.g. backslash followed by 'n') with actual newlines
+  let formatted = text.replace(/\\n/g, '\n');
+  
   // Normalize line endings
-  let formatted = text.replace(/\r\n/g, '\n');
+  formatted = formatted.replace(/\r\n/g, '\n');
 
   // Insert header markers '###' for Articolo if not present
   // E.g., if we see "Articolo 1 - Oggetto e Finalità", make it "### Articolo 1 - Oggetto e Finalità"
