@@ -2008,8 +2008,8 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
                         <tr>
                           <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                             <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                              New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
-                              Sovereign global digital nation built upon Geneva constitutional values.
+                              New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla Costituzione del New World State e sul libero arbitrio dei popoli.<br/>
+                              Sovereign global digital nation built upon New World State constitutional values.
                             </p>
                             <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
                               Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
@@ -2367,8 +2367,8 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
                         <tr>
                           <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                             <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                              New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
-                              Sovereign global digital nation built upon Geneva constitutional values.
+                              New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla Costituzione del New World State e sul libero arbitrio dei popoli.<br/>
+                              Sovereign global digital nation built upon New World State constitutional values.
                             </p>
                             <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
                               Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
@@ -3255,6 +3255,7 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
       try {
         const ai = getGenAIClient();
         const prompt = `Crea una bozza di proposta legislativa formale per lo "New World State" (una nazione digitale sovrana e globale basata sul libero arbitrio dei popoli e sulla Costituzione del New World State). La proposta deve richiamare esplicitamente e basarsi sui principi, diritti e doveri garantiti dalla Costituzione del New World State.
+ATTENZIONE (DIVIETO ASSOLUTO): Non fare MAI riferimento alla "Costituzione di Ginevra", alla "Convenzione di Ginevra" o a "Ginevra" in generale. Devi fare riferimento unicamente e rigorosamente alla "Costituzione del New World State" (o "Costituzione").
 La proposta appartiene alla categoria: "${category || 'Generale'}".
 
 Informazioni fornite dal cittadino (for dummies):

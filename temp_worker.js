@@ -48,6 +48,86 @@ const worker = {
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+    // Servizio Risorse Statiche da env.ASSETS (es. favicon, immagini, fogli di stile, js, manifest)
+    const isStaticAsset = (pathname) => {
+      const staticExtensions = [
+        '.ico', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', 
+        '.js', '.css', '.json', '.webmanifest', '.woff', '.woff2', 
+        '.ttf', '.eot', '.pdf', '.txt', '.xml'
+      ];
+      return staticExtensions.some(ext => pathname.toLowerCase().endsWith(ext));
+    };
+
+    // Helper per recuperare risorse statiche da domini alternativi/originari quando env.ASSETS non è definito
+    const fetchStaticAssetFromFallbacks = async (pathname, requestHeaders) => {
+      const candidates = [];
+      
+      // Se è configurato APP_URL e non coincide con il dominio corrente, lo proviamo
+      if (env.APP_URL && !env.APP_URL.includes(url.hostname)) {
+        candidates.push(env.APP_URL);
+      }
+      
+      // Dominio di Pages di default (dal nome del progetto "newworldstate")
+      candidates.push('https://newworldstate.pages.dev');
+      
+      // Prova anche sul dominio del worker primario
+      candidates.push('https://nws-wk.supersalvatoreferroinfranca.workers.dev');
+      
+      // Prova anche sul sito ufficiale alternativo
+      candidates.push('https://www.newworldstate.org');
+
+      for (const candidate of candidates) {
+        try {
+          const candidateUrl = new URL(pathname, candidate);
+          const headers = new Headers(requestHeaders);
+          headers.delete('host'); // Rimuoviamo l'header host originale per evitare problemi di routing di Cloudflare
+          
+          const res = await fetch(candidateUrl.toString(), {
+            method: 'GET',
+            headers: headers
+          });
+          
+          if (res.ok && res.status === 200) {
+            const contentType = res.headers.get('content-type') || '';
+            // Escludiamo risposte che sono in realtà pagine HTML (fallback 404) o errori JSON
+            if (!contentType.includes('json') && !contentType.includes('text/html')) {
+              return res;
+            }
+          }
+        } catch (e) {
+          console.error(`[Worker] Errore nel caricamento dell'asset da ${candidate}:`, e);
+        }
+      }
+      return null;
+    };
+
+    if (isStaticAsset(url.pathname)) {
+      if (env.ASSETS) {
+        try {
+          const assetResponse = await env.ASSETS.fetch(request);
+          if (assetResponse.status !== 404) {
+            return assetResponse;
+          }
+        } catch (assetErr) {
+          console.error('[Worker] Errore fetch ASSETS:', assetErr);
+        }
+      }
+
+      // Se env.ASSETS non è definito o ha fallito (es. worker autonomo), tentiamo i domini fallback
+      const fallbackAsset = await fetchStaticAssetFromFallbacks(url.pathname, request.headers);
+      if (fallbackAsset) {
+        const responseHeaders = new Headers(fallbackAsset.headers);
+        for (const [key, val] of Object.entries(corsHeaders)) {
+          responseHeaders.set(key, val);
+        }
+        return new Response(fallbackAsset.body, {
+          status: fallbackAsset.status,
+          statusText: fallbackAsset.statusText,
+          headers: responseHeaders
+        });
+      }
+    }
+
     // Se DATABASE_URL non è configurato su questo dominio/worker locale, ma abbiamo il worker primario con database attivo, facciamo il proxy trasparente
     if (!env.DATABASE_URL && !url.hostname.includes('nws-wk.supersalvatoreferroinfranca.workers.dev') && !url.hostname.includes('localhost') && !url.hostname.includes('127.0.0.1')) {
       const targetUrl = new URL(request.url);
@@ -2363,8 +2443,8 @@ CREATE TABLE citizens (
                             <tr>
                               <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                                 <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                                  New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
-                                  Sovereign global digital nation built upon Geneva constitutional values.
+                                  New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla Costituzione del New World State e sul libero arbitrio dei popoli.<br/>
+                                  Sovereign global digital nation built upon New World State constitutional values.
                                 </p>
                                 <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
                                   Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
@@ -2695,8 +2775,8 @@ CREATE TABLE citizens (
                           <tr>
                             <td style="background-color: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #f1f5f9;">
                               <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5;">
-                                New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla costituzione di Ginevra e sul libero arbitrio dei popoli.<br/>
-                                Sovereign global digital nation built upon Geneva constitutional values.
+                                New World State &copy; 2026. Nazione digitale sovrana e globale basata sulla Costituzione del New World State e sul libero arbitrio dei popoli.<br/>
+                                Sovereign global digital nation built upon New World State constitutional values.
                               </p>
                               <p style="font-size: 10px; color: #cbd5e1; margin: 0;">
                                 Questa è una notifica automatica. / This is an automated notification. Please do not reply directly.
@@ -4381,7 +4461,8 @@ CREATE TABLE citizens (
             }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
 
-          const prompt = `Crea una bozza di proposta legislativa formale per lo "New World State" (una nazione digitale sovrana e globale basata sul libero arbitrio dei popoli e sulla Costituzione di Ginevra).
+          const prompt = `Crea una bozza di proposta legislativa formale per lo "New World State" (una nazione digitale sovrana e globale basata sul libero arbitrio dei popoli e sulla Costituzione del New World State). La proposta deve richiamare esplicitamente e basarsi sui principi, diritti e doveri garantiti dalla Costituzione del New World State.
+ATTENZIONE (DIVIETO ASSOLUTO): Non fare MAI riferimento alla "Costituzione di Ginevra", alla "Convenzione di Ginevra" o a "Ginevra" in generale. Devi fare riferimento unicamente e rigorosamente alla "Costituzione del New World State" (o "Costituzione").
 La proposta appartiene alla categoria: "${category || 'Generale'}".
 
 Informazioni fornite dal cittadino (for dummies):
@@ -5274,6 +5355,33 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           status: 201, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         });
+      }
+
+      if (env.ASSETS) {
+        try {
+          const assetResponse = await env.ASSETS.fetch(request);
+          if (assetResponse.status !== 404) {
+            return assetResponse;
+          }
+        } catch (assetErr) {
+          console.error('[Worker] Errore in fallback fetch ASSETS:', assetErr);
+        }
+      }
+
+      // Se env.ASSETS non è definito o ha fallito, tentiamo i domini fallback prima di restituire 404
+      if (isStaticAsset(url.pathname)) {
+        const fallbackAsset = await fetchStaticAssetFromFallbacks(url.pathname, request.headers);
+        if (fallbackAsset) {
+          const responseHeaders = new Headers(fallbackAsset.headers);
+          for (const [key, val] of Object.entries(corsHeaders)) {
+            responseHeaders.set(key, val);
+          }
+          return new Response(fallbackAsset.body, {
+            status: fallbackAsset.status,
+            statusText: fallbackAsset.statusText,
+            headers: responseHeaders
+          });
+        }
       }
 
       return new Response(JSON.stringify({ success: false, message: 'Endpoint non trovato sul Worker: ' + url.pathname }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

@@ -1281,7 +1281,7 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                         {language === 'en' ? 'Official Voting Bulletin Notice Board' : 'Albo delle Votazioni convalidate'}
                       </h3>
                       <p className="text-slate-300 text-xs mt-1 max-w-xl leading-relaxed">
-                        Ai sensi della Costituzione di Ginevra, in questa sezione vengono solennemente pubblicati i decreti di indizione referendaria, i quesiti convalidati e i precisi termini temporali delle votazioni approvate dal Consiglio.
+                        Ai sensi della Costituzione del New World State, in questa sezione vengono solennemente pubblicati i decreti di indizione referendaria, i quesiti convalidati e i precisi termini temporali delle votazioni approvate dal Consiglio.
                       </p>
                     </div>
                     
