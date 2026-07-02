@@ -89,6 +89,32 @@ const worker = {
         const rows = await queryDb('SELECT value FROM nws_branding WHERE key = $1', [key]);
         if (rows && rows.length > 0 && rows[0].value) {
           const redirectUrl = rows[0].value;
+          
+          // Per ottimizzare la condivisione social (es. anteprima WhatsApp), invece di un redirect 307
+          // che i crawler social spesso rifiutano, scarichiamo e serviamo la risorsa direttamente.
+          try {
+            const response = await fetch(redirectUrl);
+            if (response.ok) {
+              const body = await response.arrayBuffer();
+              const contentType = response.headers.get('Content-Type') || (
+                key === 'logo' ? 'image/jpeg' : 
+                key === 'favicon' ? 'image/x-icon' : 
+                'image/png'
+              );
+              return new Response(body, {
+                status: 200,
+                headers: {
+                  'Content-Type': contentType,
+                  'Cache-Control': 'public, max-age=3600',
+                  ...corsHeaders
+                }
+              });
+            }
+          } catch (fetchErr) {
+            console.error('[BRANDING-PROXY-ERR] Errore nel proxying della risorsa, eseguo fallback redirect:', fetchErr);
+          }
+
+          // Fallback al redirect originario se la fetch diretta fallisce
           return new Response(null, {
             status: 307,
             headers: {
