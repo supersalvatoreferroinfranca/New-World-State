@@ -81,6 +81,7 @@ const worker = {
           const candidateUrl = new URL(pathname, candidate);
           const headers = new Headers(requestHeaders);
           headers.delete('host'); // Rimuoviamo l'header host originale per evitare problemi di routing di Cloudflare
+          headers.delete('accept-encoding'); // Rimuoviamo accept-encoding per evitare che l'origine ci restituisca un corpo compresso che poi non decodifichiamo correttamente
           
           const res = await fetch(candidateUrl.toString(), {
             method: 'GET',
@@ -116,14 +117,18 @@ const worker = {
       // Se env.ASSETS non è definito o ha fallito (es. worker autonomo), tentiamo i domini fallback
       const fallbackAsset = await fetchStaticAssetFromFallbacks(url.pathname, request.headers);
       if (fallbackAsset) {
-        const responseHeaders = new Headers(fallbackAsset.headers);
+        const responseHeaders = new Headers();
         for (const [key, val] of Object.entries(corsHeaders)) {
           responseHeaders.set(key, val);
         }
-        // Rimuoviamo gli header di compressione/lunghezza che possono causare errori di decodifica nel browser
-        responseHeaders.delete('content-encoding');
-        responseHeaders.delete('content-length');
-        responseHeaders.delete('transfer-encoding');
+        
+        // Copiamo solo gli header essenziali per evitare conflitti di decodifica o compressione (e.g., content-length, content-encoding)
+        const essentialHeaders = ['content-type', 'cache-control', 'etag', 'last-modified'];
+        for (const header of essentialHeaders) {
+          if (fallbackAsset.headers.has(header)) {
+            responseHeaders.set(header, fallbackAsset.headers.get(header));
+          }
+        }
 
         const arrayBuffer = await fallbackAsset.arrayBuffer();
         return new Response(arrayBuffer, {
@@ -5378,14 +5383,18 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       if (isStaticAsset(url.pathname)) {
         const fallbackAsset = await fetchStaticAssetFromFallbacks(url.pathname, request.headers);
         if (fallbackAsset) {
-          const responseHeaders = new Headers(fallbackAsset.headers);
+          const responseHeaders = new Headers();
           for (const [key, val] of Object.entries(corsHeaders)) {
             responseHeaders.set(key, val);
           }
-          // Rimuoviamo gli header di compressione/lunghezza che possono causare errori di decodifica nel browser
-          responseHeaders.delete('content-encoding');
-          responseHeaders.delete('content-length');
-          responseHeaders.delete('transfer-encoding');
+          
+          // Copiamo solo gli header essenziali per evitare conflitti di decodifica o compressione (e.g., content-length, content-encoding)
+          const essentialHeaders = ['content-type', 'cache-control', 'etag', 'last-modified'];
+          for (const header of essentialHeaders) {
+            if (fallbackAsset.headers.has(header)) {
+              responseHeaders.set(header, fallbackAsset.headers.get(header));
+            }
+          }
 
           const arrayBuffer = await fallbackAsset.arrayBuffer();
           return new Response(arrayBuffer, {
