@@ -21,6 +21,8 @@ import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
 import LegalComplianceModal from './components/pwa/LegalComplianceModal';
+import AccessibilityWidget from './components/pwa/AccessibilityWidget';
+import CookieConsentBanner from './components/pwa/CookieConsentBanner';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy'>('welcome');
@@ -312,6 +314,15 @@ function AppContent() {
         onClose={() => setComplianceModalOpen(false)} 
         initialDoc={complianceDocType} 
         language={language} 
+      />
+
+      {/* ACCESSIBILITY FLOATING WIDGET (CONTRAST & TEXT SCALING) */}
+      <AccessibilityWidget />
+
+      {/* COOKIE CONSENT BANNER */}
+      <CookieConsentBanner 
+        onOpenPrivacy={() => openCompliance('privacy')} 
+        onOpenCookies={() => openCompliance('cookies')} 
       />
 
       {/* FLOAT SCROLL TO TOP BUTTON */}

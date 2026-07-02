@@ -147,8 +147,20 @@ export default function LegalComplianceModal({ isOpen, onClose, initialDoc, lang
                 {cookies}
               </p>
 
-              <p className="font-serif font-bold text-[#0a1c3e] text-[11px] mt-4">3. CONSENSO DEI COOKIE</p>
-              <p>Poiché non impieghiamo cookie di profilazione, per legge <strong>non è richiesto alcun banner di accettazione</strong> o consenso preventivo. Il sito è accessibile in modo fluido senza pop-up fastidiosi, garantendo al contempo il massimo livello di protezione al mondo.</p>
+              <p className="font-serif font-bold text-[#0a1c3e] text-[11px] mt-4">3. CONSENSO DEI COOKIE E OPZIONI</p>
+              <p>Forniamo ai nostri cittadini il controllo totale e granulare sui propri dati. Puoi revocare, bloccare o modificare le tue preferenze di consenso in qualsiasi momento (es. disabilitando i cookie di preferenza o analitici anonimi).</p>
+              <div className="pt-2">
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new Event('nws_reopen_cookie_banner'));
+                    onClose();
+                  }}
+                  className="bg-[#0a1c3e] hover:bg-brand-gold text-white hover:text-[#0a1c3e] px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm flex items-center gap-1.5"
+                >
+                  <EyeOff className="w-3.5 h-3.5" />
+                  Gestisci Preferenze Cookie
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4 text-xs text-slate-700 leading-relaxed">
@@ -161,14 +173,26 @@ export default function LegalComplianceModal({ isOpen, onClose, initialDoc, lang
                 <li><strong>Session Storage:</strong> Used strictly to identify your authenticated state while navigating securely.</li>
                 <li><strong>Local Technical Storage:</strong> Used to store basic interface parameters, such as selected language (Italian or English) to maintain readability preferences.</li>
               </ul>
-
+ 
               <p className="font-serif font-bold text-[#0a1c3e] text-[11px] mt-4">2. REGISTERED TECHNICAL TRACKERS</p>
               <p className="bg-slate-50 p-3 rounded-lg border border-slate-150 font-mono text-[10px] text-slate-600 leading-normal">
                 {cookies}
               </p>
-
-              <p className="font-serif font-bold text-[#0a1c3e] text-[11px] mt-4">3. CONSENT PROTOCOLS</p>
-              <p>Because zero tracking or advertising cookies are initialized, under European guidelines <strong>no disruptive tracking banners are necessary</strong>, as technical cookie storage is strictly exempted. Seamless navigation, absolute sovereignty.</p>
+ 
+              <p className="font-serif font-bold text-[#0a1c3e] text-[11px] mt-4">3. CONSENT PROTOCOLS & CONTROLS</p>
+              <p>We provide full, granular sovereignty to our citizens. You can block, allow, or customize optional preference trackers and performance indicators at any time.</p>
+              <div className="pt-2">
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new Event('nws_reopen_cookie_banner'));
+                    onClose();
+                  }}
+                  className="bg-[#0a1c3e] hover:bg-brand-gold text-white hover:text-[#0a1c3e] px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm flex items-center gap-1.5"
+                >
+                  <EyeOff className="w-3.5 h-3.5" />
+                  Manage Cookie Preferences
+                </button>
+              </div>
             </div>
           )
         };

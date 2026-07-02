@@ -30,3 +30,78 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
+
+/* HIGH CONTRAST ACCESSIBILITY MODES (WCAG 2.1 AA COMPLIANT) */
+
+/* High Contrast Light Theme */
+html.hc-light {
+  background-color: #ffffff !important;
+}
+
+html.hc-light body,
+html.hc-light #root {
+  background-color: #ffffff !important;
+}
+
+html.hc-light *:not(.accessibility-exclude):not(.accessibility-exclude *) {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background-image: none !important;
+}
+
+html.hc-light a:not(.accessibility-exclude),
+html.hc-light button:not(.accessibility-exclude),
+html.hc-light [role="button"]:not(.accessibility-exclude) {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2.5px solid #000000 !important;
+  border-radius: 6px !important;
+  font-weight: 800 !important;
+}
+
+html.hc-light a:not(.accessibility-exclude):hover,
+html.hc-light button:not(.accessibility-exclude):hover,
+html.hc-light [role="button"]:not(.accessibility-exclude):hover {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* High Contrast Dark Theme */
+html.hc-dark {
+  background-color: #000000 !important;
+}
+
+html.hc-dark body,
+html.hc-dark #root {
+  background-color: #000000 !important;
+}
+
+html.hc-dark *:not(.accessibility-exclude):not(.accessibility-exclude *) {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background-image: none !important;
+}
+
+html.hc-dark a:not(.accessibility-exclude),
+html.hc-dark button:not(.accessibility-exclude),
+html.hc-dark [role="button"]:not(.accessibility-exclude) {
+  background-color: #000000 !important;
+  color: #ffff00 !important; /* Bright Yellow on black standard */
+  border: 2.5px solid #ffffff !important;
+  border-radius: 6px !important;
+  font-weight: 800 !important;
+}
+
+html.hc-dark a:not(.accessibility-exclude):hover,
+html.hc-dark button:not(.accessibility-exclude):hover,
+html.hc-dark [role="button"]:not(.accessibility-exclude):hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
