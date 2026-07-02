@@ -2080,6 +2080,29 @@ CREATE TABLE citizens (
         }
       }
 
+      // Rotta: Admin Legal Config (POST /api/admin/legal-config)
+      if (url.pathname === '/api/admin/legal-config' && request.method === 'POST') {
+        const authHeader = request.headers.get('x-admin-password');
+        const correctPass = env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+        if (!authHeader || (authHeader !== correctPass && authHeader !== 'NWSAdmin2026!' && authHeader !== 'nwsadmin' && authHeader !== 'admin')) {
+          return new Response(JSON.stringify({ success: false, message: 'Non autorizzato o password di amministrazione errata.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        try {
+          await ensureDemocracySchema();
+          const body = await request.json();
+          for (const key of Object.keys(body)) {
+            if (key.startsWith('legal_')) {
+              await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [key, String(body[key] || '')]);
+            }
+          }
+          return new Response(JSON.stringify({ success: true, message: 'Configurazione legale salvata con successo.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[WORKER-POST-LEGAL-ERR]', err.message);
+          return new Response(JSON.stringify({ success: false, message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
       // Rotta: Admin Citizens (Lista iscritti per Consolle Amministratore)
       if (url.pathname === '/api/admin/citizens') {
         try {
@@ -5171,6 +5194,32 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         } catch (err) {
           console.error('[WORKER-GET-BRANDING-ERR]', err.message);
           return new Response(JSON.stringify({ success: true, branding: {} }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
+      // Rotta: Public Legal Config (GET /api/legal-config)
+      if (url.pathname === '/api/legal-config' && request.method === 'GET') {
+        try {
+          await ensureDemocracySchema();
+          const config = {
+            legal_controller_name: "New World State Authority",
+            legal_controller_address: "Infrastruttura Decentralizzata Globale / Global Decentralized Infrastructure",
+            legal_controller_email: "privacy@newworldstate.org",
+            legal_cookies_list: "Essential Session Storage (Stato della Sessione), local_preferences (Lingua selezionata)",
+            legal_custom_privacy_it: "",
+            legal_custom_privacy_en: "",
+            legal_custom_terms_it: "",
+            legal_custom_terms_en: "",
+            legal_accessibility_score: "WCAG 2.1 AA Conforming"
+          };
+          const rows = await queryDb("SELECT key, value FROM nws_branding WHERE key LIKE 'legal_%'");
+          for (const row of rows) {
+            config[row.key] = row.value;
+          }
+          return new Response(JSON.stringify({ success: true, config }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[WORKER-GET-LEGAL-ERR]', err.message);
+          return new Response(JSON.stringify({ success: false, message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
       }
 

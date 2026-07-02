@@ -653,6 +653,55 @@ async function startServer() {
       }
     });
 
+    apiRouter.get('/legal-config', async (req, res) => {
+      try {
+        const config: {[key: string]: string} = {
+          legal_controller_name: "New World State Authority",
+          legal_controller_address: "Infrastruttura Decentralizzata Globale / Global Decentralized Infrastructure",
+          legal_controller_email: "privacy@newworldstate.org",
+          legal_cookies_list: "Essential Session Storage (Stato della Sessione), local_preferences (Lingua selezionata)",
+          legal_custom_privacy_it: "",
+          legal_custom_privacy_en: "",
+          legal_custom_terms_it: "",
+          legal_custom_terms_en: "",
+          legal_accessibility_score: "WCAG 2.1 AA Conforming"
+        };
+
+        if (dbPool) {
+          const result = await dbPool.query("SELECT key, value FROM nws_branding WHERE key LIKE 'legal_%'");
+          for (const row of result.rows) {
+            config[row.key] = row.value;
+          }
+        }
+        return res.json({ success: true, config });
+      } catch (err: any) {
+        console.error('[SERVER-GET-LEGAL-ERR]', err.message);
+        return res.json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/admin/legal-config', async (req, res) => {
+      try {
+        const body = req.body || {};
+        if (dbPool) {
+          for (const key of Object.keys(body)) {
+            if (key.startsWith('legal_')) {
+              await dbPool.query(
+                'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                [key, String(body[key] || '')]
+              );
+            }
+          }
+          return res.json({ success: true, message: 'Configurazione legale salvata con successo.' });
+        } else {
+          return res.status(500).json({ success: false, message: 'Database non disponibile.' });
+        }
+      } catch (err: any) {
+        console.error('[SERVER-POST-LEGAL-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
     apiRouter.get('/db-status', async (req, res) => {
       console.log('[API] Processing /api/db-status');
       const WORKER_URL = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev/api/db-status';

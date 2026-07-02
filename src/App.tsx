@@ -20,6 +20,7 @@ import WelcomePage from './components/home/WelcomePage';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
+import LegalComplianceModal from './components/pwa/LegalComplianceModal';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy'>('welcome');
@@ -31,6 +32,13 @@ function AppContent() {
   });
   const { language } = useI18n();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
+  const [complianceModalOpen, setComplianceModalOpen] = useState(false);
+  const [complianceDocType, setComplianceDocType] = useState<'privacy' | 'cookies' | 'terms' | 'accessibility'>('privacy');
+
+  const openCompliance = (type: 'privacy' | 'cookies' | 'terms' | 'accessibility') => {
+    setComplianceDocType(type);
+    setComplianceModalOpen(true);
+  };
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -265,8 +273,46 @@ function AppContent() {
               {language === 'en' ? 'Admin Console' : 'Consolle Amministratore'}
             </button>
           </div>
+
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 uppercase tracking-[0.25em] text-[8px] font-semibold text-slate-500/80 mt-6 border-t border-[#0a1c3e]/5 pt-4">
+            <button 
+              onClick={() => openCompliance('privacy')} 
+              className="hover:text-brand-gold transition-colors cursor-pointer"
+            >
+              {language === 'en' ? 'Privacy Policy' : 'Informativa Privacy'}
+            </button>
+            <span className="text-slate-300">•</span>
+            <button 
+              onClick={() => openCompliance('cookies')} 
+              className="hover:text-brand-gold transition-colors cursor-pointer"
+            >
+              {language === 'en' ? 'Cookie Policy' : 'Cookie Policy'}
+            </button>
+            <span className="text-slate-300">•</span>
+            <button 
+              onClick={() => openCompliance('terms')} 
+              className="hover:text-brand-gold transition-colors cursor-pointer"
+            >
+              {language === 'en' ? 'Terms & Conditions' : 'Termini e Condizioni'}
+            </button>
+            <span className="text-slate-300">•</span>
+            <button 
+              onClick={() => openCompliance('accessibility')} 
+              className="hover:text-brand-gold transition-colors cursor-pointer"
+            >
+              {language === 'en' ? 'Accessibility' : 'Accessibilità'}
+            </button>
+          </div>
         </div>
       </footer>
+
+      {/* COMPLIANCE LEGAL MODAL (GDPR / WCAG COMPLIANT) */}
+      <LegalComplianceModal 
+        isOpen={complianceModalOpen} 
+        onClose={() => setComplianceModalOpen(false)} 
+        initialDoc={complianceDocType} 
+        language={language} 
+      />
 
       {/* FLOAT SCROLL TO TOP BUTTON */}
       <button
