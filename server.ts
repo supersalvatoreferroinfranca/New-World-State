@@ -3850,6 +3850,241 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       }
     });
 
+    // =========================================================================
+    // SOVEREIGN CHAT & COMMUNICATION API (WHATSAPP / TELEGRAM INSPIRED)
+    // =========================================================================
+    const CHAT_STORAGE_DIR = path.join(process.cwd(), 'aruba_storage', 'nws_chat_files');
+    const CHAT_MESSAGES_FILE = path.join(process.cwd(), 'aruba_storage', 'nws_chat_messages.json');
+
+    // Ensure storage folder on Aruba local directory exists
+    try {
+      if (!fs.existsSync(CHAT_STORAGE_DIR)) {
+        fs.mkdirSync(CHAT_STORAGE_DIR, { recursive: true });
+        console.log(`[CHAT] Storage directory created: ${CHAT_STORAGE_DIR}`);
+      }
+    } catch (err: any) {
+      console.error('[CHAT] Error creating storage folder:', err.message);
+    }
+
+    // Helper to read messages from JSON storage
+    function loadChatMessages(): any[] {
+      try {
+        if (fs.existsSync(CHAT_MESSAGES_FILE)) {
+          const raw = fs.readFileSync(CHAT_MESSAGES_FILE, 'utf-8');
+          return JSON.parse(raw);
+        }
+      } catch (err: any) {
+        console.error('[CHAT] Error loading chat messages:', err.message);
+      }
+      return [];
+    }
+
+    // Helper to save messages to JSON storage
+    function saveChatMessages(messages: any[]) {
+      try {
+        const parentDir = path.dirname(CHAT_MESSAGES_FILE);
+        if (!fs.existsSync(parentDir)) {
+          fs.mkdirSync(parentDir, { recursive: true });
+        }
+        fs.writeFileSync(CHAT_MESSAGES_FILE, JSON.stringify(messages, null, 2), 'utf-8');
+      } catch (err: any) {
+        console.error('[CHAT] Error saving chat messages:', err.message);
+      }
+    }
+
+    // Initialize messages list
+    let chatMessages: any[] = loadChatMessages();
+
+    // Create SQL table if PostgreSQL is available
+    if (dbPool) {
+      dbPool.query(`
+        CREATE TABLE IF NOT EXISTS nws_chat_messages (
+          id SERIAL PRIMARY KEY,
+          uuid VARCHAR(100) UNIQUE NOT NULL,
+          room VARCHAR(100) DEFAULT 'general',
+          sender_name TEXT NOT NULL,
+          sender_role TEXT NOT NULL,
+          text TEXT,
+          type VARCHAR(20) NOT NULL,
+          file_url TEXT,
+          file_name TEXT,
+          file_size INT,
+          duration INT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `).then(() => {
+        console.log('[CHAT-DB] PostgreSQL nws_chat_messages table validated successfully.');
+      }).catch((err: any) => {
+        console.error('[CHAT-DB] Failed to create nws_chat_messages table:', err.message);
+      });
+    }
+
+    // Chat API endpoints
+    apiRouter.get('/chat/messages', async (req, res) => {
+      const room = (req.query.room as string) || 'general';
+      try {
+        if (dbPool) {
+          const result = await dbPool.query(
+            'SELECT uuid as id, room, sender_name as "senderName", sender_role as "senderRole", text, type, file_url as "fileUrl", file_name as "fileName", file_size as "fileSize", duration, created_at as "timestamp" FROM nws_chat_messages WHERE room = $1 ORDER BY id ASC LIMIT 500',
+            [room]
+          );
+          return res.json({ success: true, messages: result.rows });
+        } else {
+          // Fallback to local memory/JSON
+          const filtered = chatMessages
+            .filter((m) => m.room === room)
+            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          return res.json({ success: true, messages: filtered });
+        }
+      } catch (err: any) {
+        console.error('[CHAT-GET-ERR]', err.message);
+        // Failover to local memory if DB fails
+        const filtered = chatMessages
+          .filter((m) => m.room === room)
+          .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        return res.json({ success: true, messages: filtered, fallback: true });
+      }
+    });
+
+    apiRouter.post('/chat/messages', async (req, res) => {
+      const { id, room, senderName, senderRole, text, type, fileUrl, fileName, fileSize, duration } = req.body;
+      const messageId = id || `msg_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+      const timestamp = new Date().toISOString();
+
+      if (!senderName) {
+        return res.status(400).json({ success: false, message: 'senderName is required.' });
+      }
+
+      const messageObj = {
+        id: messageId,
+        room: room || 'general',
+        senderName,
+        senderRole: senderRole || 'Cittadino',
+        text: text || '',
+        type: type || 'text',
+        fileUrl: fileUrl || null,
+        fileName: fileName || null,
+        fileSize: fileSize || null,
+        duration: duration || null,
+        timestamp
+      };
+
+      try {
+        // Save to PostgreSQL if available
+        if (dbPool) {
+          await dbPool.query(
+            `INSERT INTO nws_chat_messages 
+             (uuid, room, sender_name, sender_role, text, type, file_url, file_name, file_size, duration, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            [
+              messageObj.id,
+              messageObj.room,
+              messageObj.senderName,
+              messageObj.senderRole,
+              messageObj.text,
+              messageObj.type,
+              messageObj.fileUrl,
+              messageObj.fileName,
+              messageObj.fileSize,
+              messageObj.duration,
+              timestamp
+            ]
+          );
+        }
+
+        // Save to Memory/JSON backup always (mimicking physical Aruba archive backup file)
+        chatMessages.push(messageObj);
+        // Limit backup messages in JSON file to 1000 to keep it lightweight
+        if (chatMessages.length > 1000) {
+          chatMessages.shift();
+        }
+        saveChatMessages(chatMessages);
+
+        return res.json({ success: true, message: messageObj });
+      } catch (err: any) {
+        console.error('[CHAT-POST-ERR]', err.message);
+        // Save to memory anyways
+        chatMessages.push(messageObj);
+        saveChatMessages(chatMessages);
+        return res.json({ success: true, message: messageObj, fallback: true });
+      }
+    });
+
+    apiRouter.post('/chat/upload', async (req, res) => {
+      const { fileData, fileName, fileType } = req.body;
+
+      if (!fileData || !fileName) {
+        return res.status(400).json({ success: false, message: 'fileData and fileName are required.' });
+      }
+
+      try {
+        // Validate file type (only support photo, pdf, and audio webm/ogg/mp3/m4a)
+        const ext = path.extname(fileName).toLowerCase();
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.pdf', '.webm', '.ogg', '.wav', '.mp3', '.m4a'];
+        if (!allowedExtensions.includes(ext)) {
+          return res.status(400).json({ success: false, message: 'File extension not allowed. Only photos, PDFs, and audio recordings are supported.' });
+        }
+
+        // Decode base64
+        const base64Content = fileData.split(';base64,').pop() || fileData;
+        const buffer = Buffer.from(base64Content, 'base64');
+        const originalSize = buffer.length;
+
+        // Double check maximum file size (5MB for PDFs, 2MB for photos/audio to maintain maximum speed)
+        const sizeLimit = ext === '.pdf' ? 5 * 1024 * 1024 : 2 * 1024 * 1024;
+        if (originalSize > sizeLimit) {
+          return res.status(400).json({ 
+            success: false, 
+            message: `Il file supera il limite consentito di ${ext === '.pdf' ? '5MB' : '2MB'}. La compressione client lo ridurrà automaticamente.` 
+          });
+        }
+
+        // Save locally to local Aruba mimicking archive
+        const uniqueFileName = `${Date.now()}_${Math.floor(Math.random() * 100000)}${ext}`;
+        const targetPath = path.join(CHAT_STORAGE_DIR, uniqueFileName);
+        fs.writeFileSync(targetPath, buffer);
+
+        // Serve URL path
+        const fileUrl = `/api/chat/files/${uniqueFileName}`;
+
+        console.log(`[CHAT-UPLOAD] File saved: ${uniqueFileName} (${originalSize} bytes)`);
+
+        return res.json({
+          success: true,
+          fileUrl,
+          fileName,
+          fileSize: originalSize
+        });
+      } catch (err: any) {
+        console.error('[CHAT-UPLOAD-ERR]', err.message);
+        return res.status(500).json({ success: false, message: 'Errore durante il salvataggio dell\'allegato.' });
+      }
+    });
+
+    apiRouter.get('/chat/files/:filename', (req, res) => {
+      const filename = req.params.filename;
+      const targetPath = path.join(CHAT_STORAGE_DIR, filename);
+
+      if (!fs.existsSync(targetPath)) {
+        return res.status(404).send('File non trovato.');
+      }
+
+      const ext = path.extname(filename).toLowerCase();
+      let contentType = 'application/octet-stream';
+
+      if (['.jpg', '.jpeg'].includes(ext)) contentType = 'image/jpeg';
+      else if (ext === '.png') contentType = 'image/png';
+      else if (ext === '.webp') contentType = 'image/webp';
+      else if (ext === '.pdf') contentType = 'application/pdf';
+      else if (['.webm', '.ogg'].includes(ext)) contentType = 'audio/webm';
+      else if (ext === '.mp3') contentType = 'audio/mpeg';
+      else if (ext === '.wav') contentType = 'audio/wav';
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for speed
+      fs.createReadStream(targetPath).pipe(res);
+    });
+
     // Catch-all for unknown API routes
     apiRouter.all('*', (req, res) => {
       console.warn(`[API] Unmatched route: ${req.method} ${req.url}`);

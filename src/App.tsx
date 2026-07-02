@@ -17,6 +17,7 @@ import NetworkStatusPage from './components/constitution/NetworkStatusPage';
 import VerifyCitizenPage from './components/constitution/VerifyCitizenPage';
 import DemocracyPortal from './components/democracy/DemocracyPortal';
 import WelcomePage from './components/home/WelcomePage';
+import FederalChat from './components/chat/FederalChat';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
@@ -25,7 +26,7 @@ import AccessibilityWidget from './components/pwa/AccessibilityWidget';
 import CookieConsentBanner from './components/pwa/CookieConsentBanner';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy'>('welcome');
+  const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat'>('welcome');
   const [isVerifyPath] = useState<boolean>(() => {
     const searchParams = new URLSearchParams(window.location.search);
     return window.location.pathname === '/verify' || 
@@ -232,6 +233,8 @@ function AppContent() {
               <NetworkStatusPage />
             ) : activeTab === 'democracy' ? (
               <DemocracyPortal />
+            ) : activeTab === 'chat' ? (
+              <FederalChat />
             ) : (
               <CharterPage />
             )}
