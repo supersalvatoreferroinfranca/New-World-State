@@ -125,7 +125,8 @@ const worker = {
         responseHeaders.delete('content-length');
         responseHeaders.delete('transfer-encoding');
 
-        return new Response(fallbackAsset.body, {
+        const arrayBuffer = await fallbackAsset.arrayBuffer();
+        return new Response(arrayBuffer, {
           status: fallbackAsset.status,
           statusText: fallbackAsset.statusText,
           headers: responseHeaders
@@ -5386,7 +5387,8 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           responseHeaders.delete('content-length');
           responseHeaders.delete('transfer-encoding');
 
-          return new Response(fallbackAsset.body, {
+          const arrayBuffer = await fallbackAsset.arrayBuffer();
+          return new Response(arrayBuffer, {
             status: fallbackAsset.status,
             statusText: fallbackAsset.statusText,
             headers: responseHeaders
