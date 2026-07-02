@@ -1929,6 +1929,11 @@ CREATE TABLE citizens (
             return new Response(JSON.stringify({ success: false, message: 'fileType deve essere logo, favicon o favicon-png.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
 
+          // Normalizziamo il prefisso Base64 per conformarsi ai tipi d'immagine accettati dal regex di Aruba PHP Bridge
+          const parts = fileDataBase64.split(',');
+          const actualBase64 = parts.length > 1 ? parts[1] : parts[0];
+          const normalizedBase64 = `data:image/${fileType === 'logo' ? 'jpeg' : 'png'};base64,${actualBase64}`;
+
           const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
           const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
 
@@ -1953,7 +1958,7 @@ CREATE TABLE citizens (
               body: JSON.stringify({
                 key: uploaderKey,
                 username: 'branding',
-                documentFrontData: fileDataBase64,
+                documentFrontData: normalizedBase64,
                 documentFrontName: 'LOGO_NEW-WORLD-STATE.jpg'
               })
             });
@@ -1983,7 +1988,7 @@ CREATE TABLE citizens (
               body: JSON.stringify({
                 key: uploaderKey,
                 username: 'branding',
-                documentFrontData: fileDataBase64,
+                documentFrontData: normalizedBase64,
                 documentFrontName: 'favicon.ico'
               })
             });
@@ -2013,11 +2018,11 @@ CREATE TABLE citizens (
               body: JSON.stringify({
                 key: uploaderKey,
                 username: 'branding',
-                documentFrontData: fileDataBase64,
+                documentFrontData: normalizedBase64,
                 documentFrontName: 'favicon-32x32.png',
-                documentBackData: fileDataBase64,
+                documentBackData: normalizedBase64,
                 documentBackName: 'favicon-16x16.png',
-                documentPhotoData: fileDataBase64,
+                documentPhotoData: normalizedBase64,
                 documentPhotoName: 'apple-touch-icon.png'
               })
             });
