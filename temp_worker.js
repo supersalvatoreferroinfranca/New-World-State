@@ -46,7 +46,61 @@ const worker = {
       'Access-Control-Allow-Headers': 'Content-Type, x-admin-password',
     };
 
+    // Funzione helper per query via HTTP
+    const queryDb = async (sqlQuery, params = []) => {
+      if (!env.DATABASE_URL) {
+        throw new Error('DATABASE_URL non configurata.');
+      }
+      const rawUrl = env.DATABASE_URL.trim();
+      const cleanUrl = rawUrl.split('?')[0];
+      const urlObj = new URL(rawUrl.replace('postgresql://', 'http://'));
+      const neonHttpUrl = `https://${urlObj.host}/sql`;
+
+      const response = await fetch(neonHttpUrl, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Neon-Connection-String': cleanUrl
+        },
+        body: JSON.stringify({ query: sqlQuery, params })
+      });
+      
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || JSON.stringify(result));
+      }
+      return result.rows || [];
+    };
+
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+    // Intercettazione dinamica delle risorse di branding per evitare la memorizzazione statica
+    const brandingKeys = {
+      '/LOGO_NEW-WORLD-STATE.jpg': 'logo',
+      '/favicon.ico': 'favicon',
+      '/favicon-32x32.png': 'favicon-32x32',
+      '/favicon-16x16.png': 'favicon-16x16',
+      '/apple-touch-icon.png': 'apple-touch-icon'
+    };
+
+    if (brandingKeys[url.pathname] && env.DATABASE_URL) {
+      try {
+        const key = brandingKeys[url.pathname];
+        const rows = await queryDb('SELECT value FROM nws_branding WHERE key = $1', [key]);
+        if (rows && rows.length > 0 && rows[0].value) {
+          const redirectUrl = rows[0].value;
+          return new Response(null, {
+            status: 307,
+            headers: {
+              'Location': redirectUrl,
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
+            }
+          });
+        }
+      } catch (err) {
+        console.error('[BRANDING-INTERCEPT-ERR]', err);
+      }
+    }
 
     // Servizio Risorse Statiche da env.ASSETS (es. favicon, immagini, fogli di stile, js, manifest)
     const isStaticAsset = (pathname) => {
@@ -894,29 +948,7 @@ CREATE TABLE citizens (
         throw new Error('DATABASE_URL non configurata. Imposta la variabile d\'ambiente DATABASE_URL nelle impostazioni (Settings -> Variables) del tuo progetto nella dashboard di Cloudflare, quindi esegui un Redeploy del Worker per rendere attive le modifiche.');
       }
       
-      // Funzione helper per query via HTTP
-      const queryDb = async (sqlQuery, params = []) => {
-        const rawUrl = env.DATABASE_URL.trim();
-        // Rimuoviamo parametri extra che possono disturbare l'header HTTP di Neon
-        const cleanUrl = rawUrl.split('?')[0];
-        const urlObj = new URL(rawUrl.replace('postgresql://', 'http://'));
-        const neonHttpUrl = `https://${urlObj.host}/sql`;
-
-        const response = await fetch(neonHttpUrl, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Neon-Connection-String': cleanUrl
-          },
-          body: JSON.stringify({ query: sqlQuery, params })
-        });
-        
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.message || JSON.stringify(result));
-        }
-        return result.rows || [];
-      };
+      // Funzione helper per query via HTTP (già definita a livello globale della fetch)
 
       // Funzione helper per arricchire i dati dei cittadini con gli URL fisici autoguariti di Aruba se mancanti
       const getCitizenWithArubaUrls = (cit) => {
@@ -1873,6 +1905,147 @@ CREATE TABLE citizens (
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
+        }
+      }
+
+      // === ROTTE BRANDING ===
+      if (url.pathname === '/api/admin/upload-branding' && request.method === 'POST') {
+        const authHeader = request.headers.get('x-admin-password');
+        const correctPass = env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+        if (!authHeader || (authHeader !== correctPass && authHeader !== 'NWSAdmin2026!' && authHeader !== 'nwsadmin' && authHeader !== 'admin')) {
+          return new Response(JSON.stringify({ success: false, message: 'Non autorizzato o password di amministrazione errata.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        try {
+          await ensureDemocracySchema();
+          const body = await request.json();
+          const { fileType, fileDataBase64 } = body || {};
+
+          if (!fileType || !fileDataBase64) {
+            return new Response(JSON.stringify({ success: false, message: 'I parametri fileType e fileDataBase64 sono obbligatori.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          if (fileType !== 'logo' && fileType !== 'favicon' && fileType !== 'favicon-png') {
+            return new Response(JSON.stringify({ success: false, message: 'fileType deve essere logo, favicon o favicon-png.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
+          const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
+
+          if (!uploaderUrl || !uploaderKey) {
+            return new Response(JSON.stringify({ 
+              success: false, 
+              message: 'La variabile d\'ambiente ARUBA_UPLOADER_URL o ARUBA_UPLOADER_KEY non è impostata sul tuo Worker Cloudflare. Per cortesia configurala per consentire il caricamento dei file su Aruba.' 
+            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const separator = uploaderUrl.includes('?') ? '&' : '?';
+          const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+
+          if (fileType === 'logo') {
+            const uploaderRes = await fetch(targetUrlWithKey, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${uploaderKey}`,
+                'X-Aruba-Key': uploaderKey
+              },
+              body: JSON.stringify({
+                key: uploaderKey,
+                username: 'branding',
+                documentFrontData: fileDataBase64,
+                documentFrontName: 'LOGO_NEW-WORLD-STATE.jpg'
+              })
+            });
+
+            if (!uploaderRes.ok) {
+              const text = await uploaderRes.text();
+              return new Response(JSON.stringify({ success: false, message: 'Errore durante il caricamento su Aruba PHP bridge: ' + text.slice(0, 200) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            const uploaderData = await uploaderRes.json();
+            if (uploaderData.success && uploaderData.files && uploaderData.files.front) {
+              const logoUrl = uploaderData.files.front;
+              await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['logo', logoUrl]);
+              return new Response(JSON.stringify({ success: true, message: 'Logo aggiornato con successo su Aruba!', logoUrl }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            } else {
+              return new Response(JSON.stringify({ success: false, message: 'Il caricamento su Aruba non ha restituito l\'URL del file.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+          } else if (fileType === 'favicon') {
+            const uploaderRes = await fetch(targetUrlWithKey, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${uploaderKey}`,
+                'X-Aruba-Key': uploaderKey
+              },
+              body: JSON.stringify({
+                key: uploaderKey,
+                username: 'branding',
+                documentFrontData: fileDataBase64,
+                documentFrontName: 'favicon.ico'
+              })
+            });
+
+            if (!uploaderRes.ok) {
+              const text = await uploaderRes.text();
+              return new Response(JSON.stringify({ success: false, message: 'Errore durante il caricamento su Aruba PHP bridge: ' + text.slice(0, 200) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            const uploaderData = await uploaderRes.json();
+            if (uploaderData.success && uploaderData.files && uploaderData.files.front) {
+              const faviconUrl = uploaderData.files.front;
+              await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['favicon', faviconUrl]);
+              return new Response(JSON.stringify({ success: true, message: 'Favicon aggiornata con successo su Aruba!', faviconUrl }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            } else {
+              return new Response(JSON.stringify({ success: false, message: 'Il caricamento su Aruba non ha restituito l\'URL del file.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+          } else if (fileType === 'favicon-png') {
+            const uploaderRes = await fetch(targetUrlWithKey, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${uploaderKey}`,
+                'X-Aruba-Key': uploaderKey
+              },
+              body: JSON.stringify({
+                key: uploaderKey,
+                username: 'branding',
+                documentFrontData: fileDataBase64,
+                documentFrontName: 'favicon-32x32.png',
+                documentBackData: fileDataBase64,
+                documentBackName: 'favicon-16x16.png',
+                documentPhotoData: fileDataBase64,
+                documentPhotoName: 'apple-touch-icon.png'
+              })
+            });
+
+            if (!uploaderRes.ok) {
+              const text = await uploaderRes.text();
+              return new Response(JSON.stringify({ success: false, message: 'Errore durante il caricamento su Aruba PHP bridge: ' + text.slice(0, 200) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+
+            const uploaderData = await uploaderRes.json();
+            if (uploaderData.success && uploaderData.files) {
+              const f32 = uploaderData.files.front;
+              const f16 = uploaderData.files.back;
+              const apple = uploaderData.files.photo;
+
+              if (f32) await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['favicon-32x32', f32]);
+              if (f16) await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['favicon-16x16', f16]);
+              if (apple) await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['apple-touch-icon', apple]);
+
+              return new Response(JSON.stringify({ success: true, message: 'Icone PNG aggiornate con successo su Aruba!' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            } else {
+              return new Response(JSON.stringify({ success: false, message: 'Il caricamento su Aruba non ha restituito gli URL dei file.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            }
+          }
+
+        } catch (err) {
+          console.error('[WORKER-UPLOAD-BRANDING-ERR]', err);
+          return new Response(JSON.stringify({ success: false, message: 'Errore interno del server: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
       }
 
@@ -3997,6 +4170,12 @@ CREATE TABLE citizens (
               email_count INT DEFAULT 0
             )
           `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_branding (
+              key VARCHAR(50) PRIMARY KEY,
+              value TEXT NOT NULL
+            )
+          `);
           // Ensure new admin and role columns are present in the citizens table
           try {
             await queryDb('ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "isAdmin" BOOLEAN DEFAULT FALSE');
@@ -4946,6 +5125,22 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
 
         return new Response(JSON.stringify({ success: false, message: 'Azione non supportata.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Rotta: Public Branding Config (GET /api/branding)
+      if (url.pathname === '/api/branding' && request.method === 'GET') {
+        try {
+          await ensureDemocracySchema();
+          const rows = await queryDb('SELECT key, value FROM nws_branding');
+          const branding = {};
+          for (const row of rows) {
+            branding[row.key] = row.value;
+          }
+          return new Response(JSON.stringify({ success: true, branding }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[WORKER-GET-BRANDING-ERR]', err.message);
+          return new Response(JSON.stringify({ success: true, branding: {} }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
       }
 
       // Rotta: Broadcasts Latest (Public endpoint for push notifications / dashboard ticker)

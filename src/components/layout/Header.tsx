@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { Globe, Menu, ShieldCheck, X, Home, Landmark, BookOpen, FileText, Shield, UserPlus, Lock, Wifi, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useBranding } from '../../hooks/useBranding';
 
 interface HeaderProps {
   activeTab?: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy';
@@ -11,6 +12,7 @@ interface HeaderProps {
 export default function Header({ activeTab, setActiveTab }: HeaderProps) {
   const { language, setLanguage, t } = useI18n();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { branding } = useBranding();
 
   interface NavItem {
     id: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy';
@@ -47,7 +49,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
             <div className="relative group">
               <div className="absolute -inset-1 bg-brand-gold/20 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
               <img 
-                src="/LOGO_NEW-WORLD-STATE.jpg" 
+                src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
                 alt="New World State Logo" 
                 className="h-14 w-auto object-contain relative"
               />
@@ -147,7 +149,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               <div className="h-20 px-6 border-b border-white/10 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
                   <img 
-                    src="/LOGO_NEW-WORLD-STATE.jpg" 
+                    src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
                     alt="Logo" 
                     className="h-10 w-auto object-contain"
                   />

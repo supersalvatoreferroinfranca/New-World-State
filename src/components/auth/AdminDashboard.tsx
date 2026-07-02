@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { safeFetch } from '../../services/api';
+import { useBranding } from '../../hooks/useBranding';
 import { 
   Users, 
   CheckCircle, 
@@ -66,6 +67,7 @@ const PREDEFINED_ROLES = [
 ];
 
 export default function AdminDashboard() {
+  const { branding, refreshBranding } = useBranding();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('nws_admin_auth') === 'true' || sessionStorage.getItem('nws_admin_auth') === 'true';
@@ -251,6 +253,7 @@ export default function AdminDashboard() {
 
         const data = await res.json();
         if (data.success) {
+          await refreshBranding();
           showAlert(
             'Caricamento Completato', 
             `La risorsa "${type === 'logo' ? 'Logo' : type === 'favicon' ? 'Favicon ICO' : 'Icone PNG'}" è stata salvata ed aggiornata con successo nel sistema.`
@@ -2539,8 +2542,8 @@ export default function AdminDashboard() {
                     </div>
                     <div className="bg-white rounded px-2 py-1.5 flex items-center gap-2 shadow-xs border border-slate-150 max-w-[180px]">
                       <img 
-                        src={`/favicon-32x32.png?t=${Date.now()}`} 
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/favicon.ico'; }}
+                        src={branding['favicon-32x32'] || "/favicon-32x32.png"} 
+                        onError={(e) => { (e.target as HTMLImageElement).src = branding.favicon || '/favicon.ico'; }}
                         alt="favicon" 
                         className="w-3.5 h-3.5 object-contain" 
                       />
@@ -2554,7 +2557,7 @@ export default function AdminDashboard() {
                   <h4 className="font-bold text-slate-700 text-[10px] uppercase tracking-wider">2. Barra di Navigazione (Header)</h4>
                   <div className="bg-brand-blue rounded-lg p-3 text-white border border-brand-gold/30 flex items-center gap-3">
                     <img 
-                      src={`/LOGO_NEW-WORLD-STATE.jpg?t=${Date.now()}`} 
+                      src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
                       alt="Logo preview" 
                       className="h-7 w-auto object-contain rounded bg-white/10 p-0.5" 
                     />
@@ -2571,7 +2574,7 @@ export default function AdminDashboard() {
                   <div className="bg-slate-50 rounded-lg overflow-hidden border border-slate-200 text-[9px]">
                     <div className="h-24 bg-white flex items-center justify-center border-b border-slate-150 p-2 overflow-hidden">
                       <img 
-                        src={`/LOGO_NEW-WORLD-STATE.jpg?t=${Date.now()}`} 
+                        src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
                         alt="Logo preview" 
                         className="max-h-full max-w-full object-contain rounded" 
                       />

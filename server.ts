@@ -209,6 +209,14 @@ async function runMigrations() {
         )
       `);
 
+      // Create nws_branding table for uploaded branding asset URLs
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_branding (
+          key VARCHAR(50) PRIMARY KEY,
+          value TEXT NOT NULL
+        )
+      `);
+
       console.log('[MIGRATION] PostgreSQL Table checked and updated successfully.');
     } finally {
       client.release();
@@ -625,6 +633,24 @@ async function startServer() {
         distPath,
         routes
       });
+    });
+
+    apiRouter.get('/branding', async (req, res) => {
+      try {
+        if (dbPool) {
+          const result = await dbPool.query('SELECT key, value FROM nws_branding');
+          const branding: {[key: string]: string} = {};
+          for (const row of result.rows) {
+            branding[row.key] = row.value;
+          }
+          return res.json({ success: true, branding });
+        } else {
+          return res.json({ success: true, branding: {} });
+        }
+      } catch (err: any) {
+        console.error('[SERVER-GET-BRANDING-ERR]', err.message);
+        return res.json({ success: true, branding: {} });
+      }
     });
 
     apiRouter.get('/db-status', async (req, res) => {
