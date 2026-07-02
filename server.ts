@@ -2688,6 +2688,82 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
       return res.json({ success: true, data: savedBroadcast, message });
     });
 
+    // POST /api/admin/upload-branding - Consente di caricare ed aggiornare il logo o la favicon
+    apiRouter.post('/admin/upload-branding', async (req, res) => {
+      try {
+        const { fileType, fileDataBase64 } = req.body || {};
+        if (!fileType || !fileDataBase64) {
+          return res.status(400).json({ success: false, message: 'I parametri fileType e fileDataBase64 sono obbligatori.' });
+        }
+
+        if (fileType !== 'logo' && fileType !== 'favicon' && fileType !== 'favicon-png') {
+          return res.status(400).json({ success: false, message: 'fileType deve essere logo, favicon o favicon-png.' });
+        }
+
+        // Estrai i dati binari base64
+        const matches = fileDataBase64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+        let dataBuffer: Buffer;
+        if (matches) {
+          dataBuffer = Buffer.from(matches[2], 'base64');
+        } else {
+          dataBuffer = Buffer.from(fileDataBase64, 'base64');
+        }
+
+        const filenames: string[] = [];
+        if (fileType === 'logo') {
+          filenames.push('LOGO_NEW-WORLD-STATE.jpg');
+        } else if (fileType === 'favicon') {
+          filenames.push('favicon.ico');
+        } else if (fileType === 'favicon-png') {
+          filenames.push('favicon-32x32.png');
+          filenames.push('favicon-16x16.png');
+          filenames.push('apple-touch-icon.png');
+        }
+
+        const writeErrors: string[] = [];
+        for (const filename of filenames) {
+          // 1. Scrivi nella directory public
+          const publicPath = path.join(process.cwd(), 'public', filename);
+          try {
+            fs.writeFileSync(publicPath, dataBuffer);
+            console.log(`[BRANDING] Scritta risorsa in ${publicPath}`);
+          } catch (err: any) {
+            console.error(`[BRANDING] Errore scrittura public ${filename}:`, err);
+            writeErrors.push(`public/${filename}: ${err.message}`);
+          }
+
+          // 2. Scrivi nella directory dist se esiste (per aggiornamento live)
+          const distPath = path.join(process.cwd(), 'dist', filename);
+          if (fs.existsSync(path.join(process.cwd(), 'dist'))) {
+            try {
+              fs.writeFileSync(distPath, dataBuffer);
+              console.log(`[BRANDING] Scritta risorsa in ${distPath}`);
+            } catch (err: any) {
+              console.error(`[BRANDING] Errore scrittura dist ${filename}:`, err);
+              writeErrors.push(`dist/${filename}: ${err.message}`);
+            }
+          }
+        }
+
+        if (writeErrors.length > 0) {
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Errore durante il salvataggio di alcune risorse.', 
+            errors: writeErrors 
+          });
+        }
+
+        return res.json({ 
+          success: true, 
+          message: `La risorsa ${fileType} è stata aggiornata con successo nel sistema!` 
+        });
+
+      } catch (err: any) {
+        console.error('[BRANDING-UPLOAD-ERR]', err);
+        return res.status(500).json({ success: false, message: 'Errore interno del server: ' + err.message });
+      }
+    });
+
     // GET /api/broadcasts/latest - Endpoint pubblico per recuperare gli ultimi broadcast (usato dal client per notifiche push)
     apiRouter.get('/broadcasts/latest', async (req, res) => {
       if (dbPool) {

@@ -22,7 +22,9 @@ import {
   Trash,
   Clock,
   Plus,
-  Edit
+  Edit,
+  Image,
+  UploadCloud
 } from 'lucide-react';
 
 interface Citizen {
@@ -74,7 +76,7 @@ export default function AdminDashboard() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Core navigation state
-  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals' | 'roles' | 'broadcasts'>('citizens');
+  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals' | 'roles' | 'broadcasts' | 'branding'>('citizens');
 
   // Broadcast state & handlers
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
@@ -191,6 +193,15 @@ export default function AdminDashboard() {
   const [cronLoading, setCronLoading] = useState(false);
   const [cronMessage, setCronMessage] = useState<{ success: boolean; text: string } | null>(null);
 
+  // Branding assets upload states
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+  const [faviconPngFile, setFaviconPngFile] = useState<File | null>(null);
+  const [faviconPngPreview, setFaviconPngPreview] = useState<string | null>(null);
+  const [brandingLoading, setBrandingLoading] = useState<{[key: string]: boolean}>({});
+
   const handleTriggerCron = async () => {
     setCronLoading(true);
     setCronMessage(null);
@@ -214,6 +225,64 @@ export default function AdminDashboard() {
     } finally {
       setCronLoading(false);
     }
+  };
+
+  const handleUploadBranding = async (type: 'logo' | 'favicon' | 'favicon-png', file: File) => {
+    if (!file) return;
+
+    setBrandingLoading(prev => ({ ...prev, [type]: true }));
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Data = reader.result as string;
+
+      try {
+        const res = await safeFetch('/api/admin/upload-branding', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': getAdminPassword()
+          },
+          body: JSON.stringify({
+            fileType: type,
+            fileDataBase64: base64Data
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showAlert(
+            'Caricamento Completato', 
+            `La risorsa "${type === 'logo' ? 'Logo' : type === 'favicon' ? 'Favicon ICO' : 'Icone PNG'}" è stata salvata ed aggiornata con successo nel sistema.`
+          );
+          
+          // Reset file state
+          if (type === 'logo') {
+            setLogoFile(null);
+            setLogoPreview(null);
+          } else if (type === 'favicon') {
+            setFaviconFile(null);
+            setFaviconPreview(null);
+          } else if (type === 'favicon-png') {
+            setFaviconPngFile(null);
+            setFaviconPngPreview(null);
+          }
+        } else {
+          showAlert('Errore di Caricamento', data.message || 'Impossibile completare il caricamento della risorsa.');
+        }
+      } catch (err: any) {
+        showAlert('Errore di Connessione', 'Si è verificato un errore durante l\'invio del file: ' + err.message);
+      } finally {
+        setBrandingLoading(prev => ({ ...prev, [type]: false }));
+      }
+    };
+
+    reader.onerror = () => {
+      showAlert('Errore Lettura File', 'Impossibile leggere il file selezionato.');
+      setBrandingLoading(prev => ({ ...prev, [type]: false }));
+    };
+
+    reader.readAsDataURL(file);
   };
 
   // Custom dialog system to bypass iframe sandbox restrictions on window.confirm & alert
@@ -1035,6 +1104,12 @@ export default function AdminDashboard() {
         >
           <Mail className="w-4 h-4 text-brand-gold" /> Broadcast Messaggi
         </button>
+        <button
+          onClick={() => { setActiveTab('branding'); }}
+          className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'branding' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <Image className="w-4 h-4 text-brand-gold" /> Logo & Favicon
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12">
@@ -1556,6 +1631,249 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </form>
+            </div>
+          )}
+
+          {/* TAB 5: GESTIONE BRANDING (LOGO & FAVICON) */}
+          {activeTab === 'branding' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-serif font-bold text-slate-900">Personalizzazione Identità Visiva</h3>
+                  <p className="text-slate-500 text-xs font-semibold">
+                    Modifica i file d'immagine istituzionali per aggiornare in tempo reale il logo del portale, la favicon classica e le icone progressive per dispositivi mobili.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* CARD 1: LOGO ISTITUZIONALE */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm hover:shadow-md transition">
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                    <div className="p-2 rounded-xl bg-brand-gold/10 text-brand-gold">
+                      <Image className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-serif font-bold text-slate-800 text-sm">Logo Ufficiale dello Stato</h4>
+                      <p className="text-[10px] text-slate-400">Risoluzione ideale: JPG (es. 512x512px o 1024x1024px)</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-slate-300 rounded-xl p-4 transition bg-slate-50/50 relative group">
+                      {logoPreview ? (
+                        <div className="relative">
+                          <img src={logoPreview} alt="Logo Preview" className="h-28 w-auto object-contain rounded shadow-sm bg-white" />
+                          <button 
+                            type="button" 
+                            onClick={() => { setLogoFile(null); setLogoPreview(null); }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shadow hover:bg-red-600 cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center gap-2 cursor-pointer w-full py-4">
+                          <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-[#0a1c3e] transition" />
+                          <span className="text-slate-600 font-semibold text-[11px]">Trascina o clicca per caricare JPG</span>
+                          <span className="text-[9px] text-slate-400">File supportati: .jpg, .jpeg</span>
+                          <input 
+                            type="file" 
+                            accept="image/jpeg, image/jpg" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setLogoFile(file);
+                                setLogoPreview(URL.createObjectURL(file));
+                              }
+                            }} 
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    {logoFile && (
+                      <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg text-[10px]">
+                        <span className="font-semibold text-slate-600 truncate max-w-[200px]">{logoFile.name}</span>
+                        <span className="text-slate-400 font-mono">({(logoFile.size / 1024).toFixed(1)} KB)</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      disabled={!logoFile || !!brandingLoading['logo']}
+                      onClick={() => logoFile && handleUploadBranding('logo', logoFile)}
+                      className="w-full bg-[#0a1c3e] hover:bg-[#071530] text-white py-2.5 rounded-xl font-bold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      {brandingLoading['logo'] ? (
+                        <>
+                          <span className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></span>
+                          Salvataggio...
+                        </>
+                      ) : (
+                        'Applica Nuovo Logo'
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* CARD 2: FAVICON CLASSICA (.ICO) */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm hover:shadow-md transition">
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                    <div className="p-2 rounded-xl bg-[#0a1c3e]/10 text-[#0a1c3e]">
+                      <Image className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-serif font-bold text-slate-800 text-sm">Favicon Classica (ico)</h4>
+                      <p className="text-[10px] text-slate-400">Risoluzione ideale: ICO (es. 32x32px o multi-size)</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-slate-300 rounded-xl p-4 transition bg-slate-50/50 relative group">
+                      {faviconPreview ? (
+                        <div className="relative flex flex-col items-center justify-center p-4">
+                          <div className="p-2 bg-slate-100 rounded border border-slate-200 shadow-sm flex items-center justify-center">
+                            <span className="text-slate-400 text-[10px] font-mono font-bold">FAVICON.ICO</span>
+                          </div>
+                          <button 
+                            type="button" 
+                            onClick={() => { setFaviconFile(null); setFaviconPreview(null); }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shadow hover:bg-red-600 cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center gap-2 cursor-pointer w-full py-4">
+                          <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-[#0a1c3e] transition" />
+                          <span className="text-slate-600 font-semibold text-[11px]">Trascina o clicca per caricare ICO</span>
+                          <span className="text-[9px] text-slate-400">File supportati: .ico, .icon</span>
+                          <input 
+                            type="file" 
+                            accept=".ico" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setFaviconFile(file);
+                                setFaviconPreview('selected');
+                              }
+                            }} 
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    {faviconFile && (
+                      <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg text-[10px]">
+                        <span className="font-semibold text-slate-600 truncate max-w-[200px]">{faviconFile.name}</span>
+                        <span className="text-slate-400 font-mono">({(faviconFile.size / 1024).toFixed(1)} KB)</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      disabled={!faviconFile || !!brandingLoading['favicon']}
+                      onClick={() => faviconFile && handleUploadBranding('favicon', faviconFile)}
+                      className="w-full bg-[#0a1c3e] hover:bg-[#071530] text-white py-2.5 rounded-xl font-bold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      {brandingLoading['favicon'] ? (
+                        <>
+                          <span className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></span>
+                          Salvataggio...
+                        </>
+                      ) : (
+                        'Applica Favicon .ico'
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* CARD 3: ICONE WEB MODERNE / TOUCH (.PNG) */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm hover:shadow-md transition md:col-span-2">
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                    <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-700">
+                      <Image className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-serif font-bold text-slate-800 text-sm">Icone Progressive & Apple Touch (png)</h4>
+                      <p className="text-[10px] text-slate-400">Genera automaticamente le varianti 32x32, 16x16 e l'icona iOS touch. Risoluzione ideale: PNG quadrato (min 180x180px, consigliato 512x512px)</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 hover:border-slate-300 rounded-xl p-4 transition bg-slate-50/50 relative group">
+                      {faviconPngPreview ? (
+                        <div className="relative">
+                          <img src={faviconPngPreview} alt="PNG Preview" className="h-24 w-auto object-contain rounded shadow-sm bg-white" />
+                          <button 
+                            type="button" 
+                            onClick={() => { setFaviconPngFile(null); setFaviconPngPreview(null); }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shadow hover:bg-red-600 cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center gap-2 cursor-pointer w-full py-4">
+                          <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-emerald-700 transition" />
+                          <span className="text-slate-600 font-semibold text-[11px]">Trascina o clicca per caricare PNG</span>
+                          <span className="text-[9px] text-slate-400">File supportati: .png</span>
+                          <input 
+                            type="file" 
+                            accept="image/png" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setFaviconPngFile(file);
+                                setFaviconPngPreview(URL.createObjectURL(file));
+                              }
+                            }} 
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col justify-between space-y-3">
+                      <div className="space-y-1.5 text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <p className="font-semibold text-slate-700">Questo caricamento aggiorna contemporaneamente:</p>
+                        <ul className="list-disc pl-4 space-y-1 text-[10px]">
+                          <li><span className="font-mono bg-white px-1 py-0.5 border border-slate-150 rounded">favicon-32x32.png</span> (Browser moderni)</li>
+                          <li><span className="font-mono bg-white px-1 py-0.5 border border-slate-150 rounded">favicon-16x16.png</span> (Tab browser classici)</li>
+                          <li><span className="font-mono bg-white px-1 py-0.5 border border-slate-150 rounded">apple-touch-icon.png</span> (Homescreen iOS/WebClip)</li>
+                        </ul>
+                      </div>
+
+                      {faviconPngFile && (
+                        <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg text-[10px]">
+                          <span className="font-semibold text-slate-600 truncate max-w-[150px]">{faviconPngFile.name}</span>
+                          <span className="text-slate-400 font-mono">({(faviconPngFile.size / 1024).toFixed(1)} KB)</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        disabled={!faviconPngFile || !!brandingLoading['favicon-png']}
+                        onClick={() => faviconPngFile && handleUploadBranding('favicon-png', faviconPngFile)}
+                        className="w-full bg-[#0a1c3e] hover:bg-[#071530] text-white py-2.5 rounded-xl font-bold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        {brandingLoading['favicon-png'] ? (
+                          <>
+                            <span className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></span>
+                            Generazione icone...
+                          </>
+                        ) : (
+                          'Applica icone PNG moderne'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           )}
 
@@ -2196,6 +2514,81 @@ export default function AdminDashboard() {
               <div className="mt-6 pt-4 border-t border-slate-150/60 flex items-center gap-2 text-slate-400 text-[10px] mt-auto">
                 <Shield className="w-3.5 h-3.5 text-brand-gold" />
                 <span>Consolle di Amministrazione Certificata</span>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: SIDEBAR BRANDING PREVIEW */}
+          {activeTab === 'branding' && (
+            <div className="space-y-6 animate-fade-in text-xs flex flex-col h-full justify-between">
+              <div className="space-y-6">
+                <div>
+                  <span className="text-[9px] uppercase font-mono bg-brand-gold/15 text-brand-gold px-2 py-0.5 rounded-full font-bold">Anteprima Live</span>
+                  <h3 className="text-lg font-serif text-slate-900 mt-2">Simulatore Identità</h3>
+                  <p className="text-slate-400 text-[10px] leading-relaxed">Verifica l'impatto visivo delle nuove risorse grafiche nei vari canali del sistema.</p>
+                </div>
+
+                {/* SIMULATORE SCHEDA BROWSER */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 shadow-xs">
+                  <h4 className="font-bold text-slate-700 text-[10px] uppercase tracking-wider">1. Tab del Browser</h4>
+                  <div className="bg-slate-100 rounded-lg p-2 border border-slate-200">
+                    <div className="flex items-center gap-1 pb-1.5 border-b border-slate-200 mb-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                    </div>
+                    <div className="bg-white rounded px-2 py-1.5 flex items-center gap-2 shadow-xs border border-slate-150 max-w-[180px]">
+                      <img 
+                        src={`/favicon-32x32.png?t=${Date.now()}`} 
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/favicon.ico'; }}
+                        alt="favicon" 
+                        className="w-3.5 h-3.5 object-contain" 
+                      />
+                      <span className="font-sans font-semibold text-[9px] text-slate-700 truncate">New World State</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SIMULATORE HEADER SITO */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 shadow-xs">
+                  <h4 className="font-bold text-slate-700 text-[10px] uppercase tracking-wider">2. Barra di Navigazione (Header)</h4>
+                  <div className="bg-brand-blue rounded-lg p-3 text-white border border-brand-gold/30 flex items-center gap-3">
+                    <img 
+                      src={`/LOGO_NEW-WORLD-STATE.jpg?t=${Date.now()}`} 
+                      alt="Logo preview" 
+                      className="h-7 w-auto object-contain rounded bg-white/10 p-0.5" 
+                    />
+                    <div className="leading-none">
+                      <span className="font-serif text-xs text-brand-gold font-bold block">New World State</span>
+                      <span className="text-[7px] uppercase tracking-widest text-brand-gold/70 mt-0.5 block">Official Portal</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SIMULATORE ANTEPRIMA CONDIVISIONE SOCIAL (SEO) */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 shadow-xs">
+                  <h4 className="font-bold text-slate-700 text-[10px] uppercase tracking-wider">3. Condivisione Social (Open Graph)</h4>
+                  <div className="bg-slate-50 rounded-lg overflow-hidden border border-slate-200 text-[9px]">
+                    <div className="h-24 bg-white flex items-center justify-center border-b border-slate-150 p-2 overflow-hidden">
+                      <img 
+                        src={`/LOGO_NEW-WORLD-STATE.jpg?t=${Date.now()}`} 
+                        alt="Logo preview" 
+                        className="max-h-full max-w-full object-contain rounded" 
+                      />
+                    </div>
+                    <div className="p-2 space-y-1">
+                      <span className="text-slate-400 font-semibold block font-mono">NEWWORLDSTATE.ORG</span>
+                      <h5 className="font-bold text-slate-800 text-[10px] truncate">Portal of the New World State Authority</h5>
+                      <p className="text-slate-500 line-clamp-2 leading-normal">Register as a citizen, participate in direct digital democracy and experience a decentralized state system.</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-150/60 flex items-center gap-2 text-slate-400 text-[10px] mt-auto">
+                <Shield className="w-3.5 h-3.5 text-brand-gold" />
+                <span>Simulatore Brand Federale</span>
               </div>
             </div>
           )}
