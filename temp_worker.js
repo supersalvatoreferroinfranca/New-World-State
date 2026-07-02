@@ -1957,7 +1957,7 @@ CREATE TABLE citizens (
               },
               body: JSON.stringify({
                 key: uploaderKey,
-                username: 'branding',
+                username: 'branding_logo',
                 documentFrontData: normalizedBase64,
                 documentFrontName: 'LOGO_NEW-WORLD-STATE.jpg'
               })
@@ -1987,9 +1987,9 @@ CREATE TABLE citizens (
               },
               body: JSON.stringify({
                 key: uploaderKey,
-                username: 'branding',
+                username: 'branding_favicon',
                 documentFrontData: normalizedBase64,
-                documentFrontName: 'favicon.ico'
+                documentFrontName: 'favicon.png'
               })
             });
 
@@ -2017,7 +2017,7 @@ CREATE TABLE citizens (
               },
               body: JSON.stringify({
                 key: uploaderKey,
-                username: 'branding',
+                username: 'branding_icons',
                 documentFrontData: normalizedBase64,
                 documentFrontName: 'favicon-32x32.png',
                 documentBackData: normalizedBase64,
