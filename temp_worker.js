@@ -120,6 +120,11 @@ const worker = {
         for (const [key, val] of Object.entries(corsHeaders)) {
           responseHeaders.set(key, val);
         }
+        // Rimuoviamo gli header di compressione/lunghezza che possono causare errori di decodifica nel browser
+        responseHeaders.delete('content-encoding');
+        responseHeaders.delete('content-length');
+        responseHeaders.delete('transfer-encoding');
+
         return new Response(fallbackAsset.body, {
           status: fallbackAsset.status,
           statusText: fallbackAsset.statusText,
@@ -5376,6 +5381,11 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           for (const [key, val] of Object.entries(corsHeaders)) {
             responseHeaders.set(key, val);
           }
+          // Rimuoviamo gli header di compressione/lunghezza che possono causare errori di decodifica nel browser
+          responseHeaders.delete('content-encoding');
+          responseHeaders.delete('content-length');
+          responseHeaders.delete('transfer-encoding');
+
           return new Response(fallbackAsset.body, {
             status: fallbackAsset.status,
             statusText: fallbackAsset.statusText,
