@@ -17,7 +17,7 @@ const defaultLegalConfig: LegalConfig = {
   legal_controller_name: "New World State Authority",
   legal_controller_address: "Infrastruttura Decentralizzata Globale / Global Decentralized Infrastructure",
   legal_controller_email: "privacy@newworldstate.org",
-  legal_cookies_list: "Essential Session Storage (Stato della Sessione), local_preferences (Lingua selezionata)",
+  legal_cookies_list: "Essential Session Storage (Stato della Sessione), local_preferences (Lingua selezionata), __cf_bm (Sicurezza e mitigazione bot Cloudflare), Google Fonts Web Caching (File dei caratteri tipografici memorizzati temporaneamente)",
   legal_custom_privacy_it: "",
   legal_custom_privacy_en: "",
   legal_custom_terms_it: "",

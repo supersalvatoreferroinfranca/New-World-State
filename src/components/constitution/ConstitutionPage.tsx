@@ -17,7 +17,7 @@ const constitutionLinks: ConstitutionLink[] = [
   {
     language: 'English',
     nativeName: 'Constitution EN',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/CONSTITUTION-OF-THE-SOVEREIGN-WORLD-STATE-English.pdf',
+    url: 'https://www.newworldstate.org/costitution/CONSTITUTION-OF-THE-SOVEREIGN-WORLD-STATE.pdf',
     flag: '🇺🇸',
     code: 'EN',
     descriptionEn: 'Official English version of the Sovereign World State Constitution.',
@@ -26,7 +26,7 @@ const constitutionLinks: ConstitutionLink[] = [
   {
     language: 'Italiano',
     nativeName: 'Costituzione',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/COSTITUZIONE-E-ATTO-COSTITUTIVO-STATO-MONDIALE.pdf',
+    url: 'https://www.newworldstate.org/costitution/COSTITUZIONE-E-ATTO-COSTITUTIVO-STATO-MONDIALE.pdf',
     flag: '🇮🇹',
     code: 'IT',
     descriptionEn: 'Official Italian version containing the statute and constitution.',
@@ -35,7 +35,7 @@ const constitutionLinks: ConstitutionLink[] = [
   {
     language: 'Français',
     nativeName: 'Constitution FR',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/CONSTITUTION-DE-LETAT-MONDIAL-SOUVERAIN-Francese.pdf',
+    url: 'https://www.newworldstate.org/costitution/CONSTITUTION-DE-LETAT-MONDIAL-SOUVERAIN-Francese.pdf',
     flag: '🇫🇷',
     code: 'FR',
     descriptionEn: 'French translation of the Constitution of the Sovereign World State.',
@@ -44,7 +44,7 @@ const constitutionLinks: ConstitutionLink[] = [
   {
     language: 'Español',
     nativeName: 'Constitución',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/CONSTITUCION-DEL-ESTADO-MUNDIAL-SOBERANO.pdf',
+    url: 'https://www.newworldstate.org/costitution/CONSTITUCION-DEL-ESTADO-MUNDIAL-SOBERANO.pdf',
     flag: '🇪🇸',
     code: 'ES',
     descriptionEn: 'Spanish translation of the Sovereign World State Constitution.',
@@ -53,7 +53,7 @@ const constitutionLinks: ConstitutionLink[] = [
   {
     language: 'Português',
     nativeName: 'Constituição',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/CONSTITUICAO-DO-ESTADO-SOBERANO-MUNDIAL-Portoghese.pdf',
+    url: 'https://www.newworldstate.org/costitution/CONSTITUICAO-DO-ESTADO-SOBERANO-MUNDIAL-Portoghese.pdf',
     flag: '🇵🇹',
     code: 'PT',
     descriptionEn: 'Portuguese translation of the Sovereign World State Constitution.',
@@ -62,7 +62,7 @@ const constitutionLinks: ConstitutionLink[] = [
   {
     language: 'Русский',
     nativeName: 'Конституция',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/КОНСТИТУЦИЯ-СУВЕРЕННОГО-МИРОВОГО-ГОСУДАРСТВА-Russo.pdf',
+    url: 'https://www.newworldstate.org/costitution/КОНСТИТУЦИЯ-СУВЕРЕННОГО-МИРОВОГО-ГОСУДАРСТВА-Russo.pdf',
     flag: '🇷🇺',
     code: 'RU',
     descriptionEn: 'Russian translation of the Sovereign World State Constitution.',
@@ -71,7 +71,7 @@ const constitutionLinks: ConstitutionLink[] = [
   {
     language: 'हिन्दी (Hindi)',
     nativeName: 'संविधान',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/संप्रभु-विश्व-राज्य-Hindi.pdf',
+    url: 'https://www.newworldstate.org/costitution/संप्रभु-विश्व-राज्य-Hindi.pdf',
     flag: '🇮🇳',
     code: 'HI',
     descriptionEn: 'Hindi translation of the Sovereign World State Constitution.',
@@ -80,7 +80,7 @@ const constitutionLinks: ConstitutionLink[] = [
   {
     language: 'বাংলা (Bengali)',
     nativeName: 'সংবিধান',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/সার্বভৌম-विश्व-राष्ट्र-Bengalese.pdf',
+    url: 'https://www.newworldstate.org/costitution/সার্বভৌম-विश्व-राष्ट्र-Bengalese.pdf',
     flag: '🇧🇩',
     code: 'BN',
     descriptionEn: 'Bengali translation of the sovereign world state constitution.',
@@ -89,16 +89,25 @@ const constitutionLinks: ConstitutionLink[] = [
   {
     language: '中文 (Chinese)',
     nativeName: '憲法 / 宪法',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/主权世界国家-Cinese.pdf',
+    url: 'https://www.newworldstate.org/costitution/主权世界国家-Cinese.pdf',
     flag: '🇨🇳',
     code: 'ZH',
     descriptionEn: 'Chinese translation of the Sovereign World State Constitution.',
     descriptionIt: 'Traduzione in lingua cinese della Costituzione dello Stato Mondiale Sovrano.'
   },
   {
+    language: '日本語 (Japanese)',
+    nativeName: '憲法',
+    url: 'https://www.newworldstate.org/costitution/主権世界国家-Giapponese.pdf',
+    flag: '🇯🇵',
+    code: 'JA',
+    descriptionEn: 'Japanese translation of the Sovereign World State Constitution.',
+    descriptionIt: 'Traduzione in lingua giapponese della Costituzione dello Stato Mondiale Sovrano.'
+  },
+  {
     language: 'العربية (Arabic)',
     nativeName: 'دستور',
-    url: 'https://www.newworldstate.org/wp-content/uploads/2025/05/دستور-الدولة-العالمية-ذات-السيادة-Arabo.pdf',
+    url: 'https://www.newworldstate.org/costitution/دستور-الدولة-العالمية-ذات-السيادة-Arabo.pdf',
     flag: '🌍',
     code: 'AR',
     descriptionEn: 'Arabic translation of the Sovereign World State Constitution.',

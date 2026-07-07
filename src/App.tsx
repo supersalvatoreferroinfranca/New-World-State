@@ -19,7 +19,7 @@ import DemocracyPortal from './components/democracy/DemocracyPortal';
 import WelcomePage from './components/home/WelcomePage';
 import FederalChat from './components/chat/FederalChat';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Cookie } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
 import LegalComplianceModal from './components/pwa/LegalComplianceModal';
 import AccessibilityWidget from './components/pwa/AccessibilityWidget';
@@ -36,9 +36,9 @@ function AppContent() {
   const { language } = useI18n();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const [complianceModalOpen, setComplianceModalOpen] = useState(false);
-  const [complianceDocType, setComplianceDocType] = useState<'privacy' | 'cookies' | 'terms' | 'accessibility'>('privacy');
+  const [complianceDocType, setComplianceDocType] = useState<'privacy' | 'cookies' | 'terms' | 'accessibility' | 'ccpa'>('privacy');
 
-  const openCompliance = (type: 'privacy' | 'cookies' | 'terms' | 'accessibility') => {
+  const openCompliance = (type: 'privacy' | 'cookies' | 'terms' | 'accessibility' | 'ccpa') => {
     setComplianceDocType(type);
     setComplianceModalOpen(true);
   };
@@ -307,6 +307,14 @@ function AppContent() {
             >
               {language === 'en' ? 'Accessibility' : 'Accessibilità'}
             </button>
+            <span className="text-slate-300">•</span>
+            <button 
+              onClick={() => openCompliance('ccpa')} 
+              className="hover:text-brand-gold transition-colors cursor-pointer text-[#0a1c3e] font-bold"
+              id="footer-ccpa-link"
+            >
+              {language === 'en' ? 'Do Not Sell or Share My Personal Information' : 'Non Vendere i Miei Dati (CCPA)'}
+            </button>
           </div>
         </div>
       </footer>
@@ -322,10 +330,22 @@ function AppContent() {
       {/* ACCESSIBILITY FLOATING WIDGET (CONTRAST & TEXT SCALING) */}
       <AccessibilityWidget />
 
+      {/* FLOATING PRIVACY & COOKIE CONSENT WIDGET */}
+      <button
+        onClick={() => window.dispatchEvent(new Event('nws_reopen_cookie_banner'))}
+        className="fixed bottom-6 left-6 z-40 p-3 h-12 w-12 rounded-full bg-[#0a1c3e] hover:bg-[#c5a880] text-[#f7f5f0] hover:text-[#0a1c3e] shadow-lg hover:shadow-2xl transition-all duration-300 border border-[#c5a880]/30 flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95"
+        id="reopen-cookie-banner-btn"
+        aria-label={language === 'en' ? 'Manage Cookie Preferences' : 'Gestisci preferenze cookie'}
+        title={language === 'en' ? 'Manage Cookie Preferences' : 'Gestisci preferenze cookie'}
+      >
+        <Cookie className="w-5 h-5 stroke-[2] animate-pulse" />
+      </button>
+
       {/* COOKIE CONSENT BANNER */}
       <CookieConsentBanner 
         onOpenPrivacy={() => openCompliance('privacy')} 
         onOpenCookies={() => openCompliance('cookies')} 
+        onOpenCcpa={() => openCompliance('ccpa')}
       />
 
       {/* FLOAT SCROLL TO TOP BUTTON */}

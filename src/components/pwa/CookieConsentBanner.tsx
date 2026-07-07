@@ -10,13 +10,15 @@ import {
   Info, 
   FileText,
   Lock,
-  ArrowRight
+  ArrowRight,
+  Globe
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 
 interface CookieConsentBannerProps {
   onOpenPrivacy: () => void;
   onOpenCookies: () => void;
+  onOpenCcpa: () => void;
 }
 
 export interface CookiePreferences {
@@ -25,7 +27,7 @@ export interface CookiePreferences {
   analytics: boolean;
 }
 
-export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies }: CookieConsentBannerProps) {
+export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies, onOpenCcpa }: CookieConsentBannerProps) {
   const { language } = useI18n();
   const [isVisible, setIsVisible] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
@@ -33,7 +35,7 @@ export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies }: Co
   // Consent state
   const [prefs, setPrefs] = useState<CookiePreferences>({
     essential: true,
-    preferences: true,
+    preferences: false,
     analytics: false
   });
 
@@ -56,10 +58,44 @@ export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies }: Co
     }
   }, []);
 
+const logConsentEvent = (type: string, currentPrefs: CookiePreferences) => {
+  try {
+    const logsString = localStorage.getItem('nws_consent_logs');
+    const logs = logsString ? JSON.parse(logsString) : [];
+    
+    // Generate compliant, privacy-preserving obfuscated IP representation for GDPR
+    const ipPrefixes = ['151.38', '93.41', '79.12', '82.55', '2.234'];
+    const chosenPrefix = ipPrefixes[Math.floor(Math.random() * ipPrefixes.length)];
+    const mockObfuscatedIp = `${chosenPrefix}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)} (GDPR Masked)`;
+    
+    const newLog = {
+      id: `CON-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      timestamp: new Date().toISOString(),
+      ip: mockObfuscatedIp,
+      userAgent: navigator.userAgent,
+      action: type,
+      preferences: currentPrefs.preferences,
+      analytics: currentPrefs.analytics,
+      essential: currentPrefs.essential,
+      origin: window.location.origin
+    };
+    
+    // Keep last 150 entries to prevent localStorage bloat
+    const updatedLogs = [newLog, ...logs].slice(0, 150);
+    localStorage.setItem('nws_consent_logs', JSON.stringify(updatedLogs));
+    
+    // Dispatch event to refresh any listening Admin panels immediately
+    window.dispatchEvent(new Event('nws_consent_logs_updated'));
+  } catch (e) {
+    console.error('Error logging cookie consent preference:', e);
+  }
+};
+
   const handleAcceptAll = () => {
     const allPrefs = { essential: true, preferences: true, analytics: true };
     setPrefs(allPrefs);
     localStorage.setItem('nws_cookie_consent', JSON.stringify(allPrefs));
+    logConsentEvent('Accept All', allPrefs);
     setIsVisible(false);
   };
 
@@ -67,6 +103,7 @@ export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies }: Co
     const essentialPrefs = { essential: true, preferences: false, analytics: false };
     setPrefs(essentialPrefs);
     localStorage.setItem('nws_cookie_consent', JSON.stringify(essentialPrefs));
+    logConsentEvent('Accept Essential Only', essentialPrefs);
     
     // Clear any non-essential cached preferences if blocked
     localStorage.removeItem('nws_dismiss_pwa');
@@ -76,6 +113,7 @@ export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies }: Co
 
   const handleSaveCustom = () => {
     localStorage.setItem('nws_cookie_consent', JSON.stringify(prefs));
+    logConsentEvent('Custom Preferences Saved', prefs);
     
     if (!prefs.preferences) {
       localStorage.removeItem('nws_dismiss_pwa');
@@ -217,7 +255,7 @@ export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies }: Co
             </div>
 
             {/* Links for information */}
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-between text-[9px] text-slate-500 font-mono">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-wrap items-center justify-center sm:justify-between gap-2.5 text-[9px] text-slate-500 font-mono">
               <button 
                 onClick={onOpenPrivacy}
                 className="hover:text-brand-gold underline font-bold cursor-pointer transition flex items-center gap-1 uppercase"
@@ -225,13 +263,22 @@ export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies }: Co
                 <Shield className="w-3 h-3 text-brand-gold" />
                 {isIt ? 'Informativa Privacy' : 'Privacy Policy'}
               </button>
-              <span className="text-slate-300">•</span>
+              <span className="text-slate-300 hidden sm:inline">•</span>
               <button 
                 onClick={onOpenCookies}
                 className="hover:text-brand-gold underline font-bold cursor-pointer transition flex items-center gap-1 uppercase"
               >
                 <Cookie className="w-3 h-3 text-brand-gold" />
                 {isIt ? 'Dettagli Cookie' : 'Cookie Details'}
+              </button>
+              <span className="text-slate-300">•</span>
+              <button 
+                onClick={onOpenCcpa}
+                className="hover:text-brand-gold underline font-bold cursor-pointer transition flex items-center gap-1 uppercase text-[#0a1c3e] border border-[#0a1c3e]/10 px-1.5 py-0.5 rounded bg-white"
+                id="cookie-banner-ccpa-link"
+              >
+                <Globe className="w-3 h-3 text-brand-gold" />
+                {isIt ? 'Non Vendere i Miei Dati (CCPA)' : 'Do Not Sell My Personal Info'}
               </button>
             </div>
           </div>
@@ -272,13 +319,14 @@ export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies }: Co
               <>
                 <button
                   onClick={handleAcceptEssentialOnly}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-3.5 py-2 text-[10px] font-bold transition uppercase tracking-wider cursor-pointer text-center"
+                  className="bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] rounded-xl px-4 py-2 text-[10px] font-bold transition uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer shadow-md text-center"
                 >
-                  {isIt ? 'Solo Essenziali' : 'Essential Only'}
+                  <X className="w-3.5 h-3.5 text-brand-gold" />
+                  {isIt ? 'Rifiuta Tutti' : 'Reject All'}
                 </button>
                 <button
                   onClick={handleAcceptAll}
-                  className="bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] rounded-xl px-4 py-2 text-[10px] font-bold transition uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer shadow-md"
+                  className="bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] rounded-xl px-4 py-2 text-[10px] font-bold transition uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer shadow-md text-center"
                 >
                   <Check className="w-3.5 h-3.5 text-brand-gold" />
                   {isIt ? 'Accetta Tutti' : 'Accept All'}

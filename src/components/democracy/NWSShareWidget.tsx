@@ -21,7 +21,7 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
   const [copied, setCopied] = useState(false);
   const [shareText, setShareText] = useState('');
 
-  const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://newworldstate.org';
+  const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://newworldstate.cloud';
 
   // Preformatted messages
   const messages = {

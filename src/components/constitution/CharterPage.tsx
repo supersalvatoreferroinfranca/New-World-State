@@ -1094,13 +1094,13 @@ export default function CharterPage() {
             {isEn ? 'For institutional insights' : 'Per approfondimenti istituzionali'}
           </p>
           <a
-            href="https://www.newworldstate.org"
+            href="https://www.newworldstate.cloud"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 bg-brand-blue hover:bg-brand-gold text-white hover:text-brand-blue font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all"
           >
             <Globe className="w-4 h-4" />
-            <span>newworldstate.org</span>
+            <span>newworldstate.cloud</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>

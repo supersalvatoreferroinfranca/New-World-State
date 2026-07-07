@@ -4310,7 +4310,7 @@ CREATE TABLE citizens (
                       </p>
 
                       <div style="text-align: center; margin: 28px 0;">
-                        <a href="https://newworldstate.org/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.2);">ACCEDI AL PORTALE DI VOTO</a>
+                        <a href="https://newworldstate.cloud/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.2);">ACCEDI AL PORTALE DI VOTO</a>
                       </div>
 
                       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
@@ -4458,7 +4458,7 @@ CREATE TABLE citizens (
                       </p>
 
                       <div style="text-align: center; margin: 28px 0;">
-                        <a href="https://newworldstate.org/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">ARCHIVIO STORICO CONSULTAZIONI</a>
+                        <a href="https://newworldstate.cloud/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">ARCHIVIO STORICO CONSULTAZIONI</a>
                       </div>
 
                       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
@@ -4886,7 +4886,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                   </p>
 
                   <div style="text-align: center; margin: 28px 0;">
-                    <a href="https://newworldstate.org/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">PORTALE DI DEMOCRAZIA</a>
+                    <a href="https://newworldstate.cloud/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">PORTALE DI DEMOCRAZIA</a>
                   </div>
 
                   <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
@@ -4928,7 +4928,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                   </p>
 
                   <div style="text-align: center; margin: 28px 0;">
-                    <a href="https://newworldstate.org/admin" style="display: inline-block; background-color: #d97706; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(217,119,6,0.25);">ACCEDI AL PORTALE AMMINISTRATORE</a>
+                    <a href="https://newworldstate.cloud/admin" style="display: inline-block; background-color: #d97706; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(217,119,6,0.25);">ACCEDI AL PORTALE AMMINISTRATORE</a>
                   </div>
 
                   <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
@@ -5124,7 +5124,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                     </p>
 
                     <div style="text-align: center; margin: 28px 0;">
-                      <a href="https://newworldstate.org/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">ACCEDI AL PORTALE DI VOTO</a>
+                      <a href="https://newworldstate.cloud/democracy" style="display: inline-block; background-color: #0a1c3e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; box-shadow: 0 2px 4px rgba(10,28,62,0.25);">ACCEDI AL PORTALE DI VOTO</a>
                     </div>
 
                     <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
@@ -5205,7 +5205,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             legal_controller_name: "New World State Authority",
             legal_controller_address: "Infrastruttura Decentralizzata Globale / Global Decentralized Infrastructure",
             legal_controller_email: "privacy@newworldstate.org",
-            legal_cookies_list: "Essential Session Storage (Stato della Sessione), local_preferences (Lingua selezionata)",
+            legal_cookies_list: "Essential Session Storage (Stato della Sessione), local_preferences (Lingua selezionata), __cf_bm (Sicurezza e mitigazione bot Cloudflare), Google Fonts Web Caching (File dei caratteri tipografici memorizzati temporaneamente)",
             legal_custom_privacy_it: "",
             legal_custom_privacy_en: "",
             legal_custom_terms_it: "",

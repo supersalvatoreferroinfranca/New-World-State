@@ -849,7 +849,7 @@ CREATE TABLE citizens (
               `Date: ${dateStr}\r\n` +
               `MIME-Version: 1.0\r\n` +
               `Content-Type: multipart/mixed; boundary="${boundary}"\r\n` +
-              `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.cloud>\r\n\r\n`;
+              `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.org>\r\n\r\n`;
 
             body = 
               `This is a multi-part message in MIME format.\r\n\r\n` +
@@ -872,7 +872,7 @@ CREATE TABLE citizens (
               `MIME-Version: 1.0\r\n` +
               `Content-Type: text/html; charset=utf-8\r\n` +
               `Content-Transfer-Encoding: 7bit\r\n` +
-              `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.cloud>\r\n\r\n`;
+              `Message-ID: <${Date.now()}-${user.split('@')[0]}@newworldstate.org>\r\n\r\n`;
 
             body = html.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n';
           }
@@ -1289,7 +1289,7 @@ CREATE TABLE citizens (
         if (env.BREVO_API_KEY) {
           try {
             const brevoPayload = {
-              sender: { name: "New World State", email: fromEmail.includes('@') ? fromEmail : "onboarding@newworldstate.cloud" },
+              sender: { name: "New World State", email: fromEmail.includes('@') ? fromEmail : "onboarding@newworldstate.org" },
               to: (Array.isArray(to) ? to : [to]).map(addr => ({ email: addr })),
               subject: subject,
               htmlContent: html
@@ -2683,7 +2683,7 @@ export const onRequest = [
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               personalizations: [{ to: [{ email: recipient }] }],
-              from: { email: "anagrafe@newworldstate.cloud", name: "Anagrafe New World State" },
+              from: { email: "anagrafe@newworldstate.org", name: "Anagrafe New World State" },
               subject: subject,
               content: [{ type: "text/html", value: htmlContent }]
             })
@@ -3162,7 +3162,7 @@ async function sendNotificationEmails(env, detail) {
         to: [{ email: adminEmail, name: "Amministratore NWS" }]
       }
     ],
-    from: { email: "anagrafe@newworldstate.cloud", name: "Anagrafe NWS" },
+    from: { email: "anagrafe@newworldstate.org", name: "Anagrafe NWS" },
     subject: `[NWS-ANAGRAFE] Nuova iscrizione cittadino: ${detail.surname} ${detail.firstName}`,
     content: [
       {
