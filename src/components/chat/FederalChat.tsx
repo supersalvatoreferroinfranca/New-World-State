@@ -49,14 +49,6 @@ interface ChatRoom {
 
 const CHAT_ROOMS: ChatRoom[] = [
   {
-    id: 'general',
-    nameEn: 'General Assembly',
-    nameIt: 'Assemblea Generale',
-    descEn: 'Public channel for all approved and prospective citizens of the New World State.',
-    descIt: 'Canale pubblico per tutti i cittadini approvati e candidati del New World State.',
-    icon: '🏛️'
-  },
-  {
     id: 'consulate',
     nameEn: 'Consular Hotline',
     nameIt: 'Hotline Consolare',
@@ -76,7 +68,7 @@ const CHAT_ROOMS: ChatRoom[] = [
 
 export default function FederalChat() {
   const { language } = useI18n();
-  const [activeRoom, setActiveRoom] = useState<string>('general');
+  const [activeRoom, setActiveRoom] = useState<string>('consulate');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -89,6 +81,27 @@ export default function FederalChat() {
   const [senderRole, setSenderRole] = useState('Cittadino');
   const [citizenCode, setCitizenCode] = useState('');
   const [isProfileSet, setIsProfileSet] = useState(false);
+
+  // Direct messages states
+  const [activeDirectChats, setActiveDirectChats] = useState<{ id: string; name: string; code: string; icon: string }[]>(() => {
+    try {
+      const activeUser = localStorage.getItem('nws_democracy_citizen');
+      if (activeUser) {
+        const parsed = JSON.parse(activeUser);
+        const code = parsed.citizenCode || '';
+        if (code) {
+          const cached = localStorage.getItem(`nws_active_dms_${code}`);
+          return cached ? JSON.parse(cached) : [];
+        }
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  });
+  const [citizenSearchQuery, setCitizenSearchQuery] = useState('');
+  const [citizenSearchResults, setCitizenSearchResults] = useState<any[]>([]);
+  const [isSearchingCitizens, setIsSearchingCitizens] = useState(false);
 
   // Audio Recorder State
   const [isRecording, setIsRecording] = useState(false);
@@ -111,12 +124,81 @@ export default function FederalChat() {
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Load active DMs list when citizenCode updates
+  useEffect(() => {
+    if (citizenCode) {
+      try {
+        const cached = localStorage.getItem(`nws_active_dms_${citizenCode}`);
+        if (cached) {
+          setActiveDirectChats(JSON.parse(cached));
+        } else {
+          setActiveDirectChats([]);
+        }
+      } catch (_) {}
+    }
+  }, [citizenCode]);
+
+  // Citizen search logic (debounced)
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      const trimmed = citizenSearchQuery.trim();
+      if (!trimmed) {
+        setCitizenSearchResults([]);
+        return;
+      }
+      setIsSearchingCitizens(true);
+      try {
+        const res = await fetch(`/api/chat/citizens/search?q=${encodeURIComponent(trimmed)}`);
+        const data = await res.json();
+        if (data.success) {
+          // Filter out the current user
+          const filtered = (data.citizens || []).filter((c: any) => c.citizenCode !== citizenCode);
+          setCitizenSearchResults(filtered);
+        }
+      } catch (err) {
+        console.error('Error searching citizens:', err);
+      } finally {
+        setIsSearchingCitizens(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [citizenSearchQuery, citizenCode]);
+
+  // Start DM action
+  const handleStartDirectChat = (otherCit: any) => {
+    // Generate alphabetically sorted room name to ensure consistency
+    const codes = [citizenCode, otherCit.citizenCode].sort();
+    const dmRoomId = `dm_${codes[0]}_${codes[1]}`;
+
+    const dmMeta = {
+      id: dmRoomId,
+      name: `${otherCit.firstName} ${otherCit.surname}`,
+      code: otherCit.citizenCode,
+      icon: '👤'
+    };
+
+    setActiveDirectChats(prev => {
+      const exists = prev.some(chat => chat.id === dmRoomId);
+      if (exists) return prev;
+      const updated = [dmMeta, ...prev];
+      if (citizenCode) {
+        localStorage.setItem(`nws_active_dms_${citizenCode}`, JSON.stringify(updated));
+      }
+      return updated;
+    });
+
+    setActiveRoom(dmRoomId);
+    setCitizenSearchQuery('');
+    setCitizenSearchResults([]);
+  };
+
   // Auto-detect profile from local storage/registration cache
   useEffect(() => {
     const detectProfile = () => {
       try {
-        // Try to read approved citizen info
-        const cachedCitizen = localStorage.getItem('nws_citizen_profile') || localStorage.getItem('registered_citizen');
+        // Try to read approved citizen info from active democracy session first
+        const cachedCitizen = localStorage.getItem('nws_democracy_citizen') || localStorage.getItem('nws_citizen_profile') || localStorage.getItem('registered_citizen');
         if (cachedCitizen) {
           const citizen = JSON.parse(cachedCitizen);
           const fullName = `${citizen.firstName || ''} ${citizen.surname || ''}`.trim();
@@ -596,7 +678,19 @@ export default function FederalChat() {
     }
   };
 
-  const currentRoom = CHAT_ROOMS.find(r => r.id === activeRoom) || CHAT_ROOMS[0];
+  const currentDM = activeDirectChats.find(c => c.id === activeRoom);
+  const currentRoomIcon = currentDM ? '👤' : (CHAT_ROOMS.find(r => r.id === activeRoom)?.icon || '🏛️');
+  const currentRoomName = currentDM 
+    ? currentDM.name 
+    : (CHAT_ROOMS.find(r => r.id === activeRoom) 
+        ? (language === 'en' ? CHAT_ROOMS.find(r => r.id === activeRoom)!.nameEn : CHAT_ROOMS.find(r => r.id === activeRoom)!.nameIt)
+        : (language === 'en' ? 'Direct Chat' : 'Chat Privata'));
+
+  const currentRoomDesc = currentDM
+    ? `${language === 'en' ? 'Sovereign Secure Direct Line with' : 'Linea Diretta Protetta con'} ${currentDM.name} (${currentDM.code})`
+    : (CHAT_ROOMS.find(r => r.id === activeRoom)
+        ? (language === 'en' ? CHAT_ROOMS.find(r => r.id === activeRoom)!.descEn : CHAT_ROOMS.find(r => r.id === activeRoom)!.descIt)
+        : '');
 
   return (
     <div className="bg-[#faf9f5] border border-[#c5a880]/30 rounded-3xl overflow-hidden shadow-xl grid grid-cols-1 lg:grid-cols-12 min-h-[600px] max-h-[800px] h-[75vh] font-sans">
@@ -630,42 +724,140 @@ export default function FederalChat() {
         </div>
 
         {/* Channels List */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/50">
-          <p className="text-[9px] uppercase tracking-[0.25em] text-slate-400 font-extrabold px-2 py-1">
-            {language === 'en' ? 'Hotlines & Rooms' : 'Linee & Assemblee'}
-          </p>
+        <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-slate-50/50">
+          <div>
+            <p className="text-[9px] uppercase tracking-[0.25em] text-[#0a1c3e]/80 font-mono font-extrabold px-2 py-1.5 mb-1 bg-brand-gold/10 rounded border border-brand-gold/20 flex items-center gap-1.5">
+              <span>🏛️</span> {language === 'en' ? 'State Organs' : 'Organi di Stato'}
+            </p>
+            <div className="space-y-2 mt-1.5">
+              {CHAT_ROOMS.map((room) => {
+                const isActive = activeRoom === room.id;
+                return (
+                  <button
+                    key={room.id}
+                    onClick={() => setActiveRoom(room.id)}
+                    className={`w-full p-3 rounded-xl border text-left flex gap-3 transition duration-200 cursor-pointer ${
+                      isActive 
+                        ? 'bg-[#0a1c3e] border-[#0a1c3e] text-white shadow-md' 
+                        : 'bg-white hover:bg-slate-100 border-slate-150 text-slate-800 shadow-sm'
+                    }`}
+                  >
+                    <span className="text-xl self-center shrink-0">{room.icon}</span>
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold truncate">
+                          {language === 'en' ? room.nameEn : room.nameIt}
+                        </h4>
+                        {room.id === 'consulate' && (
+                          <span className="text-[8px] font-mono font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1.5 py-0.5 rounded uppercase scale-90">
+                            {language === 'en' ? 'Hotline' : 'Hotline'}
+                          </span>
+                        )}
+                        {room.id === 'embassy' && (
+                          <span className="text-[8px] font-mono font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-1.5 py-0.5 rounded uppercase scale-90">
+                            {language === 'en' ? 'Embassy' : 'Ambasciata'}
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-[10px] leading-relaxed line-clamp-1 ${isActive ? 'text-slate-300' : 'text-slate-400'}`}>
+                        {language === 'en' ? room.descEn : room.descIt}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-          {CHAT_ROOMS.map((room) => {
-            const isActive = activeRoom === room.id;
-            return (
-              <button
-                key={room.id}
-                onClick={() => setActiveRoom(room.id)}
-                className={`w-full p-3.5 rounded-2xl border text-left flex gap-3.5 transition duration-200 cursor-pointer ${
-                  isActive 
-                    ? 'bg-[#0a1c3e] border-[#0a1c3e] text-white shadow-lg shadow-[#0a1c3e]/15' 
-                    : 'bg-white hover:bg-slate-100 border-slate-150 text-slate-800'
-                }`}
-              >
-                <span className="text-2xl self-center shrink-0">{room.icon}</span>
-                <div className="space-y-0.5 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold truncate">
-                      {language === 'en' ? room.nameEn : room.nameIt}
-                    </h4>
-                    {room.id === 'consulate' && (
-                      <span className="text-[8px] font-mono font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1.5 py-0.5 rounded-full uppercase scale-90">
-                        {language === 'en' ? 'Secure' : 'Sicuro'}
-                      </span>
-                    )}
-                  </div>
-                  <p className={`text-[10px] leading-relaxed line-clamp-2 ${isActive ? 'text-slate-300' : 'text-slate-400'}`}>
-                    {language === 'en' ? room.descEn : room.descIt}
-                  </p>
+          {/* Internal Registered Citizens Search */}
+          <div className="border-t border-slate-200 pt-3">
+            <p className="text-[9px] uppercase tracking-[0.25em] text-slate-400 font-extrabold px-2 mb-1.5">
+              🔍 {language === 'en' ? 'Search Citizens' : 'Cerca Cittadini'}
+            </p>
+            <div className="px-2 relative">
+              <input
+                type="text"
+                placeholder={language === 'en' ? 'Search by name or code...' : 'Cerca per nome o codice...'}
+                value={citizenSearchQuery}
+                onChange={(e) => setCitizenSearchQuery(e.target.value)}
+                className="w-full bg-white border border-slate-200 focus:border-[#0a1c3e] focus:ring-1 focus:ring-[#0a1c3e] rounded-lg px-2.5 py-1.5 text-[11px] outline-none transition text-[#0a1c3e]"
+              />
+              {isSearchingCitizens && (
+                <div className="absolute right-4 top-2 flex items-center">
+                  <span className="w-3.5 h-3.5 border-2 border-[#0a1c3e] border-t-transparent rounded-full animate-spin" />
                 </div>
-              </button>
-            );
-          })}
+              )}
+            </div>
+
+            {/* Citizens Search Results dropdown */}
+            {citizenSearchResults.length > 0 && (
+              <div className="mx-2 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden divide-y divide-slate-100 max-h-48 overflow-y-auto z-10 relative">
+                {citizenSearchResults.map((cit) => (
+                  <button
+                    key={cit.id}
+                    type="button"
+                    onClick={() => handleStartDirectChat(cit)}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-50 transition flex items-center gap-2.5 cursor-pointer text-xs"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-[#0a1c3e]/5 flex items-center justify-center font-bold text-slate-700 text-[10px]">
+                      {(cit.firstName || 'C')[0]}{(cit.surname || 'C')[0]}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-slate-800 truncate">{cit.firstName} {cit.surname}</p>
+                      <p className="text-[9px] text-slate-400 font-mono">{cit.citizenCode}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {citizenSearchQuery.trim() !== '' && citizenSearchResults.length === 0 && !isSearchingCitizens && (
+              <p className="text-[10px] text-slate-400 px-3 mt-1.5 italic">
+                {language === 'en' ? 'No registered citizens found' : 'Nessun cittadino trovato'}
+              </p>
+            )}
+          </div>
+
+          {/* Active Private Chats */}
+          <div className="border-t border-slate-200 pt-3">
+            <p className="text-[9px] uppercase tracking-[0.25em] text-slate-400 font-extrabold px-2 mb-1.5">
+              👥 {language === 'en' ? 'Direct Messages' : 'Messaggi Privati'}
+            </p>
+            <div className="space-y-1.5">
+              {activeDirectChats.length === 0 ? (
+                <p className="text-[10px] text-slate-400 px-3 italic py-2">
+                  {language === 'en' ? 'No active direct chats. Use the search bar above to start communication.' : 'Nessuna chat privata attiva. Usa la barra di ricerca sopra per iniziare.'}
+                </p>
+              ) : (
+                activeDirectChats.map((chat) => {
+                  const isActive = activeRoom === chat.id;
+                  return (
+                    <button
+                      key={chat.id}
+                      type="button"
+                      onClick={() => setActiveRoom(chat.id)}
+                      className={`w-full p-2.5 rounded-xl border text-left flex gap-2.5 transition duration-200 cursor-pointer ${
+                        isActive 
+                          ? 'bg-[#0a1c3e]/10 border-[#0a1c3e]/20 text-[#0a1c3e]' 
+                          : 'bg-white hover:bg-slate-100 border-slate-150 text-slate-800 shadow-sm'
+                      }`}
+                    >
+                      <span className="text-lg self-center shrink-0">{chat.icon}</span>
+                      <div className="space-y-0.5 min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className={`text-xs truncate font-bold ${isActive ? 'text-[#0a1c3e]' : 'text-slate-800'}`}>
+                            {chat.name}
+                          </h4>
+                        </div>
+                        <p className="text-[9px] text-slate-400 font-mono leading-none truncate">
+                          {chat.code}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Fast transfers info badge */}
@@ -761,13 +953,13 @@ export default function FederalChat() {
             {/* Chat Room Header */}
             <div className="p-4 bg-slate-50 border-b border-slate-150 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{currentRoom.icon}</span>
+                <span className="text-2xl">{currentRoomIcon}</span>
                 <div>
                   <h3 className="text-xs font-bold text-slate-900">
-                    {language === 'en' ? currentRoom.nameEn : currentRoom.nameIt}
+                    {currentRoomName}
                   </h3>
                   <p className="text-[10px] text-slate-500 truncate max-w-[300px] md:max-w-[450px]">
-                    {language === 'en' ? currentRoom.descEn : currentRoom.descIt}
+                    {currentRoomDesc}
                   </p>
                 </div>
               </div>

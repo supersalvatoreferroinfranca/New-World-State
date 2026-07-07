@@ -24,7 +24,6 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
   const navigationItems: NavItem[] = [
     { id: 'welcome', label: language === 'en' ? 'Home/Intro' : 'Home/Intro', icon: Home },
     { id: 'democracy', label: language === 'en' ? 'Direct Democracy' : 'Democrazia Diretta', icon: Landmark, highlight: true },
-    { id: 'chat', label: language === 'en' ? 'Federal Chat' : 'Chat Federale', icon: MessageSquare, highlight: true },
     { id: 'constitution', label: language === 'en' ? 'Constitution' : 'Costituzione', icon: BookOpen },
     { id: 'charter', label: language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti', icon: FileText },
     { id: 'governance', label: language === 'en' ? 'Governance' : 'Governance', icon: Shield },
@@ -97,13 +96,6 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
                 className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'governance' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
               >
                 {language === 'en' ? 'Governance' : 'Governance'}
-              </button>
-              <button 
-                onClick={() => setActiveTab?.('chat')}
-                className={`hover:text-brand-gold transition-all duration-150 cursor-pointer flex items-center gap-1 font-bold ${activeTab === 'chat' ? 'text-brand-gold scale-105 border-b border-brand-gold' : 'text-emerald-400'}`}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                💬 {language === 'en' ? 'Chat' : 'Chat'}
               </button>
             </div>
 

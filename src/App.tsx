@@ -19,7 +19,7 @@ import DemocracyPortal from './components/democracy/DemocracyPortal';
 import WelcomePage from './components/home/WelcomePage';
 import FederalChat from './components/chat/FederalChat';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
-import { ArrowUp, Cookie } from 'lucide-react';
+import { ArrowUp, Cookie, MessageSquare, ArrowRight } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
 import LegalComplianceModal from './components/pwa/LegalComplianceModal';
 import AccessibilityWidget from './components/pwa/AccessibilityWidget';
@@ -234,7 +234,28 @@ function AppContent() {
             ) : activeTab === 'democracy' ? (
               <DemocracyPortal />
             ) : activeTab === 'chat' ? (
-              <FederalChat />
+              <div className="max-w-2xl mx-auto bg-white border border-[#c5a880]/30 rounded-3xl p-8 text-center shadow-xl space-y-6 animate-fade-in my-10">
+                <div className="w-16 h-16 rounded-full bg-[#0a1c3e]/5 text-[#0a1c3e] flex items-center justify-center mx-auto border border-[#0a1c3e]/10">
+                  <MessageSquare className="w-8 h-8 text-brand-gold animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-serif font-bold text-xl text-[#0a1c3e] uppercase tracking-wide">
+                    {language === 'en' ? 'Federal Chat Moved' : 'Chat Federale Spostata'}
+                  </h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    {language === 'en' 
+                      ? 'The Federal Chat service is now securely integrated inside the Citizen Area. Please login or register to access Hotlines, State Organs, and internal messaging with other citizens.' 
+                      : 'Il servizio di Chat Federale è ora integrato in modo protetto all\'interno dell\'Area Cittadino (Democrazia Diretta). Accedi o registrati per comunicare con gli Organi di Stato e gli altri cittadini.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveTab('democracy')}
+                  className="bg-[#0a1c3e] hover:bg-brand-gold text-white hover:text-[#0a1c3e] font-bold uppercase tracking-wider text-xs px-6 py-3.5 rounded-xl transition duration-150 shadow-lg inline-flex items-center gap-2 cursor-pointer border-b-4 border-brand-gold"
+                >
+                  <span>{language === 'en' ? 'Go to Democracy Portal' : 'Accedi all\'Area Utente'}</span>
+                  <ArrowRight className="w-4 h-4 animate-bounce" />
+                </button>
+              </div>
             ) : (
               <CharterPage />
             )}

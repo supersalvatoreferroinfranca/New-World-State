@@ -3920,6 +3920,57 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
     }
 
     // Chat API endpoints
+    apiRouter.get('/chat/citizens/search', async (req, res) => {
+      const q = (req.query.q as string || '').trim();
+      if (!q) {
+        return res.json({ success: true, citizens: [] });
+      }
+      try {
+        if (dbPool) {
+          const result = await dbPool.query(
+            `SELECT id, "firstName", surname, "citizenCode", "arubaPhotoUrl" 
+             FROM citizens 
+             WHERE status = 'approved' AND (
+               "firstName" ILIKE $1 OR 
+               surname ILIKE $1 OR 
+               "citizenCode" ILIKE $1
+             ) 
+             ORDER BY surname ASC, "firstName" ASC
+             LIMIT 30`,
+            [`%${q}%`]
+          );
+          const formatted = result.rows.map(row => ({
+            id: row.id,
+            firstName: row.firstName || row.firstname || '',
+            surname: row.surname || '',
+            citizenCode: row.citizenCode || '',
+            arubaPhotoUrl: row.arubaPhotoUrl || row.arubaphotourl || ''
+          }));
+          return res.json({ success: true, citizens: formatted });
+        } else {
+          const lowerQ = q.toLowerCase();
+          const filtered = memoryCitizens
+            .filter(c => c.status === 'approved' && (
+              (c.firstName || '').toLowerCase().includes(lowerQ) ||
+              (c.surname || '').toLowerCase().includes(lowerQ) ||
+              (c.citizenCode || '').toLowerCase().includes(lowerQ)
+            ))
+            .slice(0, 30)
+            .map(c => ({
+              id: c.id,
+              firstName: c.firstName || '',
+              surname: c.surname || '',
+              citizenCode: c.citizenCode || '',
+              arubaPhotoUrl: c.arubaPhotoUrl || ''
+            }));
+          return res.json({ success: true, citizens: filtered });
+        }
+      } catch (err: any) {
+        console.error('[CITIZENS-SEARCH-ERR]', err.message);
+        return res.status(500).json({ success: false, message: 'Errore durante la ricerca dei cittadini.' });
+      }
+    });
+
     apiRouter.get('/chat/messages', async (req, res) => {
       const room = (req.query.room as string) || 'general';
       try {

@@ -46,6 +46,7 @@ import { startBackgroundSync, stopBackgroundSync } from '../../services/notifica
 import PWANotifierBanner from '../pwa/PWANotifierBanner';
 import { LegislativeTextRenderer } from './LegislativeTextRenderer';
 import { NWSShareWidget } from './NWSShareWidget';
+import FederalChat from '../chat/FederalChat';
 
 interface CitizenSession {
   id: number;
@@ -127,7 +128,7 @@ export default function DemocracyPortal() {
   const [alboError, setAlboError] = useState<string | null>(null);
 
   // Filter and navigation states
-  const [subTab, setSubTab] = useState<'active' | 'new' | 'archive' | 'admin' | 'albo' | 'share'>('active');
+  const [subTab, setSubTab] = useState<'active' | 'new' | 'archive' | 'admin' | 'albo' | 'share' | 'chat'>('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -838,6 +839,15 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                   {language === 'en' ? 'Invite & Share' : 'Divulga e Invita'}
                 </button>
 
+                <button
+                  onClick={() => { setSubTab('chat'); setSelectedProposal(null); }}
+                  id="tab-democracy-chat-btn"
+                  className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 flex items-center gap-1.5 cursor-pointer ${subTab === 'chat' ? 'bg-emerald-600 text-white shadow' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span>{language === 'en' ? 'Federal Chat' : 'Chat Federale'}</span>
+                </button>
+
                 {isAdmin && (
                   <button
                     onClick={() => { setSubTab('admin'); setSelectedProposal(null); }}
@@ -854,7 +864,7 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
               </div>
 
               {/* Barra di Ricerca e Categoria */}
-              {subTab !== 'new' && subTab !== 'albo' && (
+              {subTab !== 'new' && subTab !== 'albo' && subTab !== 'chat' && (
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -1409,6 +1419,13 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
             {subTab === 'share' && (
               <div className="max-w-4xl mx-auto space-y-6 text-left animate-fade-in" id="share-invite-pane">
                 <NWSShareWidget />
+              </div>
+            )}
+
+            {/* SUBTAB: CHAT SERVICE */}
+            {subTab === 'chat' && (
+              <div className="max-w-6xl mx-auto text-left animate-fade-in animate-duration-300" id="chat-services-pane">
+                <FederalChat />
               </div>
             )}
 
