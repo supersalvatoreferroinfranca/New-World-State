@@ -3930,7 +3930,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           const result = await dbPool.query(
             `SELECT id, "firstName", surname, "citizenCode", "arubaPhotoUrl" 
              FROM citizens 
-             WHERE status = 'approved' AND (
+             WHERE (status = 'approved' OR status = 'pending') AND (
                "firstName" ILIKE $1 OR 
                surname ILIKE $1 OR 
                "citizenCode" ILIKE $1
@@ -3950,7 +3950,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         } else {
           const lowerQ = q.toLowerCase();
           const filtered = memoryCitizens
-            .filter(c => c.status === 'approved' && (
+            .filter(c => (c.status === 'approved' || c.status === 'pending') && (
               (c.firstName || '').toLowerCase().includes(lowerQ) ||
               (c.surname || '').toLowerCase().includes(lowerQ) ||
               (c.citizenCode || '').toLowerCase().includes(lowerQ)
@@ -4088,6 +4088,62 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             success: false, 
             message: `Il file supera il limite consentito di ${ext === '.pdf' ? '5MB' : '2MB'}. La compressione client lo ridurrà automaticamente.` 
           });
+        }
+
+        // If Aruba PHP Bridge is configured, upload directly to Aruba (.org)
+        const uploaderUrl = process.env.ARUBA_UPLOADER_URL ? process.env.ARUBA_UPLOADER_URL.trim() : '';
+        const uploaderKey = process.env.ARUBA_UPLOADER_KEY ? process.env.ARUBA_UPLOADER_KEY.trim() : '';
+
+        if (uploaderUrl && uploaderKey) {
+          console.log('[CHAT-UPLOAD] Uploading directly to Aruba PHP Bridge...');
+          // Normalize prefix
+          let base64WithPrefix = fileData;
+          if (!base64WithPrefix.startsWith('data:')) {
+            let mime = 'application/octet-stream';
+            if (ext === '.pdf') mime = 'application/pdf';
+            else if (['.jpg', '.jpeg'].includes(ext)) mime = 'image/jpeg';
+            else if (ext === '.png') mime = 'image/png';
+            else if (ext === '.webp') mime = 'image/webp';
+            else if (['.webm', '.ogg', '.mp3', '.m4a', '.wav'].includes(ext)) mime = 'audio/webm';
+            base64WithPrefix = `data:${mime};base64,${fileData}`;
+          }
+
+          const separator = uploaderUrl.includes('?') ? '&' : '?';
+          const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+
+          try {
+            const uploaderRes = await fetch(targetUrlWithKey, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${uploaderKey}`,
+                'X-Aruba-Key': uploaderKey
+              },
+              body: JSON.stringify({
+                key: uploaderKey,
+                username: 'nws_chat_files',
+                documentFrontData: base64WithPrefix,
+                documentFrontName: fileName
+              })
+            });
+
+            if (uploaderRes.ok) {
+              const uploaderData: any = await uploaderRes.json();
+              if (uploaderData.success && uploaderData.files && uploaderData.files.front) {
+                const fileUrl = uploaderData.files.front;
+                console.log(`[CHAT-UPLOAD] File saved on Aruba: ${fileUrl}`);
+                return res.json({
+                  success: true,
+                  fileUrl,
+                  fileName,
+                  fileSize: originalSize
+                });
+              }
+            }
+          } catch (arubaErr: any) {
+            console.error('[CHAT-UPLOAD-ARUBA-ERR]', arubaErr.message);
+          }
+          console.warn('[CHAT-UPLOAD] Failed to upload to Aruba PHP Bridge, falling back to local storage...');
         }
 
         // Save locally to local Aruba mimicking archive

@@ -103,6 +103,42 @@ export default function FederalChat() {
   const [citizenSearchResults, setCitizenSearchResults] = useState<any[]>([]);
   const [isSearchingCitizens, setIsSearchingCitizens] = useState(false);
 
+  // Rubrica dei contatti (Address Book)
+  const [addressBook, setAddressBook] = useState<{ id: string; firstName: string; surname: string; citizenCode: string; arubaPhotoUrl: string }[]>(() => {
+    try {
+      const activeUser = localStorage.getItem('nws_democracy_citizen');
+      if (activeUser) {
+        const parsed = JSON.parse(activeUser);
+        const code = parsed.citizenCode || '';
+        if (code) {
+          const cached = localStorage.getItem(`nws_address_book_${code}`);
+          return cached ? JSON.parse(cached) : [];
+        }
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  });
+
+  const addToAddressBook = (contact: any) => {
+    setAddressBook(prev => {
+      const exists = prev.some(c => c.citizenCode === contact.citizenCode);
+      if (exists) return prev;
+      return [...prev, {
+        id: contact.id || '',
+        firstName: contact.firstName || '',
+        surname: contact.surname || '',
+        citizenCode: contact.citizenCode || '',
+        arubaPhotoUrl: contact.arubaPhotoUrl || ''
+      }];
+    });
+  };
+
+  const removeFromAddressBook = (contactCode: string) => {
+    setAddressBook(prev => prev.filter(c => c.citizenCode !== contactCode));
+  };
+
   // Audio Recorder State
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -135,8 +171,26 @@ export default function FederalChat() {
           setActiveDirectChats([]);
         }
       } catch (_) {}
+
+      try {
+        const cachedAB = localStorage.getItem(`nws_address_book_${citizenCode}`);
+        if (cachedAB) {
+          setAddressBook(JSON.parse(cachedAB));
+        } else {
+          setAddressBook([]);
+        }
+      } catch (_) {}
     }
   }, [citizenCode]);
+
+  // Sync address book to localStorage when it changes
+  useEffect(() => {
+    if (citizenCode) {
+      try {
+        localStorage.setItem(`nws_address_book_${citizenCode}`, JSON.stringify(addressBook));
+      } catch (_) {}
+    }
+  }, [addressBook, citizenCode]);
 
   // Citizen search logic (debounced)
   useEffect(() => {
@@ -792,22 +846,49 @@ export default function FederalChat() {
             {/* Citizens Search Results dropdown */}
             {citizenSearchResults.length > 0 && (
               <div className="mx-2 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden divide-y divide-slate-100 max-h-48 overflow-y-auto z-10 relative">
-                {citizenSearchResults.map((cit) => (
-                  <button
-                    key={cit.id}
-                    type="button"
-                    onClick={() => handleStartDirectChat(cit)}
-                    className="w-full px-3 py-2 text-left hover:bg-slate-50 transition flex items-center gap-2.5 cursor-pointer text-xs"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-[#0a1c3e]/5 flex items-center justify-center font-bold text-slate-700 text-[10px]">
-                      {(cit.firstName || 'C')[0]}{(cit.surname || 'C')[0]}
+                {citizenSearchResults.map((cit) => {
+                  const isInAB = addressBook.some(c => c.citizenCode === cit.citizenCode);
+                  return (
+                    <div
+                      key={cit.id}
+                      className="w-full hover:bg-slate-50 transition flex items-center justify-between px-3 py-2 text-xs divide-x-0"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleStartDirectChat(cit)}
+                        className="flex-1 min-w-0 text-left flex items-center gap-2.5 cursor-pointer"
+                      >
+                        <div className="w-6 h-6 rounded-full bg-[#0a1c3e]/5 flex items-center justify-center font-bold text-slate-700 text-[10px] shrink-0">
+                          {(cit.firstName || 'C')[0]}{(cit.surname || 'C')[0]}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-slate-800 truncate leading-tight">{cit.firstName} {cit.surname}</p>
+                          <p className="text-[9px] text-slate-400 font-mono leading-none">{cit.citizenCode}</p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isInAB) {
+                            removeFromAddressBook(cit.citizenCode);
+                          } else {
+                            addToAddressBook(cit);
+                          }
+                        }}
+                        title={isInAB ? (language === 'en' ? 'Remove from Contacts' : 'Rimuovi dalla Rubrica') : (language === 'en' ? 'Add to Contacts' : 'Aggiungi alla Rubrica')}
+                        className={`p-1.5 rounded-lg border transition duration-200 cursor-pointer shrink-0 ${
+                          isInAB 
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100' 
+                            : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-[#0a1c3e] hover:bg-slate-100'
+                        }`}
+                      >
+                        {isInAB ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-bold text-slate-800 truncate">{cit.firstName} {cit.surname}</p>
-                      <p className="text-[9px] text-slate-400 font-mono">{cit.citizenCode}</p>
-                    </div>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
             )}
             {citizenSearchQuery.trim() !== '' && citizenSearchResults.length === 0 && !isSearchingCitizens && (
@@ -815,6 +896,57 @@ export default function FederalChat() {
                 {language === 'en' ? 'No registered citizens found' : 'Nessun cittadino trovato'}
               </p>
             )}
+          </div>
+
+          {/* La mia Rubrica / My Contacts */}
+          <div className="border-t border-slate-200 pt-3">
+            <p className="text-[9px] uppercase tracking-[0.25em] text-slate-400 font-extrabold px-2 mb-1.5 flex justify-between items-center">
+              <span>📖 {language === 'en' ? 'My Contacts' : 'La mia Rubrica'}</span>
+              <span className="text-slate-400 font-normal">({addressBook.length})</span>
+            </p>
+            <div className="space-y-1 max-h-40 overflow-y-auto px-1">
+              {addressBook.length === 0 ? (
+                <p className="text-[10px] text-slate-400 px-2 italic py-1">
+                  {language === 'en' ? 'No contacts saved yet.' : 'Nessun contatto salvato.'}
+                </p>
+              ) : (
+                addressBook.map((contact) => (
+                  <div key={contact.citizenCode} className="flex items-center justify-between p-1.5 hover:bg-slate-50 rounded-lg group transition duration-200">
+                    <button
+                      type="button"
+                      onClick={() => handleStartDirectChat(contact)}
+                      className="flex-1 min-w-0 text-left flex items-center gap-2 cursor-pointer"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-[#0a1c3e]/5 flex items-center justify-center font-bold text-slate-700 text-[9px] shrink-0">
+                        {(contact.firstName || 'C')[0]}{(contact.surname || 'C')[0]}
+                      </div>
+                      <div className="min-w-0 flex-1 px-1">
+                        <p className="text-xs font-bold text-slate-700 truncate leading-tight group-hover:text-[#0a1c3e]">{contact.firstName} {contact.surname}</p>
+                        <p className="text-[8px] text-slate-400 font-mono truncate leading-none mt-0.5">{contact.citizenCode}</p>
+                      </div>
+                    </button>
+                    <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition duration-150">
+                      <button
+                        type="button"
+                        onClick={() => handleStartDirectChat(contact)}
+                        title={language === 'en' ? 'Start Chat' : 'Avvia Chat'}
+                        className="p-1 text-slate-400 hover:text-[#0a1c3e] hover:bg-[#0a1c3e]/5 rounded cursor-pointer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeFromAddressBook(contact.citizenCode)}
+                        title={language === 'en' ? 'Remove Contact' : 'Rimuovi'}
+                        className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {/* Active Private Chats */}

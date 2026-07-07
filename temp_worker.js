@@ -4230,6 +4230,22 @@ CREATE TABLE citizens (
               value TEXT NOT NULL
             )
           `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_chat_messages (
+              id SERIAL PRIMARY KEY,
+              uuid TEXT UNIQUE,
+              room TEXT,
+              sender_name TEXT,
+              sender_role TEXT,
+              text TEXT,
+              type TEXT,
+              file_url TEXT,
+              file_name TEXT,
+              file_size INTEGER,
+              duration INTEGER,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
           // Ensure new admin and role columns are present in the citizens table
           try {
             await queryDb('ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "isAdmin" BOOLEAN DEFAULT FALSE');
@@ -5242,6 +5258,235 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         const res = await fetch(nominatimUrl, { headers: { 'User-Agent': 'WorldRegistrationApp/1.0' } });
         const data = await res.json();
         return new Response(JSON.stringify(data), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      // Rotta: Chat Citizen Search
+      if (url.pathname === '/api/chat/citizens/search' && request.method === 'GET') {
+        try {
+          await ensureDemocracySchema();
+          const q = (url.searchParams.get('q') || '').trim();
+          if (!q) {
+            return new Response(JSON.stringify({ success: true, citizens: [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const sql = `
+            SELECT id, "firstName", surname, "citizenCode", "arubaPhotoUrl" 
+            FROM citizens 
+            WHERE (status = 'approved' OR status = 'pending') AND (
+              "firstName" ILIKE $1 OR 
+              surname ILIKE $1 OR 
+              "citizenCode" ILIKE $1
+            ) 
+            ORDER BY surname ASC, "firstName" ASC
+            LIMIT 30
+          `;
+          const rows = await queryDb(sql, [`%${q}%`]);
+          const formatted = rows.map(row => ({
+            id: row.id,
+            firstName: row.firstName || row.firstname || '',
+            surname: row.surname || '',
+            citizenCode: row.citizenCode || row.citizencode || row.citizen_code || '',
+            arubaPhotoUrl: row.arubaPhotoUrl || row.arubaphotourl || row.aruba_photo_url || ''
+          }));
+
+          return new Response(JSON.stringify({ success: true, citizens: formatted }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[WORKER-CHAT-SEARCH-ERR]', err.message);
+          return new Response(JSON.stringify({ success: false, message: 'Errore durante la ricerca dei cittadini.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
+      // Rotta: Chat Get Messages
+      if (url.pathname === '/api/chat/messages' && request.method === 'GET') {
+        try {
+          await ensureDemocracySchema();
+          const room = url.searchParams.get('room');
+          if (!room) {
+            return new Response(JSON.stringify({ success: false, message: 'room parameter is required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const sql = `
+            SELECT uuid as id, room, sender_name as "senderName", sender_role as "senderRole", text, type, file_url as "fileUrl", file_name as "fileName", file_size as "fileSize", duration, created_at as "timestamp"
+            FROM nws_chat_messages
+            WHERE room = $1
+            ORDER BY id ASC
+            LIMIT 500
+          `;
+          const rows = await queryDb(sql, [room]);
+          const formatted = rows.map(row => ({
+            id: row.id,
+            room: row.room,
+            senderName: row.senderName || row.sendername || '',
+            senderRole: row.senderRole || row.senderrole || 'Cittadino',
+            text: row.text || '',
+            type: row.type || 'text',
+            fileUrl: row.fileUrl || row.fileurl || '',
+            fileName: row.fileName || row.filename || '',
+            fileSize: row.fileSize || row.filesize || 0,
+            duration: row.duration || 0,
+            timestamp: row.timestamp || new Date().toISOString()
+          }));
+
+          return new Response(JSON.stringify({ success: true, messages: formatted }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[WORKER-CHAT-GET-MESSAGES-ERR]', err.message);
+          return new Response(JSON.stringify({ success: false, message: 'Errore nel caricamento dei messaggi.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
+      // Rotta: Chat Post Message
+      if (url.pathname === '/api/chat/messages' && request.method === 'POST') {
+        try {
+          await ensureDemocracySchema();
+          const body = await request.json();
+          const { room, senderName, senderRole, text, type, fileUrl, fileName, fileSize, duration } = body || {};
+
+          if (!room || !senderName) {
+            return new Response(JSON.stringify({ success: false, message: 'room and senderName are required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const uuidVal = 'msg_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+          const sql = `
+            INSERT INTO nws_chat_messages 
+            (uuid, room, sender_name, sender_role, text, type, file_url, file_name, file_size, duration)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            RETURNING uuid as id, room, sender_name as "senderName", sender_role as "senderRole", text, type, file_url as "fileUrl", file_name as "fileName", file_size as "fileSize", duration, created_at as "timestamp"
+          `;
+          const rows = await queryDb(sql, [
+            uuidVal,
+            room,
+            senderName,
+            senderRole || 'Cittadino',
+            text || '',
+            type || 'text',
+            fileUrl || null,
+            fileName || null,
+            fileSize ? Number(fileSize) : null,
+            duration ? Number(duration) : null
+          ]);
+
+          const messageObj = rows.length > 0 ? {
+            id: rows[0].id,
+            room: rows[0].room,
+            senderName: rows[0].senderName || rows[0].sendername || senderName,
+            senderRole: rows[0].senderRole || rows[0].senderrole || senderRole || 'Cittadino',
+            text: rows[0].text || '',
+            type: rows[0].type || 'text',
+            fileUrl: rows[0].fileUrl || rows[0].fileurl || fileUrl || '',
+            fileName: rows[0].fileName || rows[0].filename || fileName || '',
+            fileSize: rows[0].fileSize || rows[0].filesize || fileSize || 0,
+            duration: rows[0].duration || duration || 0,
+            timestamp: rows[0].timestamp || new Date().toISOString()
+          } : {
+            id: uuidVal,
+            room,
+            senderName,
+            senderRole: senderRole || 'Cittadino',
+            text: text || '',
+            type: type || 'text',
+            fileUrl: fileUrl || '',
+            fileName: fileName || '',
+            fileSize: fileSize || 0,
+            duration: duration || 0,
+            timestamp: new Date().toISOString()
+          };
+
+          return new Response(JSON.stringify({ success: true, message: messageObj }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[WORKER-CHAT-POST-MESSAGE-ERR]', err.message);
+          return new Response(JSON.stringify({ success: false, message: 'Errore nel salvataggio del messaggio.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
+      // Rotta: Chat Upload (con caricamento diretto su Aruba via PHP Bridge)
+      if (url.pathname === '/api/chat/upload' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          const { fileData, fileName, fileType } = body || {};
+
+          if (!fileData || !fileName) {
+            return new Response(JSON.stringify({ success: false, message: 'fileData and fileName are required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          // Validate file extension
+          const parts = fileName.split('.');
+          const ext = parts.length > 1 ? ('.' + parts.pop().toLowerCase()) : '';
+          const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.pdf', '.webm', '.ogg', '.wav', '.mp3', '.m4a'];
+          if (!allowedExtensions.includes(ext)) {
+            return new Response(JSON.stringify({ success: false, message: 'File extension not allowed. Only photos, PDFs, and audio recordings are supported.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';
+          const uploaderKey = env.ARUBA_UPLOADER_KEY ? env.ARUBA_UPLOADER_KEY.trim() : '';
+
+          if (!uploaderUrl || !uploaderKey) {
+            return new Response(JSON.stringify({ 
+              success: false, 
+              message: 'La variabile d\'ambiente ARUBA_UPLOADER_URL o ARUBA_UPLOADER_KEY non è impostata sul tuo Worker Cloudflare.' 
+            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const separator = uploaderUrl.includes('?') ? '&' : '?';
+          const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+
+          // Normalizziamo il prefisso Base64
+          let base64WithPrefix = fileData;
+          if (!base64WithPrefix.startsWith('data:')) {
+            let mime = 'application/octet-stream';
+            if (ext === '.pdf') mime = 'application/pdf';
+            else if (['.jpg', '.jpeg'].includes(ext)) mime = 'image/jpeg';
+            else if (ext === '.png') mime = 'image/png';
+            else if (ext === '.webp') mime = 'image/webp';
+            else if (['.webm', '.ogg', '.mp3', '.m4a', '.wav'].includes(ext)) mime = 'audio/webm';
+            base64WithPrefix = `data:${mime};base64,${fileData}`;
+          }
+
+          // Spediamo al bridge Aruba impostando username: 'nws_chat_files' per organizzarli nella cartella apposita
+          const uploaderRes = await fetch(targetUrlWithKey, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${uploaderKey}`,
+              'X-Aruba-Key': uploaderKey
+            },
+            body: JSON.stringify({
+              key: uploaderKey,
+              username: 'nws_chat_files',
+              documentFrontData: base64WithPrefix,
+              documentFrontName: fileName
+            })
+          });
+
+          if (!uploaderRes.ok) {
+            throw new Error(`Aruba PHP bridge returned HTTP ${uploaderRes.status}`);
+          }
+
+          const uploaderData = await uploaderRes.json();
+          if (uploaderData.success && uploaderData.files && uploaderData.files.front) {
+            const arubaFileUrl = uploaderData.files.front;
+            console.log('[WORKER-CHAT-UPLOAD] File caricato correttamente su Aruba:', arubaFileUrl);
+
+            // Calcoliamo la dimensione approssimativa in byte del file caricato
+            const base64Content = base64WithPrefix.split(';base64,').pop() || base64WithPrefix;
+            const originalSize = Math.floor((base64Content.length * 3) / 4);
+
+            return new Response(JSON.stringify({
+              success: true,
+              fileUrl: arubaFileUrl,
+              fileName,
+              fileSize: originalSize
+            }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          } else {
+            console.error('[WORKER-CHAT-UPLOAD-ERR] Risposta bridge fallita:', uploaderData);
+            return new Response(JSON.stringify({ 
+              success: false, 
+              message: uploaderData.message || 'Il server Aruba non ha restituito l\'URL del file caricato.' 
+            }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+        } catch (err) {
+          console.error('[WORKER-CHAT-UPLOAD-EXCEPTION]', err.message);
+          return new Response(JSON.stringify({ success: false, message: 'Errore nel caricamento del file su Aruba: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
       }
 
       // Rotta: Register
