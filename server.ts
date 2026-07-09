@@ -4077,7 +4077,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       try {
         if (dbPool) {
           const result = await dbPool.query(
-            'SELECT uuid as id, room, sender_name as "senderName", sender_role as "senderRole", text, type, file_url as "fileUrl", file_name as "fileName", file_size as "fileSize", duration, created_at as "timestamp" FROM nws_chat_messages WHERE room = $1 ORDER BY id ASC LIMIT 500',
+            'SELECT uuid as id, room, sender_name as "senderName", sender_role as "senderRole", text, type, file_url as "fileUrl", file_name as "fileName", file_size as "fileSize", duration, created_at as "timestamp" FROM nws_chat_messages WHERE room = $1 ORDER BY nws_chat_messages.id ASC LIMIT 500',
             [room]
           );
           

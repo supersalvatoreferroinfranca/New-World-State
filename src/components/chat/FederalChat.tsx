@@ -789,7 +789,7 @@ export default function FederalChat() {
         : '');
 
   return (
-    <div className="bg-white lg:bg-[#faf9f5] border-0 lg:border border-[#c5a880]/30 rounded-none lg:rounded-3xl overflow-hidden shadow-none lg:shadow-xl grid grid-cols-1 lg:grid-cols-12 h-[calc(100vh-140px)] md:h-[calc(100vh-200px)] lg:h-[75vh] min-h-[480px] lg:min-h-[600px] max-h-none lg:max-h-[800px] font-sans -mx-4 -mb-10 sm:-mx-6 lg:mx-0 lg:mb-0">
+    <div className="bg-white lg:bg-[#faf9f5] border border-slate-200/80 lg:border border-[#c5a880]/30 rounded-2xl lg:rounded-3xl overflow-hidden shadow-md lg:shadow-xl grid grid-cols-1 lg:grid-cols-12 h-[540px] sm:h-[620px] lg:h-[75vh] min-h-[480px] lg:min-h-[600px] max-h-none lg:max-h-[800px] font-sans -mx-4 mb-6 sm:-mx-6 lg:mx-0 lg:mb-0">
       
       {/* LEFT COLUMN: ROOMS / CHANNELS */}
       <div className={`lg:col-span-4 border-r border-slate-200 bg-white flex flex-col h-full ${
