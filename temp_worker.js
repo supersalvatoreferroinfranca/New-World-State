@@ -1998,6 +1998,7 @@ CREATE TABLE citizens (
             if (uploaderData.success && uploaderData.files && uploaderData.files.front) {
               const logoUrl = uploaderData.files.front;
               await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['logo', logoUrl]);
+              await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['logo_mtime', String(Date.now())]);
               return new Response(JSON.stringify({ success: true, message: 'Logo aggiornato con successo su Aruba!', logoUrl }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             } else {
               return new Response(JSON.stringify({ success: false, message: 'Il caricamento su Aruba non ha restituito l\'URL del file.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -2028,6 +2029,7 @@ CREATE TABLE citizens (
             if (uploaderData.success && uploaderData.files && uploaderData.files.front) {
               const faviconUrl = uploaderData.files.front;
               await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['favicon', faviconUrl]);
+              await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['favicon_mtime', String(Date.now())]);
               return new Response(JSON.stringify({ success: true, message: 'Favicon aggiornata con successo su Aruba!', faviconUrl }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             } else {
               return new Response(JSON.stringify({ success: false, message: 'Il caricamento su Aruba non ha restituito l\'URL del file.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -2067,6 +2069,7 @@ CREATE TABLE citizens (
               if (f32) await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['favicon-32x32', f32]);
               if (f16) await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['favicon-16x16', f16]);
               if (apple) await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['apple-touch-icon', apple]);
+              await queryDb('INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', ['favicon_mtime', String(Date.now())]);
 
               return new Response(JSON.stringify({ success: true, message: 'Icone PNG aggiornate con successo su Aruba!' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
             } else {

@@ -2864,22 +2864,33 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
 
         // Persisti la risorsa nel database 'nws_branding' e in memoria fallback per aggiornamento istantaneo
         try {
+          const currentMtime = String(Date.now());
           if (fileType === 'logo') {
             if (dbPool) {
               await dbPool.query(
                 'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
                 ['logo', fileDataBase64]
               );
+              await dbPool.query(
+                'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                ['logo_mtime', currentMtime]
+              );
             }
             memoryBranding['logo'] = fileDataBase64;
+            memoryBranding['logo_mtime'] = currentMtime;
           } else if (fileType === 'favicon') {
             if (dbPool) {
               await dbPool.query(
                 'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
                 ['favicon', fileDataBase64]
               );
+              await dbPool.query(
+                'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                ['favicon_mtime', currentMtime]
+              );
             }
             memoryBranding['favicon'] = fileDataBase64;
+            memoryBranding['favicon_mtime'] = currentMtime;
           } else if (fileType === 'favicon-png') {
             if (dbPool) {
               await dbPool.query(
@@ -2894,10 +2905,15 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
                 'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
                 ['apple-touch-icon', fileDataBase64]
               );
+              await dbPool.query(
+                'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                ['favicon_mtime', currentMtime]
+              );
             }
             memoryBranding['favicon-32x32'] = fileDataBase64;
             memoryBranding['favicon-16x16'] = fileDataBase64;
             memoryBranding['apple-touch-icon'] = fileDataBase64;
+            memoryBranding['favicon_mtime'] = currentMtime;
           }
         } catch (dbErr: any) {
           console.error('[BRANDING] Errore salvataggio database:', dbErr);

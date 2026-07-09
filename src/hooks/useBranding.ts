@@ -37,15 +37,26 @@ export function useBranding() {
         .then(res => res.json())
         .then(data => {
           if (data.success && data.branding) {
-            const logoTimestamp = data.branding.logo_mtime ? `?t=${data.branding.logo_mtime}` : '';
-            const faviconTimestamp = data.branding.favicon_mtime ? `?t=${data.branding.favicon_mtime}` : '';
+            const logoVal = data.branding.logo || '/LOGO_NEW-WORLD-STATE.jpg';
+            const faviconVal = data.branding.favicon || '/favicon.ico';
+            const fav32Val = data.branding['favicon-32x32'] || '/favicon-32x32.png';
+            const fav16Val = data.branding['favicon-16x16'] || '/favicon-16x16.png';
+            const appleTouchVal = data.branding['apple-touch-icon'] || '/apple-touch-icon.png';
+
+            const isBase64 = (val: string) => val.startsWith('data:');
+            
+            const appendTimestamp = (val: string, mtime: string) => {
+              if (isBase64(val)) return val;
+              const ts = mtime ? `t=${mtime}` : `t=${Date.now()}`;
+              return val.includes('?') ? `${val}&${ts}` : `${val}?${ts}`;
+            };
 
             const newBranding: BrandingConfig = {
-              logo: data.branding.logo || `/LOGO_NEW-WORLD-STATE.jpg${logoTimestamp}`,
-              favicon: data.branding.favicon || `/favicon.ico${faviconTimestamp}`,
-              'favicon-32x32': data.branding['favicon-32x32'] || `/favicon-32x32.png${faviconTimestamp}`,
-              'favicon-16x16': data.branding['favicon-16x16'] || `/favicon-16x16.png${faviconTimestamp}`,
-              'apple-touch-icon': data.branding['apple-touch-icon'] || `/apple-touch-icon.png${faviconTimestamp}`
+              logo: appendTimestamp(logoVal, data.branding.logo_mtime),
+              favicon: appendTimestamp(faviconVal, data.branding.favicon_mtime),
+              'favicon-32x32': appendTimestamp(fav32Val, data.branding.favicon_mtime),
+              'favicon-16x16': appendTimestamp(fav16Val, data.branding.favicon_mtime),
+              'apple-touch-icon': appendTimestamp(appleTouchVal, data.branding.favicon_mtime)
             };
             cachedBranding = newBranding;
             
@@ -70,15 +81,26 @@ export function useBranding() {
       const res = await safeFetch(`/api/branding?t=${Date.now()}`);
       const data = await res.json();
       if (data.success && data.branding) {
-        const logoTimestamp = data.branding.logo_mtime ? `?t=${data.branding.logo_mtime}` : '';
-        const faviconTimestamp = data.branding.favicon_mtime ? `?t=${data.branding.favicon_mtime}` : '';
+        const logoVal = data.branding.logo || '/LOGO_NEW-WORLD-STATE.jpg';
+        const faviconVal = data.branding.favicon || '/favicon.ico';
+        const fav32Val = data.branding['favicon-32x32'] || '/favicon-32x32.png';
+        const fav16Val = data.branding['favicon-16x16'] || '/favicon-16x16.png';
+        const appleTouchVal = data.branding['apple-touch-icon'] || '/apple-touch-icon.png';
+
+        const isBase64 = (val: string) => val.startsWith('data:');
+        
+        const appendTimestamp = (val: string, mtime: string) => {
+          if (isBase64(val)) return val;
+          const ts = mtime ? `t=${mtime}` : `t=${Date.now()}`;
+          return val.includes('?') ? `${val}&${ts}` : `${val}?${ts}`;
+        };
 
         const newBranding: BrandingConfig = {
-          logo: data.branding.logo || `/LOGO_NEW-WORLD-STATE.jpg${logoTimestamp}`,
-          favicon: data.branding.favicon || `/favicon.ico${faviconTimestamp}`,
-          'favicon-32x32': data.branding['favicon-32x32'] || `/favicon-32x32.png${faviconTimestamp}`,
-          'favicon-16x16': data.branding['favicon-16x16'] || `/favicon-16x16.png${faviconTimestamp}`,
-          'apple-touch-icon': data.branding['apple-touch-icon'] || `/apple-touch-icon.png${faviconTimestamp}`
+          logo: appendTimestamp(logoVal, data.branding.logo_mtime),
+          favicon: appendTimestamp(faviconVal, data.branding.favicon_mtime),
+          'favicon-32x32': appendTimestamp(fav32Val, data.branding.favicon_mtime),
+          'favicon-16x16': appendTimestamp(fav16Val, data.branding.favicon_mtime),
+          'apple-touch-icon': appendTimestamp(appleTouchVal, data.branding.favicon_mtime)
         };
         cachedBranding = newBranding;
         updateDomFavicons(newBranding);
