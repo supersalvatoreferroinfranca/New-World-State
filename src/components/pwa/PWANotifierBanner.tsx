@@ -135,10 +135,10 @@ export default function PWANotifierBanner() {
               <Smartphone className="w-5 h-5 animate-bounce" />
             </div>
             <div className="space-y-1">
-              <h4 className="font-serif text-sm font-bold text-[#f7f5f0] uppercase tracking-wide flex items-center gap-1.5">
+              <h3 className="font-serif text-sm font-bold text-[#f7f5f0] uppercase tracking-wide flex items-center gap-1.5">
                 {language === 'en' ? '📱 Install Official WebApp' : '📱 Installa l\'App del Portale'}
                 <span className="text-[9px] bg-brand-gold text-[#0a1c3e] font-bold font-mono px-1.5 py-0.5 rounded uppercase">PWA 1.0</span>
-              </h4>
+              </h3>
               <p className="text-xs text-slate-350 leading-relaxed max-w-xl">
                 {language === 'en'
                   ? 'Access your private citizen console in just one click directly from your smartphone home screen. Faster, secure, offline ready.'
@@ -175,10 +175,10 @@ export default function PWANotifierBanner() {
               <h3 className="font-serif text-sm font-bold text-[#0a1c3e] uppercase tracking-tight flex items-center gap-1.5">
                 {language === 'en' ? 'Web Push Notifications' : 'Notifiche Push nel Browser'}
                 {isSubscribed && (
-                  <span className="inline-block w-2 H-2 bg-emerald-500 rounded-full" />
+                  <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full" />
                 )}
               </h3>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-600">
                 {language === 'en' 
                   ? 'Status updates, active referendum alerts, and personal certificates' 
                   : 'Avvisi sui referendum, esiti di voto e convalide della tua anagrafe'}
@@ -213,7 +213,7 @@ export default function PWANotifierBanner() {
 
         {/* 3. EXTRA INFO PANEL / ALERTS LOG */}
         <div className="p-5 space-y-4">
-          <div className="text-xs text-slate-500 space-y-1.5 bg-slate-50/80 p-3.5 border border-slate-100 rounded-xl leading-normal">
+          <div className="text-xs text-slate-600 space-y-1.5 bg-slate-50/80 p-3.5 border border-slate-100 rounded-xl leading-normal">
             <div className="flex items-center gap-1.5 font-bold text-[#0a1c3e] mb-1 text-[11px]">
               <Info className="w-4 h-4 text-brand-gold shrink-0" />
               <span>{language === 'en' ? 'HOW BROWSER NOTIFICATIONS WORK:' : 'COME FUNZIONANO LE NOTIFICHE:'}</span>
@@ -241,7 +241,7 @@ export default function PWANotifierBanner() {
           {isSubscribed && (
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-600 font-mono">
                   {language === 'en' ? 'Latest alert feed' : 'Feed Notifiche Ricevute'}
                 </h4>
                 {notifHistory.length > 0 && (

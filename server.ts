@@ -82,6 +82,31 @@ let memoryCustomRoles: any[] = [
 
 let memoryBroadcasts: any[] = [];
 
+let memoryBranding: { [key: string]: string } = {};
+
+async function getLogoAsBase64(): Promise<string> {
+  if (memoryBranding['logo']) {
+    return memoryBranding['logo'];
+  }
+  if (dbPool) {
+    try {
+      const dbRes = await dbPool.query("SELECT value FROM nws_branding WHERE key = 'logo'");
+      if (dbRes.rows && dbRes.rows.length > 0) {
+        return dbRes.rows[0].value;
+      }
+    } catch (e) {
+      console.error('[BRANDING] Failed to query logo from db:', e);
+    }
+  }
+  try {
+    const logoPath = path.join(process.cwd(), 'src', 'components', 'layout', 'logo-nws.png');
+    if (fs.existsSync(logoPath)) {
+      return `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
+    }
+  } catch (_) {}
+  return '';
+}
+
 async function runMigrations() {
   if (!dbPool) return;
   try {
@@ -273,18 +298,25 @@ function generateCitizenIdCardPdf(citizen: any, baseUrl: string = 'https://newwo
       doc.rect(2, 2, width - 4, 25).fill('#f1f5f9');
 
       // Attempt to load and draw the official logo
-      const logoPath = path.join(process.cwd(), 'src', 'components', 'layout', 'logo-nws.png');
       let drawLogo = false;
+      let logoBuffer: Buffer | null = null;
       try {
-        if (fs.existsSync(logoPath)) {
+        const customLogoBase64 = await getLogoAsBase64();
+        if (customLogoBase64) {
+          const matches = customLogoBase64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+          if (matches) {
+            logoBuffer = Buffer.from(matches[2], 'base64');
+          } else {
+            logoBuffer = Buffer.from(customLogoBase64, 'base64');
+          }
           drawLogo = true;
         }
       } catch (_) {}
 
-      if (drawLogo) {
+      if (drawLogo && logoBuffer) {
         try {
           // Centered vertically in the 25pt header space (2pt margin, starts at 5, height 16)
-          doc.image(logoPath, 8, 5, { height: 16 });
+          doc.image(logoBuffer, 8, 5, { height: 16 });
         } catch (logoErr) {
           console.warn('[PDF] Failed to draw header logo:', logoErr);
           drawLogo = false;
@@ -637,19 +669,17 @@ async function startServer() {
 
     apiRouter.get('/branding', async (req, res) => {
       try {
+        const branding: {[key: string]: string} = { ...memoryBranding };
         if (dbPool) {
           const result = await dbPool.query('SELECT key, value FROM nws_branding');
-          const branding: {[key: string]: string} = {};
           for (const row of result.rows) {
             branding[row.key] = row.value;
           }
-          return res.json({ success: true, branding });
-        } else {
-          return res.json({ success: true, branding: {} });
         }
+        return res.json({ success: true, branding });
       } catch (err: any) {
         console.error('[SERVER-GET-BRANDING-ERR]', err.message);
-        return res.json({ success: true, branding: {} });
+        return res.json({ success: true, branding: { ...memoryBranding } });
       }
     });
 
@@ -1482,10 +1512,7 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
 
             let logoDataUrl = '';
             try {
-              const logoPath = path.join(process.cwd(), 'src', 'components', 'layout', 'logo-nws.png');
-              if (fs.existsSync(logoPath)) {
-                logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
-              }
+              logoDataUrl = await getLogoAsBase64();
             } catch (_) {}
 
             let qrCodeDataUrl = '';
@@ -1653,10 +1680,7 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
 
               let logoDataUrl = '';
               try {
-                const logoPath = path.join(process.cwd(), 'src', 'components', 'layout', 'logo-nws.png');
-                if (fs.existsSync(logoPath)) {
-                  logoDataUrl = `data:image/png;base64,${fs.readFileSync(logoPath).toString('base64')}`;
-                }
+                logoDataUrl = await getLogoAsBase64();
               } catch (_) {}
 
               let qrCodeDataUrl = '';
@@ -2820,7 +2844,48 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
           }
         }
 
-        if (writeErrors.length > 0) {
+        // Persisti la risorsa nel database 'nws_branding' e in memoria fallback per aggiornamento istantaneo
+        try {
+          if (fileType === 'logo') {
+            if (dbPool) {
+              await dbPool.query(
+                'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                ['logo', fileDataBase64]
+              );
+            }
+            memoryBranding['logo'] = fileDataBase64;
+          } else if (fileType === 'favicon') {
+            if (dbPool) {
+              await dbPool.query(
+                'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                ['favicon', fileDataBase64]
+              );
+            }
+            memoryBranding['favicon'] = fileDataBase64;
+          } else if (fileType === 'favicon-png') {
+            if (dbPool) {
+              await dbPool.query(
+                'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                ['favicon-32x32', fileDataBase64]
+              );
+              await dbPool.query(
+                'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                ['favicon-16x16', fileDataBase64]
+              );
+              await dbPool.query(
+                'INSERT INTO nws_branding (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+                ['apple-touch-icon', fileDataBase64]
+              );
+            }
+            memoryBranding['favicon-32x32'] = fileDataBase64;
+            memoryBranding['favicon-16x16'] = fileDataBase64;
+            memoryBranding['apple-touch-icon'] = fileDataBase64;
+          }
+        } catch (dbErr: any) {
+          console.error('[BRANDING] Errore salvataggio database:', dbErr);
+        }
+
+        if (writeErrors.length > 0 && !dbPool) {
           return res.status(500).json({ 
             success: false, 
             message: 'Errore durante il salvataggio di alcune risorse.', 

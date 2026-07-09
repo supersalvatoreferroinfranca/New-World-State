@@ -161,7 +161,7 @@ function AppContent() {
               </div>
             </div>
 
-            <p className="text-lg md:text-xl text-muted/80 max-w-3xl mx-auto font-light leading-relaxed">
+            <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto font-light leading-relaxed">
               {language === 'en' ? (
                 <>Join the <span className="text-brand-blue font-medium">sovereign digital state</span>. A borderless community dedicated to universal rights, justice, and the collective advancement of humanity.</>
               ) : (
@@ -175,35 +175,35 @@ function AppContent() {
                 <button 
                   onClick={() => setActiveTab('welcome')}
                   id="tab-welcome-btn"
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'welcome' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'welcome' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
                   🌟 {language === 'en' ? 'Start Here/Home' : 'Inizia Qui/Home'}
                 </button>
                 <button 
                   onClick={() => setActiveTab('register')}
                   id="tab-register-btn"
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'register' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'register' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
                   {language === 'en' ? 'Registration' : 'Registrazione'}
                 </button>
                 <button 
                   onClick={() => setActiveTab('constitution')}
                   id="tab-constitution-btn"
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'constitution' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'constitution' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
                   {language === 'en' ? 'Constitution' : 'Costituzione'}
                 </button>
                 <button 
                   onClick={() => setActiveTab('governance')}
                   id="tab-governance-btn"
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'governance' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'governance' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
                   {language === 'en' ? 'Governance' : 'Governance'}
                 </button>
                 <button 
                   onClick={() => setActiveTab('charter')}
                   id="tab-charter-btn"
-                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'charter' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/60 hover:text-[#0a1c3e]'}`}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'charter' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
                   {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
                 </button>
@@ -263,7 +263,7 @@ function AppContent() {
         </div>
       </main>
 
-      <footer className="py-20 border-t border-brand-blue/10 bg-white/30 backdrop-blur-sm text-center text-sm text-muted">
+      <footer className="py-20 border-t border-brand-blue/10 bg-white/30 backdrop-blur-sm text-center text-sm text-slate-600">
         <div className="max-w-xl mx-auto space-y-6">
           <p className="font-tech text-xs uppercase tracking-[0.1em]">© 2025 New World State Authority. Established MMXIV.</p>
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 uppercase tracking-[0.3em] text-[9px] font-bold">
@@ -300,7 +300,7 @@ function AppContent() {
             </button>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 uppercase tracking-[0.25em] text-[8px] font-semibold text-slate-500/80 mt-6 border-t border-[#0a1c3e]/5 pt-4">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 uppercase tracking-[0.25em] text-[8px] font-semibold text-slate-600 mt-6 border-t border-[#0a1c3e]/5 pt-4">
             <button 
               onClick={() => openCompliance('privacy')} 
               className="hover:text-brand-gold transition-colors cursor-pointer"

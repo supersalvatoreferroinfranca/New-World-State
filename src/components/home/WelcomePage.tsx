@@ -99,8 +99,8 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-3xl mx-auto text-center space-y-6 relative">
-          <div className="inline-flex items-center gap-1.5 bg-brand-gold/25 text-brand-gold text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full border border-brand-gold/20">
-            <Sparkles className="w-3.5 h-3.5 text-brand-gold animate-pulse" />
+          <div className="inline-flex items-center gap-1.5 bg-brand-gold/15 text-amber-200 text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full border border-brand-gold/20">
+            <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
             {language === 'en' ? 'Sovereign Digital onboarding' : 'La tua Guida Semplificata'}
           </div>
 
@@ -144,13 +144,13 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
       {/* SPIEGATO FACILE: LE 3 REGOLE D'ORO */}
       <div className="space-y-6">
         <div className="text-center space-y-2">
-          <span className="text-xs uppercase tracking-widest font-mono text-brand-gold font-bold">
+          <span className="text-xs uppercase tracking-widest font-mono text-[#8a6c31] font-bold">
             {language === 'en' ? 'A Guided and Clear Roadmap' : 'Un percorso guidato e lineare'}
           </span>
           <h3 className="text-2xl md:text-3xl font-serif text-[#0a1c3e] font-bold">
             {language === 'en' ? 'How does the Digital State work?' : 'Come funziona lo Stato Digitale?'}
           </h3>
-          <p className="text-sm text-slate-500 max-w-xl mx-auto">
+          <p className="text-sm text-slate-600 max-w-xl mx-auto">
             {language === 'en' 
               ? 'We have reduced the process to the essentials to make it accessible and pleasant for everyone.' 
               : 'Abbiamo ridotto all\'essenziale la procedura per renderla accessibile e confortevole a chiunque.'}
@@ -159,13 +159,13 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white border border-brand-blue/10 rounded-2xl p-6 shadow-sm space-y-4 hover:shadow-md transition">
-            <div className="w-12 h-12 rounded-xl bg-amber-50 text-brand-gold flex items-center justify-center font-bold text-xl border border-brand-gold/20">
+            <div className="w-12 h-12 rounded-xl bg-amber-50 text-[#8a6c31] flex items-center justify-center font-bold text-xl border border-brand-gold/20">
               1
             </div>
             <h4 className="font-bold text-[#0a1c3e] text-base">
               {language === 'en' ? 'Register for Free' : 'Ti registri gratis'}
             </h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               {language === 'en' 
                 ? 'Fill out your basic details (name, date of birth, residential address) and upload a photo of your standard document to confirm your real identity. It only takes two minutes!' 
                 : 'Inserisci i tuoi dati anagrafici di base (nome, data di nascita, indirizzo residenziale) e carichi una foto del documento ordinario per confermare la tua identità reale. Richiede solo un paio di minuti!'}
@@ -179,7 +179,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
             <h4 className="font-bold text-[#0a1c3e] text-base">
               {language === 'en' ? 'Receive Your Passport' : 'Ricevi il Passaporto'}
             </h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               {language === 'en' 
                 ? 'Our registry officers quickly verify your details and issue your membership. You will receive your official signed PDF passport via email protected by a 16-digit code.' 
                 : 'I funzionari del nostro archivio anagrafico verificano rapidamente i tuoi dati ed emettono il provvedimento d\'iscrizione. Riceverai via e-mail il tuo passaporto ufficiale PDF protetto da un codice a 16 cifre.'}
@@ -193,7 +193,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
             <h4 className="font-bold text-[#0a1c3e] text-base">
               {language === 'en' ? 'Participate and Decide' : 'Partecipi e decidi'}
             </h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               {language === 'en' 
                 ? 'Once your passport is active, you are a full voting member! You can vote YES or NO on proposals and key public reforms.' 
                 : 'Una volta ottenuto il passaporto, sarai a tutti gli effetti un membro deliberante! Potrai votare SI o NO sulle proposte e riforme d\'interesse pubblico, esprimendoti su ogni decisione chiave.'}
@@ -216,7 +216,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
             <h3 className="font-serif text-[#0a1c3e] text-2xl font-bold">
               {language === 'en' ? 'Take the "Welcome Test" 🌟' : 'Fai il "Test di Benvenuto" 🌟'}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-600">
               {language === 'en' 
                 ? 'Three fast questions to help you verify if our digital democracy aligns with your values!' 
                 : 'Tre risposte veloci per capire se la nostra democrazia fa al caso tuo!'}
@@ -255,7 +255,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
             <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm min-h-[160px] flex flex-col justify-between animate-fade-in">
               {quizStep === 0 && (
                 <div className="space-y-4">
-                  <div className="text-xs font-mono text-brand-gold uppercase font-bold">
+                  <div className="text-xs font-mono text-[#8a6c31] uppercase font-bold">
                     {language === 'en' ? 'Question 1 of 3' : 'Domanda 1 di 3'}
                   </div>
                   <h4 className="font-bold text-[#0a1c3e] text-sm">
@@ -282,7 +282,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
 
               {quizStep === 1 && (
                 <div className="space-y-4">
-                  <div className="text-xs font-mono text-brand-gold uppercase font-bold">
+                  <div className="text-xs font-mono text-[#8a6c31] uppercase font-bold">
                     {language === 'en' ? 'Question 2 of 3' : 'Domanda 2 di 3'}
                   </div>
                   <h4 className="font-bold text-[#0a1c3e] text-sm">
@@ -309,7 +309,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
 
               {quizStep === 2 && (
                 <div className="space-y-4">
-                  <div className="text-xs font-mono text-brand-gold uppercase font-bold">
+                  <div className="text-xs font-mono text-[#8a6c31] uppercase font-bold">
                     {language === 'en' ? 'Question 3 of 3' : 'Domanda 3 di 3'}
                   </div>
                   <h4 className="font-bold text-[#0a1c3e] text-sm font-serif">
@@ -350,7 +350,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
           <h3 className="text-2xl md:text-3xl font-serif text-[#0a1c3e] font-bold">
             {language === 'en' ? 'What can you find here?' : 'Cosa trovi su questo sito?'}
           </h3>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             {language === 'en'
               ? 'A simple and friendly overview of the main areas of our digital environment!'
               : 'Un riassunto amichevole e immediato delle stanze principali del nostro Stato!'}
@@ -359,14 +359,14 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start">
-            <div className="p-3 bg-amber-50 text-brand-gold rounded-xl">
+            <div className="p-3 bg-amber-50 text-[#8a6c31] rounded-xl">
               <Vote className="w-6 h-6" />
             </div>
             <div className="space-y-1">
               <h4 className="font-bold text-[#0a1c3e] text-sm">
                 {language === 'en' ? 'Referendum & Voting (Democracy)' : 'Referendum e Votazioni (Democrazia)'}
               </h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 {language === 'en'
                   ? 'The heart of our community! Here you can see proposals made by other citizens, view explanation details, vote \'In Favor\' or \'Against\', or submit your own ideas.'
                   : 'È il cuore pulsante! Qui vedi le riforme proposte dai cittadini. Puoi leggere i dettagli e votare "Favorevole" o "Contrario", oppure proporre una tua idea d\'interesse collettivo.'}
@@ -382,7 +382,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               <h4 className="font-bold text-[#0a1c3e] text-sm">
                 {language === 'en' ? 'Rules of the State (Constitution)' : 'Le Regole dello Stato (Costituzione)'}
               </h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 {language === 'en'
                   ? 'No complicated legal jargon. Our fundamental principles are presented in a clean, straightforward, and readable Constitution and Charter of Rights.'
                   : 'Nessun linguaggio incomprensibile o polveroso. I nostri principi fondamentali sono scritti in modo chiaro, semplice e trasparente nella Costituzione e nella Carta dei Diritti.'}
@@ -398,7 +398,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               <h4 className="font-bold text-[#0a1c3e] text-sm">
                 {language === 'en' ? 'Data Protection & Privacy' : 'Tutela dei tuoi Dati (Privacy)'}
               </h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 {language === 'en'
                   ? 'Your safety and privacy are our highest priority. We employ robust protocols to ensure your credentials are fully safeguarded from any misuse.'
                   : 'La tua sicurezza e la tua privacy sono per noi una priorità assoluta. Usiamo moderni protocolli di tutela per assicurarci che i dati inseriti siano protetti e al riparo da utilizzi impropri.'}
@@ -414,7 +414,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               <h4 className="font-bold text-[#0a1c3e] text-sm">
                 {language === 'en' ? 'Administration Console' : 'Consolle di Amministrazione'}
               </h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 {language === 'en'
                   ? 'An area reserved for verified officers to update the civil registry, approve digital PDF passport requests, and offer support to citizens.'
                   : 'L\'area riservata ai delegati d\'ufficio per l\'aggiornamento dell\'anagrafe, l\'attivazione dei passaporti digitali in formato PDF e il supporto diretto a tutti i cittadini.'}
@@ -427,13 +427,13 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
       {/* RISPOSTE VELOCI A DUBBI ED ESIGENZE (FAQ) */}
       <div className="space-y-6">
         <div className="text-center space-y-1">
-          <span className="text-xs uppercase tracking-widest font-mono text-brand-gold font-bold">
+          <span className="text-xs uppercase tracking-widest font-mono text-[#8a6c31] font-bold">
             {language === 'en' ? 'Frequently Asked Questions' : 'Domande frequenti'}
           </span>
           <h3 className="text-2xl md:text-3xl font-serif text-[#0a1c3e] font-bold">
             {language === 'en' ? 'Clear Answers to Common Questions' : 'Risposte semplici a domande comuni'}
           </h3>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-600">
             {language === 'en'
               ? 'Everything you need to know, explained in complete transparency.'
               : 'Tutto quello che c\'è da sapere, spiegato in totale trasparenza.'}

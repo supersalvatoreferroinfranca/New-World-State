@@ -119,7 +119,7 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
             {language === 'en' ? 'Invite friends and family' : 'Invita amici e parenti'}
           </h4>
         </div>
-        <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+        <p className="text-xs text-slate-600 mb-4 leading-relaxed">
           {language === 'en' 
             ? 'Spread the word about the New World State! Share a quick invite via your favorite platforms.' 
             : 'Fai conoscere il New World State alle persone care! Invia un invito rapido tramite le tue piattaforme preferite.'}
@@ -160,7 +160,7 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
         
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 bg-brand-gold/20 text-brand-gold text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border border-brand-gold/20 mb-1">
+            <div className="inline-flex items-center gap-1.5 bg-brand-gold/15 text-amber-200 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border border-brand-gold/20 mb-1">
               <Users className="w-3 h-3" />
               {language === 'en' ? 'Sovereign Outreach' : 'Diffusione Sovrana'}
             </div>
@@ -173,7 +173,7 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
                 : 'Offri ai tuoi cari e ai tuoi amici l\'opportunità di far parte di una società digitale pacifica e libera. Scegli un messaggio, personalizzalo e condividilo gratuitamente.'}
             </p>
           </div>
-          <div className="hidden lg:flex items-center justify-center w-16 h-16 rounded-full bg-white/5 border border-white/10 text-brand-gold">
+          <div className="hidden lg:flex items-center justify-center w-16 h-16 rounded-full bg-white/5 border border-white/10 text-amber-200">
             <Heart className="w-8 h-8 fill-brand-gold/10 animate-pulse" />
           </div>
         </div>
@@ -185,7 +185,7 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
           <div className="space-y-4">
             {/* Input name */}
             <div>
-              <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">
+              <label className="block text-[10px] uppercase font-bold text-slate-600 tracking-wider mb-1.5">
                 {language === 'en' ? 'Recipient\'s name (Optional)' : 'Nome della persona cara (Opzionale)'}
               </label>
               <input 
@@ -199,7 +199,7 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
 
             {/* Message Style Tab Buttons */}
             <div>
-              <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">
+              <label className="block text-[10px] uppercase font-bold text-slate-600 tracking-wider mb-2">
                 {language === 'en' ? 'Choose message tone' : 'Scegli il tono del messaggio'}
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -222,7 +222,7 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
 
             {/* Action buttons list */}
             <div className="space-y-2.5 pt-2">
-              <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
+              <label className="block text-[10px] uppercase font-bold text-slate-600 tracking-wider mb-1">
                 {language === 'en' ? 'Click to share instantly' : 'Clicca per inviare all\'istante'}
               </label>
               
@@ -276,10 +276,10 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
           <div className="bg-slate-50 border border-slate-150 rounded-2xl p-5 md:p-6 flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-[9px] uppercase tracking-wider font-mono font-bold text-slate-400">
+                <span className="text-[9px] uppercase tracking-wider font-mono font-bold text-slate-600">
                   {language === 'en' ? 'Live Message Preview' : 'Anteprima reale del messaggio'}
                 </span>
-                <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
+                <span className="text-[10px] text-slate-600 font-semibold flex items-center gap-1">
                   <Sparkles className="w-3 h-3 text-brand-gold" /> {messages[currentLang][messageStyle].title}
                 </span>
               </div>
@@ -293,7 +293,7 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
               <div className="p-1 rounded-full bg-brand-gold/15 text-brand-gold shrink-0 mt-0.5">
                 <Sparkles className="w-3.5 h-3.5" />
               </div>
-              <p className="text-[10px] text-slate-500 leading-relaxed">
+              <p className="text-[10px] text-slate-600 leading-relaxed">
                 {language === 'en' 
                   ? 'Cost-free tools. Direct links utilize official secure deep links to trigger native apps on mobile/desktop without any tracking or intermediate servers.'
                   : 'Strumenti a costo zero. I collegamenti sfruttano i link ufficiali protetti per avviare direttamente WhatsApp, Telegram ed Email senza tracciamenti o server intermedi.'}

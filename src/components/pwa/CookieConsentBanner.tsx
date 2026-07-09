@@ -157,10 +157,10 @@ const logConsentEvent = (type: string, currentPrefs: CookiePreferences) => {
             <Cookie className="w-5 h-5 text-brand-gold animate-pulse" />
           </div>
           <div className="space-y-1.5">
-            <h4 className="text-xs font-serif font-bold text-[#0a1c3e] uppercase tracking-wider flex items-center gap-1.5">
+            <h3 className="text-xs font-serif font-bold text-[#0a1c3e] uppercase tracking-wider flex items-center gap-1.5">
               {isIt ? 'Tutela della Privacy & Consenso Cookie' : 'Privacy Protection & Cookie Consent'}
-            </h4>
-            <p className="text-[11px] text-slate-500 leading-relaxed">
+            </h3>
+            <p className="text-[11px] text-slate-600 leading-relaxed">
               {isIt 
                 ? 'Utilizziamo cookie tecnici essenziali per garantire il corretto funzionamento del portale anagrafico. Con il tuo consenso, vorremmo abilitare cookie opzionali per memorizzare le tue preferenze d\'interfaccia ed effettuare diagnosi anonime.'
                 : 'We use essential technical cookies to guarantee the correct behavior of the citizenship registry. With your consent, we would also like to enable optional cookies to remember your interface preferences and perform anonymous diagnostics.'}
@@ -188,7 +188,7 @@ const logConsentEvent = (type: string, currentPrefs: CookiePreferences) => {
                       {isIt ? 'Sempre Attivi' : 'Always Active'}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-normal">
+                  <p className="text-[10px] text-slate-600 leading-normal">
                     {isIt
                       ? 'Necessari per mantenere la sessione, la selezione della lingua e la scalatura dell\'accessibilità.'
                       : 'Required to maintain secure sessions, language preferences, and text accessibility scaling.'}
@@ -208,7 +208,7 @@ const logConsentEvent = (type: string, currentPrefs: CookiePreferences) => {
                   <span className="font-semibold text-slate-800 text-[11px] block">
                     {isIt ? '2. Cookie e Storage di Preferenza' : '2. Preference Cookies & Storage'}
                   </span>
-                  <p className="text-[10px] text-slate-400 leading-normal">
+                  <p className="text-[10px] text-slate-600 leading-normal">
                     {isIt
                       ? 'Abilitano la memorizzazione delle preferenze personali, come la dismissione degli avvisi di installazione PWA.'
                       : 'Enable saving personal preferences, such as hiding PWA installation prompts and temporary forms.'}
@@ -235,7 +235,7 @@ const logConsentEvent = (type: string, currentPrefs: CookiePreferences) => {
                   <span className="font-semibold text-slate-800 text-[11px] block">
                     {isIt ? '3. Cookie Analitici e Prestazionali' : '3. Analytics & Performance Trackers'}
                   </span>
-                  <p className="text-[10px] text-slate-400 leading-normal">
+                  <p className="text-[10px] text-slate-600 leading-normal">
                     {isIt
                       ? 'Consentono di analizzare in modo totalmente anonimo l\'efficienza dei nostri server regionali Edge.'
                       : 'Allow fully anonymous performance diagnosis to optimize our regional Edge servers.'}
@@ -255,7 +255,7 @@ const logConsentEvent = (type: string, currentPrefs: CookiePreferences) => {
             </div>
 
             {/* Links for information */}
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-wrap items-center justify-center sm:justify-between gap-2.5 text-[9px] text-slate-500 font-mono">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-wrap items-center justify-center sm:justify-between gap-2.5 text-[9px] text-slate-600 font-mono">
               <button 
                 onClick={onOpenPrivacy}
                 className="hover:text-brand-gold underline font-bold cursor-pointer transition flex items-center gap-1 uppercase"
@@ -290,7 +290,7 @@ const logConsentEvent = (type: string, currentPrefs: CookiePreferences) => {
           {/* Customizer trigger (Left on desktop) */}
           <button
             onClick={() => setShowCustomizer(!showCustomizer)}
-            className="text-[10px] font-bold text-slate-500 hover:text-[#0a1c3e] flex items-center justify-center gap-1 transition cursor-pointer hover:underline uppercase tracking-wide self-center"
+            className="text-[10px] font-bold text-slate-600 hover:text-[#0a1c3e] flex items-center justify-center gap-1 transition cursor-pointer hover:underline uppercase tracking-wide self-center"
           >
             {showCustomizer ? (
               <>
