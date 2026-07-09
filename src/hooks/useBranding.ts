@@ -32,17 +32,20 @@ export function useBranding() {
     listeners.push(onChange);
 
     if (!cachedBranding) {
-      // Fetch from API
-      safeFetch('/api/branding')
+      // Fetch from API with cache buster to prevent local browser caching
+      safeFetch(`/api/branding?t=${Date.now()}`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.branding) {
+            const logoTimestamp = data.branding.logo_mtime ? `?t=${data.branding.logo_mtime}` : '';
+            const faviconTimestamp = data.branding.favicon_mtime ? `?t=${data.branding.favicon_mtime}` : '';
+
             const newBranding: BrandingConfig = {
-              logo: data.branding.logo || '/LOGO_NEW-WORLD-STATE.jpg',
-              favicon: data.branding.favicon || '/favicon.ico',
-              'favicon-32x32': data.branding['favicon-32x32'] || '/favicon-32x32.png',
-              'favicon-16x16': data.branding['favicon-16x16'] || '/favicon-16x16.png',
-              'apple-touch-icon': data.branding['apple-touch-icon'] || '/apple-touch-icon.png'
+              logo: data.branding.logo || `/LOGO_NEW-WORLD-STATE.jpg${logoTimestamp}`,
+              favicon: data.branding.favicon || `/favicon.ico${faviconTimestamp}`,
+              'favicon-32x32': data.branding['favicon-32x32'] || `/favicon-32x32.png${faviconTimestamp}`,
+              'favicon-16x16': data.branding['favicon-16x16'] || `/favicon-16x16.png${faviconTimestamp}`,
+              'apple-touch-icon': data.branding['apple-touch-icon'] || `/apple-touch-icon.png${faviconTimestamp}`
             };
             cachedBranding = newBranding;
             
@@ -64,15 +67,18 @@ export function useBranding() {
 
   const refreshBranding = async () => {
     try {
-      const res = await safeFetch('/api/branding');
+      const res = await safeFetch(`/api/branding?t=${Date.now()}`);
       const data = await res.json();
       if (data.success && data.branding) {
+        const logoTimestamp = data.branding.logo_mtime ? `?t=${data.branding.logo_mtime}` : '';
+        const faviconTimestamp = data.branding.favicon_mtime ? `?t=${data.branding.favicon_mtime}` : '';
+
         const newBranding: BrandingConfig = {
-          logo: data.branding.logo || '/LOGO_NEW-WORLD-STATE.jpg',
-          favicon: data.branding.favicon || '/favicon.ico',
-          'favicon-32x32': data.branding['favicon-32x32'] || '/favicon-32x32.png',
-          'favicon-16x16': data.branding['favicon-16x16'] || '/favicon-16x16.png',
-          'apple-touch-icon': data.branding['apple-touch-icon'] || '/apple-touch-icon.png'
+          logo: data.branding.logo || `/LOGO_NEW-WORLD-STATE.jpg${logoTimestamp}`,
+          favicon: data.branding.favicon || `/favicon.ico${faviconTimestamp}`,
+          'favicon-32x32': data.branding['favicon-32x32'] || `/favicon-32x32.png${faviconTimestamp}`,
+          'favicon-16x16': data.branding['favicon-16x16'] || `/favicon-16x16.png${faviconTimestamp}`,
+          'apple-touch-icon': data.branding['apple-touch-icon'] || `/apple-touch-icon.png${faviconTimestamp}`
         };
         cachedBranding = newBranding;
         updateDomFavicons(newBranding);

@@ -669,6 +669,9 @@ async function startServer() {
 
     apiRouter.get('/branding', async (req, res) => {
       try {
+        // Prevent browser/proxy caching of the branding configuration API response
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        
         const branding: {[key: string]: string} = { ...memoryBranding };
         if (dbPool) {
           const result = await dbPool.query('SELECT key, value FROM nws_branding');
@@ -676,6 +679,21 @@ async function startServer() {
             branding[row.key] = row.value;
           }
         }
+
+        // Add server file modification timestamps to let the client force-refresh static assets
+        try {
+          const logoPath = path.join(process.cwd(), 'public', 'LOGO_NEW-WORLD-STATE.jpg');
+          if (fs.existsSync(logoPath)) {
+            branding['logo_mtime'] = String(fs.statSync(logoPath).mtimeMs);
+          }
+          const faviconPath = path.join(process.cwd(), 'public', 'favicon.ico');
+          if (fs.existsSync(faviconPath)) {
+            branding['favicon_mtime'] = String(fs.statSync(faviconPath).mtimeMs);
+          }
+        } catch (e) {
+          console.error('[BRANDING] Failed to read static file mtimes:', e);
+        }
+
         return res.json({ success: true, branding });
       } catch (err: any) {
         console.error('[SERVER-GET-BRANDING-ERR]', err.message);
