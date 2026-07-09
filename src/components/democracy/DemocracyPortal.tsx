@@ -901,7 +901,7 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
             </div>
           </div>
 
-          <div className="p-6 max-w-6xl mx-auto">
+          <div className={`${subTab === 'chat' ? 'p-0 lg:p-6' : 'p-6'} max-w-6xl mx-auto`}>
             {/* NO PROPOSALS ERROR */}
             {proposalsError && (
               <div className="bg-red-50 border border-red-100 text-red-700 p-4 rounded-2xl flex items-center gap-3 text-xs mb-6">

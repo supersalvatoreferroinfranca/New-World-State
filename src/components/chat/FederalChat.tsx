@@ -19,7 +19,8 @@ import {
   AlertCircle,
   HelpCircle,
   X,
-  Plus
+  Plus,
+  ArrowLeft
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 
@@ -69,6 +70,7 @@ const CHAT_ROOMS: ChatRoom[] = [
 export default function FederalChat() {
   const { language } = useI18n();
   const [activeRoom, setActiveRoom] = useState<string>('consulate');
+  const [mobileActiveTab, setMobileActiveTab] = useState<'list' | 'chat'>('list');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -142,6 +144,7 @@ export default function FederalChat() {
   // Audio Recorder State
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const recordingDurationRef = useRef(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const durationTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -159,6 +162,10 @@ export default function FederalChat() {
   const [audioProgress, setAudioProgress] = useState<{ [key: string]: number }>({});
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const prevRoomRef = useRef(activeRoom);
+  const prevMessagesLengthRef = useRef(messages.length);
+  const isNearBottomRef = useRef(true);
 
   // Load active DMs list when citizenCode updates
   useEffect(() => {
@@ -243,6 +250,7 @@ export default function FederalChat() {
     });
 
     setActiveRoom(dmRoomId);
+    setMobileActiveTab('chat');
     setCitizenSearchQuery('');
     setCitizenSearchResults([]);
   };
@@ -334,10 +342,35 @@ export default function FederalChat() {
     return () => clearInterval(timer);
   }, [activeRoom]);
 
-  // Scroll to bottom on messages change
+  // Handle scroll event to monitor if user is near the bottom
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const threshold = 100;
+    const nearBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) <= threshold;
+    isNearBottomRef.current = nearBottom;
+  };
+
+  // Smart Scroll to bottom on messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const isRoomSwitch = prevRoomRef.current !== activeRoom;
+    prevRoomRef.current = activeRoom;
+
+    const isInitialLoad = messages.length > 0 && prevMessagesLengthRef.current === 0;
+    const isNewMessageArrived = messages.length > prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = messages.length;
+
+    const lastMessage = messages[messages.length - 1];
+    const isLastMessageMe = lastMessage?.senderName === senderName;
+
+    if (isRoomSwitch || isInitialLoad || isLastMessageMe || isNearBottomRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      isNearBottomRef.current = true;
+    }
+  }, [messages, activeRoom, senderName]);
 
   // Save Name / Establish Citizen profile manually
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -357,6 +390,7 @@ export default function FederalChat() {
       setErrorMsg(null);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
+      recordingDurationRef.current = 0;
       
       // Try using webm first, fallback to standard ogg/wav
       let options = { mimeType: 'audio/webm;codecs=opus' };
@@ -382,13 +416,14 @@ export default function FederalChat() {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         stream.getTracks().forEach(track => track.stop()); // Release mic
 
-        if (recordingDuration < 1) {
+        const finalDuration = recordingDurationRef.current;
+        if (finalDuration < 1) {
           // Ignore ultra-short recordings
           return;
         }
 
         // Upload recorded audio file
-        await handleUploadFile(audioBlob, `voice_memo_${Date.now()}.webm`, 'audio', recordingDuration);
+        await handleUploadFile(audioBlob, `voice_memo_${Date.now()}.webm`, 'audio', finalDuration);
       };
 
       mediaRecorderRef.current = recorder;
@@ -397,7 +432,11 @@ export default function FederalChat() {
       setRecordingDuration(0);
 
       durationTimerRef.current = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
+        setRecordingDuration(prev => {
+          const nextVal = prev + 1;
+          recordingDurationRef.current = nextVal;
+          return nextVal;
+        });
       }, 1000);
 
     } catch (err: any) {
@@ -747,10 +786,12 @@ export default function FederalChat() {
         : '');
 
   return (
-    <div className="bg-[#faf9f5] border border-[#c5a880]/30 rounded-3xl overflow-hidden shadow-xl grid grid-cols-1 lg:grid-cols-12 min-h-[600px] max-h-[800px] h-[75vh] font-sans">
+    <div className="bg-white lg:bg-[#faf9f5] border-0 lg:border border-[#c5a880]/30 rounded-none lg:rounded-3xl overflow-hidden shadow-none lg:shadow-xl grid grid-cols-1 lg:grid-cols-12 h-[calc(100vh-140px)] md:h-[calc(100vh-200px)] lg:h-[75vh] min-h-[480px] lg:min-h-[600px] max-h-none lg:max-h-[800px] font-sans -mx-4 -mb-10 sm:-mx-6 lg:mx-0 lg:mb-0">
       
       {/* LEFT COLUMN: ROOMS / CHANNELS */}
-      <div className="lg:col-span-4 border-r border-slate-200 bg-white flex flex-col h-full">
+      <div className={`lg:col-span-4 border-r border-slate-200 bg-white flex flex-col h-full ${
+        mobileActiveTab === 'list' ? 'flex' : 'hidden lg:flex'
+      }`}>
         {/* Profile Header Block */}
         <div className="p-4 bg-brand-blue border-b border-[#c5a880]/20 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -789,7 +830,10 @@ export default function FederalChat() {
                 return (
                   <button
                     key={room.id}
-                    onClick={() => setActiveRoom(room.id)}
+                    onClick={() => {
+                      setActiveRoom(room.id);
+                      setMobileActiveTab('chat');
+                    }}
                     className={`w-full p-3 rounded-xl border text-left flex gap-3 transition duration-200 cursor-pointer ${
                       isActive 
                         ? 'bg-[#0a1c3e] border-[#0a1c3e] text-white shadow-md' 
@@ -966,7 +1010,10 @@ export default function FederalChat() {
                     <button
                       key={chat.id}
                       type="button"
-                      onClick={() => setActiveRoom(chat.id)}
+                      onClick={() => {
+                        setActiveRoom(chat.id);
+                        setMobileActiveTab('chat');
+                      }}
                       className={`w-full p-2.5 rounded-xl border text-left flex gap-2.5 transition duration-200 cursor-pointer ${
                         isActive 
                           ? 'bg-[#0a1c3e]/10 border-[#0a1c3e]/20 text-[#0a1c3e]' 
@@ -1004,7 +1051,9 @@ export default function FederalChat() {
       </div>
 
       {/* RIGHT COLUMN: ACTIVE CHAT SCREEN */}
-      <div className="lg:col-span-8 flex flex-col h-full bg-white">
+      <div className={`lg:col-span-8 flex flex-col h-full bg-white ${
+        mobileActiveTab === 'chat' ? 'flex' : 'hidden lg:flex'
+      }`}>
         
         {/* Identity Setup Prompt if not established */}
         {!isProfileSet ? (
@@ -1078,19 +1127,36 @@ export default function FederalChat() {
               >
                 {language === 'en' ? 'Initialize Interface' : 'Entra in Chat'}
               </button>
+
+              <button
+                type="button"
+                onClick={() => setMobileActiveTab('list')}
+                className="lg:hidden w-full text-slate-500 hover:text-slate-850 text-[10px] font-bold uppercase tracking-wider py-1.5 hover:underline cursor-pointer transition"
+              >
+                {language === 'en' ? '← Back to Channel List' : '← Torna alla lista dei canali'}
+              </button>
             </form>
           </div>
         ) : (
           <>
             {/* Chat Room Header */}
             <div className="p-4 bg-slate-50 border-b border-slate-150 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{currentRoomIcon}</span>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-900">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {/* Back Button for mobile */}
+                <button
+                  type="button"
+                  onClick={() => setMobileActiveTab('list')}
+                  className="lg:hidden p-1.5 hover:bg-slate-200 active:bg-slate-300 rounded-lg text-slate-600 cursor-pointer transition mr-1 shrink-0"
+                  title={language === 'en' ? 'Back' : 'Indietro'}
+                >
+                  <ArrowLeft className="w-5 h-5 text-brand-blue" />
+                </button>
+                <span className="text-2xl shrink-0">{currentRoomIcon}</span>
+                <div className="min-w-0">
+                  <h3 className="text-xs font-bold text-slate-900 truncate">
                     {currentRoomName}
                   </h3>
-                  <p className="text-[10px] text-slate-500 truncate max-w-[300px] md:max-w-[450px]">
+                  <p className="text-[10px] text-slate-500 truncate max-w-[200px] sm:max-w-[300px] md:max-w-[450px]">
                     {currentRoomDesc}
                   </p>
                 </div>
@@ -1116,7 +1182,11 @@ export default function FederalChat() {
             )}
 
             {/* MESSAGES SCREEN */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#eae7e0] space-y-4">
+            <div 
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#eae7e0] space-y-4"
+            >
               
               {/* Default Welcome / Secure Encryption Notice */}
               <div className="max-w-md mx-auto bg-white/70 backdrop-blur rounded-2xl p-3 border border-slate-200 text-center text-[10px] text-slate-600 font-mono leading-normal shadow-sm">
