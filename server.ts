@@ -3407,7 +3407,9 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
             email: cit.email,
             citizenCode: cit.citizenCode || cit.citizencode || cit.citizen_code,
             isAmbassador: !!(cit.isAmbassador || cit.isambassador),
-            isPeacekeeper: !!(cit.isPeacekeeper || cit.ispeacekeeper)
+            isPeacekeeper: !!(cit.isPeacekeeper || cit.ispeacekeeper),
+            operationalRole: cit.operationalRole || cit.operationalrole || null,
+            isAdmin: !!(cit.isAdmin || cit.isadmin)
           }
         });
       } catch (err: any) {
@@ -4078,7 +4080,22 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             'SELECT uuid as id, room, sender_name as "senderName", sender_role as "senderRole", text, type, file_url as "fileUrl", file_name as "fileName", file_size as "fileSize", duration, created_at as "timestamp" FROM nws_chat_messages WHERE room = $1 ORDER BY id ASC LIMIT 500',
             [room]
           );
-          return res.json({ success: true, messages: result.rows });
+          
+          const formatted = result.rows.map(row => ({
+            id: row.id || row.uuid,
+            room: row.room,
+            senderName: row.senderName || row.sendername || '',
+            senderRole: row.senderRole || row.senderrole || 'Cittadino',
+            text: row.text || '',
+            type: row.type || 'text',
+            fileUrl: row.fileUrl || row.fileurl || '',
+            fileName: row.fileName || row.filename || '',
+            fileSize: row.fileSize || row.filesize || 0,
+            duration: row.duration || 0,
+            timestamp: row.timestamp || row.created_at || new Date().toISOString()
+          }));
+
+          return res.json({ success: true, messages: formatted });
         } else {
           // Fallback to local memory/JSON
           const filtered = chatMessages

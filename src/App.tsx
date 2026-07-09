@@ -26,7 +26,20 @@ import AccessibilityWidget from './components/pwa/AccessibilityWidget';
 import CookieConsentBanner from './components/pwa/CookieConsentBanner';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat'>('welcome');
+  const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat'>(() => {
+    try {
+      const saved = localStorage.getItem('nws_democracy_citizen') || sessionStorage.getItem('nws_democracy_citizen');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.id) {
+          return 'democracy';
+        }
+      }
+    } catch (e) {
+      console.error('[AUTH-TAB-INIT-ERR]', e);
+    }
+    return 'welcome';
+  });
   const [isVerifyPath] = useState<boolean>(() => {
     const searchParams = new URLSearchParams(window.location.search);
     return window.location.pathname === '/verify' || 
@@ -232,7 +245,7 @@ function AppContent() {
             ) : activeTab === 'network' ? (
               <NetworkStatusPage />
             ) : activeTab === 'democracy' ? (
-              <DemocracyPortal />
+              <DemocracyPortal onGoToAdmin={() => setActiveTab('admin')} />
             ) : activeTab === 'chat' ? (
               <div className="max-w-2xl mx-auto bg-white border border-[#c5a880]/30 rounded-3xl p-8 text-center shadow-xl space-y-6 animate-fade-in my-10">
                 <div className="w-16 h-16 rounded-full bg-[#0a1c3e]/5 text-[#0a1c3e] flex items-center justify-center mx-auto border border-[#0a1c3e]/10">

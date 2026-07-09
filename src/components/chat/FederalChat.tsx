@@ -367,7 +367,10 @@ export default function FederalChat() {
     const isLastMessageMe = lastMessage?.senderName === senderName;
 
     if (isRoomSwitch || isInitialLoad || isLastMessageMe || isNearBottomRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: isRoomSwitch || isInitialLoad ? 'auto' : 'smooth'
+      });
       isNearBottomRef.current = true;
     }
   }, [messages, activeRoom, senderName]);

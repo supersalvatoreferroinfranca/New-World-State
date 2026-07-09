@@ -57,6 +57,8 @@ interface CitizenSession {
   citizenCode: string;
   isAmbassador: boolean;
   isPeacekeeper: boolean;
+  operationalRole?: string | null;
+  isAdmin?: boolean;
 }
 
 interface Proposal {
@@ -87,7 +89,7 @@ interface AlboItem {
   published_at: string;
 }
 
-export default function DemocracyPortal() {
+export default function DemocracyPortal({ onGoToAdmin }: { onGoToAdmin?: () => void } = {}) {
   const { language } = useI18n();
 
   // Citizen auth states
@@ -595,20 +597,34 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
           </div>
           
           {citizen ? (
-            <div className="bg-brand-gold/10 border border-brand-gold/30 px-4 py-3 rounded-2xl flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-brand-gold flex items-center justify-center font-serif text-[#0a1c3e] font-bold text-sm shadow">
-                {citizen.firstName[0]}{citizen.surname[0]}
-              </div>
-              <div>
-                <p className="text-xs font-bold font-serif text-brand-gold leading-none">{citizen.firstName} {citizen.surname}</p>
-                <p className="text-[10px] font-mono mt-1 text-white/70 block">CODE: {citizen.citizenCode}</p>
-                <button 
-                  onClick={handleLogout}
-                  id="democracy-logout-btn"
-                  className="text-[9px] text-[#ef4444] hover:underline font-bold uppercase tracking-wider block mt-0.5 cursor-pointer"
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* ACCESSO RAPIDO CONSOLLE AMMINISTRATORE */}
+              {(citizen.isAmbassador || citizen.isPeacekeeper || citizen.isAdmin || citizen.operationalRole) && onGoToAdmin && (
+                <button
+                  onClick={onGoToAdmin}
+                  id="header-admin-quick-link"
+                  className="bg-gradient-to-r from-amber-500 to-amber-650 hover:from-amber-600 hover:to-amber-700 text-white font-serif font-bold uppercase tracking-wider text-[10px] px-4 py-2.5 rounded-xl transition duration-150 shadow-md flex items-center justify-center gap-1.5 border border-amber-300 animate-pulse cursor-pointer shrink-0"
                 >
-                  {language === 'en' ? 'Log out' : 'Disconnetti Sessione'}
+                  <Shield className="w-3.5 h-3.5 fill-current text-white" />
+                  <span>{language === 'en' ? 'Admin Console' : 'Consolle Amministratore'}</span>
                 </button>
+              )}
+
+              <div className="bg-brand-gold/10 border border-brand-gold/30 px-4 py-3 rounded-2xl flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-brand-gold flex items-center justify-center font-serif text-[#0a1c3e] font-bold text-sm shadow">
+                  {citizen.firstName[0]}{citizen.surname[0]}
+                </div>
+                <div>
+                  <p className="text-xs font-bold font-serif text-brand-gold leading-none">{citizen.firstName} {citizen.surname}</p>
+                  <p className="text-[10px] font-mono mt-1 text-white/70 block">CODE: {citizen.citizenCode}</p>
+                  <button 
+                    onClick={handleLogout}
+                    id="democracy-logout-btn"
+                    className="text-[9px] text-[#ef4444] hover:underline font-bold uppercase tracking-wider block mt-0.5 cursor-pointer"
+                  >
+                    {language === 'en' ? 'Log out' : 'Disconnetti Sessione'}
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -785,6 +801,34 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
       {/* PORTAL MAIN AREA */}
       {citizen && (
         <div id="democracy-main-portal-view">
+          {/* PROMINENT GOVERNMENT OFFICIAL BANNER */}
+          {(citizen.isAmbassador || citizen.isPeacekeeper || citizen.isAdmin || citizen.operationalRole) && onGoToAdmin && (
+            <div className="mx-4 lg:mx-auto max-w-6xl mt-6 bg-gradient-to-r from-amber-50 to-amber-100/60 border-l-4 border-amber-500 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm border border-amber-200/50">
+              <div className="flex items-start gap-3.5">
+                <div className="w-9 h-9 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center shrink-0 mt-0.5 border border-amber-200">
+                  <Shield className="w-5 h-5 fill-current text-amber-600" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-amber-900 uppercase tracking-widest font-serif flex items-center gap-1.5">
+                    ✨ {language === 'en' ? 'Official Sovereign Delegation' : 'Autorità Statale Rilevata'}
+                  </h4>
+                  <p className="text-[11px] text-amber-700 mt-1 leading-relaxed">
+                    {language === 'en' 
+                      ? `You hold an official operational role as: "${citizen.operationalRole || (citizen.isAmbassador ? 'Digital Ambassador' : 'Peace Officer')}". You are authorized to access and manage the sovereign console.` 
+                      : `Il tuo profilo ricopre la carica ufficiale di: "${citizen.operationalRole || (citizen.isAmbassador ? 'Ambasciatore Digitale' : 'Ufficiale di Pace')}". Sei autorizzato a gestire la consolle amministrativa.`}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onGoToAdmin}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-serif font-bold uppercase tracking-wider text-[10px] px-5 py-2.5 rounded-xl transition duration-150 shadow-md flex items-center justify-center gap-1.5 cursor-pointer shrink-0 border-b-2 border-amber-700"
+              >
+                <span>{language === 'en' ? 'Quick Access Admin Console' : 'Consolle Amministratore (Accesso Rapido)'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* TABS E RICERCA */}
           <div className="bg-slate-50 border-b border-slate-100 p-4">
             <div className="max-w-6xl mx-auto flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">

@@ -4691,7 +4691,9 @@ CREATE TABLE citizens (
             email: cit.email,
             citizenCode: cit.citizenCode || cit.citizencode || cit.citizen_code,
             isAmbassador: !!(cit.isAmbassador || cit.isambassador),
-            isPeacekeeper: !!(cit.isPeacekeeper || cit.ispeacekeeper)
+            isPeacekeeper: !!(cit.isPeacekeeper || cit.ispeacekeeper),
+            operationalRole: cit.operationalRole || cit.operationalrole || null,
+            isAdmin: !!(cit.isAdmin || cit.isadmin)
           }
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
