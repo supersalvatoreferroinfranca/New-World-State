@@ -156,10 +156,26 @@ export default function FederalChat() {
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewType, setPreviewType] = useState<'photo' | 'pdf' | null>(null);
 
-  // Audio players ref mapping (id -> HTMLAudioElement)
-  const audioPlayersRef = useRef<{ [key: string]: HTMLAudioElement }>({});
+  // Shared audio player ref and tracking of current audio ID
+  const sharedAudioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioIdRef = useRef<string | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [audioProgress, setAudioProgress] = useState<{ [key: string]: number }>({});
+
+  // Cleanup effect to release audio resources on unmount
+  useEffect(() => {
+    return () => {
+      if (sharedAudioRef.current) {
+        sharedAudioRef.current.pause();
+        if (sharedAudioRef.current.src && sharedAudioRef.current.src.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(sharedAudioRef.current.src);
+          } catch (_) {}
+        }
+        sharedAudioRef.current.src = '';
+      }
+    };
+  }, []);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -757,55 +773,95 @@ export default function FederalChat() {
   };
 
   // ---------------------------------------------------------------------------
-  // CUSTOM AUDIO PLAYER LOGIC
+  // CUSTOM AUDIO PLAYER LOGIC (With unique ID checks, explicit src updates,
+  // currentTime resets, and cache evasion/revocation)
   // ---------------------------------------------------------------------------
   const togglePlayAudio = (id: string, url: string) => {
-    const existing = audioPlayersRef.current[id];
-
-    if (playingAudioId === id && existing) {
-      existing.pause();
+    // 1. If clicking the currently playing message, toggle pause
+    if (playingAudioId === id && sharedAudioRef.current) {
+      sharedAudioRef.current.pause();
       setPlayingAudioId(null);
       return;
     }
 
-    // Pause currently playing audio if any
-    if (playingAudioId && audioPlayersRef.current[playingAudioId]) {
-      audioPlayersRef.current[playingAudioId].pause();
+    // 2. If a different audio is playing, pause it, revoke old source, and clear src
+    if (sharedAudioRef.current) {
+      sharedAudioRef.current.pause();
+      if (sharedAudioRef.current.src) {
+        // Revoke Object URLs to release browser resources
+        if (sharedAudioRef.current.src.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(sharedAudioRef.current.src);
+          } catch (e) {
+            console.warn('[AUDIO] Failed to revoke object URL:', e);
+          }
+        }
+        // Explicitly clear src to trigger resource garbage collection and prevent browser-level cache pollution
+        sharedAudioRef.current.src = '';
+        sharedAudioRef.current.load();
+      }
     }
 
-    if (existing) {
-      if (existing.ended || existing.currentTime >= existing.duration) {
-        existing.currentTime = 0;
-      }
-      existing.play().catch(e => console.warn(e));
-      setPlayingAudioId(id);
-    } else {
-      // Add unique cache-buster parameter to prevent aggressive browser/CDN caching of identical audio files
-      const busterUrl = url.includes('?') 
-        ? `${url}&t=${encodeURIComponent(id)}_${Date.now()}` 
-        : `${url}?t=${encodeURIComponent(id)}_${Date.now()}`;
+    // 3. Initialize or retrieve the shared HTMLAudioElement
+    if (!sharedAudioRef.current) {
+      sharedAudioRef.current = new Audio();
+    }
 
-      const newPlayer = new Audio(busterUrl);
-      newPlayer.addEventListener('timeupdate', () => {
-        const percentage = (newPlayer.currentTime / newPlayer.duration) * 100;
+    const audio = sharedAudioRef.current;
+
+    // 4. Explicitly reset currentTime to 0 to prevent audio residue/start delays
+    audio.currentTime = 0;
+
+    // 5. Append unique cache-buster to bypass strict proxy/CDN/browser asset caching (especially for masked .png endpoints)
+    const busterUrl = url.includes('?') 
+      ? `${url}&t=${encodeURIComponent(id)}_${Date.now()}` 
+      : `${url}?t=${encodeURIComponent(id)}_${Date.now()}`;
+
+    // 6. Set unique ID context and set source explicitly
+    currentAudioIdRef.current = id;
+    audio.src = busterUrl;
+
+    // 7. Bind dynamic event listeners using one-shot properties to prevent listener aggregation
+    audio.ontimeupdate = () => {
+      // Unique ID check: ensure progress matches the active message ID context
+      if (currentAudioIdRef.current === id) {
+        const percentage = (audio.currentTime / audio.duration) * 100;
         setAudioProgress(prev => ({
           ...prev,
           [id]: percentage || 0
         }));
-      });
+      }
+    };
 
-      newPlayer.addEventListener('ended', () => {
+    audio.onended = () => {
+      if (currentAudioIdRef.current === id) {
         setPlayingAudioId(null);
         setAudioProgress(prev => ({
           ...prev,
           [id]: 0
         }));
-      });
+      }
+    };
 
-      audioPlayersRef.current[id] = newPlayer;
-      newPlayer.play().catch(e => console.warn(e));
-      setPlayingAudioId(id);
-    }
+    audio.onerror = (err) => {
+      console.error(`[AUDIO] Playback error for message ${id}:`, err);
+      if (currentAudioIdRef.current === id) {
+        setPlayingAudioId(null);
+      }
+    };
+
+    // 8. Explicitly load resource and trigger play
+    audio.load();
+    audio.play()
+      .then(() => {
+        setPlayingAudioId(id);
+      })
+      .catch((err) => {
+        console.warn(`[AUDIO] Playback start was cancelled or failed for message ${id}:`, err);
+        if (currentAudioIdRef.current === id) {
+          setPlayingAudioId(null);
+        }
+      });
   };
 
   const formatSize = (bytes?: number) => {
