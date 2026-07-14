@@ -780,7 +780,12 @@ export default function FederalChat() {
       existing.play().catch(e => console.warn(e));
       setPlayingAudioId(id);
     } else {
-      const newPlayer = new Audio(url);
+      // Add unique cache-buster parameter to prevent aggressive browser/CDN caching of identical audio files
+      const busterUrl = url.includes('?') 
+        ? `${url}&t=${encodeURIComponent(id)}_${Date.now()}` 
+        : `${url}?t=${encodeURIComponent(id)}_${Date.now()}`;
+
+      const newPlayer = new Audio(busterUrl);
       newPlayer.addEventListener('timeupdate', () => {
         const percentage = (newPlayer.currentTime / newPlayer.duration) * 100;
         setAudioProgress(prev => ({

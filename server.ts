@@ -4230,19 +4230,20 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           const uniqueFolder = `nws_chat_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 
           try {
+            const urlEncodedBody = new URLSearchParams();
+            urlEncodedBody.append('key', uploaderKey);
+            urlEncodedBody.append('username', uniqueFolder);
+            urlEncodedBody.append('documentFrontData', base64WithPrefix);
+            urlEncodedBody.append('documentFrontName', fileName);
+
             const uploaderRes = await fetch(targetUrlWithKey, {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
                 'Authorization': `Bearer ${uploaderKey}`,
                 'X-Aruba-Key': uploaderKey
               },
-              body: JSON.stringify({
-                key: uploaderKey,
-                username: uniqueFolder,
-                documentFrontData: base64WithPrefix,
-                documentFrontName: fileName
-              })
+              body: urlEncodedBody
             });
 
             if (uploaderRes.ok) {
