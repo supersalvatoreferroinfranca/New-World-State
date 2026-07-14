@@ -5446,7 +5446,9 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             base64WithPrefix = `data:${mime};base64,${fileData}`;
           }
 
-          // Spediamo al bridge Aruba impostando username: 'nws_chat_files' per organizzarli nella cartella apposita
+          // Spediamo al bridge Aruba impostando un username univoco per evitare che i file si sovrascrivano (salvati come fronte.png)
+          const uniqueFolder = `nws_chat_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+
           const uploaderRes = await fetch(targetUrlWithKey, {
             method: 'POST',
             headers: {
@@ -5456,7 +5458,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             },
             body: JSON.stringify({
               key: uploaderKey,
-              username: 'nws_chat_files',
+              username: uniqueFolder,
               documentFrontData: base64WithPrefix,
               documentFrontName: fileName
             })
