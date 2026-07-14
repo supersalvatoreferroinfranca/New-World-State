@@ -774,6 +774,9 @@ export default function FederalChat() {
     }
 
     if (existing) {
+      if (existing.ended || existing.currentTime >= existing.duration) {
+        existing.currentTime = 0;
+      }
       existing.play().catch(e => console.warn(e));
       setPlayingAudioId(id);
     } else {
@@ -1127,7 +1130,7 @@ export default function FederalChat() {
       </div>
 
       {/* RIGHT COLUMN: ACTIVE CHAT SCREEN */}
-      <div className={`lg:col-span-8 flex flex-col h-full bg-white ${
+      <div className={`lg:col-span-8 flex flex-col h-full bg-white max-h-full min-h-0 ${
         mobileActiveTab === 'chat' ? 'flex' : 'hidden lg:flex'
       }`}>
         
@@ -1261,7 +1264,7 @@ export default function FederalChat() {
             <div 
               ref={scrollContainerRef}
               onScroll={handleScroll}
-              className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#eae7e0] space-y-4"
+              className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#eae7e0] space-y-4 min-h-0"
             >
               
               {/* Default Welcome / Secure Encryption Notice */}
