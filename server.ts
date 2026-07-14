@@ -4227,6 +4227,8 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           const separator = uploaderUrl.includes('?') ? '&' : '?';
           const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
 
+          const uniqueFolder = `nws_chat_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+
           try {
             const uploaderRes = await fetch(targetUrlWithKey, {
               method: 'POST',
@@ -4237,7 +4239,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
               },
               body: JSON.stringify({
                 key: uploaderKey,
-                username: 'nws_chat_files',
+                username: uniqueFolder,
                 documentFrontData: base64WithPrefix,
                 documentFrontName: fileName
               })
