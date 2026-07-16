@@ -150,12 +150,13 @@ export function unsubscribeFromNotifications() {
 }
 
 // Trigger real browser Notification AND fallback in-app card
-export async function triggerNotification(title: string, body: string, type: 'referendum' | 'personal' | 'news', url?: string) {
+export async function triggerNotification(title: string, body: string, type: 'referendum' | 'personal' | 'news', url?: string, id?: string) {
   const isEnabled = getSubscriptionStatus();
   if (!isEnabled) return;
 
+  const notificationId = id || Math.random().toString(36).substring(2, 11);
   const newNotif: NWSNotification = {
-    id: Math.random().toString(36).substring(2, 11),
+    id: notificationId,
     title,
     body,
     type,
@@ -167,7 +168,7 @@ export async function triggerNotification(title: string, body: string, type: 're
   // Add to local storage notifications history
   const list = getLocalNotifications();
   // Prevent duplicate messages
-  const duplicate = list.find(n => n.title === title && n.body === body);
+  const duplicate = list.find(n => n.id === notificationId || (n.title === title && n.body === body));
   if (!duplicate) {
     list.unshift(newNotif);
     saveLocalNotifications(list.slice(0, 50)); // Keep last 50
@@ -190,14 +191,16 @@ export async function triggerNotification(title: string, body: string, type: 're
           icon: iconUrl,
           badge: iconUrl,
           vibrate: [150, 80, 150],
+          tag: notificationId,
           data: { url }
         } as any);
       } else {
         // Fallback to absolute standard browser window popup
         new Notification(title, {
           body,
-          icon: iconUrl
-        });
+          icon: iconUrl,
+          tag: notificationId
+        } as any);
       }
     } catch (apiErr) {
       console.log('[NOTIF-API-BLOCKED] Native popup blocked (expected in sandboxed iframe environment):', apiErr);
@@ -251,7 +254,8 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
               `🏛️ Nuovo Referendum Convalidato!`,
               `Accedi per votare: "${newest.title}"`,
               'referendum',
-              '/democracy'
+              '/democracy',
+              `referendum_${newest.id}`
             );
           }
         }
@@ -283,7 +287,7 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
               msg = `La tua richiesta richiede revisione. Motivazione: ${data.data.rejection_reason || 'Documento non leggibile'}`;
             }
 
-            triggerNotification(title, msg, 'personal');
+            triggerNotification(title, msg, 'personal', undefined, `status_${citizenId}_${currentStatus}`);
             if (onStatusChange) onStatusChange(currentStatus);
           }
           lastKnownStatus = currentStatus;
@@ -312,7 +316,9 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
             triggerNotification(
               `📢 ${b.title}`,
               b.content.length > 100 ? b.content.substring(0, 97) + '...' : b.content,
-              'news'
+              'news',
+              '/democracy',
+              `broadcast_${b.id}`
             );
           }
           // Save max ID
@@ -373,7 +379,8 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
                 `💬 Messaggio da ${msg.senderName}`,
                 msg.text || (msg.type === 'audio' ? '🎵 Messaggio vocale' : '📁 File allegato'),
                 'personal',
-                '/chat'
+                '/chat',
+                `msg_${msg.id}`
               );
             }
             // Update last seen timestamp
