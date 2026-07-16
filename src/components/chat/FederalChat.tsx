@@ -23,7 +23,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
-import { updateSWState } from '../../services/notifications';
+import { updateSWState, updateLastSeenChatTimestamp } from '../../services/notifications';
 
 interface ChatMessage {
   id: string;
@@ -387,6 +387,13 @@ export default function FederalChat() {
         if (data.success) {
           setMessages(data.messages);
           setErrorMsg(null);
+          
+          // Aggiorna il timestamp dell'ultimo messaggio letto per sincronizzarlo con il Service Worker ed evitare notifiche duplicate/insistenti
+          if (Array.isArray(data.messages) && data.messages.length > 0) {
+            const timestamps = data.messages.map((m: ChatMessage) => new Date(m.timestamp).getTime());
+            const maxTimeStr = new Date(Math.max(...timestamps)).toISOString();
+            updateLastSeenChatTimestamp(maxTimeStr);
+          }
         }
       }
     } catch (err: any) {

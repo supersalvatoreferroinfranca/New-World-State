@@ -6056,6 +6056,38 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
       }
 
+      // Fallback per la navigazione Single Page Application (SPA) (es. /chat, /democracy)
+      if (request.method === 'GET' && !url.pathname.startsWith('/api/')) {
+        // Se non è un asset statico, facciamo il fallback a /index.html per permettere a React Router di gestire la rotta lato client
+        if (env.ASSETS) {
+          try {
+            const indexRequest = new Request(new URL('/', request.url).toString(), request);
+            const assetResponse = await env.ASSETS.fetch(indexRequest);
+            if (assetResponse.status !== 404) {
+              return assetResponse;
+            }
+          } catch (assetErr) {
+            console.error('[Worker] Errore in SPA fallback fetch ASSETS:', assetErr);
+          }
+        }
+
+        // Recuperiamo /index.html dai domini di fallback
+        const fallbackAsset = await fetchStaticAssetFromFallbacks('/index.html', request.headers);
+        if (fallbackAsset) {
+          const responseHeaders = new Headers();
+          for (const [key, val] of Object.entries(corsHeaders)) {
+            responseHeaders.set(key, val);
+          }
+          responseHeaders.set('content-type', 'text/html; charset=utf-8');
+
+          const arrayBuffer = await fallbackAsset.arrayBuffer();
+          return new Response(arrayBuffer, {
+            status: 200,
+            headers: responseHeaders
+          });
+        }
+      }
+
       return new Response(JSON.stringify({ success: false, message: 'Endpoint non trovato sul Worker: ' + url.pathname }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     } catch (err) {
       return new Response(JSON.stringify({ status: 'error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

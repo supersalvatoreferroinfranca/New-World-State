@@ -379,7 +379,7 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
             // Update last seen timestamp
             const timestamps = data.messages.map((m: any) => new Date(m.timestamp).getTime());
             const maxTime = new Date(Math.max(...timestamps)).toISOString();
-            localStorage.setItem('nws_last_seen_chat_timestamp', maxTime);
+            updateLastSeenChatTimestamp(maxTime);
           }
         }
       } catch (e) {
@@ -397,6 +397,18 @@ export async function updateSWState(senderName: string, citizenCode: string) {
     await cache.put('/citizen_code', new Response(citizenCode));
   } catch (e) {
     console.debug('[SW-STATE-WRITE-ERR]', e);
+  }
+}
+
+// Update last seen chat timestamp and sync it to Service Worker cache to avoid duplicate/insistent notifications
+export function updateLastSeenChatTimestamp(timestampStr: string) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('nws_last_seen_chat_timestamp', timestampStr);
+  
+  if ('caches' in window) {
+    caches.open('nws-notif-state').then(cache => {
+      cache.put('/last_seen_chat_timestamp', new Response(timestampStr)).catch(() => {});
+    }).catch(() => {});
   }
 }
 
