@@ -47,9 +47,32 @@ async function isTabActive(path) {
   return false;
 }
 
+// Helper to check if ANY tab of the app is active and visible
+async function isAnyClientVisible() {
+  try {
+    const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of windowClients) {
+      if (client.visibilityState === 'visible') {
+        return true;
+      }
+    }
+  } catch (e) {
+    console.error('[SW-ANY-VISIBILITY-CHECK-ERR]', e);
+  }
+  return false;
+}
+
 // Background content checker to trigger native notifications even when app is closed
 async function checkNewContent() {
   if (!self.Notification || self.Notification.permission !== 'granted') {
+    return;
+  }
+
+  // Se l'app è attualmente aperta e visibile in primo piano su qualsiasi scheda,
+  // lasciamo che sia l'app React stessa a gestire i controlli e le notifiche.
+  // Questo evita notifiche doppie o spam insistenti durante l'uso attivo del portale.
+  const appVisible = await isAnyClientVisible();
+  if (appVisible) {
     return;
   }
 
@@ -221,11 +244,6 @@ self.addEventListener('sync', (event) => {
 self.addEventListener('fetch', (event) => {
   // Network-first strategy with cached fallback for maximum interactive reliability
   if (event.request.method !== 'GET') return;
-  
-  // When user navigates or opens the site, trigger a background check immediately
-  if (event.request.mode === 'navigate') {
-    event.waitUntil(checkNewContent());
-  }
   
   event.respondWith(
     fetch(event.request)

@@ -170,8 +170,10 @@ const worker = {
           
           if (res.ok && res.status === 200) {
             const contentType = res.headers.get('content-type') || '';
-            // Escludiamo risposte che sono in realtà pagine HTML (fallback 404) o errori JSON
-            if (!contentType.includes('json') && !contentType.includes('text/html')) {
+            // Escludiamo risposte che sono in realtà pagine HTML di errore (fallback 404) o errori JSON,
+            // tranne quando stiamo richiedendo espressamente index.html o un file .html valido.
+            const isHtmlRequested = pathname === '/index.html' || pathname.endsWith('.html');
+            if (!contentType.includes('json') && (!contentType.includes('text/html') || isHtmlRequested)) {
               return res;
             }
           }
