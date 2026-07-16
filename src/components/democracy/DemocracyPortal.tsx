@@ -130,7 +130,19 @@ export default function DemocracyPortal({ onGoToAdmin }: { onGoToAdmin?: () => v
   const [alboError, setAlboError] = useState<string | null>(null);
 
   // Filter and navigation states
-  const [subTab, setSubTab] = useState<'active' | 'new' | 'archive' | 'admin' | 'albo' | 'share' | 'chat'>('active');
+  const [subTab, setSubTab] = useState<'active' | 'new' | 'archive' | 'admin' | 'albo' | 'share' | 'chat'>(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get('tab');
+      if (tabParam === 'chat') {
+        return 'chat';
+      }
+      if (window.location.pathname === '/chat' || window.location.pathname.endsWith('/chat')) {
+        return 'chat';
+      }
+    }
+    return 'active';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);

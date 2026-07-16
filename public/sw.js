@@ -102,13 +102,15 @@ async function checkNewContent() {
               .filter(b => b.id > lastSeenId)
               .sort((a, b) => a.id - b.id);
               
-            for (const b of newBroadcasts) {
-              await self.registration.showNotification(`📢 ${b.title}`, {
-                body: b.content.length > 100 ? b.content.substring(0, 97) + '...' : b.content,
+            if (newBroadcasts.length > 0) {
+              // Only notify about the newest broadcast to avoid spamming the user
+              const newest = newBroadcasts[newBroadcasts.length - 1];
+              await self.registration.showNotification(`📢 ${newest.title}`, {
+                body: newest.content.length > 100 ? newest.content.substring(0, 97) + '...' : newest.content,
                 icon: iconUrl,
                 badge: iconUrl,
                 vibrate: [100, 50, 100],
-                tag: `broadcast_${b.id}`,
+                tag: `broadcast_${newest.id}`,
                 data: { url: '/democracy' }
               });
             }
@@ -176,14 +178,24 @@ async function checkNewContent() {
           if (res.ok) {
             const data = await res.json();
             if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-              for (const msg of data.messages) {
+              if (data.messages.length === 1) {
+                const msg = data.messages[0];
                 await self.registration.showNotification(`💬 Messaggio da ${msg.senderName}`, {
                   body: msg.text || (msg.type === 'audio' ? '🎵 Messaggio vocale' : '📁 File allegato'),
                   icon: iconUrl,
                   badge: iconUrl,
                   vibrate: [150, 80, 150],
                   tag: `msg_${msg.id}`,
-                  data: { url: '/chat' }
+                  data: { url: '/democracy?tab=chat' }
+                });
+              } else {
+                await self.registration.showNotification(`💬 ${data.messages.length} Nuovi Messaggi`, {
+                  body: `Hai ricevuto nuovi messaggi in chat. Accedi per leggerli.`,
+                  icon: iconUrl,
+                  badge: iconUrl,
+                  vibrate: [150, 80, 150],
+                  tag: `msg_grouped_${Date.now()}`,
+                  data: { url: '/democracy?tab=chat' }
                 });
               }
               // Update last seen timestamp

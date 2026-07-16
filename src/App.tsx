@@ -27,6 +27,16 @@ import CookieConsentBanner from './components/pwa/CookieConsentBanner';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat'>(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get('tab');
+      if (tabParam === 'chat' || tabParam === 'democracy') {
+        return 'democracy';
+      }
+      if (window.location.pathname === '/chat' || window.location.pathname === '/democracy') {
+        return 'democracy';
+      }
+    }
     try {
       const saved = localStorage.getItem('nws_democracy_citizen') || sessionStorage.getItem('nws_democracy_citizen');
       if (saved) {

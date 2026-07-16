@@ -307,23 +307,27 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
         const lastSeenIdStr = localStorage.getItem('nws_last_seen_broadcast_id');
         const lastSeenId = lastSeenIdStr ? parseInt(lastSeenIdStr, 10) : 0;
         
-        // Filter for broadcasts newer than lastSeenId
-        const newBroadcasts = data.data.filter((b: any) => b.id > lastSeenId);
-        if (newBroadcasts.length > 0) {
-          // Sort ascending so they are triggered in order
-          const sortedNew = [...newBroadcasts].sort((a: any, b: any) => a.id - b.id);
-          for (const b of sortedNew) {
-            triggerNotification(
-              `📢 ${b.title}`,
-              b.content.length > 100 ? b.content.substring(0, 97) + '...' : b.content,
-              'news',
-              '/democracy',
-              `broadcast_${b.id}`
-            );
+        if (data.data.length > 0) {
+          const maxId = Math.max(...data.data.map((b: any) => b.id));
+          if (lastSeenId === 0) {
+            // First run: just initialize the ID without sending historic notifications
+            localStorage.setItem('nws_last_seen_broadcast_id', String(maxId));
+          } else {
+            const newBroadcasts = data.data.filter((b: any) => b.id > lastSeenId);
+            if (newBroadcasts.length > 0) {
+              const sortedNew = [...newBroadcasts].sort((a: any, b: any) => a.id - b.id);
+              // Only notify about the newest one to avoid user notification floods
+              const newest = sortedNew[sortedNew.length - 1];
+              triggerNotification(
+                `📢 ${newest.title}`,
+                newest.content.length > 100 ? newest.content.substring(0, 97) + '...' : newest.content,
+                'news',
+                '/democracy',
+                `broadcast_${newest.id}`
+              );
+              localStorage.setItem('nws_last_seen_broadcast_id', String(maxId));
+            }
           }
-          // Save max ID
-          const maxId = Math.max(...newBroadcasts.map((b: any) => b.id));
-          localStorage.setItem('nws_last_seen_broadcast_id', String(maxId));
         }
       }
     }
@@ -357,42 +361,56 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
 
     try {
       let lastSeenTimestamp = localStorage.getItem('nws_last_seen_chat_timestamp');
-      if (!lastSeenTimestamp) {
-        // Default to 5 minutes ago to capture any missed messages on load
-        lastSeenTimestamp = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const isFirstInit = !lastSeenTimestamp;
+      if (isFirstInit) {
+        // Default to current time to prevent spamming old chat history on startup
+        lastSeenTimestamp = new Date().toISOString();
         localStorage.setItem('nws_last_seen_chat_timestamp', lastSeenTimestamp);
       }
       
       const res = await fetch(`/api/chat/unread?senderName=${encodeURIComponent(senderName)}&citizenCode=${encodeURIComponent(citizenCode)}&since=${encodeURIComponent(lastSeenTimestamp)}`);
       if (res.ok) {
         const data = await res.json();
-          if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-            for (const msg of data.messages) {
-              // Skip if active and in the same room
-              const activeRoom = localStorage.getItem('nws_active_chat_room');
-              const isTabActive = document.visibilityState === 'visible';
-              if (isTabActive && activeRoom === msg.room) {
-                continue;
-              }
-
-              triggerNotification(
-                `💬 Messaggio da ${msg.senderName}`,
-                msg.text || (msg.type === 'audio' ? '🎵 Messaggio vocale' : '📁 File allegato'),
-                'personal',
-                '/chat',
-                `msg_${msg.id}`
-              );
+        if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+          const activeRoom = localStorage.getItem('nws_active_chat_room');
+          const isTabActive = document.visibilityState === 'visible';
+          
+          const validMessages = data.messages.filter((msg: any) => {
+            if (isTabActive && activeRoom === msg.room) {
+              return false;
             }
-            // Update last seen timestamp
-            const timestamps = data.messages.map((m: any) => new Date(m.timestamp).getTime());
-            const maxTime = new Date(Math.max(...timestamps)).toISOString();
-            updateLastSeenChatTimestamp(maxTime);
+            return true;
+          });
+
+          if (validMessages.length === 1) {
+            const msg = validMessages[0];
+            triggerNotification(
+              `💬 Messaggio da ${msg.senderName}`,
+              msg.text || (msg.type === 'audio' ? '🎵 Messaggio vocale' : '📁 File allegato'),
+              'personal',
+              '/democracy?tab=chat',
+              `msg_${msg.id}`
+            );
+          } else if (validMessages.length > 1) {
+            triggerNotification(
+              `💬 ${validMessages.length} Nuovi Messaggi`,
+              `Hai ricevuto nuovi messaggi in chat. Accedi per leggerli.`,
+              'personal',
+              '/democracy?tab=chat',
+              `msg_grouped_${Date.now()}`
+            );
           }
+
+          // Update last seen timestamp
+          const timestamps = data.messages.map((m: any) => new Date(m.timestamp).getTime());
+          const maxTime = new Date(Math.max(...timestamps)).toISOString();
+          updateLastSeenChatTimestamp(maxTime);
         }
-      } catch (e) {
-        console.debug('[SYNC-CHAT-FAILED]', e);
       }
+    } catch (e) {
+      console.debug('[SYNC-CHAT-FAILED]', e);
     }
+  }
 }
 
 // Keep Service Worker state updated with user details
