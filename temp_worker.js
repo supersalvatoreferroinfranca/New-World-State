@@ -190,6 +190,10 @@ const worker = {
       for (const candidate of candidates) {
         try {
           const candidateUrl = new URL(pathname, candidate);
+          // Preveniamo un loop ricorsivo infinito se l'host del candidato coincide con l'host corrente gestito dal Worker
+          if (candidateUrl.hostname === url.hostname) {
+            continue;
+          }
           const headers = new Headers(requestHeaders);
           headers.delete('host'); // Rimuoviamo l'header host originale per evitare problemi di routing di Cloudflare
           headers.delete('accept-encoding'); // Rimuoviamo accept-encoding per evitare che l'origine ci restituisca un corpo compresso che poi non decodifichiamo correttamente
