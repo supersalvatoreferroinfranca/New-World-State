@@ -89,6 +89,26 @@ interface AlboItem {
   published_at: string;
 }
 
+const DEFAULT_ROLES_MAP_EN: Record<number, string> = {
+  1: "Registry Console",
+  2: "Minister of Justice",
+  3: "Guardian of the Constitution",
+  4: "Electoral Supervisor",
+  5: "Digital Ambassador",
+  6: "Peace Officer",
+  7: "Digital Custodian (IT)"
+};
+
+const DEFAULT_ROLES_MAP_IT: Record<number, string> = {
+  1: "Console dell'Anagrafe",
+  2: "Ministro della Giustizia",
+  3: "Garante della Costituzione",
+  4: "Supervisore Elettorale",
+  5: "Ambasciatore Digitale",
+  6: "Ufficiale di Pace",
+  7: "Custode Digitale (IT)"
+};
+
 export default function DemocracyPortal({ onGoToAdmin }: { onGoToAdmin?: () => void } = {}) {
   const { language } = useI18n();
 
@@ -100,6 +120,9 @@ export default function DemocracyPortal({ onGoToAdmin }: { onGoToAdmin?: () => v
     }
     return null;
   });
+
+  // Custom roles state
+  const [customRoles, setCustomRoles] = useState<any[]>([]);
 
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -213,9 +236,76 @@ export default function DemocracyPortal({ onGoToAdmin }: { onGoToAdmin?: () => v
   };
 
   useEffect(() => {
+    const fetchCustomRoles = async () => {
+      try {
+        const res = await safeFetch('/api/democracy/custom-roles');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+            setCustomRoles(data.data);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch custom roles:', err);
+      }
+    };
+
     fetchProposals();
     fetchAlbo();
+    fetchCustomRoles();
   }, []);
+
+  const getFormattedRoles = () => {
+    if (!citizen) return '';
+    const roleField = citizen.operationalRole;
+    if (!roleField) {
+      if (citizen.isAmbassador) {
+        return language === 'en' ? 'Digital Ambassador' : 'Ambasciatore Digitale';
+      }
+      if (citizen.isPeacekeeper) {
+        return language === 'en' ? 'Peace Officer' : 'Ufficiale di Pace';
+      }
+      return '';
+    }
+
+    const trimmed = roleField.trim();
+    let assignedArray: any[] = [];
+    if (trimmed.startsWith('[')) {
+      try {
+        assignedArray = JSON.parse(trimmed);
+      } catch (err) {
+        assignedArray = [{ legacyName: roleField }];
+      }
+    } else {
+      assignedArray = [{ legacyName: roleField }];
+    }
+
+    const defaultMap = language === 'en' ? DEFAULT_ROLES_MAP_EN : DEFAULT_ROLES_MAP_IT;
+
+    const roleNames = assignedArray.map((assigned: any) => {
+      if (assigned.roleId) {
+        const matched = customRoles.find(cr => Number(cr.id) === Number(assigned.roleId));
+        if (matched) return matched.name;
+        if (defaultMap[assigned.roleId]) {
+          return defaultMap[assigned.roleId];
+        }
+        return language === 'en' ? `Role #${assigned.roleId}` : `Ruolo #${assigned.roleId}`;
+      }
+      return assigned.legacyName || '';
+    }).filter(Boolean);
+
+    if (roleNames.length === 0) {
+      if (citizen.isAmbassador) {
+        return language === 'en' ? 'Digital Ambassador' : 'Ambasciatore Digitale';
+      }
+      if (citizen.isPeacekeeper) {
+        return language === 'en' ? 'Peace Officer' : 'Ufficiale di Pace';
+      }
+      return '';
+    }
+
+    return roleNames.join(', ');
+  };
 
   useEffect(() => {
     // Avvia la sincronizzazione in background per notifiche di voto e modifiche anagrafe personale
@@ -826,8 +916,8 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
                   </h4>
                   <p className="text-[11px] text-amber-700 mt-1 leading-relaxed">
                     {language === 'en' 
-                      ? `You hold an official operational role as: "${citizen.operationalRole || (citizen.isAmbassador ? 'Digital Ambassador' : 'Peace Officer')}". You are authorized to access and manage the sovereign console.` 
-                      : `Il tuo profilo ricopre la carica ufficiale di: "${citizen.operationalRole || (citizen.isAmbassador ? 'Ambasciatore Digitale' : 'Ufficiale di Pace')}". Sei autorizzato a gestire la consolle amministrativa.`}
+                      ? `You hold an official operational role as: "${getFormattedRoles()}". You are authorized to access and manage the sovereign console.` 
+                      : `Il tuo profilo ricopre la carica ufficiale di: "${getFormattedRoles()}". Sei autorizzato a gestire la consolle amministrativa.`}
                   </p>
                 </div>
               </div>

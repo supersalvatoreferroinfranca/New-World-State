@@ -4782,6 +4782,18 @@ CREATE TABLE citizens (
         }
       }
 
+      // 1bb. Ottieni Elenco Ruoli Operativi per traduzione visuale
+      if (url.pathname === '/api/democracy/custom-roles' && request.method === 'GET') {
+        await ensureDemocracySchema();
+        try {
+          const rows = await queryDb('SELECT * FROM nws_custom_roles ORDER BY id ASC');
+          return new Response(JSON.stringify({ success: true, data: rows }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[Worker-democracy-roles-err]', err.message);
+          return new Response(JSON.stringify({ success: true, data: memoryCustomRoles }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
       // 1c. AI-Assisted Proposal Drafting (Gemini REST API fetch)
       if (url.pathname === '/api/democracy/ai-draft-proposal' && request.method === 'POST') {
         try {
