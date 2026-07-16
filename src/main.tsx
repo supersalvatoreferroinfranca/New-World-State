@@ -8,10 +8,7 @@ import { registerPWAResources } from './services/notifications.ts';
 const NON_ESSENTIAL_KEYS = [
   'nws_dismiss_pwa',
   'nws_access_font_size',
-  'nws_access_contrast',
-  'nws_local_notifications',
-  'nws_notifications_enabled',
-  'nws_last_seen_broadcast_id'
+  'nws_access_contrast'
 ];
 
 const checkAndBlockNonEssentialStorage = () => {
@@ -30,12 +27,6 @@ const checkAndBlockNonEssentialStorage = () => {
       localStorage.removeItem('nws_dismiss_pwa');
       localStorage.removeItem('nws_access_font_size');
       localStorage.removeItem('nws_access_contrast');
-    }
-    if (!parsed.analytics) {
-      // Analytics/Trackers consent revoked or not given: clear analytics keys
-      localStorage.removeItem('nws_local_notifications');
-      localStorage.removeItem('nws_notifications_enabled');
-      localStorage.removeItem('nws_last_seen_broadcast_id');
     }
     return parsed;
   } catch (e) {
@@ -60,10 +51,6 @@ localStorage.setItem = function (key: string, value: string) {
       const parsed = JSON.parse(saved);
       if (['nws_dismiss_pwa', 'nws_access_font_size', 'nws_access_contrast'].includes(key) && !parsed.preferences) {
         console.warn(`[Privacy Sandbox] Blocked setting preference key "${key}" - Preference cookies are disabled.`);
-        return;
-      }
-      if (['nws_local_notifications', 'nws_notifications_enabled', 'nws_last_seen_broadcast_id'].includes(key) && !parsed.analytics) {
-        console.warn(`[Privacy Sandbox] Blocked setting analytics/tracker key "${key}" - Analytics cookies are disabled.`);
         return;
       }
     } catch (e) {

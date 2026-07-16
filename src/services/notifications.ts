@@ -100,6 +100,15 @@ export async function registerPWAResources() {
 // Check if browser notifications are subscribed (stored in localStorage for persistence)
 export function getSubscriptionStatus(): boolean {
   if (typeof window === 'undefined') return false;
+  
+  // If native permission is granted, we are functionally subscribed!
+  if ('Notification' in window && Notification.permission === 'granted') {
+    if (localStorage.getItem('nws_notifications_enabled') !== 'true') {
+      localStorage.setItem('nws_notifications_enabled', 'true');
+    }
+    return true;
+  }
+  
   return localStorage.getItem('nws_notifications_enabled') === 'true';
 }
 
@@ -325,6 +334,12 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
       const citizen = JSON.parse(cachedCitizen);
       senderName = `${citizen.firstName || ''} ${citizen.surname || ''}`.trim();
       citizenCode = citizen.citizenCode || '';
+    } else {
+      const adminPass = localStorage.getItem('nws_admin_password');
+      if (adminPass) {
+        senderName = 'Console Centrale';
+        citizenCode = 'NWS-ADM-001';
+      }
     }
   } catch (e) {
     console.debug('[READ-PROFILE-FAILED]', e);
@@ -337,12 +352,14 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
     try {
       let lastSeenTimestamp = localStorage.getItem('nws_last_seen_chat_timestamp');
       if (!lastSeenTimestamp) {
-        lastSeenTimestamp = new Date().toISOString();
+        // Default to 5 minutes ago to capture any missed messages on load
+        lastSeenTimestamp = new Date(Date.now() - 5 * 60 * 1000).toISOString();
         localStorage.setItem('nws_last_seen_chat_timestamp', lastSeenTimestamp);
-      } else {
-        const res = await fetch(`/api/chat/unread?senderName=${encodeURIComponent(senderName)}&citizenCode=${encodeURIComponent(citizenCode)}&since=${encodeURIComponent(lastSeenTimestamp)}`);
-        if (res.ok) {
-          const data = await res.json();
+      }
+      
+      const res = await fetch(`/api/chat/unread?senderName=${encodeURIComponent(senderName)}&citizenCode=${encodeURIComponent(citizenCode)}&since=${encodeURIComponent(lastSeenTimestamp)}`);
+      if (res.ok) {
+        const data = await res.json();
           if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
             for (const msg of data.messages) {
               // Skip if active and in the same room
@@ -365,11 +382,10 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
             localStorage.setItem('nws_last_seen_chat_timestamp', maxTime);
           }
         }
+      } catch (e) {
+        console.debug('[SYNC-CHAT-FAILED]', e);
       }
-    } catch (e) {
-      console.debug('[SYNC-CHAT-FAILED]', e);
     }
-  }
 }
 
 // Keep Service Worker state updated with user details
