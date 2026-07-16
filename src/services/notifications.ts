@@ -269,7 +269,7 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
   // 2. Personal updates check: if user is logged in, sync status
   if (citizenId !== null) {
     try {
-      const res = await fetch(`/api/admin/citizen-card?id=${citizenId}`);
+      const res = await fetch(`/api/citizen-status?id=${citizenId}`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.data) {

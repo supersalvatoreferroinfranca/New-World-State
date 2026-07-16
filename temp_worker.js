@@ -298,8 +298,8 @@ const worker = {
       }
     }
 
-    // 1. Diagnostica Visiva HTML al percorso "/"
-    if (url.pathname === '/' || url.pathname === '/index.html') {
+    // 1. Diagnostica Visiva HTML al percorso "/" (solo se esplicitamente richiesto tramite parametro o se il DB non è configurato)
+    if ((url.pathname === '/' || url.pathname === '/index.html') && (url.searchParams.has('diagnostics') || !env.DATABASE_URL)) {
       try {
         let dbStatus = {
           envConfigured: !!env.DATABASE_URL,
@@ -1657,6 +1657,42 @@ CREATE TABLE citizens (
         console.warn('[EMAIL] Configura SMTP_USER/SMTP_PASS nella dashboard di Cloudflare.');
         return false;
       };
+
+      // Rotta: Citizen Status Check
+      if (url.pathname === '/api/citizen-status' && request.method === 'GET') {
+        const id = url.searchParams.get('id');
+        if (!id) {
+          return new Response(JSON.stringify({ success: false, message: 'ID cittadino mancante.' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        try {
+          const rows = await queryDb('SELECT * FROM citizens WHERE id = $1', [Number(id)]);
+          if (rows.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const citizen = rows[0];
+          return new Response(JSON.stringify({
+            success: true,
+            data: {
+              id: citizen.id,
+              status: citizen.status,
+              rejection_reason: citizen.rejectionReason || citizen.rejection_reason || citizen.rejectionreason || null
+            }
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (dbErr) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore query: ' + dbErr.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
 
       // Rotta: Health Check
       if (url.pathname === '/api/db-status') {
