@@ -252,6 +252,31 @@ async function runMigrations() {
 }
 
 // Genera un documento PDF ad alta risoluzione con le dimensioni esatte di una ID card (85,60 mm x 53,98 mm)
+function formatTimestamp(ts: any): string {
+  if (!ts) return new Date().toISOString();
+  if (typeof ts === 'string') {
+    if (ts.endsWith('Z') || ts.includes('+') || ts.includes('T')) {
+      if (ts.includes('T') && !ts.endsWith('Z') && !ts.includes('+') && !ts.includes('-')) {
+        return ts + 'Z';
+      }
+      return ts;
+    }
+    const clean = ts.replace(' ', 'T');
+    if (!clean.endsWith('Z')) {
+      return clean + 'Z';
+    }
+    return clean;
+  }
+  if (ts instanceof Date) {
+    return ts.toISOString();
+  }
+  try {
+    return new Date(ts).toISOString();
+  } catch (e) {
+    return new Date().toISOString();
+  }
+}
+
 function toPdfSafeUpper(str: string): string {
   if (!str) return '';
   return str
@@ -4099,7 +4124,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             fileName: row.fileName || row.filename || '',
             fileSize: row.fileSize || row.filesize || 0,
             duration: row.duration || 0,
-            timestamp: row.timestamp || row.created_at || new Date().toISOString()
+            timestamp: formatTimestamp(row.timestamp || row.created_at)
           }));
         } else {
           const sinceDate = new Date(since).getTime();
@@ -4235,7 +4260,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             fileName: row.fileName || row.filename || '',
             fileSize: row.fileSize || row.filesize || 0,
             duration: row.duration || 0,
-            timestamp: row.timestamp || row.created_at || new Date().toISOString()
+            timestamp: formatTimestamp(row.timestamp || row.created_at)
           }));
 
           return res.json({ success: true, messages: formatted });

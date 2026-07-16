@@ -138,10 +138,41 @@ const worker = {
       return staticExtensions.some(ext => pathname.toLowerCase().endsWith(ext));
     };
 
+    const formatTimestamp = (ts) => {
+      if (!ts) return new Date().toISOString();
+      if (typeof ts === 'string') {
+        if (ts.endsWith('Z') || ts.includes('+') || ts.includes('T')) {
+          if (ts.includes('T') && !ts.endsWith('Z') && !ts.includes('+') && !ts.includes('-')) {
+            return ts + 'Z';
+          }
+          return ts;
+        }
+        const clean = ts.replace(' ', 'T');
+        if (!clean.endsWith('Z')) {
+          return clean + 'Z';
+        }
+        return clean;
+      }
+      if (ts instanceof Date) {
+        return ts.toISOString();
+      }
+      try {
+        return new Date(ts).toISOString();
+      } catch (e) {
+        return new Date().toISOString();
+      }
+    };
+
     // Helper per recuperare risorse statiche da domini alternativi/originari quando env.ASSETS non è definito
     const fetchStaticAssetFromFallbacks = async (pathname, requestHeaders) => {
       const candidates = [];
       
+      // Se siamo su produzione (non localhost/worker), aggiungiamo il dominio corrente come primo candidato!
+      // In Cloudflare Workers, i subrequest verso lo stesso host scavalcano il worker e vanno all'origin (bypassing infinite loops).
+      if (!url.hostname.includes('localhost') && !url.hostname.includes('127.0.0.1') && !url.hostname.includes('nws-wk.')) {
+        candidates.push(`${url.protocol}//${url.hostname}`);
+      }
+
       // Se è configurato APP_URL e non coincide con il dominio corrente, lo proviamo
       if (env.APP_URL && !env.APP_URL.includes(url.hostname)) {
         candidates.push(env.APP_URL);
@@ -5334,7 +5365,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             fileName: row.fileName || row.filename || '',
             fileSize: row.fileSize || row.filesize || 0,
             duration: row.duration || 0,
-            timestamp: row.timestamp || new Date().toISOString()
+            timestamp: formatTimestamp(row.timestamp || row.created_at || row.createdat)
           }));
 
           const filtered = formatted.filter(m => {
@@ -5451,7 +5482,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             fileName: row.fileName || row.filename || '',
             fileSize: row.fileSize || row.filesize || 0,
             duration: row.duration || 0,
-            timestamp: row.timestamp || new Date().toISOString()
+            timestamp: formatTimestamp(row.timestamp || row.created_at || row.createdat)
           }));
 
           return new Response(JSON.stringify({ success: true, messages: formatted }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -5503,7 +5534,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             fileName: rows[0].fileName || rows[0].filename || fileName || '',
             fileSize: rows[0].fileSize || rows[0].filesize || fileSize || 0,
             duration: rows[0].duration || duration || 0,
-            timestamp: rows[0].timestamp || new Date().toISOString()
+            timestamp: formatTimestamp(rows[0].timestamp || rows[0].created_at || rows[0].createdat)
           } : {
             id: uuidVal,
             room,
@@ -6063,7 +6094,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         // Se non è un asset statico, facciamo il fallback a /index.html per permettere a React Router di gestire la rotta lato client
         if (env.ASSETS) {
           try {
-            const indexRequest = new Request(new URL('/', request.url).toString(), request);
+            const indexRequest = new Request(new URL('/index.html', request.url).toString(), request);
             const assetResponse = await env.ASSETS.fetch(indexRequest);
             if (assetResponse.status !== 404) {
               return assetResponse;
