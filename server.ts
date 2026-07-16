@@ -4212,7 +4212,6 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
 
         if (uploaderUrl && uploaderKey) {
           console.log('[CHAT-UPLOAD] Uploading directly to Aruba PHP Bridge...');
-          // Normalize prefix
           let base64WithPrefix = fileData;
           if (!base64WithPrefix.startsWith('data:')) {
             let mime = 'application/octet-stream';
@@ -4220,7 +4219,11 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             else if (['.jpg', '.jpeg'].includes(ext)) mime = 'image/jpeg';
             else if (ext === '.png') mime = 'image/png';
             else if (ext === '.webp') mime = 'image/webp';
-            else if (['.webm', '.ogg', '.mp3', '.m4a', '.wav'].includes(ext)) mime = 'audio/webm';
+            else if (ext === '.webm') mime = 'audio/webm';
+            else if (ext === '.ogg') mime = 'audio/ogg';
+            else if (ext === '.mp3') mime = 'audio/mpeg';
+            else if (ext === '.m4a') mime = 'audio/mp4';
+            else if (ext === '.wav') mime = 'audio/wav';
             base64WithPrefix = `data:${mime};base64,${fileData}`;
           }
 

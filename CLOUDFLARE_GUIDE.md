@@ -2925,13 +2925,31 @@ function saveBase64File($base64Data, $originalName, $targetDir, $filePrefix, &$e
     if (empty($ext)) $ext = 'png'; 
     $ext = strtolower($ext);
     
+    // Rileva se si tratta di un caricamento da chat (cartella nws_chat_ o prefisso chat)
+    $isChatUpload = (strpos($targetDir, 'nws_chat_') !== false || $filePrefix === 'chat');
+    
     // Validazione estensioni consentite per motivi di sicurezza
-    if (!in_array($ext, array('png', 'jpg', 'jpeg', 'pdf'))) {
-        $errorMsg = "Estensione '" . $ext . "' non consentita per " . $filePrefix . ". Consentite: png, jpg, jpeg, pdf";
+    // Se è un file di chat, consentiamo anche formati audio e d'immagine multimediali
+    $allowed = $isChatUpload 
+        ? array('png', 'jpg', 'jpeg', 'pdf', 'webm', 'ogg', 'wav', 'mp3', 'm4a', 'gif', 'webp')
+        : array('png', 'jpg', 'jpeg', 'pdf');
+        
+    if (!in_array($ext, $allowed)) {
+        $errorMsg = "Estensione '" . $ext . "' non consentita per " . $filePrefix . ". Consentite: " . implode(', ', $allowed);
         return null;
     }
     
-    $fileName = $filePrefix . '.' . $ext;
+    // Per i file di chat, preserviamo il nome file originale univoco e sanificato per evitare di sovrascriverlo con 'fronte'
+    if ($isChatUpload) {
+        $safeName = preg_replace('/[^a-zA-Z0-9_\.-]/', '', $originalName);
+        if (empty($safeName)) {
+            $safeName = 'chat_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
+        }
+        $fileName = $safeName;
+    } else {
+        $fileName = $filePrefix . '.' . $ext;
+    }
+    
     $filePath = $targetDir . '/' . $fileName;
     
     // Verifica writeability prima di scrivere
