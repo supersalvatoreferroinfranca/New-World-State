@@ -29,34 +29,34 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
       friendly: {
         title: "Amichevole & Caldo",
         subject: "Unisciti a me nel New World State! 🌟",
-        body: (name: string) => `Ciao${name ? ' ' + name : ''}! volevo farti conoscere un progetto pazzesco a cui ho appena aderito: il New World State. È uno Stato Digitale pacifico e globale, basato sul libero arbitrio e su una Costituzione bellissima. L'adesione è gratuita al 100% e ti rilasciano anche un passaporto digitale nominale in PDF! Dai un'occhiata qui, mi farebbe un sacco piacere se ne facessi parte anche tu: ${appUrl}`
+        body: (name: string) => `Ciao${name ? ' ' + name : ''}! volevo farti conoscere un progetto pazzesco a cui ho appena aderito: il New World State. È uno Stato Digitale pacifico e globale, basato sul libero arbitrio e su una Costituzione bellissima. L'adesione è gratuita al 100% e ti rilasciano anche un passaporto digitale nominale in PDF! Dai un'occhiata qui, mi farebbe un sacco piacere se ne facessi parte anche tu. Facciamo passaparola per far crescere la nostra comunità pacifica e libera: ${appUrl}`
       },
       inspiring: {
         title: "Ispiratore & Solenne",
         subject: "Una nuova era di libertà digitale: New World State 🌍",
-        body: (name: string) => `Caro${name ? ' ' + name : ' amico'}, ti invito a leggere e aderire alla Costituzione del New World State. Una nazione interamente digitale, pacifica e globale che unisce cittadini di ogni continente per deliberare insieme con la democrazia diretta. Unisciti a questa rivoluzione di libertà e sovranità digitale, l'adesione è gratuita ed aperta a tutti: ${appUrl}`
+        body: (name: string) => `Caro${name ? ' ' + name : ' amico'}, ti invito a leggere e aderire alla Costituzione del New World State. Una nazione interamente digitale, pacifica e globale che unisce cittadini di ogni continente per deliberare insieme con la democrazia diretta. Unisciti a questa rivoluzione di libertà e sovranità digitale. L'adesione è gratuita ed aperta a tutti: aiutaci a far crescere la comunità condividendo questo invito con le persone di cui ti fidi! Passa parola: ${appUrl}`
       },
       informative: {
         title: "Informativo & Semplice",
         subject: "Come ottenere il passaporto del New World State 💳",
-        body: (name: string) => `Ciao${name ? ' ' + name : ''}! Ti segnalo il New World State, una comunità digitale mondiale. Bastano 2 minuti per registrarsi gratuitamente, ottenere il passaporto digitale verificato in formato PDF e partecipare alle votazioni dei referendum globali. Trovi tutte le informazioni e la registrazione guidata qui: ${appUrl}`
+        body: (name: string) => `Ciao${name ? ' ' + name : ''}! Ti segnalo il New World State, una comunità digitale mondiale. Bastano 2 minuti per registrarsi gratuitamente, ottenere il passaporto digitale verificato in formato PDF e partecipare alle votazioni dei referendum globali. Trovi tutte le informazioni e la registrazione guidata qui. Registrati e fai passaparola per aiutarci ad allargare la nostra rete globale: ${appUrl}`
       }
     },
     en: {
       friendly: {
         title: "Friendly & Casual",
         subject: "Join me in the New World State! 🌟",
-        body: (name: string) => `Hi${name ? ' ' + name : ''}! I wanted to share an amazing project I just joined: the New World State. It's a peaceful global Digital State based on human free will and a beautiful Constitution. Joining is 100% free and they even issue a signed digital PDF passport! Take a look, I'd love for you to join me here: ${appUrl}`
+        body: (name: string) => `Hi${name ? ' ' + name : ''}! I wanted to share an amazing project I just joined: the New World State. It's a peaceful global Digital State based on human free will and a beautiful Constitution. Joining is 100% free and they even issue a signed digital PDF passport! Take a look, I'd love for you to join me. Let's spread the word to grow our peaceful and free community: ${appUrl}`
       },
       inspiring: {
         title: "Inspiring & Solemn",
         subject: "A new era of digital freedom: New World State 🌍",
-        body: (name: string) => `Dear${name ? ' ' + name : ' friend'}, I invite you to discover and join the New World State. An entirely digital, peaceful, global nation connecting citizens from all continents to deliberate together via direct democracy. Join this wave of freedom and digital sovereignty. It is free and open to everyone: ${appUrl}`
+        body: (name: string) => `Dear${name ? ' ' + name : ' friend'}, I invite you to discover and join the New World State. An entirely digital, peaceful, global nation connecting citizens from all continents to deliberate together via direct democracy. Join this wave of freedom and digital sovereignty. It is free and open to everyone: help us grow the community by passing this on to people you trust! Spread the word: ${appUrl}`
       },
       informative: {
         title: "Informative & Direct",
         subject: "Get your free New World State Digital Passport 💳",
-        body: (name: string) => `Hello${name ? ' ' + name : ''}! Check out the New World State, a global digital community. It takes just 2 minutes to register for free, receive your verified PDF digital passport, and vote on global referendums. Read all details and sign up here: ${appUrl}`
+        body: (name: string) => `Hello${name ? ' ' + name : ''}! Check out the New World State, a global digital community. It takes just 2 minutes to register for free, receive your verified PDF digital passport, and vote on global referendums. Read all details and sign up here. Register and spread the word to help expand our global network: ${appUrl}`
       }
     }
   };
