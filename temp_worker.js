@@ -5351,6 +5351,76 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
       }
 
+      // Rotta: Chat Get Active DMs
+      if (url.pathname === '/api/chat/active-dms' && request.method === 'GET') {
+        try {
+          await ensureDemocracySchema();
+          const citizenCode = url.searchParams.get('citizenCode');
+
+          if (!citizenCode) {
+            return new Response(JSON.stringify({ success: false, message: 'citizenCode is required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          // Query distinct rooms
+          const roomsQuery = `
+            SELECT DISTINCT room FROM nws_chat_messages 
+            WHERE room LIKE 'dm_%' AND room LIKE $1
+          `;
+          const roomRows = await queryDb(roomsQuery, [`%${citizenCode}%`]);
+          const rooms = roomRows.map(row => row.room);
+
+          const otherCodes = rooms.map(room => {
+            const parts = room.substring(3).split('_');
+            return parts.find(p => p !== citizenCode);
+          }).filter(code => !!code);
+
+          const uniqueOtherCodes = Array.from(new Set(otherCodes));
+
+          let chats = [];
+          if (uniqueOtherCodes.length > 0) {
+            const citizensQuery = `
+              SELECT "firstName", surname, "citizenCode", "arubaPhotoUrl" 
+              FROM citizens 
+              WHERE "citizenCode" = ANY($1)
+            `;
+            const citizenRows = await queryDb(citizensQuery, [uniqueOtherCodes]);
+            chats = citizenRows.map(row => {
+              const otherCode = row.citizenCode || row.citizencode || '';
+              const rName = `${row.firstName || row.firstname || ''} ${row.surname || ''}`.trim();
+              const room = rooms.find(r => r.includes(otherCode)) || '';
+              return {
+                id: room,
+                name: rName || otherCode,
+                code: otherCode,
+                icon: '👤'
+              };
+            });
+          }
+
+          // Fallback
+          rooms.forEach(room => {
+            const exists = chats.some(c => c.id === room);
+            if (!exists) {
+              const parts = room.substring(3).split('_');
+              const otherCode = parts.find(p => p !== citizenCode) || 'UNKNOWN';
+              chats.push({
+                id: room,
+                name: otherCode === 'NWS-ADM-001' ? 'Console Centrale' : `Cittadino (${otherCode})`,
+                code: otherCode,
+                icon: '👤'
+              });
+            }
+          });
+
+          chats.sort((a, b) => a.id.localeCompare(b.id));
+
+          return new Response(JSON.stringify({ success: true, chats }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[WORKER-ACTIVE-DMS-ERR]', err.message);
+          return new Response(JSON.stringify({ success: false, message: 'Errore nel recupero delle chat private attive.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
       // Rotta: Chat Get Messages
       if (url.pathname === '/api/chat/messages' && request.method === 'GET') {
         try {

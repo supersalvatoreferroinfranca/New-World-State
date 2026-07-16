@@ -272,6 +272,55 @@ export default function FederalChat() {
     setCitizenSearchResults([]);
   };
 
+  // Synchronize active DMs list from server to auto-receive private chats
+  const syncActiveDMs = async () => {
+    if (!citizenCode) return;
+    try {
+      const res = await fetch(`/api/chat/active-dms?citizenCode=${encodeURIComponent(citizenCode)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.chats)) {
+          setActiveDirectChats(prev => {
+            const merged = [...prev];
+            let modified = false;
+            data.chats.forEach((srvChat: any) => {
+              const idx = merged.findIndex(c => c.id === srvChat.id);
+              if (idx === -1) {
+                merged.push(srvChat);
+                modified = true;
+              } else {
+                if (merged[idx].name === srvChat.code && srvChat.name !== srvChat.code) {
+                  merged[idx] = { ...merged[idx], name: srvChat.name };
+                  modified = true;
+                }
+              }
+            });
+            if (modified) {
+              localStorage.setItem(`nws_active_dms_${citizenCode}`, JSON.stringify(merged));
+              return merged;
+            }
+            return prev;
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Error syncing active DMs:', err);
+    }
+  };
+
+  // Periodic active DMs sync to auto-detect incoming private chats
+  useEffect(() => {
+    if (!citizenCode) return;
+    
+    syncActiveDMs();
+
+    const timer = setInterval(() => {
+      syncActiveDMs();
+    }, 4000);
+    
+    return () => clearInterval(timer);
+  }, [citizenCode]);
+
   // Auto-detect profile from local storage/registration cache
   useEffect(() => {
     const detectProfile = () => {
