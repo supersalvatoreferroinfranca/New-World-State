@@ -5301,6 +5301,56 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
       }
 
+      // Rotta: Chat Get Unread Messages
+      if (url.pathname === '/api/chat/unread' && request.method === 'GET') {
+        try {
+          await ensureDemocracySchema();
+          const senderName = url.searchParams.get('senderName');
+          const citizenCode = url.searchParams.get('citizenCode');
+          const since = url.searchParams.get('since');
+
+          if (!senderName || !since) {
+            return new Response(JSON.stringify({ success: false, message: 'senderName and since are required.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const sql = `
+            SELECT uuid as id, room, sender_name as "senderName", sender_role as "senderRole", text, type, file_url as "fileUrl", file_name as "fileName", file_size as "fileSize", duration, created_at as "timestamp"
+            FROM nws_chat_messages
+            WHERE created_at > $1 AND sender_name != $2
+            ORDER BY created_at ASC
+            LIMIT 100
+          `;
+          const rows = await queryDb(sql, [since, senderName]);
+          const formatted = rows.map(row => ({
+            id: row.id,
+            room: row.room,
+            senderName: row.senderName || row.sendername || '',
+            senderRole: row.senderRole || row.senderrole || 'Cittadino',
+            text: row.text || '',
+            type: row.type || 'text',
+            fileUrl: row.fileUrl || row.fileurl || '',
+            fileName: row.fileName || row.filename || '',
+            fileSize: row.fileSize || row.filesize || 0,
+            duration: row.duration || 0,
+            timestamp: row.timestamp || new Date().toISOString()
+          }));
+
+          const filtered = formatted.filter(m => {
+            if (m.room && m.room.startsWith('dm_')) {
+              if (!citizenCode || !m.room.includes(citizenCode)) {
+                return false;
+              }
+            }
+            return true;
+          });
+
+          return new Response(JSON.stringify({ success: true, messages: filtered }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          console.error('[WORKER-CHAT-UNREAD-ERR]', err.message);
+          return new Response(JSON.stringify({ success: false, message: 'Errore nel caricamento dei messaggi non letti.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
       // Rotta: Chat Get Messages
       if (url.pathname === '/api/chat/messages' && request.method === 'GET') {
         try {

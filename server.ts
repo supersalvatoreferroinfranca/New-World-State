@@ -4072,6 +4072,59 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       }
     });
 
+    apiRouter.get('/chat/unread', async (req, res) => {
+      const senderName = req.query.senderName as string;
+      const citizenCode = req.query.citizenCode as string;
+      const since = req.query.since as string;
+
+      if (!senderName || !since) {
+        return res.status(400).json({ success: false, message: 'senderName and since are required.' });
+      }
+
+      try {
+        let messages: any[] = [];
+        if (dbPool) {
+          const result = await dbPool.query(
+            'SELECT uuid as id, room, sender_name as "senderName", sender_role as "senderRole", text, type, file_url as "fileUrl", file_name as "fileName", file_size as "fileSize", duration, created_at as "timestamp" FROM nws_chat_messages WHERE created_at > $1 AND sender_name != $2 ORDER BY created_at ASC LIMIT 100',
+            [since, senderName]
+          );
+          messages = result.rows.map(row => ({
+            id: row.id || row.uuid,
+            room: row.room,
+            senderName: row.senderName || row.sendername || '',
+            senderRole: row.senderRole || row.senderrole || 'Cittadino',
+            text: row.text || '',
+            type: row.type || 'text',
+            fileUrl: row.fileUrl || row.fileurl || '',
+            fileName: row.fileName || row.filename || '',
+            fileSize: row.fileSize || row.filesize || 0,
+            duration: row.duration || 0,
+            timestamp: row.timestamp || row.created_at || new Date().toISOString()
+          }));
+        } else {
+          const sinceDate = new Date(since).getTime();
+          messages = chatMessages.filter(m => {
+            const msgTime = new Date(m.timestamp).getTime();
+            return msgTime > sinceDate && m.senderName !== senderName;
+          });
+        }
+
+        const filtered = messages.filter((m: any) => {
+          if (m.room && m.room.startsWith('dm_')) {
+            if (!citizenCode || !m.room.includes(citizenCode)) {
+              return false;
+            }
+          }
+          return true;
+        });
+
+        return res.json({ success: true, messages: filtered });
+      } catch (err: any) {
+        console.error('[CHAT-UNREAD-ERR]', err.message);
+        return res.status(500).json({ success: false, message: 'Errore nel recupero dei messaggi non letti.' });
+      }
+    });
+
     apiRouter.get('/chat/messages', async (req, res) => {
       const room = (req.query.room as string) || 'general';
       try {

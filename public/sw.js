@@ -112,6 +112,41 @@ async function checkNewContent() {
   } catch (e) {
     console.debug('[SW] Errore verifica proposte convalidate:', e);
   }
+
+  // 3. Check unread chat messages
+  try {
+    const senderName = await getState('sender_name', '');
+    const citizenCode = await getState('citizen_code', '');
+    if (senderName) {
+      let lastSeenTimestamp = await getState('last_seen_chat_timestamp', '');
+      if (!lastSeenTimestamp) {
+        lastSeenTimestamp = new Date().toISOString();
+        await saveState('last_seen_chat_timestamp', lastSeenTimestamp);
+      } else {
+        const res = await fetch(`/api/chat/unread?senderName=${encodeURIComponent(senderName)}&citizenCode=${encodeURIComponent(citizenCode)}&since=${encodeURIComponent(lastSeenTimestamp)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+            for (const msg of data.messages) {
+              await self.registration.showNotification(`💬 Messaggio da ${msg.senderName}`, {
+                body: msg.text || (msg.type === 'audio' ? '🎵 Messaggio vocale' : '📁 File allegato'),
+                icon: iconUrl,
+                badge: iconUrl,
+                vibrate: [150, 80, 150],
+                data: { url: '/chat' }
+              });
+            }
+            // Update last seen timestamp
+            const timestamps = data.messages.map(m => new Date(m.timestamp).getTime());
+            const maxTime = new Date(Math.max(...timestamps)).toISOString();
+            await saveState('last_seen_chat_timestamp', maxTime);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.debug('[SW] Errore verifica chat non letti:', e);
+  }
 }
 
 self.addEventListener('install', (event) => {

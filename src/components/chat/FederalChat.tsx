@@ -23,6 +23,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
+import { updateSWState } from '../../services/notifications';
 
 interface ChatMessage {
   id: string;
@@ -283,6 +284,7 @@ export default function FederalChat() {
           if (fullName) {
             setSenderName(fullName);
             setCitizenCode(citizen.citizenCode || '');
+            updateSWState(fullName, citizen.citizenCode || '');
             
             // Assign specific role based on status or admin settings
             if (citizen.isAdmin) {
@@ -305,6 +307,7 @@ export default function FederalChat() {
           setSenderName('Console Centrale');
           setSenderRole('Amministratore');
           setCitizenCode('NWS-ADM-001');
+          updateSWState('Console Centrale', 'NWS-ADM-001');
           setIsProfileSet(true);
           return;
         }
@@ -348,6 +351,12 @@ export default function FederalChat() {
   // Fetch immediately on room switch
   useEffect(() => {
     fetchMessages(false);
+    if (activeRoom) {
+      localStorage.setItem('nws_active_chat_room', activeRoom);
+    }
+    return () => {
+      localStorage.removeItem('nws_active_chat_room');
+    };
   }, [activeRoom]);
 
   // Set up periodic smart long-polling (every 3 seconds) for responsive chat
@@ -396,6 +405,7 @@ export default function FederalChat() {
     e.preventDefault();
     if (!senderName.trim()) return;
     setIsProfileSet(true);
+    updateSWState(senderName, citizenCode || 'NWS-GUEST');
     
     // Dispatch custom event to notify other parts
     window.dispatchEvent(new Event('nws_profile_updated'));

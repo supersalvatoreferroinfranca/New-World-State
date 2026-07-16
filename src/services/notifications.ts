@@ -315,4 +315,72 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
   } catch (e) {
     console.debug('[SYNC-BROADCASTS-FAILED]', e);
   }
+
+  // 4. Scan for new unread chat messages
+  let senderName = '';
+  let citizenCode = '';
+  try {
+    const cachedCitizen = localStorage.getItem('nws_democracy_citizen') || localStorage.getItem('nws_citizen_profile') || localStorage.getItem('registered_citizen');
+    if (cachedCitizen) {
+      const citizen = JSON.parse(cachedCitizen);
+      senderName = `${citizen.firstName || ''} ${citizen.surname || ''}`.trim();
+      citizenCode = citizen.citizenCode || '';
+    }
+  } catch (e) {
+    console.debug('[READ-PROFILE-FAILED]', e);
+  }
+
+  if (senderName) {
+    // Also keep SW state synced
+    updateSWState(senderName, citizenCode);
+
+    try {
+      let lastSeenTimestamp = localStorage.getItem('nws_last_seen_chat_timestamp');
+      if (!lastSeenTimestamp) {
+        lastSeenTimestamp = new Date().toISOString();
+        localStorage.setItem('nws_last_seen_chat_timestamp', lastSeenTimestamp);
+      } else {
+        const res = await fetch(`/api/chat/unread?senderName=${encodeURIComponent(senderName)}&citizenCode=${encodeURIComponent(citizenCode)}&since=${encodeURIComponent(lastSeenTimestamp)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+            for (const msg of data.messages) {
+              // Skip if active and in the same room
+              const activeRoom = localStorage.getItem('nws_active_chat_room');
+              const isTabActive = document.visibilityState === 'visible';
+              if (isTabActive && activeRoom === msg.room) {
+                continue;
+              }
+
+              triggerNotification(
+                `💬 Messaggio da ${msg.senderName}`,
+                msg.text || (msg.type === 'audio' ? '🎵 Messaggio vocale' : '📁 File allegato'),
+                'personal',
+                '/chat'
+              );
+            }
+            // Update last seen timestamp
+            const timestamps = data.messages.map((m: any) => new Date(m.timestamp).getTime());
+            const maxTime = new Date(Math.max(...timestamps)).toISOString();
+            localStorage.setItem('nws_last_seen_chat_timestamp', maxTime);
+          }
+        }
+      }
+    } catch (e) {
+      console.debug('[SYNC-CHAT-FAILED]', e);
+    }
+  }
 }
+
+// Keep Service Worker state updated with user details
+export async function updateSWState(senderName: string, citizenCode: string) {
+  if (typeof window === 'undefined' || !('caches' in window)) return;
+  try {
+    const cache = await caches.open('nws-notif-state');
+    await cache.put('/sender_name', new Response(senderName));
+    await cache.put('/citizen_code', new Response(citizenCode));
+  } catch (e) {
+    console.debug('[SW-STATE-WRITE-ERR]', e);
+  }
+}
+
