@@ -169,13 +169,15 @@ export async function triggerNotification(title: string, body: string, type: 're
   const list = getLocalNotifications();
   // Prevent duplicate messages
   const duplicate = list.find(n => n.id === notificationId || (n.title === title && n.body === body));
-  if (!duplicate) {
-    list.unshift(newNotif);
-    saveLocalNotifications(list.slice(0, 50)); // Keep last 50
-    
-    // Alert components
-    listeners.forEach(cb => cb(newNotif));
+  if (duplicate) {
+    return; // Return early to completely avoid native and in-app duplication
   }
+
+  list.unshift(newNotif);
+  saveLocalNotifications(list.slice(0, 50)); // Keep last 50
+  
+  // Alert components
+  listeners.forEach(cb => cb(newNotif));
 
   // Standard web browser notification implementation
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
@@ -375,8 +377,19 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
           const activeRoom = localStorage.getItem('nws_active_chat_room');
           const isTabActive = document.visibilityState === 'visible';
           
+          // Read already notified IDs
+          const notifiedIdsStr = localStorage.getItem('nws_notified_msg_ids') || '[]';
+          let notifiedIds: string[] = [];
+          try {
+            notifiedIds = JSON.parse(notifiedIdsStr);
+          } catch (e) {}
+
           const validMessages = data.messages.filter((msg: any) => {
             if (isTabActive && activeRoom === msg.room) {
+              return false;
+            }
+            // Ignore messages already notified
+            if (notifiedIds.includes(msg.id)) {
               return false;
             }
             return true;
@@ -391,6 +404,8 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
               '/democracy?tab=chat',
               `msg_${msg.id}`
             );
+            notifiedIds.push(msg.id);
+            localStorage.setItem('nws_notified_msg_ids', JSON.stringify(notifiedIds.slice(-100)));
           } else if (validMessages.length > 1) {
             triggerNotification(
               `💬 ${validMessages.length} Nuovi Messaggi`,
@@ -399,6 +414,8 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
               '/democracy?tab=chat',
               `msg_grouped_${Date.now()}`
             );
+            validMessages.forEach((msg: any) => notifiedIds.push(msg.id));
+            localStorage.setItem('nws_notified_msg_ids', JSON.stringify(notifiedIds.slice(-100)));
           }
 
           // Update last seen timestamp

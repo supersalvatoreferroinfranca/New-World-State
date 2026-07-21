@@ -178,8 +178,16 @@ async function checkNewContent() {
           if (res.ok) {
             const data = await res.json();
             if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-              if (data.messages.length === 1) {
-                const msg = data.messages[0];
+              const notifiedIdsStr = await getState('notified_msg_ids', '[]');
+              let notifiedIds = [];
+              try {
+                notifiedIds = JSON.parse(notifiedIdsStr);
+              } catch (err) {}
+
+              const newMessages = data.messages.filter(msg => !notifiedIds.includes(msg.id));
+
+              if (newMessages.length === 1) {
+                const msg = newMessages[0];
                 await self.registration.showNotification(`💬 Messaggio da ${msg.senderName}`, {
                   body: msg.text || (msg.type === 'audio' ? '🎵 Messaggio vocale' : '📁 File allegato'),
                   icon: iconUrl,
@@ -188,8 +196,10 @@ async function checkNewContent() {
                   tag: `msg_${msg.id}`,
                   data: { url: '/democracy?tab=chat' }
                 });
-              } else {
-                await self.registration.showNotification(`💬 ${data.messages.length} Nuovi Messaggi`, {
+                notifiedIds.push(msg.id);
+                await saveState('notified_msg_ids', JSON.stringify(notifiedIds.slice(-100)));
+              } else if (newMessages.length > 1) {
+                await self.registration.showNotification(`💬 ${newMessages.length} Nuovi Messaggi`, {
                   body: `Hai ricevuto nuovi messaggi in chat. Accedi per leggerli.`,
                   icon: iconUrl,
                   badge: iconUrl,
@@ -197,6 +207,8 @@ async function checkNewContent() {
                   tag: `msg_grouped_${Date.now()}`,
                   data: { url: '/democracy?tab=chat' }
                 });
+                newMessages.forEach(msg => notifiedIds.push(msg.id));
+                await saveState('notified_msg_ids', JSON.stringify(notifiedIds.slice(-100)));
               }
               // Update last seen timestamp
               const timestamps = data.messages.map(m => new Date(m.timestamp).getTime());

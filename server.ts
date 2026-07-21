@@ -848,6 +848,30 @@ async function startServer() {
       }
     });
 
+    apiRouter.get('/citizen-status', async (req, res) => {
+      const id = req.query.id as string;
+      if (!id) {
+        return res.status(400).json({ success: false, message: 'ID cittadino mancante.' });
+      }
+      try {
+        const citizen = await findCitizenById(id);
+        if (!citizen) {
+          return res.status(404).json({ success: false, message: 'Cittadino non trovato.' });
+        }
+        return res.json({
+          success: true,
+          data: {
+            id: citizen.id,
+            status: citizen.status,
+            rejection_reason: citizen.rejectionReason || citizen.rejection_reason || citizen.rejectionreason || null
+          }
+        });
+      } catch (err: any) {
+        console.error('[API] Error in /api/citizen-status:', err.message);
+        return res.status(500).json({ success: false, message: 'Errore query: ' + err.message });
+      }
+    });
+
     apiRouter.get('/lookup/location', async (req, res) => {
       const { q, type, lat, lon } = req.query;
       if (!q && (!lat || !lon)) return res.status(400).json({ error: 'Query parameter q or (lat and lon) is required' });
