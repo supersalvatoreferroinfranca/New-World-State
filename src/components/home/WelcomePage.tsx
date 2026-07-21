@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   HelpCircle, 
@@ -11,7 +11,10 @@ import {
   Award, 
   FileCheck,
   ChevronDown,
-  Info
+  Info,
+  Volume2,
+  Pause,
+  RotateCcw
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 import PWANotifierBanner from '../pwa/PWANotifierBanner';
@@ -23,9 +26,16 @@ interface WelcomePageProps {
 }
 
 export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: WelcomePageProps) {
-  const { language } = useI18n();
+  const { language, tText } = useI18n();
   const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
   
+  // TTS (Text-to-Speech) State
+  const [isTtsPlaying, setIsTtsPlaying] = useState(false);
+  const [ttsIndex, setTtsIndex] = useState(0);
+  const [ttsRate, setTtsRate] = useState(1.0);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoiceName, setSelectedVoiceName] = useState<string>('');
+
   // Interactive banana quiz state
   const [quizStep, setQuizStep] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
@@ -70,6 +80,185 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
   ];
 
   const faqs = language === 'en' ? enFAQs : itFAQs;
+
+  // Get current text chunks for reading
+  const getSpeakTexts = () => {
+    const texts: string[] = [];
+
+    // 1. Hero Content
+    if (language === 'en') {
+      texts.push("Hello! Welcome to the New World State!");
+      texts.push("Have you ever dreamed of a unified digital space where every voice counts directly, without borders or complex bureaucracy? This is New World State: a peaceful and sovereign online community designed for all generations.");
+    } else if (language === 'it') {
+      texts.push("Benvenuto nel New World State!");
+      texts.push("Hai mai desiderato una comunità globale senza barriere fisiche, priva di burocrazia complessa e dove la tua voce conta direttamente? Questo è il New World State: uno spazio condiviso, amichevole e sicuro, progettato per includere tutte le generazioni.");
+    } else if (language === 'fr') {
+      texts.push("Bonjour! Bienvenue dans l'État Citoyen Global!");
+      texts.push("Avez-vous déjà rêvé d'un espace numérique unifié où chaque voix compte directement, sans frontières ni bureaucratie complexe? C'est le New World State: une communauté en ligne pacifique et souveraine conçue pour toutes les générations.");
+    } else if (language === 'es') {
+      texts.push("¡Hola! ¡Bienvenido al Estado Ciudadano Global!");
+      texts.push("¿Alguna vez has soñado con un espacio digital unificado donde cada voz cuente directamente, sin fronteras ni burocracia compleja? Esto es New World State: una comunidad en línea pacífica y soberana diseñada para todas las generaciones.");
+    } else if (language === 'pt') {
+      texts.push("Olá! Bem-vindo ao Estado Cidadão Global!");
+      texts.push("Você já sonhou com um espaço digital unificado onde cada voz conta diretamente, sem fronteiras ou burocracia complexa? Este é o New World State: uma comunidade online pacífica e soberana projetada para todas as gerações.");
+    } else if (language === 'ru') {
+      texts.push("Привет! Добро пожаловать во Всемирное Государство Граждан!");
+      texts.push("Мечтали ли вы когда-нибудь о едином цифровом пространстве, где каждый голос учитывается напрямую, без границ и сложной бюрократии? Это New World State: мирное и суверенное онлайн-сообщество, созданное для всех поколений.");
+    } else if (language === 'hi') {
+      texts.push("नमस्ते! वैश्विक नागरिक राज्य में आपका स्वागत है!");
+      texts.push("क्या आपने कभी एक ऐसे एकीकृत डिजिटल स्थान का सपना देखा है जहाँ हर आवाज बिना सीमाओं या जटिल नौकरशाही के सीधे मायने रखती है? यह न्यू वर्ल्ड स्टेट है: सभी पीढ़ियों के लिए डिज़ाइन किया गया एक शांतिपूर्ण और संप्रभु ऑनलाइन समुदाय।");
+    } else if (language === 'bn') {
+      texts.push("হ্যালো! বিশ্ব নাগরিক রাষ্ট্রে আপনাকে স্বাগতম!");
+      texts.push("আপনি কি কখনো এমন একটি ঐক্যবদ্ধ ডিজিটাল স্পেসের স্বপ্ন দেখেছেন যেখানে প্রতিটি কণ্ঠস্বর সরাসরি গণনা করা হয়, সীমানা বা জটিল আমলাতন্ত্র ছাড়াই? এটি নিউ ওয়ার্ল্ড স্টেট: সমস্ত প্রজন্মের জন্য ডিজাইন করা একটি শান্তিপূর্ণ এবং সার্বভৌম অনলাইন সম্প্রদায়।");
+    } else if (language === 'zh') {
+      texts.push("你好！欢迎来到全球公民国家！");
+      texts.push("您是否曾梦想过一个统一的数字空间，在这里，每个声音都直接计数，没有国界或复杂的官僚机构？这就是新世界国家：一个专为所有世代设计的和平且主权在线社区。");
+    } else if (language === 'ja') {
+      texts.push("こんにちは！世界市民国家へようこそ！");
+      texts.push("国境や複雑な官僚主義なしに、すべての声が直接反映される、統一されたデジタル空間を夢見たことはありませんか？これが新世界国家（New World State）です。すべての世代のために設計された、平和で主権あるオンラインコミュニティです。");
+    } else if (language === 'ar') {
+      texts.push("مرحباً بك في دولة المواطن العالمي!");
+      texts.push("هل حلمت يوماً بمساحة رقمية موحدة حيث يكون لكل صوت قيمة مباشرة، دون حدود أو بيروقراطية معقدة؟ هذه هي دولة العالم الجديد: مجتمع رقمي سلمي وسيادي مصمم لجميع الأجيال.");
+    }
+
+    // 2. Three Golden Rules
+    if (language === 'en') {
+      texts.push("How does the Digital State work?");
+      texts.push("First rule: Register for Free. Fill out your basic details and upload your document. It only takes two minutes!");
+      texts.push("Second rule: Receive Your Passport. Our officers verify your details and issue your membership. You will receive your official signed PDF passport via email.");
+      texts.push("Third rule: Participate and Decide. Once active, you are a voting member. You can vote on proposals and key public reforms.");
+    } else if (language === 'it') {
+      texts.push("Come funziona lo Stato Digitale?");
+      texts.push("Prima regola: Ti registri gratis. Inserisci i tuoi dati anagrafici di base e carichi una foto del documento ordinario per confermare la tua identità reale.");
+      texts.push("Seconda regola: Ricevi il Passaporto. I funzionari del nostro archivio anagrafico verificano rapidamente i tuoi dati ed emettono il provvedimento d'iscrizione.");
+      texts.push("Terza regola: Partecipi e decidi. Una volta ottenuto il passaporto, sarai a tutti gli effetti un membro deliberante! Potrai votare sulle decisioni chiave.");
+    } else {
+      texts.push(tText("How does the Digital State work?"));
+      texts.push(tText("Register for Free. Fill out your basic details and upload your document."));
+      texts.push(tText("Receive Your Passport. Our officers verify your details and issue your membership."));
+      texts.push(tText("Participate and Decide. Once active, you are a voting member."));
+    }
+
+    // 3. FAQs Questions and Answers
+    texts.push(language === 'en' ? "Frequently Asked Questions" : "Domande frequenti");
+    faqs.forEach(faq => {
+      texts.push(faq.q);
+      texts.push(faq.a);
+    });
+
+    return texts;
+  };
+
+  const speakTextSegment = (index: number, rateValue: number, playActive: boolean) => {
+    if (!window.speechSynthesis) return;
+
+    window.speechSynthesis.cancel();
+
+    if (!playActive) return;
+
+    const segments = getSpeakTexts();
+    if (index < 0 || index >= segments.length) {
+      setIsTtsPlaying(false);
+      setTtsIndex(0);
+      return;
+    }
+
+    const currentText = segments[index];
+    const utterance = new SpeechSynthesisUtterance(currentText);
+    
+    // Find voice matching language or selected name
+    let selectedVoice = voices.find(v => v.name === selectedVoiceName);
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(language.toLowerCase()));
+    }
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    utterance.rate = rateValue;
+    utterance.lang = language;
+
+    utterance.onend = () => {
+      const nextIdx = index + 1;
+      setTtsIndex(nextIdx);
+      if (playActive) {
+        speakTextSegment(nextIdx, rateValue, true);
+      }
+    };
+
+    utterance.onerror = (e) => {
+      console.warn("Speech Synthesis error:", e);
+      if (e.error !== 'interrupted') {
+        setIsTtsPlaying(false);
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Synchronously load available voices
+  useEffect(() => {
+    if (!window.speechSynthesis) return;
+
+    const updateVoiceList = () => {
+      const systemVoices = window.speechSynthesis.getVoices();
+      setVoices(systemVoices);
+      
+      // Select best voice matching the current language
+      const bestMatch = systemVoices.find(v => v.lang.toLowerCase().startsWith(language.toLowerCase()));
+      if (bestMatch) {
+        setSelectedVoiceName(bestMatch.name);
+      }
+    };
+
+    updateVoiceList();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = updateVoiceList;
+    }
+
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [language]);
+
+  // Clean stop on component unmount
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const handleStartStopTts = () => {
+    if (isTtsPlaying) {
+      // Stop
+      window.speechSynthesis.cancel();
+      setIsTtsPlaying(false);
+    } else {
+      // Start/Resume
+      setIsTtsPlaying(true);
+      // Start from current segment index
+      speakTextSegment(ttsIndex, ttsRate, true);
+    }
+  };
+
+  const handleResetTts = () => {
+    window.speechSynthesis.cancel();
+    setIsTtsPlaying(false);
+    setTtsIndex(0);
+  };
+
+  const handleRateChange = (newRate: number) => {
+    const clampedRate = Math.max(0.5, Math.min(2.0, Number(newRate.toFixed(1))));
+    setTtsRate(clampedRate);
+    if (isTtsPlaying) {
+      // Instantly apply rate change by restarting current segment
+      speakTextSegment(ttsIndex, clampedRate, true);
+    }
+  };
 
   const handleQuizAnswer = (answer: string) => {
     const nextAnswers = [...quizAnswers, answer];
@@ -119,6 +308,129 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               "Hai mai desiderato una comunità globale senza barriere fisiche, priva di burocrazia complessa e dove la tua voce conta direttamente? Questo è il New World State: uno spazio condiviso, amichevole e sicuro, progettato per includere tutte le generazioni."
             )}
           </p>
+
+          {/* TTS SPEECH SYNTHESIS ACCESSIBILITY READER */}
+          <div className="mx-auto max-w-xl bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-3 shadow-inner text-left">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-brand-gold">
+                <Volume2 className="w-5 h-5 text-brand-gold animate-pulse" />
+                <span className="text-xs font-tech font-bold uppercase tracking-wider text-amber-100">
+                  {language === 'en' ? 'Audio Assistant Guide' : 'Guida Audio Assistita'}
+                </span>
+              </div>
+              <div className="text-[10px] font-mono text-slate-300">
+                {isTtsPlaying ? (
+                  <span className="text-emerald-400 animate-pulse font-bold flex items-center gap-1">
+                    ● Reading segment {ttsIndex + 1}/{getSpeakTexts().length}
+                  </span>
+                ) : (
+                  <span className="text-slate-400">Audio ready • {getSpeakTexts().length} segments</span>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+              {/* Voice Choice */}
+              <div className="flex items-center gap-2 bg-[#06122a] p-2 rounded-xl border border-white/5">
+                <span className="text-[9px] uppercase tracking-wider text-slate-300 font-tech font-bold shrink-0">Voice / Voce:</span>
+                <select
+                  value={selectedVoiceName}
+                  onChange={(e) => {
+                    setSelectedVoiceName(e.target.value);
+                    if (isTtsPlaying) {
+                      // Apply voice immediately in real time
+                      setTimeout(() => {
+                        speakTextSegment(ttsIndex, ttsRate, true);
+                      }, 100);
+                    }
+                  }}
+                  className="bg-transparent text-xs text-brand-gold w-full focus:outline-none cursor-pointer"
+                >
+                  {voices
+                    .filter(v => v.lang.toLowerCase().startsWith(language.toLowerCase()))
+                    .map((v, i) => (
+                      <option key={i} value={v.name} className="text-brand-blue bg-[#0a1c3e] text-xs">
+                        {v.name.replace(/Google/i, '').replace(/Microsoft/i, '').substring(0, 24)} ({v.lang})
+                      </option>
+                    ))}
+                  {/* Fallback to list all voices if none match language */}
+                  {voices.filter(v => v.lang.toLowerCase().startsWith(language.toLowerCase())).length === 0 && (
+                    voices.slice(0, 15).map((v, i) => (
+                      <option key={i} value={v.name} className="text-brand-blue bg-[#0a1c3e] text-xs">
+                        {v.name.substring(0, 24)} ({v.lang})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+
+              {/* Speed Controls */}
+              <div className="flex items-center justify-between bg-[#06122a] p-1.5 rounded-xl border border-white/5 gap-1">
+                <span className="text-[9px] uppercase tracking-wider text-slate-300 font-tech font-bold pl-1.5 font-mono">Speed / Vel:</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handleRateChange(ttsRate - 0.2)}
+                    disabled={ttsRate <= 0.6}
+                    className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 transition flex items-center justify-center font-bold text-slate-300 text-xs disabled:opacity-30 cursor-pointer"
+                    title="Slower"
+                  >
+                    -
+                  </button>
+                  <span className="text-xs font-tech font-bold text-brand-gold w-10 text-center">
+                    {ttsRate.toFixed(1)}x
+                  </span>
+                  <button
+                    onClick={() => handleRateChange(ttsRate + 0.2)}
+                    disabled={ttsRate >= 2.0}
+                    className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 transition flex items-center justify-center font-bold text-slate-300 text-xs disabled:opacity-30 cursor-pointer"
+                    title="Faster"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Action Bar */}
+            <div className="flex items-center justify-center gap-4 pt-1">
+              <button
+                onClick={handleStartStopTts}
+                className={`px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition active:scale-95 shadow cursor-pointer ${
+                  isTtsPlaying 
+                    ? 'bg-red-500 hover:bg-red-600 text-white' 
+                    : 'bg-brand-gold hover:bg-brand-gold/90 text-[#0a1c3e]'
+                }`}
+              >
+                {isTtsPlaying ? (
+                  <>
+                    <Pause className="w-3.5 h-3.5 fill-current" />
+                    {language === 'en' ? 'Stop Guide' : 'Ferma Guida'}
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5" />
+                    {language === 'en' ? 'Listen Page 🎧' : 'Ascolta Pagina 🎧'}
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleResetTts}
+                disabled={ttsIndex === 0 && !isTtsPlaying}
+                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 font-bold text-xs tracking-wider transition active:scale-95 disabled:opacity-30 cursor-pointer flex items-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                {language === 'en' ? 'Reset' : 'Riavvia'}
+              </button>
+            </div>
+
+            {/* Subtitle Telemetry Display */}
+            {isTtsPlaying && (
+              <div className="p-2.5 bg-black/40 rounded-xl border border-white/5 text-center text-slate-300 text-xs font-light italic leading-relaxed animate-fade-in max-h-16 overflow-y-auto">
+                "{getSpeakTexts()[ttsIndex]}"
+              </div>
+            )}
+          </div>
 
           <div className="pt-4 flex flex-wrap justify-center gap-4">
             <button 

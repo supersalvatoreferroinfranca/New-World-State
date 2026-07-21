@@ -22,15 +22,15 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
   }
 
   const navigationItems: NavItem[] = [
-    { id: 'welcome', label: language === 'en' ? 'Home/Intro' : 'Home/Intro', icon: Home },
-    { id: 'democracy', label: language === 'en' ? 'Direct Democracy' : 'Democrazia Diretta', icon: Landmark, highlight: true },
-    { id: 'constitution', label: language === 'en' ? 'Constitution' : 'Costituzione', icon: BookOpen },
-    { id: 'charter', label: language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti', icon: FileText },
-    { id: 'governance', label: language === 'en' ? 'Governance' : 'Governance', icon: Shield },
-    { id: 'register', label: language === 'en' ? 'Registration' : 'Registrazione', icon: UserPlus },
-    { id: 'privacy', label: language === 'en' ? 'Privacy Protocol' : 'Protocollo Privacy', icon: Lock },
-    { id: 'network', label: language === 'en' ? 'Network Status' : 'Stato Network', icon: Wifi },
-    { id: 'admin', label: language === 'en' ? 'Admin Console' : 'Console Amministratore', icon: Settings },
+    { id: 'welcome', label: t('homeIntro'), icon: Home },
+    { id: 'democracy', label: t('directDemocracy'), icon: Landmark, highlight: true },
+    { id: 'constitution', label: t('constitution'), icon: BookOpen },
+    { id: 'charter', label: t('charterOfRights'), icon: FileText },
+    { id: 'governance', label: t('governance'), icon: Shield },
+    { id: 'register', label: t('registration'), icon: UserPlus },
+    { id: 'privacy', label: t('privacyProtocol'), icon: Lock },
+    { id: 'network', label: t('networkStatus'), icon: Wifi },
+    { id: 'admin', label: t('adminConsole'), icon: Settings },
   ];
 
   const handleNavClick = (tabId: NavItem['id']) => {
@@ -69,7 +69,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
                 onClick={() => setActiveTab?.('welcome')}
                 className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'welcome' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
               >
-                📊 {language === 'en' ? 'Home/Intro' : 'Home/Intro'}
+                📊 {t('homeIntro')}
               </button>
               <button 
                 onClick={() => setActiveTab?.('democracy')}
@@ -77,25 +77,25 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
                 className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'democracy' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : 'text-brand-gold font-extrabold flex items-center gap-1.5'}`}
               >
                 <span className="w-2 h-2 rounded-full bg-brand-gold animate-ping" />
-                {language === 'en' ? 'Direct Democracy' : 'Democrazia Diretta'}
+                {t('directDemocracy')}
               </button>
               <button 
                 onClick={() => setActiveTab?.('constitution')}
                 className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'constitution' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
               >
-                {language === 'en' ? 'Constitution' : 'Costituzione'}
+                {t('constitution')}
               </button>
               <button 
                 onClick={() => setActiveTab?.('charter')}
                 className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'charter' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
               >
-                {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
+                {t('charterOfRights')}
               </button>
               <button 
                 onClick={() => setActiveTab?.('governance')}
                 className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'governance' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
               >
-                {language === 'en' ? 'Governance' : 'Governance'}
+                {t('governance')}
               </button>
             </div>
 
@@ -108,8 +108,17 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
                 onChange={(e) => setLanguage(e.target.value as any)}
                 className="bg-transparent text-xs font-tech font-bold uppercase tracking-widest focus:outline-none cursor-pointer hover:text-brand-gold transition-colors"
               >
-                <option value="it" className="text-white bg-[#0a1c3e]">IT</option>
-                <option value="en" className="text-white bg-[#0a1c3e]">EN</option>
+                <option value="it" className="text-white bg-[#0a1c3e]">🇮🇹 IT</option>
+                <option value="en" className="text-white bg-[#0a1c3e]">🇬🇧 EN</option>
+                <option value="fr" className="text-white bg-[#0a1c3e]">🇫🇷 FR</option>
+                <option value="es" className="text-white bg-[#0a1c3e]">🇪🇸 ES</option>
+                <option value="pt" className="text-white bg-[#0a1c3e]">🇵🇹 PT</option>
+                <option value="ru" className="text-white bg-[#0a1c3e]">🇷🇺 RU</option>
+                <option value="hi" className="text-white bg-[#0a1c3e]">🇮🇳 HI</option>
+                <option value="bn" className="text-white bg-[#0a1c3e]">🇧🇩 BN</option>
+                <option value="zh" className="text-white bg-[#0a1c3e]">🇨🇳 ZH</option>
+                <option value="ja" className="text-white bg-[#0a1c3e]">🇯🇵 JA</option>
+                <option value="ar" className="text-white bg-[#0a1c3e]">🌍 AR</option>
               </select>
             </div>
             
@@ -208,22 +217,25 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
                 <div className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-brand-gold" />
-                    <span className="text-[10px] uppercase tracking-wider font-tech text-slate-400">Language / Lingua</span>
+                    <span className="text-[10px] uppercase tracking-wider font-tech text-slate-400">Language</span>
                   </div>
-                  <div className="flex gap-1.5">
-                    <button
-                      onClick={() => setLanguage('it')}
-                      className={`text-xs px-2.5 py-1 rounded font-bold transition-all duration-150 ${language === 'it' ? 'bg-brand-gold text-brand-blue' : 'hover:bg-white/10 text-slate-300'}`}
-                    >
-                      IT
-                    </button>
-                    <button
-                      onClick={() => setLanguage('en')}
-                      className={`text-xs px-2.5 py-1 rounded font-bold transition-all duration-150 ${language === 'en' ? 'bg-brand-gold text-brand-blue' : 'hover:bg-white/10 text-slate-300'}`}
-                    >
-                      EN
-                    </button>
-                  </div>
+                  <select 
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value as any)}
+                    className="bg-brand-blue border border-white/10 text-xs font-tech font-bold uppercase tracking-wider focus:outline-none cursor-pointer text-brand-gold p-1 rounded-lg"
+                  >
+                    <option value="it">🇮🇹 IT</option>
+                    <option value="en">🇬🇧 EN</option>
+                    <option value="fr">🇫🇷 FR</option>
+                    <option value="es">🇪🇸 ES</option>
+                    <option value="pt">🇵🇹 PT</option>
+                    <option value="ru">🇷🇺 RU</option>
+                    <option value="hi">🇮🇳 HI</option>
+                    <option value="bn">🇧🇩 BN</option>
+                    <option value="zh">🇨🇳 ZH</option>
+                    <option value="ja">🇯🇵 JA</option>
+                    <option value="ar">🌍 AR</option>
+                  </select>
                 </div>
 
                 <div className="text-[9px] uppercase tracking-[0.2em] text-slate-500 font-tech">

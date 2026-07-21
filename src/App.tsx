@@ -57,7 +57,7 @@ function AppContent() {
            window.location.pathname.startsWith('/verify') || 
            searchParams.get('verify') === 'true';
   });
-  const { language } = useI18n();
+  const { language, t, tText } = useI18n();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const [complianceModalOpen, setComplianceModalOpen] = useState(false);
   const [complianceDocType, setComplianceDocType] = useState<'privacy' | 'cookies' | 'terms' | 'accessibility' | 'ccpa'>('privacy');
@@ -115,35 +115,52 @@ function AppContent() {
 
   React.useEffect(() => {
     document.documentElement.lang = language;
-    if (language === 'en') {
-      document.title = "New World State 1.0 | Global Citizenship Registry";
-      
-      const metaTitle = document.querySelector('meta[name="title"]');
-      if (metaTitle) metaTitle.setAttribute('content', 'New World State 1.0 | Global Citizenship Registry');
-      
-      const metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) metaDesc.setAttribute('content', 'Join the global digital community. Official citizenship registration under the New World State.');
-      
-      const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) ogTitle.setAttribute('content', 'New World State 1.0 | Global Citizenship Registry');
-      
-      const ogDesc = document.querySelector('meta[property="og:description"]');
-      if (ogDesc) ogDesc.setAttribute('content', 'Join the global digital community. Official citizenship registration.');
-    } else {
-      document.title = "New World State 1.0 | Registro Mondiale della Cittadinanza";
-      
-      const metaTitle = document.querySelector('meta[name="title"]');
-      if (metaTitle) metaTitle.setAttribute('content', 'New World State 1.0 | Registro Mondiale della Cittadinanza');
-      
-      const metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) metaDesc.setAttribute('content', 'Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State, basata su trasparenza, pace e progresso tecnologico.');
-      
-      const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) ogTitle.setAttribute('content', 'New World State 1.0 | Registro Mondiale della Cittadinanza');
-      
-      const ogDesc = document.querySelector('meta[property="og:description"]');
-      if (ogDesc) ogDesc.setAttribute('content', 'Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State.');
-    }
+    
+    // Dynamic page title and description per language
+    const titles: Record<string, string> = {
+      en: "New World State 1.0 | Global Citizenship Registry",
+      it: "New World State 1.0 | Registro Mondiale della Cittadinanza",
+      fr: "New World State 1.0 | Registre Mondial de la Citoyenneté",
+      es: "New World State 1.0 | Registro Global de la Ciudadanía",
+      pt: "New World State 1.0 | Registro Mundial da Cidadania",
+      ru: "New World State 1.0 | Всемирный реестр гражданства",
+      hi: "New World State 1.0 | वैश्विक नागरिकता रजिस्ट्री",
+      bn: "New World State 1.0 | বৈশ্বিক नागरिकত্ব রেজিস্ট্রি",
+      zh: "New World State 1.0 | 全球公民身份登记处",
+      ja: "New World State 1.0 | 世界市民権登録簿",
+      ar: "New World State 1.0 | السجل العالمي للمواطنة"
+    };
+
+    const descriptions: Record<string, string> = {
+      en: "Join the global digital community. Official citizenship registration under the New World State.",
+      it: "Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State.",
+      fr: "Rejoignez la communauté numérique mondiale. Enregistrement officiel de la citoyenneté.",
+      es: "Únete a la comunidad digital global. Registro oficial de ciudadanía.",
+      pt: "Junte-se à comunidade digital global. Registro oficial de cidadania.",
+      ru: "Присоединяйтесь к мировому цифровому сообществу. Официальная регистрация гражданства.",
+      hi: "वैश्विक डिजिटल समुदाय में शामिल हों। आधिकारिक नागरिकता पंजीकरण।",
+      bn: "বৈশ্বিক ডিজিটাল সম্প্রদায়ে যোগ দিন। অফিসিয়াল নাগরিকত্ব নিবন্ধন।",
+      zh: "加入全球数字社区。新世界国家官方公民身份登记。",
+      ja: "グローバルなデジタルコミュニティに参加しましょう。新世界国家の公式市民権登録。",
+      ar: "انضم إلى المجتمع الرقمي العالمي. تسجيل المواطنة الرسمي."
+    };
+
+    const currentTitle = titles[language] || titles.en;
+    const currentDesc = descriptions[language] || descriptions.en;
+
+    document.title = currentTitle;
+    
+    const metaTitle = document.querySelector('meta[name="title"]');
+    if (metaTitle) metaTitle.setAttribute('content', currentTitle);
+    
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', currentDesc);
+    
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute('content', currentTitle);
+    
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.setAttribute('content', currentDesc);
   }, [language]);
 
   if (isVerifyPath) {
@@ -186,10 +203,9 @@ function AppContent() {
             </div>
 
             <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto font-light leading-relaxed">
-              {language === 'en' ? (
-                <>Join the <span className="text-brand-blue font-medium">sovereign digital state</span>. A borderless community dedicated to universal rights, justice, and the collective advancement of humanity.</>
-              ) : (
-                <>Entra a far parte dello <span className="text-brand-blue font-medium">stato sovrano digitale</span>. Una comunità senza confini dedicata ai diritti universali, alla giustizia e al progresso collettivo dell'umanità.</>
+              {tText(
+                "Join the sovereign digital state. A borderless community dedicated to universal rights, justice, and the collective advancement of humanity.",
+                "Entra a far parte dello stato sovrano digitale. Una comunità senza confini dedicata ai diritti universali, alla giustizia e al progresso collettivo dell'umanità."
               )}
             </p>
             
@@ -201,35 +217,35 @@ function AppContent() {
                   id="tab-welcome-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'welcome' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
-                  🌟 {language === 'en' ? 'Start Here/Home' : 'Inizia Qui/Home'}
+                  🌟 {tText('Start Here/Home', 'Inizia Qui/Home')}
                 </button>
                 <button 
                   onClick={() => setActiveTab('register')}
                   id="tab-register-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'register' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
-                  {language === 'en' ? 'Registration' : 'Registrazione'}
+                  {t('registration')}
                 </button>
                 <button 
                   onClick={() => setActiveTab('constitution')}
                   id="tab-constitution-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'constitution' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
-                  {language === 'en' ? 'Constitution' : 'Costituzione'}
+                  {t('constitution')}
                 </button>
                 <button 
                   onClick={() => setActiveTab('governance')}
                   id="tab-governance-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'governance' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
-                  {language === 'en' ? 'Governance' : 'Governance'}
+                  {t('governance')}
                 </button>
                 <button 
                   onClick={() => setActiveTab('charter')}
                   id="tab-charter-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'charter' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
-                  {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
+                  {t('charterOfRights')}
                 </button>
               </div>
             </div>
@@ -264,19 +280,20 @@ function AppContent() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="font-serif font-bold text-xl text-[#0a1c3e] uppercase tracking-wide">
-                    {language === 'en' ? 'Federal Chat Moved' : 'Chat Federale Spostata'}
+                    {tText('Federal Chat Moved', 'Chat Federale Spostata')}
                   </h3>
                   <p className="text-sm text-slate-500 leading-relaxed">
-                    {language === 'en' 
-                      ? 'The Federal Chat service is now securely integrated inside the Citizen Area. Please login or register to access Hotlines, State Organs, and internal messaging with other citizens.' 
-                      : 'Il servizio di Chat Federale è ora integrato in modo protetto all\'interno dell\'Area Cittadino (Democrazia Diretta). Accedi o registrati per comunicare con gli Organi di Stato e gli altri cittadini.'}
+                    {tText(
+                      "The Federal Chat service is now securely integrated inside the Citizen Area. Please login or register to access Hotlines, State Organs, and internal messaging with other citizens.",
+                      "Il servizio di Chat Federale è ora integrato in modo protetto all'interno dell'Area Cittadino (Democrazia Diretta). Accedi o registrati per comunicare con gli Organi di Stato e gli altri cittadini."
+                    )}
                   </p>
                 </div>
                 <button
                   onClick={() => setActiveTab('democracy')}
                   className="bg-[#0a1c3e] hover:bg-brand-gold text-white hover:text-[#0a1c3e] font-bold uppercase tracking-wider text-xs px-6 py-3.5 rounded-xl transition duration-150 shadow-lg inline-flex items-center gap-2 cursor-pointer border-b-4 border-brand-gold"
                 >
-                  <span>{language === 'en' ? 'Go to Democracy Portal' : 'Accedi all\'Area Utente'}</span>
+                  <span>{tText('Go to Democracy Portal', "Accedi all'Area Utente")}</span>
                   <ArrowRight className="w-4 h-4 animate-bounce" />
                 </button>
               </div>
@@ -295,32 +312,32 @@ function AppContent() {
               onClick={() => setActiveTab('constitution')} 
               className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'constitution' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
             >
-              {language === 'en' ? 'Constitution' : 'Costituzione'}
+              {t('constitution')}
             </button>
             <button 
               onClick={() => setActiveTab('charter')} 
               className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'charter' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
             >
-              {language === 'en' ? 'Charter of Rights' : 'Carta dei Diritti'}
+              {t('charterOfRights')}
             </button>
             <button 
               onClick={() => setActiveTab('privacy')} 
               className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'privacy' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
             >
-              {language === 'en' ? 'Privacy Protocol' : 'Protocollo Privacy'}
+              {t('privacyProtocol')}
             </button>
             <button 
               onClick={() => setActiveTab('network')} 
               className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'network' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
             >
-              {language === 'en' ? 'Network Status' : 'Stato Network'}
+              {t('networkStatus')}
             </button>
             <button 
               onClick={() => setActiveTab('admin')} 
               id="footer-admin-btn"
               className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'admin' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
             >
-              {language === 'en' ? 'Admin Console' : 'Consolle Amministratore'}
+              {t('adminConsole')}
             </button>
           </div>
 
@@ -329,21 +346,21 @@ function AppContent() {
               onClick={() => openCompliance('privacy')} 
               className="hover:text-brand-gold transition-colors cursor-pointer"
             >
-              {language === 'en' ? 'Privacy Policy' : 'Informativa Privacy'}
+              {tText('Privacy Policy', 'Informativa Privacy')}
             </button>
             <span className="text-slate-300">•</span>
             <button 
               onClick={() => openCompliance('cookies')} 
               className="hover:text-brand-gold transition-colors cursor-pointer"
             >
-              {language === 'en' ? 'Cookie Policy' : 'Cookie Policy'}
+              {tText('Cookie Policy', 'Informativa Cookie')}
             </button>
             <span className="text-slate-300">•</span>
             <button 
               onClick={() => openCompliance('terms')} 
               className="hover:text-brand-gold transition-colors cursor-pointer"
             >
-              {language === 'en' ? 'Terms & Conditions' : 'Termini e Condizioni'}
+              {tText('Terms & Conditions', 'Termini e Condizioni')}
             </button>
             <span className="text-slate-300">•</span>
             <button 

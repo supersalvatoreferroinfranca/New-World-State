@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Scale, Heart, Shield, Landmark, Globe, CheckCircle2, FileText, Compass, Sparkles, ExternalLink } from 'lucide-react';
@@ -957,12 +957,113 @@ const charterTranslations: LanguageCharter[] = [
         ]
       }
     ]
+  },
+  {
+    code: 'ja',
+    langName: '日本語',
+    flag: '🇯🇵',
+    mainTitle: '新世界国家市民の権利憲章',
+    description: 'この文書は、世界市民国家の倫理的および精神的な原則を、すべての人間に対する具体的な保護へと翻訳するものです。',
+    categories: [
+      {
+        id: 'civil',
+        icon: <Shield className="w-5 h-5" />,
+        colorClass: 'text-blue-600',
+        bgLightClass: 'bg-blue-50/70',
+        borderClass: 'border-blue-100',
+        title: 'I. 不可侵の人権と市民権',
+        articles: [
+          {
+            title: '普遍的尊厳と平等',
+            text: 'すべての市民は、等しく社会的尊厳を有し、法の下に平等です。性別、人種、言語、宗教、政治的意見、あるいは個人的・社会的条件による差別は一切ありません。'
+          },
+          {
+            title: '個人の自由と住居の不可侵',
+            text: '個人の自由および住居は不可侵です。'
+          },
+          {
+            title: '思想と信教の自由',
+            text: 'すべての人は、自らの信仰を自由に表明し、思想を表現し、真実の情報にアクセスする権利を有します。'
+          },
+          {
+            title: '公正な裁判を受ける権利',
+            text: '弁護は不可侵の権利であり、無罪の推定が保証されます。'
+          }
+        ]
+      },
+      {
+        id: 'social',
+        icon: <Heart className="w-5 h-5" />,
+        colorClass: 'text-amber-600',
+        bgLightClass: 'bg-amber-50/70',
+        borderClass: 'border-amber-100',
+        title: 'II. 社会的および経済的権利',
+        articles: [
+          {
+            title: '労働の権利',
+            text: '労働は、自己実現、幸福、および社会的進歩のための手段として認められます。'
+          },
+          {
+            title: '健康の保護',
+            text: '健康は個人の基本的人権であり、共同体全体の利益です。'
+          },
+          {
+            title: '教育と科学',
+            text: '芸術、科学、および教育は自由です。教育はすべての人に開かれ、アクセス可能でなければなりません。'
+          },
+          {
+            title: '社会扶助',
+            text: '国家は、障害、病気、または困窮の場合に、適切な保護を保証します。'
+          }
+        ]
+      },
+      {
+        id: 'ethical',
+        icon: <Compass className="w-5 h-5" />,
+        colorClass: 'text-emerald-600',
+        bgLightClass: 'bg-emerald-50/70',
+        borderClass: 'border-emerald-100',
+        title: 'III. 倫理的および地球規模の権利',
+        articles: [
+          {
+            title: '平和への権利',
+            text: '新世界国家（NWS）は、侵略の手段としての戦争を否認し、地球上の共存の柱として平和を促進します。'
+          },
+          {
+            title: '環境保護',
+            text: 'すべての市民は、将来の世代のために持続可能性を確保するため、景観、植物、動物を守る義務を負います。'
+          }
+        ]
+      },
+      {
+        id: 'political',
+        icon: <Landmark className="w-5 h-5" />,
+        colorClass: 'text-purple-600',
+        bgLightClass: 'bg-purple-50/70',
+        borderClass: 'border-purple-100',
+        title: 'IV. 政治的権利と参加',
+        articles: [
+          {
+            title: '直接民主主義',
+            text: 'すべての市民は、デジタル直接民主主義のツールを通じて、国家運営に投票し、積極的に活動に参加する権利を有します。'
+          }
+        ]
+      }
+    ]
   }
 ];
 
 export default function CharterPage() {
   const { language } = useI18n();
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(language === 'en' ? 'en' : 'it');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
+    return charterTranslations.some(c => c.code === language) ? language : 'it';
+  });
+
+  useEffect(() => {
+    if (charterTranslations.some(c => c.code === language)) {
+      setSelectedLanguage(language);
+    }
+  }, [language]);
 
   const currentCharter = charterTranslations.find(c => c.code === selectedLanguage) || charterTranslations[1];
   const isEn = language === 'en';
