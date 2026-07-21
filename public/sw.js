@@ -37,8 +37,19 @@ async function isTabActive(path) {
     const windowClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of windowClients) {
       const url = new URL(client.url);
-      if (url.pathname === path && client.visibilityState === 'visible') {
-        return true;
+      if (client.visibilityState === 'visible') {
+        if (url.pathname === path) {
+          return true;
+        }
+        if (url.pathname === '/' || url.pathname === '/index.html') {
+          const tabParam = url.searchParams.get('tab');
+          if (path === '/democracy' && (tabParam === 'democracy' || tabParam === 'chat' || !tabParam)) {
+            return true;
+          }
+          if (path === '/chat' && tabParam === 'chat') {
+            return true;
+          }
+        }
       }
     }
   } catch (e) {
@@ -111,7 +122,7 @@ async function checkNewContent() {
                 badge: iconUrl,
                 vibrate: [100, 50, 100],
                 tag: `broadcast_${newest.id}`,
-                data: { url: '/democracy' }
+                data: { url: '/?tab=democracy' }
               });
             }
             await saveState('last_seen_broadcast_id', String(maxId));
@@ -149,7 +160,7 @@ async function checkNewContent() {
                   badge: iconUrl,
                   vibrate: [150, 80, 150],
                   tag: `referendum_${newest.id}`,
-                  data: { url: '/democracy' }
+                  data: { url: '/?tab=democracy' }
                 });
               }
               await saveState('last_seen_approved_count', String(currentCount));
@@ -194,7 +205,7 @@ async function checkNewContent() {
                   badge: iconUrl,
                   vibrate: [150, 80, 150],
                   tag: `msg_${msg.id}`,
-                  data: { url: '/democracy?tab=chat' }
+                  data: { url: '/?tab=chat' }
                 });
                 notifiedIds.push(msg.id);
                 await saveState('notified_msg_ids', JSON.stringify(notifiedIds.slice(-100)));
@@ -205,7 +216,7 @@ async function checkNewContent() {
                   badge: iconUrl,
                   vibrate: [150, 80, 150],
                   tag: `msg_grouped_${Date.now()}`,
-                  data: { url: '/democracy?tab=chat' }
+                  data: { url: '/?tab=chat' }
                 });
                 newMessages.forEach(msg => notifiedIds.push(msg.id));
                 await saveState('notified_msg_ids', JSON.stringify(notifiedIds.slice(-100)));

@@ -256,7 +256,7 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
               `🏛️ Nuovo Referendum Convalidato!`,
               `Accedi per votare: "${newest.title}"`,
               'referendum',
-              '/democracy',
+              '/?tab=democracy',
               `referendum_${newest.id}`
             );
           }
@@ -324,7 +324,7 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
                 `📢 ${newest.title}`,
                 newest.content.length > 100 ? newest.content.substring(0, 97) + '...' : newest.content,
                 'news',
-                '/democracy',
+                '/?tab=democracy',
                 `broadcast_${newest.id}`
               );
               localStorage.setItem('nws_last_seen_broadcast_id', String(maxId));
@@ -401,7 +401,7 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
               `💬 Messaggio da ${msg.senderName}`,
               msg.text || (msg.type === 'audio' ? '🎵 Messaggio vocale' : '📁 File allegato'),
               'personal',
-              '/democracy?tab=chat',
+              '/?tab=chat',
               `msg_${msg.id}`
             );
             notifiedIds.push(msg.id);
@@ -411,7 +411,7 @@ async function performSyncChecks(citizenId: number | null, onStatusChange?: (new
               `💬 ${validMessages.length} Nuovi Messaggi`,
               `Hai ricevuto nuovi messaggi in chat. Accedi per leggerli.`,
               'personal',
-              '/democracy?tab=chat',
+              '/?tab=chat',
               `msg_grouped_${Date.now()}`
             );
             validMessages.forEach((msg: any) => notifiedIds.push(msg.id));
