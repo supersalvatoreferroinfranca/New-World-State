@@ -39,6 +39,19 @@ export default function CookieConsentBanner({ onOpenPrivacy, onOpenCookies, onOp
     analytics: false
   });
 
+  // Active simulated jurisdiction state
+  const [simulatedJurisdiction, setSimulatedJurisdiction] = useState<string>(() => {
+    return localStorage.getItem('nws_simulated_jurisdiction') || 'nws';
+  });
+
+  useEffect(() => {
+    const handleJurisdictionChange = (e: any) => {
+      setSimulatedJurisdiction(e.detail || 'nws');
+    };
+    window.addEventListener('nws_privacy_jurisdiction_changed', handleJurisdictionChange as EventListener);
+    return () => window.removeEventListener('nws_privacy_jurisdiction_changed', handleJurisdictionChange as EventListener);
+  }, []);
+
   useEffect(() => {
     // Check if consent has already been given
     const savedConsent = localStorage.getItem('nws_cookie_consent');
@@ -156,10 +169,25 @@ const logConsentEvent = (type: string, currentPrefs: CookiePreferences) => {
           <div className="p-3 bg-[#0a1c3e]/5 text-[#0a1c3e] rounded-2xl border border-[#0a1c3e]/10 shrink-0">
             <Cookie className="w-5 h-5 text-brand-gold animate-pulse" />
           </div>
-          <div className="space-y-1.5">
-            <h3 className="text-xs font-serif font-bold text-[#0a1c3e] uppercase tracking-wider flex items-center gap-1.5">
-              {isIt ? 'Tutela della Privacy & Consenso Cookie' : 'Privacy Protection & Cookie Consent'}
-            </h3>
+          <div className="space-y-1.5 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5 justify-between">
+              <h3 className="text-xs font-serif font-bold text-[#0a1c3e] uppercase tracking-wider flex items-center gap-1.5">
+                {isIt ? 'Tutela della Privacy & Consenso Cookie' : 'Privacy Protection & Cookie Consent'}
+              </h3>
+              {simulatedJurisdiction && simulatedJurisdiction !== 'nws' && (
+                <span className="text-[8.5px] font-mono font-bold bg-[#c5a880]/20 text-[#0a1c3e] border border-[#c5a880]/30 px-1.5 py-0.5 rounded uppercase flex items-center gap-1">
+                  <span>⚖️</span>
+                  <span>
+                    {simulatedJurisdiction === 'eu' && 'EU - GDPR'}
+                    {simulatedJurisdiction === 'us_ca' && 'US - CCPA/CPRA'}
+                    {simulatedJurisdiction === 'ch' && 'CH - LPD/FADP'}
+                    {simulatedJurisdiction === 'uk' && 'UK - GDPR'}
+                    {simulatedJurisdiction === 'au' && 'AU - APPs'}
+                    {simulatedJurisdiction === 'br' && 'BR - LGPD'}
+                  </span>
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-slate-600 leading-relaxed">
               {isIt 
                 ? 'Utilizziamo cookie tecnici essenziali per garantire il corretto funzionamento del portale anagrafico. Con il tuo consenso, vorremmo abilitare cookie opzionali per memorizzare le tue preferenze d\'interfaccia ed effettuare diagnosi anonime.'

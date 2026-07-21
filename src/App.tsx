@@ -24,6 +24,7 @@ import { startBackgroundSync } from './services/notifications';
 import LegalComplianceModal from './components/pwa/LegalComplianceModal';
 import AccessibilityWidget from './components/pwa/AccessibilityWidget';
 import CookieConsentBanner from './components/pwa/CookieConsentBanner';
+import SovereignCustodeDebugWidget from './components/pwa/SovereignCustodeDebugWidget';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat'>(() => {
@@ -370,6 +371,9 @@ function AppContent() {
         initialDoc={complianceDocType} 
         language={language} 
       />
+
+      {/* CUSTODE DIGITALE SIMULATION & DEBUG DESK (Appears above WCAG/Accessibility Widget) */}
+      <SovereignCustodeDebugWidget />
 
       {/* ACCESSIBILITY FLOATING WIDGET (CONTRAST & TEXT SCALING) */}
       <AccessibilityWidget />
