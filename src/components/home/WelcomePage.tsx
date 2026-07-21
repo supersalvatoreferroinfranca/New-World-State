@@ -447,11 +447,11 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
                 onClick={() => setActiveFAQ(activeFAQ === index ? null : index)}
                 className="w-full p-4 text-left font-bold text-xs md:text-sm text-[#0a1c3e] flex justify-between items-center bg-slate-50/50 hover:bg-slate-50 transition"
               >
-                <span>{faq.q}</span>
+                <span data-readable="true" className="faq-question-text">{faq.q}</span>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${activeFAQ === index ? 'rotate-180 text-brand-gold' : ''}`} />
               </button>
               {activeFAQ === index && (
-                <div className="p-4 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-white animate-fade-in">
+                <div data-readable="true" className="p-4 text-xs text-slate-600 leading-relaxed border-t border-slate-100 bg-white animate-fade-in faq-answer-text">
                   {faq.a}
                 </div>
               )}

@@ -590,14 +590,14 @@ export default function PWANotifierBanner() {
                           <div className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
                         )}
                       </div>
-                      <div className="space-y-0.5 w-full">
+                      <div className="space-y-0.5 w-full" data-readable="true">
                         <div className="flex justify-between items-start gap-2 flex-wrap">
-                          <strong className="text-[#0a1c3e] font-serif block">{item.title}</strong>
+                          <strong className="text-[#0a1c3e] font-serif block" data-readable="true">{item.title}</strong>
                           <span className="text-[9px] text-slate-400 font-mono">
                             {new Date(item.timestamp).toLocaleTimeString(language === 'en' ? 'en-US' : 'it-IT', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <p className="text-slate-500 text-[11px] leading-relaxed">{item.body}</p>
+                        <p className="text-slate-500 text-[11px] leading-relaxed" data-readable="true">{item.body}</p>
                       </div>
                     </div>
                   ))}
