@@ -157,20 +157,14 @@ export default function AccessibilityWidget() {
     utterance.lang = langMapping[language] || language;
     utterance.rate = rate;
 
-    // Apply voice selection
-    if (selectedVoiceName) {
-      const voice = voices.find(v => v.name === selectedVoiceName);
-      if (voice) {
-        utterance.voice = voice;
-      }
-    } else {
-      // Fallback
-      const targetLang = language;
-      const fallbackVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang) && v.localService) || 
-                            voices.find(v => v.lang.toLowerCase().startsWith(targetLang));
-      if (fallbackVoice) {
-        utterance.voice = fallbackVoice;
-      }
+    // Apply voice selection matching current language
+    let voice = selectedVoiceName ? voices.find(v => v.name === selectedVoiceName) : null;
+    if (!voice || !voice.lang.toLowerCase().startsWith(language)) {
+      voice = voices.find(v => v.lang.toLowerCase().startsWith(language) && v.localService) || 
+              voices.find(v => v.lang.toLowerCase().startsWith(language));
+    }
+    if (voice) {
+      utterance.voice = voice;
     }
 
     // Keep track of index on boundary change for real-time adjustments

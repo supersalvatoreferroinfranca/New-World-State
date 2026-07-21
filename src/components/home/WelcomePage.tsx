@@ -166,9 +166,9 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     const currentText = segments[index];
     const utterance = new SpeechSynthesisUtterance(currentText);
     
-    // Find voice matching language or selected name
+    // Find voice matching current language
     let selectedVoice = voices.find(v => v.name === selectedVoiceName);
-    if (!selectedVoice) {
+    if (!selectedVoice || !selectedVoice.lang.toLowerCase().startsWith(language.toLowerCase())) {
       selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(language.toLowerCase()));
     }
     if (selectedVoice) {
