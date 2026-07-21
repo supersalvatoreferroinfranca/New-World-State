@@ -327,33 +327,31 @@ export default function SovereignCustodeDebugWidget() {
                     {isIt ? 'Simula Cambio Lingua' : 'Simulate Language'}
                   </span>
 
-                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                    <button
-                      onClick={() => {
-                        setLanguage('it');
-                        triggerNotification('Lingua impostata: Italiano (IT)');
+                  <div className="relative bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 cursor-pointer">
+                    <select
+                      value={language}
+                      onChange={(e) => {
+                        const nextLang = e.target.value as any;
+                        setLanguage(nextLang);
+                        triggerNotification(isIt ? `Lingua impostata: ${nextLang.toUpperCase()}` : `Language set: ${nextLang.toUpperCase()}`);
                       }}
-                      className={`py-1.5 rounded-lg text-[10px] font-bold transition border cursor-pointer ${
-                        language === 'it'
-                          ? 'bg-[#0a1c3e] text-white border-[#0a1c3e] shadow-sm'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
+                      className="w-full bg-transparent text-xs font-bold text-[#0a1c3e] focus:outline-none cursor-pointer appearance-none"
                     >
-                      🇮🇹 Italiano (IT)
-                    </button>
-                    <button
-                      onClick={() => {
-                        setLanguage('en');
-                        triggerNotification('Language set: English (EN)');
-                      }}
-                      className={`py-1.5 rounded-lg text-[10px] font-bold transition border cursor-pointer ${
-                        language === 'en'
-                          ? 'bg-[#0a1c3e] text-white border-[#0a1c3e] shadow-sm'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      🇬🇧 English (EN)
-                    </button>
+                      <option value="it">🇮🇹 Italiano (IT)</option>
+                      <option value="en">🇬🇧 English (EN)</option>
+                      <option value="fr">🇫🇷 Français (FR)</option>
+                      <option value="es">🇪🇸 Español (ES)</option>
+                      <option value="pt">🇵🇹 Português (PT)</option>
+                      <option value="ru">🇷🇺 Русский (RU)</option>
+                      <option value="hi">🇮🇳 हिन्दी (HI)</option>
+                      <option value="bn">🇧🇩 বাংলা (BN)</option>
+                      <option value="zh">🇨🇳 中文 (ZH)</option>
+                      <option value="ja">🇯🇵 日本語 (JA)</option>
+                      <option value="ar">🌍 العربية (AR)</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-[#0a1c3e]/60">
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </div>
                   </div>
                 </div>
 

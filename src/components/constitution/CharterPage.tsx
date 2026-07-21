@@ -1053,6 +1053,87 @@ const charterTranslations: LanguageCharter[] = [
   }
 ];
 
+const LOCAL_CHARTER_TRANSLATIONS: Record<string, Record<string, string>> = {
+  charterOfRights: {
+    en: 'Charter of Rights',
+    it: 'Carta dei Diritti',
+    fr: 'Charte des Droits',
+    es: 'Carta de Derechos',
+    pt: 'Carta de Direitos',
+    ru: 'Хартия прав',
+    hi: 'अधिकारों का चार्टर',
+    bn: 'অধিকার সনদ',
+    zh: '权利宪章',
+    ja: '権利憲章',
+    ar: 'ميثاق الحقوق'
+  },
+  universalProtection: {
+    en: 'Universal Citizen Protection',
+    it: 'Tutela Universale del Cittadino',
+    fr: 'Protection Universelle du Citoyen',
+    es: 'Protección Universal del Ciudadano',
+    pt: 'Proteção Universal do Cidadão',
+    ru: 'Всеобщая защита граждан',
+    hi: 'सार्वभौमिक नागरिक संरक्षण',
+    bn: 'সর্বজনীন নাগরিক সুরক্ষা',
+    zh: '普遍公民保护',
+    ja: '普遍的な市民保護',
+    ar: 'حماية المواطن العالمية'
+  },
+  selectTranslation: {
+    en: 'Select translation',
+    it: 'Seleziona traduzione',
+    fr: 'Sélectionner la traduction',
+    es: 'Seleccionar traducción',
+    pt: 'Selecionar tradução',
+    ru: 'Выберите перевод',
+    hi: 'अनुवाद चुनें',
+    bn: 'অনুবাদ নির্বাচন করুন',
+    zh: '选择翻译',
+    ja: '翻訳を選択',
+    ar: 'اختر الترجمة'
+  },
+  officialDecree: {
+    en: 'Official Decree',
+    it: 'Decreto Ufficiale',
+    fr: 'Décret Officiel',
+    es: 'Decreto Oficial',
+    pt: 'Decreto Oficial',
+    ru: 'Официальный указ',
+    hi: 'आधिकारिक डिक्री',
+    bn: 'সরকারী ডিক্রি',
+    zh: '官方法令',
+    ja: '公式法令',
+    ar: 'مرسوم رسمي'
+  },
+  institutionalInsights: {
+    en: 'For institutional insights',
+    it: 'Per approfondimenti istituzionali',
+    fr: 'Pour des informations institutionnelles',
+    es: 'Para información institucional',
+    pt: 'Para informações institucionais',
+    ru: 'Для получения институциональной информации',
+    hi: 'संस्थागत अंतर्दृष्टि के लिए',
+    bn: 'প্রাতিষ্ঠানিক অন্তর্দৃষ্টির জন্য',
+    zh: '获取机构洞察',
+    ja: '機関への洞察のために',
+    ar: 'للحصول على رؤى مؤسسية'
+  },
+  footerNote: {
+    en: 'All contents are certified and compiled dynamically under NWS supreme decree guidelines. Registered citizens can claim certificates securely.',
+    it: 'Tutti i contenuti sono certificati e compilati dinamicamente secondo le linee guida del decreto supremo NWS. I cittadini registrati possono richiedere i certificati in modo sicuro.',
+    fr: 'Tous les contenus sont certifiés et compilés dynamiquement selon les directives du décret suprême de la NWS. Les citoyens enregistrés peuvent demander des certificats en toute sécurité.',
+    es: 'Todos los contenidos están certificados y compilados dinámicamente bajo las pautas del decreto supremo de NWS. Los ciudadanos registrados pueden reclamar certificados de forma segura.',
+    pt: 'Todos os conteúdos são certificados e compilados dinamicamente sob as diretrizes do decreto supremo da NWS. Cidadãos registrados podem reivindicar certificados com segurança.',
+    ru: 'Все материалы сертифицированы и динамически скомпилированы в соответствии с руководящими принципами верховного указа NWS. Зарегистрированные граждане могут безопасно запрашивать сертификаты.',
+    hi: 'सभी सामग्रियां एनडब्ल्यूएस सर्वोच्च डिक्री दिशानिर्देशों के तहत प्रमाणित और गतिशील रूप से संकलित हैं। पंजीकृत नागरिक सुरक्षित रूप से प्रमाणपत्रों का दावा कर सकते हैं।',
+    bn: 'সমস্ত বিষয়বস্তু প্রত্যয়ित এবং NWS সর্বোচ্চ ডিক্রি নির্দেশিকা অধীনে গতিশীলভাবে সংকলিত হয়। নিবন্ধিত নাগরিকরা নিরাপদে সার্টিফিকেটের জন্য দাবি করতে পারেন।',
+    zh: '所有内容均经过认证，并根据 NWS 最高法令指南动态编译。注册公民可以安全地索取证书。',
+    ja: 'すべてのコンテンツは、NWS最高法令のガイドラインの下で認定され、動的にコンパイルされています。登録市民は安全に証明書を請求できます。',
+    ar: 'جميع المحتويات معتمدة ومجمعة ديناميكيًا بموجب توجيهات المرسوم السامي لـ NWS. يمكن للمواطنين المسجلين المطالبة بالشهادات بأمان.'
+  }
+};
+
 export default function CharterPage() {
   const { language } = useI18n();
   const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
@@ -1066,7 +1147,12 @@ export default function CharterPage() {
   }, [language]);
 
   const currentCharter = charterTranslations.find(c => c.code === selectedLanguage) || charterTranslations[1];
-  const isEn = language === 'en';
+  
+  const getT = (key: string): string => {
+    const section = LOCAL_CHARTER_TRANSLATIONS[key];
+    if (!section) return '';
+    return section[language] || section['en'] || '';
+  };
 
   return (
     <motion.div
@@ -1087,10 +1173,10 @@ export default function CharterPage() {
             <Scale className="w-6 h-6" />
           </div>
           <h2 className="text-3xl md:text-5xl font-serif text-brand-blue font-bold tracking-tight">
-            {isEn ? 'Charter of Rights' : 'Carta dei Diritti'}
+            {getT('charterOfRights')}
           </h2>
           <p className="text-xs uppercase tracking-[0.3em] font-tech text-brand-gold font-bold">
-            {isEn ? 'Universal Citizen Protection' : 'Tutela Universale del Cittadino'}
+            {getT('universalProtection')}
           </p>
           <div className="h-0.5 w-16 bg-brand-gold/30 mx-auto rounded-full" />
         </div>
@@ -1098,7 +1184,7 @@ export default function CharterPage() {
         {/* Dynamic Multi-Language Selector Wheel/Row */}
         <div className="mb-10 text-center">
           <p className="text-[10px] uppercase font-tech font-bold text-muted tracking-wider mb-3">
-            {isEn ? 'Select translation' : 'Seleziona traduzione'}
+            {getT('selectTranslation')}
           </p>
           <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto p-2 bg-brand-blue/5 rounded-2xl border border-brand-blue/5">
             {charterTranslations.map((translation) => {
@@ -1134,7 +1220,7 @@ export default function CharterPage() {
           {/* Heading */}
           <div className="text-center space-y-4 mb-10">
             <span className="text-[10px] font-tech font-semibold tracking-widest text-brand-gold/90 uppercase">
-              {isEn ? 'Official Decree' : 'Decreto Ufficiale'}
+              {getT('officialDecree')}
             </span>
             <h3 className="text-xl md:text-2xl font-serif text-[#0A1C3E] font-bold px-4 leading-tight">
               {currentCharter.mainTitle}
@@ -1192,7 +1278,7 @@ export default function CharterPage() {
         {/* Institutional Resource Link Button */}
         <div className="max-w-md mx-auto text-center space-y-3">
           <p className="text-[10px] uppercase font-tech font-bold tracking-widest text-muted">
-            {isEn ? 'For institutional insights' : 'Per approfondimenti istituzionali'}
+            {getT('institutionalInsights')}
           </p>
           <a
             href="https://www.newworldstate.cloud"
@@ -1208,11 +1294,7 @@ export default function CharterPage() {
 
         {/* Official Footer Signature */}
         <div className="mt-12 p-5 bg-brand-gold/5 rounded-2xl border border-brand-gold/10 text-center text-[11px] text-brand-blue/70">
-          {isEn ? (
-            <span>All contents are certified and compiled dynamically under NWS supreme decree guidelines. Registered citizens can claim certificates securely.</span>
-          ) : (
-            <span>Tutti i contenuti sono certificati e compilati dinamicamente secondo le linee guida del decreto supremo NWS. I cittadini registrati possono richiedere i certificati in modo sicuro.</span>
-          )}
+          <span>{getT('footerNote')}</span>
         </div>
       </div>
     </motion.div>

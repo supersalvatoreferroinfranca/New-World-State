@@ -74,6 +74,20 @@ export default function AccessibilityWidget() {
     localStorage.setItem('nws_access_contrast', contrastMode);
   }, [contrastMode]);
 
+  const langMapping: Record<string, string> = {
+    en: 'en-US',
+    it: 'it-IT',
+    fr: 'fr-FR',
+    es: 'es-ES',
+    pt: 'pt-PT',
+    ru: 'ru-RU',
+    hi: 'hi-IN',
+    bn: 'bn-IN',
+    zh: 'zh-CN',
+    ja: 'ja-JP',
+    ar: 'ar-AE'
+  };
+
   // Load available voices
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
@@ -85,7 +99,7 @@ export default function AccessibilityWidget() {
       // Auto-select a default if none is set
       const saved = localStorage.getItem('nws_access_voice_name');
       if (!saved && allVoices.length > 0) {
-        const targetLang = language === 'en' ? 'en' : 'it';
+        const targetLang = language;
         const defaultVoice = allVoices.find(v => v.lang.toLowerCase().startsWith(targetLang) && v.localService) || 
                              allVoices.find(v => v.lang.toLowerCase().startsWith(targetLang));
         if (defaultVoice) {
@@ -98,6 +112,21 @@ export default function AccessibilityWidget() {
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
   }, [language]);
+
+  // When language changes, auto-select a suitable voice if the current one doesn't match
+  useEffect(() => {
+    if (voices.length === 0) return;
+    
+    const currentVoice = voices.find(v => v.name === selectedVoiceName);
+    if (!currentVoice || !currentVoice.lang.toLowerCase().startsWith(language)) {
+      const bestVoice = voices.find(v => v.lang.toLowerCase().startsWith(language) && v.localService) || 
+                        voices.find(v => v.lang.toLowerCase().startsWith(language));
+      if (bestVoice) {
+        setSelectedVoiceName(bestVoice.name);
+        localStorage.setItem('nws_access_voice_name', bestVoice.name);
+      }
+    }
+  }, [language, voices, selectedVoiceName]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -125,7 +154,7 @@ export default function AccessibilityWidget() {
     }
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = language === 'en' ? 'en-US' : 'it-IT';
+    utterance.lang = langMapping[language] || language;
     utterance.rate = rate;
 
     // Apply voice selection
@@ -136,7 +165,7 @@ export default function AccessibilityWidget() {
       }
     } else {
       // Fallback
-      const targetLang = language === 'en' ? 'en' : 'it';
+      const targetLang = language;
       const fallbackVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetLang) && v.localService) || 
                             voices.find(v => v.lang.toLowerCase().startsWith(targetLang));
       if (fallbackVoice) {
@@ -204,7 +233,7 @@ export default function AccessibilityWidget() {
         // Briefly wait to let the cancellation register on some browsers
         setTimeout(() => {
           const utterance = new SpeechSynthesisUtterance(remainingText.trim());
-          utterance.lang = language === 'en' ? 'en-US' : 'it-IT';
+          utterance.lang = langMapping[language] || language;
           utterance.rate = speechRate;
           
           const voice = voices.find(v => v.name === voiceName);
@@ -399,8 +428,7 @@ export default function AccessibilityWidget() {
 
   // Filter voices matching selected language
   const languageFilteredVoices = voices.filter(voice => {
-    const targetPrefix = language === 'en' ? 'en' : 'it';
-    return voice.lang.toLowerCase().startsWith(targetPrefix);
+    return voice.lang.toLowerCase().startsWith(language);
   });
 
   return (
