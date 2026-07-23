@@ -19,6 +19,13 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
+import { Language } from '../../constants/translations';
+import { 
+  getMatchingVoicesForLanguage, 
+  getBestVoiceForLanguage, 
+  getDefaultBcp47ForLanguage, 
+  getLanguageNativeName 
+} from '../../utils/ttsVoices';
 
 export default function AccessibilityWidget() {
   const { language } = useI18n();
@@ -53,6 +60,7 @@ export default function AccessibilityWidget() {
   // Real-time tracking references
   const currentTextRef = useRef<string>('');
   const currentCharIndexRef = useRef<number>(0);
+  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Apply Font Size changes
   useEffect(() => {
@@ -94,7 +102,9 @@ export default function AccessibilityWidget() {
 
     const loadVoices = () => {
       const allVoices = window.speechSynthesis.getVoices();
-      setVoices(allVoices);
+      if (allVoices.length > 0) {
+        setVoices(allVoices);
+      }
       
       // Auto-select a default if none is set
       const saved = localStorage.getItem('nws_access_voice_name');
@@ -111,22 +121,40 @@ export default function AccessibilityWidget() {
 
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    // Android Chrome & Safari async voice load polling
+    const pollInterval = setInterval(() => {
+      const v = window.speechSynthesis.getVoices();
+      if (v.length > 0) {
+        setVoices(v);
+        clearInterval(pollInterval);
+      }
+    }, 250);
+
+    return () => {
+      clearInterval(pollInterval);
+    };
   }, [language]);
 
-  // When language changes, auto-select a suitable voice if the current one doesn't match
+  // When language changes, auto-select a suitable voice strictly for that language
   useEffect(() => {
     if (voices.length === 0) return;
     
-    const currentVoice = voices.find(v => v.name === selectedVoiceName);
-    if (!currentVoice || !currentVoice.lang.toLowerCase().startsWith(language)) {
-      const bestVoice = voices.find(v => v.lang.toLowerCase().startsWith(language) && v.localService) || 
-                        voices.find(v => v.lang.toLowerCase().startsWith(language));
+    // Check if currently selected voice belongs to the new language
+    const matching = getMatchingVoicesForLanguage(voices, language as Language);
+    const isValidForLang = matching.some(v => v.name === selectedVoiceName);
+    
+    if (!isValidForLang) {
+      const bestVoice = getBestVoiceForLanguage(voices, language as Language);
       if (bestVoice) {
         setSelectedVoiceName(bestVoice.name);
         localStorage.setItem('nws_access_voice_name', bestVoice.name);
+      } else {
+        setSelectedVoiceName('default');
+        localStorage.removeItem('nws_access_voice_name');
       }
     }
-  }, [language, voices, selectedVoiceName]);
+  }, [language, voices]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -143,8 +171,12 @@ export default function AccessibilityWidget() {
 
     window.speechSynthesis.cancel();
 
-    // Clean up text
-    const cleanText = text.replace(/\s+/g, ' ').trim();
+    // Clean up text and emojis for cross-platform stability
+    const cleanText = text
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
     if (!cleanText) return;
 
     // Keep track of full text being spoken
@@ -154,17 +186,17 @@ export default function AccessibilityWidget() {
     }
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = langMapping[language] || language;
+    activeUtteranceRef.current = utterance; // Prevent Apple/Safari GC cleanup bug
     utterance.rate = rate;
 
     // Apply voice selection matching current language
-    let voice = selectedVoiceName ? voices.find(v => v.name === selectedVoiceName) : null;
-    if (!voice || !voice.lang.toLowerCase().startsWith(language)) {
-      voice = voices.find(v => v.lang.toLowerCase().startsWith(language) && v.localService) || 
-              voices.find(v => v.lang.toLowerCase().startsWith(language));
-    }
-    if (voice) {
-      utterance.voice = voice;
+    const bestVoice = getBestVoiceForLanguage(voices, language as Language, selectedVoiceName);
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+      utterance.lang = bestVoice.lang;
+    } else {
+      utterance.voice = null;
+      utterance.lang = getDefaultBcp47ForLanguage(language as Language);
     }
 
     // Keep track of index on boundary change for real-time adjustments
@@ -183,14 +215,19 @@ export default function AccessibilityWidget() {
     utterance.onend = () => {
       setIsPlaying(false);
       setIsPaused(false);
+      activeUtteranceRef.current = null;
     };
 
     utterance.onerror = () => {
       setIsPlaying(false);
       setIsPaused(false);
+      activeUtteranceRef.current = null;
     };
 
-    window.speechSynthesis.speak(utterance);
+    // Micro delay after cancel to prevent iOS/Safari/Chrome race condition
+    setTimeout(() => {
+      window.speechSynthesis.speak(utterance);
+    }, 60);
   };
 
   // Handle speed rate change in real-time
@@ -259,16 +296,25 @@ export default function AccessibilityWidget() {
   };
 
   const handleReadFullPage = () => {
-    // Select all readable content, explicitly including elements marked data-readable
+    // If welcome audio guide button is present, click it directly for full translated guide reading
+    const welcomeAudioBtn = document.getElementById('welcome-audio-guide-btn');
+    if (welcomeAudioBtn) {
+      welcomeAudioBtn.click();
+      return;
+    }
+
+    // Otherwise, select visible readable content from the document
     const elements = document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, [data-readable="true"]');
     const texts: string[] = [];
     
     elements.forEach((el) => {
-      if (el.closest('.accessibility-exclude')) return;
-      const text = el.textContent?.trim();
+      const htmlEl = el as HTMLElement;
+      if (htmlEl.closest('.accessibility-exclude')) return;
+      if (htmlEl.offsetParent === null && !htmlEl.classList.contains('fixed')) return;
+
+      const text = htmlEl.textContent?.trim();
       if (text && text.length > 2) {
-        // Simple deduplication of nested text nodes
-        const alreadyExists = texts.some(t => t === text || t.includes(text));
+        const alreadyExists = texts.some(t => t === text || (t.length > text.length && t.includes(text)));
         if (!alreadyExists) {
           texts.push(text);
         }
@@ -421,9 +467,7 @@ export default function AccessibilityWidget() {
   };
 
   // Filter voices matching selected language
-  const languageFilteredVoices = voices.filter(voice => {
-    return voice.lang.toLowerCase().startsWith(language);
-  });
+  const languageFilteredVoices = getMatchingVoicesForLanguage(voices, language as Language);
 
   return (
     <div className="fixed bottom-6 left-6 z-[999] font-sans accessibility-exclude flex items-center gap-2">
@@ -628,29 +672,30 @@ export default function AccessibilityWidget() {
             <div className="space-y-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-100 accessibility-exclude">
               
               {/* Voice Changer Selector */}
-              {languageFilteredVoices.length > 0 && (
-                <div className="space-y-1 pb-1 accessibility-exclude">
-                  <label className="text-[9px] uppercase font-bold text-slate-400 block accessibility-exclude">
-                    {language === 'en' ? 'Voice Model:' : 'Voce sintesi:'}
-                  </label>
-                  <div className="relative accessibility-exclude">
-                    <select
-                      value={selectedVoiceName}
-                      onChange={(e) => handleVoiceChange(e.target.value)}
-                      className="w-full bg-white border border-slate-200 hover:border-slate-300 rounded-xl px-2.5 py-1.5 text-[10px] font-medium text-[#0a1c3e] cursor-pointer focus:outline-none appearance-none accessibility-exclude"
-                    >
-                      {languageFilteredVoices.map((voice) => (
-                        <option key={voice.name} value={voice.name}>
-                          {voice.name} ({voice.localService ? 'HD' : 'Cloud'})
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-[#0a1c3e]/60 accessibility-exclude">
-                      <ChevronDown className="w-3 h-3 accessibility-exclude" />
-                    </div>
+              <div className="space-y-1 pb-1 accessibility-exclude">
+                <label className="text-[9px] uppercase font-bold text-slate-400 block accessibility-exclude">
+                  {language === 'en' ? 'Voice Model:' : 'Voce sintesi:'}
+                </label>
+                <div className="relative accessibility-exclude">
+                  <select
+                    value={selectedVoiceName}
+                    onChange={(e) => handleVoiceChange(e.target.value)}
+                    className="w-full bg-white border border-slate-200 hover:border-slate-300 rounded-xl px-2.5 py-1.5 text-[10px] font-medium text-[#0a1c3e] cursor-pointer focus:outline-none appearance-none accessibility-exclude"
+                  >
+                    <option value="default">
+                      {getLanguageNativeName(language as Language)} - Auto ({getDefaultBcp47ForLanguage(language as Language)})
+                    </option>
+                    {languageFilteredVoices.map((voice) => (
+                      <option key={voice.name} value={voice.name}>
+                        {voice.name.replace(/Google/i, '').replace(/Microsoft/i, '').trim()} ({voice.localService ? 'HD' : 'Cloud'})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-[#0a1c3e]/60 accessibility-exclude">
+                    <ChevronDown className="w-3 h-3 accessibility-exclude" />
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Full Page Reading Actions */}
               <div className="flex items-center gap-2 accessibility-exclude">

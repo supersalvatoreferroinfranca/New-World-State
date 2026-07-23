@@ -189,13 +189,15 @@ function AppContent() {
         <div className="max-w-7xl mx-auto py-10 relative">
           <div className="text-center space-y-6 mb-12">
             <div className="inline-block px-4 py-1.5 border border-brand-gold/30 rounded-full bg-brand-gold/5 mb-2">
-              <p className="text-[10px] uppercase tracking-[0.4em] font-tech text-brand-gold font-bold">New World State Official Registry</p>
+              <p className="text-[10px] uppercase tracking-[0.4em] font-tech text-brand-gold font-bold">
+                {tText("New World State Official Registry", "Registro Ufficiale del New World State")}
+              </p>
             </div>
             
             <div className="relative">
               <h1 className="text-5xl md:text-8xl font-serif text-brand-blue tracking-tighter leading-[0.8] mb-4">
-                Citizenship <br />
-                <span className="italic text-brand-gold">World Sovereign</span>
+                {tText("Citizenship", "Cittadinanza")} <br />
+                <span className="italic text-brand-gold">{tText("World Sovereign", "Sovrana Mondiale")}</span>
               </h1>
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-[0.03] text-[200px] font-serif font-bold select-none pointer-events-none hidden md:block">
                 NWS
@@ -254,7 +256,9 @@ function AppContent() {
           <div className="relative">
             {/* Decorative side accent */}
             <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden xl:block">
-              <p className="writing-vertical-rl rotate-180 text-[10px] uppercase tracking-[0.5em] font-tech text-muted opacity-30">Authenticity • Integrity • Sovereignty</p>
+              <p className="writing-vertical-rl rotate-180 text-[10px] uppercase tracking-[0.5em] font-tech text-muted opacity-30">
+                {tText("Authenticity • Integrity • Sovereignty", "Autenticità • Integrità • Sovranità")}
+              </p>
             </div>
             
             {activeTab === 'welcome' ? (

@@ -46,8 +46,19 @@ if (process.env.DATABASE_URL) {
       connectionString: cleanUrl,
       ssl: {
         rejectUnauthorized: false
-      }
+      },
+      keepAlive: true,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000
     });
+
+    // CRITICAL: Attach error listener to the Pool instance.
+    // Node-postgres emits 'error' on the Pool when an idle client is disconnected or experiences network reset (e.g. ECONNRESET).
+    // Without this listener, Node.js throws an unhandled 'error' event and crashes the process.
+    dbPool.on('error', (err: any) => {
+      console.error('[DB Pool] Idle client error handled gracefully:', err?.message || err);
+    });
+
     console.log('[DB] PostgreSQL Pool initialized successfully with clean URL.');
     
     // Run self-healing database schema migrations
@@ -58,6 +69,15 @@ if (process.env.DATABASE_URL) {
 } else {
   console.log('[DB] WARNING: DATABASE_URL is not defined. Falling back to memory storage for admin features.');
 }
+
+// Global process error handlers to prevent unexpected crashes
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Process] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Process] Uncaught Exception:', err);
+});
 
 // In-Memory Fallback Database for registered citizens
 const memoryCitizens: any[] = [];

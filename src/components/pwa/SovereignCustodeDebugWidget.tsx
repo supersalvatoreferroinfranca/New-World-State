@@ -58,41 +58,53 @@ export default function SovereignCustodeDebugWidget() {
 
   useEffect(() => {
     loadCitizen();
-    // Listen to changes in local storage or profile updates
+    // Listen to changes in local storage, login events, or profile updates
     window.addEventListener('storage', loadCitizen);
     window.addEventListener('nws_citizen_updated', loadCitizen);
+    window.addEventListener('nws_login_success', loadCitizen);
+    window.addEventListener('nws_logout', loadCitizen);
     return () => {
       window.removeEventListener('storage', loadCitizen);
       window.removeEventListener('nws_citizen_updated', loadCitizen);
+      window.removeEventListener('nws_login_success', loadCitizen);
+      window.removeEventListener('nws_logout', loadCitizen);
     };
   }, []);
 
-  // Check if current user is Custode Digitale
+  // Check if current user is logged in
+  const isLoggedIn = !!citizen && (!!citizen.id || !!citizen.citizenCode || !!citizen.email || !!citizen.firstName);
+
+  // Check if current logged-in user is Custode Digitale
   const checkIsCustode = () => {
-    if (isSimulated) return true;
-    if (!citizen) return false;
-    if (citizen.isAdmin) return true; // Admins get access too!
+    if (!isLoggedIn) return false;
+    if (citizen?.isAdmin) return true; // Admins get access
     
-    const roleField = citizen.operationalRole;
+    const roleField = citizen?.operationalRole || citizen?.role;
     if (!roleField) return false;
     
-    const trimmed = roleField.trim();
+    const roleStr = typeof roleField === 'string' ? roleField : JSON.stringify(roleField);
+    const trimmed = roleStr.trim();
     if (trimmed.startsWith('[')) {
       try {
         const assignedArray = JSON.parse(trimmed);
         return assignedArray.some((assigned: any) => 
           assigned.roleId === 7 || 
-          assigned.legacyName?.includes("Custode") ||
-          assigned.legacyName?.includes("Custodian")
+          assigned.legacyName?.toLowerCase().includes("custode") ||
+          assigned.legacyName?.toLowerCase().includes("custodian")
         );
       } catch (e) {
-        return trimmed.includes("Custode") || trimmed.includes("Custodian") || trimmed.includes("7");
+        return trimmed.toLowerCase().includes("custode") || trimmed.toLowerCase().includes("custodian") || trimmed.includes("7");
       }
     }
-    return trimmed.includes("Custode") || trimmed.includes("Custodian");
+    return trimmed.toLowerCase().includes("custode") || trimmed.toLowerCase().includes("custodian");
   };
 
   const isCustodeActive = checkIsCustode();
+
+  // MUST be logged in AND have Custode Digitale role
+  if (!isLoggedIn || !isCustodeActive) {
+    return null;
+  }
 
   // Save Simulate Mode
   const handleToggleSimulation = () => {

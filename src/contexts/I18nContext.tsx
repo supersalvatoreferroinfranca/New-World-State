@@ -899,6 +899,84 @@ const COMMON_PHRASES: Record<string, Record<Language, string>> = {
     zh: "基于模拟选择的法律合规性细节",
     ja: "シミュレートされた選択に基づく法的コンプライアンス詳細",
     ar: "تفاصيل الامتثال القانوني بناءً على التحديد المحاكي"
+  },
+  "Join the sovereign digital state. A borderless community dedicated to universal rights, justice, and the collective advancement of humanity.": {
+    it: "Entra a far parte dello stato sovrano digitale. Una comunità senza confini dedicata ai diritti universali, alla giustizia e al progresso collettivo dell'umanità.",
+    en: "Join the sovereign digital state. A borderless community dedicated to universal rights, justice, and the collective advancement of humanity.",
+    fr: "Rejoignez l'État numérique souverain. Une communauté sans frontières dédiée aux droits universels, à la justice et au progrès collectif de l'humanité.",
+    es: "Únete al estado digital soberano. Una comunidad sin fronteras dedicada a los derechos universales, la justicia y el avance colectivo de la humanidad.",
+    pt: "Junte-se ao estado digital soberano. Uma comunidade sem fronteiras dedicada aos direitos universais, à justiça e ao avanço coletivo da humanidade.",
+    ru: "Присоединяйтесь к суверенному цифровому государству. Сообщество без границ, посвященное всеобщим правам, справедливости и коллективному прогрессу человечества.",
+    hi: "संप्रभु डिजिटल राज्य से जुड़ें। सार्वभौमिक अधिकारों, न्याय और मानवता की सामूहिक प्रगति के लिए समर्पित एक सीमाहीन समुदाय।",
+    bn: "সার্বভৌম ডিজিটাল রাজ্যে যোগ দিন। সর্বজনীন অধিকার, ন্যায়বিচার এবং মানবজাতির সম্মিলিত অগ্রগতির জন্য নিবেদিত একটি সীমাহীন সম্প্রদায়।",
+    zh: "加入主权数字国家。一个致力于普遍权利、正义和人类共同进步的无国界社区。",
+    ja: "主権デジタル国家に参加しましょう。普遍的権利、正義、そして人類の集団的進歩に捧げられた国境のないコミュニティ。",
+    ar: "انضم إلى الدولة الرقمية السيادية. مجتمع بلا حدود مكرس للحقوق العالمية والعدالة والتقدم الجماعي للبشرية."
+  },
+  "New World State Official Registry": {
+    it: "Registro Ufficiale del New World State",
+    en: "New World State Official Registry",
+    fr: "Registre Officiel du New World State",
+    es: "Registro Oficial del New World State",
+    pt: "Registro Oficial do New World State",
+    ru: "Официальный реестр New World State",
+    hi: "न्यू वर्ल्ड स्टेट आधिकारिक रजिस्ट्री",
+    bn: "নিউ ওয়ার্ল্ড স্টেট অফিসিয়াল রেজিস্ট্রি",
+    zh: "新世界国家官方登记处",
+    ja: "新世界国家公式登録局",
+    ar: "السجل الرسمي لدولة العالم الجديد"
+  },
+  "Citizenship": {
+    it: "Cittadinanza",
+    en: "Citizenship",
+    fr: "Citoyenneté",
+    es: "Ciudadanía",
+    pt: "Cidadania",
+    ru: "Гражданство",
+    hi: "नागरिकता",
+    bn: "নাগরিকত্ব",
+    zh: "公民身份",
+    ja: "市民権",
+    ar: "المواطنة"
+  },
+  "World Sovereign": {
+    it: "Sovrana Mondiale",
+    en: "World Sovereign",
+    fr: "Souveraine Mondiale",
+    es: "Soberana Mundial",
+    pt: "Soberana Mundial",
+    ru: "Мирового Суверена",
+    hi: "विश्व संप्रभु",
+    bn: "বিশ্ব সার্বভৌম",
+    zh: "世界主权",
+    ja: "世界主権",
+    ar: "السيادية العالمية"
+  },
+  "Start Here/Home": {
+    it: "Inizia Qui/Home",
+    en: "Start Here/Home",
+    fr: "Commencer ici/Accueil",
+    es: "Empieza aquí/Inicio",
+    pt: "Comece aqui/Início",
+    ru: "Начните здесь/Главная",
+    hi: "यहाँ से शुरू करें/होम",
+    bn: "এখানে শুরু করুন/হোম",
+    zh: "从这里开始/首页",
+    ja: "ここからスタート/ホーム",
+    ar: "ابدأ من هنا/الرئيسية"
+  },
+  "Authenticity • Integrity • Sovereignty": {
+    it: "Autenticità • Integrità • Sovranità",
+    en: "Authenticity • Integrity • Sovereignty",
+    fr: "Authenticité • Intégrité • Souveraineté",
+    es: "Autenticidad • Integridad • Soberanía",
+    pt: "Autenticidade • Integridade • Soberania",
+    ru: "Подлинность • Целостность • Суверенитет",
+    hi: "प्रामाणिकता • अखंडता • संप्रभुता",
+    bn: "প্রামাণিকতা • অখণ্ডতা • সার্বভৌমত্ব",
+    zh: "真实性 • 完整性 • 主权",
+    ja: "真正性 • 誠実性 • 主権",
+    ar: "الأصالة • النزاهة • السيادة"
   }
 };
 

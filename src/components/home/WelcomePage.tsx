@@ -1,32 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, 
-  HelpCircle, 
-  CheckCircle2, 
   ArrowRight, 
   ShieldCheck, 
   Vote, 
   FileText, 
   Smile, 
   Award, 
-  FileCheck,
   ChevronDown,
-  Info,
   Volume2,
   Pause,
   RotateCcw
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
+import { Language } from '../../constants/translations';
 import PWANotifierBanner from '../pwa/PWANotifierBanner';
 import { NWSShareWidget } from '../democracy/NWSShareWidget';
+import { 
+  HERO_DATA, 
+  TTS_UI_DATA, 
+  ROADMAP_DATA, 
+  QUIZ_DATA, 
+  PORTAL_CARDS_DATA, 
+  FAQS_DATA, 
+  FAQ_HEADER_DATA,
+  FINAL_BANNER_DATA 
+} from '../../data/welcomeTranslations';
+import { 
+  getMatchingVoicesForLanguage, 
+  getBestVoiceForLanguage, 
+  getDefaultBcp47ForLanguage, 
+  getLanguageNativeName 
+} from '../../utils/ttsVoices';
 
 interface WelcomePageProps {
   onStartRegistration: () => void;
   onGoToDemocracy: () => void;
 }
 
+const BCP47_TAGS: Record<Language, string> = {
+  it: 'it-IT',
+  en: 'en-US',
+  fr: 'fr-FR',
+  es: 'es-ES',
+  pt: 'pt-PT',
+  ru: 'ru-RU',
+  hi: 'hi-IN',
+  bn: 'bn-IN',
+  zh: 'zh-CN',
+  ja: 'ja-JP',
+  ar: 'ar-SA'
+};
+
 export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: WelcomePageProps) {
-  const { language, tText } = useI18n();
+  const { language } = useI18n();
+  const currentLang: Language = language in FAQS_DATA ? language : 'en';
+
   const [activeFAQ, setActiveFAQ] = useState<number | null>(null);
   
   // TTS (Text-to-Speech) State
@@ -36,125 +65,83 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceName, setSelectedVoiceName] = useState<string>('');
 
-  // Interactive banana quiz state
+  // Garbage collection protection for Safari / Apple WebKit & keepalive for Chrome/Edge/Firefox
+  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const keepaliveIntervalRef = useRef<any>(null);
+
+  const stopKeepalive = () => {
+    if (keepaliveIntervalRef.current) {
+      clearInterval(keepaliveIntervalRef.current);
+      keepaliveIntervalRef.current = null;
+    }
+  };
+
+  const startKeepalive = () => {
+    stopKeepalive();
+    // Chromium (Chrome/Edge/Brave/Opera) 15-second SpeechSynthesis freeze workaround
+    keepaliveIntervalRef.current = setInterval(() => {
+      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      } else {
+        stopKeepalive();
+      }
+    }, 10000);
+  };
+
+  // Interactive quiz state
   const [quizStep, setQuizStep] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
   const [quizResult, setQuizResult] = useState<string | null>(null);
 
-  const itFAQs = [
-    {
-      q: "Cos'è esattamente il New World State?",
-      a: "È una comunità globale e inclusiva. Immagina uno Stato vero e proprio, dotato di Costituzione e passaporti d'adesione, ma interamente digitale: non occorre trasferirsi o lasciare la propria casa! Consente a persone reali di tutto il pianeta di confrontarsi e deliberare pacificamente insieme."
-    },
-    {
-      q: "Ci sono costi d'iscrizione o tasse da pagare?",
-      a: "Assolutamente NO! 💸 L'adesione è gratuita al 100% per tutti e lo sarà per sempre. Non ci sono costi nascosti, abbonamenti o annunci pubblicitari di terze parti. Chiediamo soltanto il tuo interesse e la tua partecipazione attiva."
-    },
-    {
-      q: "Perché è necessario caricare la foto di un documento d'identità?",
-      a: "Per garantire il massimo livello di trasparenza e sicurezza reciproca. Dobbiamo verificare che ogni iscritto sia effettivamente una persona reale e non un profilo automatizzato o un robot dedito all'invio di posta indesiderata 🤖. I tuoi documenti vengono custoditi d'accordo con severi protocolli di riservatezza e non verranno mai ceduti o condivisi."
-    },
-    {
-      q: "Cosa posso fare una volta completata la registrazione?",
-      a: "Potrai consultare e votare nei referendum della democrazia diretta federale, ottenere il tuo passaporto digitale nominale certificato in formato PDF, proporre nuove iniziative popolari e persino essere eletto o designato a incarichi di servizio della nostra comunità."
-    }
-  ];
+  const faqs = FAQS_DATA[currentLang] || FAQS_DATA.it;
 
-  const enFAQs = [
-    {
-      q: "What exactly is the New World State?",
-      a: "It is a global, inclusive digital community. Imagine a real state with its own Constitution and passports, but entirely digital: you don't need to move or leave your home! It allows real people from all over the world to discuss and vote on important things together."
-    },
-    {
-      q: "Does it cost anything? Are there taxes?",
-      a: "Absolutely NOT! 💸 Joining is 100% free and always will be. There are no fees, subscriptions, or third-party advertisements. We only ask for your interest and active participation."
-    },
-    {
-      q: "Why do you require document verification photos?",
-      a: "To ensure mutual safety and complete transparency. We must verify that every single member is a real human being and not a computerized bot or spam profile 🤖. Your document photos are secured under strict privacy standards and will never be shared or commercialized."
-    },
-    {
-      q: "What can I do once I become a Citizen?",
-      a: "You can view and vote on our direct democracy laws, obtain your officially signed digital Passport in PDF format, submit your own law proposals, and even be assigned to operational service roles in our digital community."
-    }
-  ];
-
-  const faqs = language === 'en' ? enFAQs : itFAQs;
-
-  // Get current text chunks for reading
-  const getSpeakTexts = () => {
+  // Get current text chunks for reading aloud in active language
+  const getSpeakTexts = (): string[] => {
+    const lang = currentLang;
     const texts: string[] = [];
 
     // 1. Hero Content
-    if (language === 'en') {
-      texts.push("Hello! Welcome to the New World State!");
-      texts.push("Have you ever dreamed of a unified digital space where every voice counts directly, without borders or complex bureaucracy? This is New World State: a peaceful and sovereign online community designed for all generations.");
-    } else if (language === 'it') {
-      texts.push("Benvenuto nel New World State!");
-      texts.push("Hai mai desiderato una comunità globale senza barriere fisiche, priva di burocrazia complessa e dove la tua voce conta direttamente? Questo è il New World State: uno spazio condiviso, amichevole e sicuro, progettato per includere tutte le generazioni.");
-    } else if (language === 'fr') {
-      texts.push("Bonjour! Bienvenue dans l'État Citoyen Global!");
-      texts.push("Avez-vous déjà rêvé d'un espace numérique unifié où chaque voix compte directement, sans frontières ni bureaucratie complexe? C'est le New World State: une communauté en ligne pacifique et souveraine conçue pour toutes les générations.");
-    } else if (language === 'es') {
-      texts.push("¡Hola! ¡Bienvenido al Estado Ciudadano Global!");
-      texts.push("¿Alguna vez has soñado con un espacio digital unificado donde cada voz cuente directamente, sin fronteras ni burocracia compleja? Esto es New World State: una comunidad en línea pacífica y soberana diseñada para todas las generaciones.");
-    } else if (language === 'pt') {
-      texts.push("Olá! Bem-vindo ao Estado Cidadão Global!");
-      texts.push("Você já sonhou com um espaço digital unificado onde cada voz conta diretamente, sem fronteiras ou burocracia complexa? Este é o New World State: uma comunidade online pacífica e soberana projetada para todas as gerações.");
-    } else if (language === 'ru') {
-      texts.push("Привет! Добро пожаловать во Всемирное Государство Граждан!");
-      texts.push("Мечтали ли вы когда-нибудь о едином цифровом пространстве, где каждый голос учитывается напрямую, без границ и сложной бюрократии? Это New World State: мирное и суверенное онлайн-сообщество, созданное для всех поколений.");
-    } else if (language === 'hi') {
-      texts.push("नमस्ते! वैश्विक नागरिक राज्य में आपका स्वागत है!");
-      texts.push("क्या आपने कभी एक ऐसे एकीकृत डिजिटल स्थान का सपना देखा है जहाँ हर आवाज बिना सीमाओं या जटिल नौकरशाही के सीधे मायने रखती है? यह न्यू वर्ल्ड स्टेट है: सभी पीढ़ियों के लिए डिज़ाइन किया गया एक शांतिपूर्ण और संप्रभु ऑनलाइन समुदाय।");
-    } else if (language === 'bn') {
-      texts.push("হ্যালো! বিশ্ব নাগরিক রাষ্ট্রে আপনাকে স্বাগতম!");
-      texts.push("আপনি কি কখনো এমন একটি ঐক্যবদ্ধ ডিজিটাল স্পেসের স্বপ্ন দেখেছেন যেখানে প্রতিটি কণ্ঠস্বর সরাসরি গণনা করা হয়, সীমানা বা জটিল আমলাতন্ত্র ছাড়াই? এটি নিউ ওয়ার্ল্ড স্টেট: সমস্ত প্রজন্মের জন্য ডিজাইন করা একটি শান্তিপূর্ণ এবং সার্বভৌম অনলাইন সম্প্রদায়।");
-    } else if (language === 'zh') {
-      texts.push("你好！欢迎来到全球公民国家！");
-      texts.push("您是否曾梦想过一个统一的数字空间，在这里，每个声音都直接计数，没有国界或复杂的官僚机构？这就是新世界国家：一个专为所有世代设计的和平且主权在线社区。");
-    } else if (language === 'ja') {
-      texts.push("こんにちは！世界市民国家へようこそ！");
-      texts.push("国境や複雑な官僚主義なしに、すべての声が直接反映される、統一されたデジタル空間を夢見たことはありませんか？これが新世界国家（New World State）です。すべての世代のために設計された、平和で主権あるオンラインコミュニティです。");
-    } else if (language === 'ar') {
-      texts.push("مرحباً بك في دولة المواطن العالمي!");
-      texts.push("هل حلمت يوماً بمساحة رقمية موحدة حيث يكون لكل صوت قيمة مباشرة، دون حدود أو بيروقراطية معقدة؟ هذه هي دولة العالم الجديد: مجتمع رقمي سلمي وسيادي مصمم لجميع الأجيال.");
-    }
+    texts.push(`${HERO_DATA.titlePart1[lang]} ${HERO_DATA.titlePart2[lang]}`);
+    texts.push(HERO_DATA.description[lang]);
 
     // 2. Three Golden Rules
-    if (language === 'en') {
-      texts.push("How does the Digital State work?");
-      texts.push("First rule: Register for Free. Fill out your basic details and upload your document. It only takes two minutes!");
-      texts.push("Second rule: Receive Your Passport. Our officers verify your details and issue your membership. You will receive your official signed PDF passport via email.");
-      texts.push("Third rule: Participate and Decide. Once active, you are a voting member. You can vote on proposals and key public reforms.");
-    } else if (language === 'it') {
-      texts.push("Come funziona lo Stato Digitale?");
-      texts.push("Prima regola: Ti registri gratis. Inserisci i tuoi dati anagrafici di base e carichi una foto del documento ordinario per confermare la tua identità reale.");
-      texts.push("Seconda regola: Ricevi il Passaporto. I funzionari del nostro archivio anagrafico verificano rapidamente i tuoi dati ed emettono il provvedimento d'iscrizione.");
-      texts.push("Terza regola: Partecipi e decidi. Una volta ottenuto il passaporto, sarai a tutti gli effetti un membro deliberante! Potrai votare sulle decisioni chiave.");
-    } else {
-      texts.push(tText("How does the Digital State work?"));
-      texts.push(tText("Register for Free. Fill out your basic details and upload your document."));
-      texts.push(tText("Receive Your Passport. Our officers verify your details and issue your membership."));
-      texts.push(tText("Participate and Decide. Once active, you are a voting member."));
-    }
+    texts.push(ROADMAP_DATA.title[lang]);
+    texts.push(`${ROADMAP_DATA.step1Title[lang]}: ${ROADMAP_DATA.step1Desc[lang]}`);
+    texts.push(`${ROADMAP_DATA.step2Title[lang]}: ${ROADMAP_DATA.step2Desc[lang]}`);
+    texts.push(`${ROADMAP_DATA.step3Title[lang]}: ${ROADMAP_DATA.step3Desc[lang]}`);
 
-    // 3. FAQs Questions and Answers
-    texts.push(language === 'en' ? "Frequently Asked Questions" : "Domande frequenti");
-    faqs.forEach(faq => {
+    // 3. Portal Roadmap
+    texts.push(PORTAL_CARDS_DATA.title[lang]);
+    texts.push(`${PORTAL_CARDS_DATA.card1Title[lang]}: ${PORTAL_CARDS_DATA.card1Desc[lang]}`);
+    texts.push(`${PORTAL_CARDS_DATA.card2Title[lang]}: ${PORTAL_CARDS_DATA.card2Desc[lang]}`);
+    texts.push(`${PORTAL_CARDS_DATA.card3Title[lang]}: ${PORTAL_CARDS_DATA.card3Desc[lang]}`);
+    texts.push(`${PORTAL_CARDS_DATA.card4Title[lang]}: ${PORTAL_CARDS_DATA.card4Desc[lang]}`);
+
+    // 4. FAQs
+    texts.push(TTS_UI_DATA.title[lang]);
+    const activeFaqs = FAQS_DATA[lang] || FAQS_DATA.it;
+    activeFaqs.forEach(faq => {
       texts.push(faq.q);
       texts.push(faq.a);
     });
+
+    // 5. Final Banner
+    texts.push(FINAL_BANNER_DATA.title[lang]);
+    texts.push(FINAL_BANNER_DATA.desc[lang]);
 
     return texts;
   };
 
   const speakTextSegment = (index: number, rateValue: number, playActive: boolean) => {
-    if (!window.speechSynthesis) return;
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     window.speechSynthesis.cancel();
 
-    if (!playActive) return;
+    if (!playActive) {
+      setIsTtsPlaying(false);
+      return;
+    }
 
     const segments = getSpeakTexts();
     if (index < 0 || index >= segments.length) {
@@ -163,65 +150,124 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
       return;
     }
 
-    const currentText = segments[index];
-    const utterance = new SpeechSynthesisUtterance(currentText);
-    
-    // Find voice matching current language
-    let selectedVoice = voices.find(v => v.name === selectedVoiceName);
-    if (!selectedVoice || !selectedVoice.lang.toLowerCase().startsWith(language.toLowerCase())) {
-      selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(language.toLowerCase()));
-    }
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
+    const rawText = segments[index];
+    // Strip emojis for cross-platform engine stability (Android, Windows, iOS)
+    const cleanText = rawText
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-    utterance.rate = rateValue;
-    utterance.lang = language;
-
-    utterance.onend = () => {
+    if (!cleanText) {
+      // Skip empty text and move to next
       const nextIdx = index + 1;
       setTtsIndex(nextIdx);
-      if (playActive) {
+      if (nextIdx < segments.length) {
         speakTextSegment(nextIdx, rateValue, true);
+      } else {
+        setIsTtsPlaying(false);
+        setTtsIndex(0);
+      }
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    activeUtteranceRef.current = utterance; // Prevent Safari GC garbage collection bug
+    utterance.rate = rateValue;
+
+    // Retrieve best voice strictly matching current language
+    const bestVoice = getBestVoiceForLanguage(voices, currentLang, selectedVoiceName);
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+      utterance.lang = bestVoice.lang;
+    } else {
+      utterance.voice = null;
+      utterance.lang = getDefaultBcp47ForLanguage(currentLang);
+    }
+
+    utterance.onend = () => {
+      stopKeepalive();
+      activeUtteranceRef.current = null;
+      const nextIdx = index + 1;
+      setTtsIndex(nextIdx);
+      if (playActive && nextIdx < segments.length) {
+        speakTextSegment(nextIdx, rateValue, true);
+      } else {
+        setIsTtsPlaying(false);
+        setTtsIndex(0);
       }
     };
 
     utterance.onerror = (e) => {
       console.warn("Speech Synthesis error:", e);
+      stopKeepalive();
+      activeUtteranceRef.current = null;
       if (e.error !== 'interrupted') {
         setIsTtsPlaying(false);
       }
     };
 
-    window.speechSynthesis.speak(utterance);
+    // Micro delay after cancel to prevent iOS/Safari/Chrome race conditions
+    setTimeout(() => {
+      if (window.speechSynthesis) {
+        startKeepalive();
+        window.speechSynthesis.speak(utterance);
+      }
+    }, 60);
   };
 
-  // Synchronously load available voices
+  // Synchronously and asynchronously load voices for Android, Windows, Apple
   useEffect(() => {
-    if (!window.speechSynthesis) return;
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     const updateVoiceList = () => {
       const systemVoices = window.speechSynthesis.getVoices();
-      setVoices(systemVoices);
-      
-      // Select best voice matching the current language
-      const bestMatch = systemVoices.find(v => v.lang.toLowerCase().startsWith(language.toLowerCase()));
-      if (bestMatch) {
-        setSelectedVoiceName(bestMatch.name);
+      if (systemVoices.length > 0) {
+        setVoices(systemVoices);
       }
     };
 
     updateVoiceList();
+
+    // Android Chrome & Safari voice load polling fallback
+    const pollInterval = setInterval(() => {
+      const v = window.speechSynthesis.getVoices();
+      if (v.length > 0) {
+        setVoices(v);
+      }
+    }, 500);
+
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
       window.speechSynthesis.onvoiceschanged = updateVoiceList;
     }
 
     return () => {
+      clearInterval(pollInterval);
+      stopKeepalive();
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
     };
-  }, [language]);
+  }, []);
+
+  // When language changes, auto-select matching voice and reset TTS if playing
+  useEffect(() => {
+    if (voices.length === 0) return;
+
+    const bestVoice = getBestVoiceForLanguage(voices, currentLang);
+    if (bestVoice) {
+      setSelectedVoiceName(bestVoice.name);
+    } else {
+      setSelectedVoiceName('default');
+    }
+
+    if (isTtsPlaying) {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      setIsTtsPlaying(false);
+      setTtsIndex(0);
+    }
+  }, [currentLang, voices]);
 
   // Clean stop on component unmount
   useEffect(() => {
@@ -235,18 +281,21 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
   const handleStartStopTts = () => {
     if (isTtsPlaying) {
       // Stop
-      window.speechSynthesis.cancel();
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
       setIsTtsPlaying(false);
     } else {
       // Start/Resume
       setIsTtsPlaying(true);
-      // Start from current segment index
       speakTextSegment(ttsIndex, ttsRate, true);
     }
   };
 
   const handleResetTts = () => {
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     setIsTtsPlaying(false);
     setTtsIndex(0);
   };
@@ -255,7 +304,6 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     const clampedRate = Math.max(0.5, Math.min(2.0, Number(newRate.toFixed(1))));
     setTtsRate(clampedRate);
     if (isTtsPlaying) {
-      // Instantly apply rate change by restarting current segment
       speakTextSegment(ttsIndex, clampedRate, true);
     }
   };
@@ -267,7 +315,6 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     if (quizStep < 2) {
       setQuizStep(quizStep + 1);
     } else {
-      // Calculate funny result
       setQuizResult("approved");
     }
   };
@@ -278,35 +325,29 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     setQuizResult(null);
   };
 
+  const matchingVoices = getMatchingVoicesForLanguage(voices, currentLang);
+
   return (
     <div className="space-y-16 animate-fade-in" id="welcome-page-component">
       
-      {/* SEZIONE ACCOGLIENZA SUPER SEMPLICE E INTERGENERAZIONALE */}
+      {/* HERO SECTION */}
       <div className="bg-[#0a1c3e] text-white rounded-3xl p-8 md:p-12 border-b-4 border-brand-gold shadow-2xl relative overflow-hidden">
-        {/* Background glow effects */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-3xl mx-auto text-center space-y-6 relative">
           <div className="inline-flex items-center gap-1.5 bg-brand-gold/15 text-amber-200 text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full border border-brand-gold/20">
             <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
-            {language === 'en' ? 'Sovereign Digital onboarding' : 'La tua Guida Semplificata'}
+            {HERO_DATA.badge[currentLang]}
           </div>
 
           <h2 className="text-3xl md:text-5xl font-serif text-white tracking-tight leading-tight">
-            {language === 'en' ? (
-              <>Hello! Welcome to the <br /><span className="text-brand-gold">New World State</span>!</>
-            ) : (
-              <>Benvenuto nel <br /><span className="text-brand-gold">New World State</span>!</>
-            )}
+            {HERO_DATA.titlePart1[currentLang]} <br />
+            <span className="text-brand-gold">{HERO_DATA.titlePart2[currentLang]}</span>
           </h2>
 
           <p className="text-base md:text-lg text-white/80 font-light leading-relaxed">
-            {language === 'en' ? (
-              "Have you ever dreamed of a unified digital space where every voice counts directly, without borders or complex bureaucracy? This is New World State: a peaceful and sovereign online community designed for all generations."
-            ) : (
-              "Hai mai desiderato una comunità globale senza barriere fisiche, priva di burocrazia complessa e dove la tua voce conta direttamente? Questo è il New World State: uno spazio condiviso, amichevole e sicuro, progettato per includere tutte le generazioni."
-            )}
+            {HERO_DATA.description[currentLang]}
           </p>
 
           {/* TTS SPEECH SYNTHESIS ACCESSIBILITY READER */}
@@ -315,16 +356,18 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               <div className="flex items-center gap-2 text-brand-gold">
                 <Volume2 className="w-5 h-5 text-brand-gold animate-pulse" />
                 <span className="text-xs font-tech font-bold uppercase tracking-wider text-amber-100">
-                  {language === 'en' ? 'Audio Assistant Guide' : 'Guida Audio Assistita'}
+                  {TTS_UI_DATA.title[currentLang]}
                 </span>
               </div>
               <div className="text-[10px] font-mono text-slate-300">
                 {isTtsPlaying ? (
                   <span className="text-emerald-400 animate-pulse font-bold flex items-center gap-1">
-                    ● Reading segment {ttsIndex + 1}/{getSpeakTexts().length}
+                    ● {TTS_UI_DATA.readingSegment[currentLang]} {ttsIndex + 1}/{getSpeakTexts().length}
                   </span>
                 ) : (
-                  <span className="text-slate-400">Audio ready • {getSpeakTexts().length} segments</span>
+                  <span className="text-slate-400">
+                    {TTS_UI_DATA.audioReady[currentLang].replace('{count}', getSpeakTexts().length.toString())}
+                  </span>
                 )}
               </div>
             </div>
@@ -332,13 +375,15 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
               {/* Voice Choice */}
               <div className="flex items-center gap-2 bg-[#06122a] p-2 rounded-xl border border-white/5">
-                <span className="text-[9px] uppercase tracking-wider text-slate-300 font-tech font-bold shrink-0">Voice / Voce:</span>
+                <span className="text-[9px] uppercase tracking-wider text-slate-300 font-tech font-bold shrink-0">
+                  {TTS_UI_DATA.voiceLabel[currentLang]}:
+                </span>
                 <select
                   value={selectedVoiceName}
                   onChange={(e) => {
-                    setSelectedVoiceName(e.target.value);
+                    const newVoice = e.target.value;
+                    setSelectedVoiceName(newVoice);
                     if (isTtsPlaying) {
-                      // Apply voice immediately in real time
                       setTimeout(() => {
                         speakTextSegment(ttsIndex, ttsRate, true);
                       }, 100);
@@ -346,33 +391,28 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
                   }}
                   className="bg-transparent text-xs text-brand-gold w-full focus:outline-none cursor-pointer"
                 >
-                  {voices
-                    .filter(v => v.lang.toLowerCase().startsWith(language.toLowerCase()))
-                    .map((v, i) => (
-                      <option key={i} value={v.name} className="text-brand-blue bg-[#0a1c3e] text-xs">
-                        {v.name.replace(/Google/i, '').replace(/Microsoft/i, '').substring(0, 24)} ({v.lang})
-                      </option>
-                    ))}
-                  {/* Fallback to list all voices if none match language */}
-                  {voices.filter(v => v.lang.toLowerCase().startsWith(language.toLowerCase())).length === 0 && (
-                    voices.slice(0, 15).map((v, i) => (
-                      <option key={i} value={v.name} className="text-brand-blue bg-[#0a1c3e] text-xs">
-                        {v.name.substring(0, 24)} ({v.lang})
-                      </option>
-                    ))
-                  )}
+                  <option value="default" className="text-brand-blue bg-[#0a1c3e] text-xs">
+                    {getLanguageNativeName(currentLang)} - Auto ({getDefaultBcp47ForLanguage(currentLang)})
+                  </option>
+                  {matchingVoices.map((v) => (
+                    <option key={v.name} value={v.name} className="text-brand-blue bg-[#0a1c3e] text-xs">
+                      {v.name.replace(/Google/i, '').replace(/Microsoft/i, '').trim().substring(0, 28)} ({v.localService ? 'HD' : 'Cloud'})
+                    </option>
+                  ))}
                 </select>
               </div>
 
               {/* Speed Controls */}
               <div className="flex items-center justify-between bg-[#06122a] p-1.5 rounded-xl border border-white/5 gap-1">
-                <span className="text-[9px] uppercase tracking-wider text-slate-300 font-tech font-bold pl-1.5 font-mono">Speed / Vel:</span>
+                <span className="text-[9px] uppercase tracking-wider text-slate-300 font-tech font-bold pl-1.5 font-mono">
+                  {TTS_UI_DATA.speedLabel[currentLang]}:
+                </span>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleRateChange(ttsRate - 0.2)}
                     disabled={ttsRate <= 0.6}
                     className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 transition flex items-center justify-center font-bold text-slate-300 text-xs disabled:opacity-30 cursor-pointer"
-                    title="Slower"
+                    title={TTS_UI_DATA.slower[currentLang]}
                   >
                     -
                   </button>
@@ -383,7 +423,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
                     onClick={() => handleRateChange(ttsRate + 0.2)}
                     disabled={ttsRate >= 2.0}
                     className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 transition flex items-center justify-center font-bold text-slate-300 text-xs disabled:opacity-30 cursor-pointer"
-                    title="Faster"
+                    title={TTS_UI_DATA.faster[currentLang]}
                   >
                     +
                   </button>
@@ -394,6 +434,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
             {/* Main Action Bar */}
             <div className="flex items-center justify-center gap-4 pt-1">
               <button
+                id="welcome-audio-guide-btn"
                 onClick={handleStartStopTts}
                 className={`px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition active:scale-95 shadow cursor-pointer ${
                   isTtsPlaying 
@@ -404,12 +445,12 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
                 {isTtsPlaying ? (
                   <>
                     <Pause className="w-3.5 h-3.5 fill-current" />
-                    {language === 'en' ? 'Stop Guide' : 'Ferma Guida'}
+                    {TTS_UI_DATA.stopBtn[currentLang]}
                   </>
                 ) : (
                   <>
                     <Volume2 className="w-3.5 h-3.5" />
-                    {language === 'en' ? 'Listen Page 🎧' : 'Ascolta Pagina 🎧'}
+                    {TTS_UI_DATA.listenBtn[currentLang]}
                   </>
                 )}
               </button>
@@ -420,7 +461,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
                 className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 font-bold text-xs tracking-wider transition active:scale-95 disabled:opacity-30 cursor-pointer flex items-center gap-1.5"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                {language === 'en' ? 'Reset' : 'Riavvia'}
+                {TTS_UI_DATA.resetBtn[currentLang]}
               </button>
             </div>
 
@@ -437,14 +478,14 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               onClick={onStartRegistration}
               className="bg-brand-gold hover:bg-brand-gold/90 text-[#0a1c3e] px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide transition shadow-lg active:scale-95 border-b-4 border-amber-600 flex items-center gap-2 cursor-pointer"
             >
-              {language === 'en' ? 'Get My Free Passport Now 🚀' : 'Ottieni il Mio Passaporto Gratis 🚀'}
+              {HERO_DATA.btnPassport[currentLang]}
               <ArrowRight className="w-4 h-4" />
             </button>
             <button 
               onClick={onGoToDemocracy}
               className="bg-white/10 hover:bg-white/20 text-white px-6 py-3.5 rounded-xl font-bold text-sm tracking-wide transition border border-white/20 active:scale-95 cursor-pointer"
             >
-              {language === 'en' ? 'See What We Vote 🗳️' : 'Guarda Cosa Votiamo 🗳️'}
+              {HERO_DATA.btnDemocracy[currentLang]}
             </button>
           </div>
         </div>
@@ -453,19 +494,17 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
       {/* PWA AND BROWSER NOTIFICATIONS SYSTEM PANEL */}
       <PWANotifierBanner />
 
-      {/* SPIEGATO FACILE: LE 3 REGOLE D'ORO */}
+      {/* LE 3 REGOLE D'ORO */}
       <div className="space-y-6">
         <div className="text-center space-y-2">
           <span className="text-xs uppercase tracking-widest font-mono text-[#8a6c31] font-bold">
-            {language === 'en' ? 'A Guided and Clear Roadmap' : 'Un percorso guidato e lineare'}
+            {ROADMAP_DATA.badge[currentLang]}
           </span>
           <h3 className="text-2xl md:text-3xl font-serif text-[#0a1c3e] font-bold">
-            {language === 'en' ? 'How does the Digital State work?' : 'Come funziona lo Stato Digitale?'}
+            {ROADMAP_DATA.title[currentLang]}
           </h3>
           <p className="text-sm text-slate-600 max-w-xl mx-auto">
-            {language === 'en' 
-              ? 'We have reduced the process to the essentials to make it accessible and pleasant for everyone.' 
-              : 'Abbiamo ridotto all\'essenziale la procedura per renderla accessibile e confortevole a chiunque.'}
+            {ROADMAP_DATA.subtitle[currentLang]}
           </p>
         </div>
 
@@ -475,12 +514,10 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               1
             </div>
             <h4 className="font-bold text-[#0a1c3e] text-base">
-              {language === 'en' ? 'Register for Free' : 'Ti registri gratis'}
+              {ROADMAP_DATA.step1Title[currentLang]}
             </h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              {language === 'en' 
-                ? 'Fill out your basic details (name, date of birth, residential address) and upload a photo of your standard document to confirm your real identity. It only takes two minutes!' 
-                : 'Inserisci i tuoi dati anagrafici di base (nome, data di nascita, indirizzo residenziale) e carichi una foto del documento ordinario per confermare la tua identità reale. Richiede solo un paio di minuti!'}
+              {ROADMAP_DATA.step1Desc[currentLang]}
             </p>
           </div>
 
@@ -489,12 +526,10 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               2
             </div>
             <h4 className="font-bold text-[#0a1c3e] text-base">
-              {language === 'en' ? 'Receive Your Passport' : 'Ricevi il Passaporto'}
+              {ROADMAP_DATA.step2Title[currentLang]}
             </h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              {language === 'en' 
-                ? 'Our registry officers quickly verify your details and issue your membership. You will receive your official signed PDF passport via email protected by a 16-digit code.' 
-                : 'I funzionari del nostro archivio anagrafico verificano rapidamente i tuoi dati ed emettono il provvedimento d\'iscrizione. Riceverai via e-mail il tuo passaporto ufficiale PDF protetto da un codice a 16 cifre.'}
+              {ROADMAP_DATA.step2Desc[currentLang]}
             </p>
           </div>
 
@@ -503,35 +538,31 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               3
             </div>
             <h4 className="font-bold text-[#0a1c3e] text-base">
-              {language === 'en' ? 'Participate and Decide' : 'Partecipi e decidi'}
+              {ROADMAP_DATA.step3Title[currentLang]}
             </h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              {language === 'en' 
-                ? 'Once your passport is active, you are a full voting member! You can vote YES or NO on proposals and key public reforms.' 
-                : 'Una volta ottenuto il passaporto, sarai a tutti gli effetti un membro deliberante! Potrai votare SI o NO sulle proposte e riforme d\'interesse pubblico, esprimendoti su ogni decisione chiave.'}
+              {ROADMAP_DATA.step3Desc[currentLang]}
             </p>
           </div>
         </div>
       </div>
 
-      {/* QUIZ DIVERTENTE E GUIDATO - TEST DI CONOSCENZA */}
+      {/* QUIZ INTERATTIVO */}
       <div className="bg-amber-500/5 border border-brand-gold/30 rounded-3xl p-8 md:p-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 text-3xl opacity-25 select-none pointer-events-none">
-          {language === 'en' ? '✨ Self-Check' : '✨ Autocontrollo'}
+          {QUIZ_DATA.badge[currentLang]}
         </div>
         
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="text-center space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#0a1c3e] font-mono">
-              {language === 'en' ? 'Quick Alignment Test' : 'Test di Sincronia Veloce'}
+              {QUIZ_DATA.subBadge[currentLang]}
             </span>
             <h3 className="font-serif text-[#0a1c3e] text-2xl font-bold">
-              {language === 'en' ? 'Take the "Welcome Test" 🌟' : 'Fai il "Test di Benvenuto" 🌟'}
+              {QUIZ_DATA.title[currentLang]}
             </h3>
             <p className="text-xs text-slate-600">
-              {language === 'en' 
-                ? 'Three fast questions to help you verify if our digital democracy aligns with your values!' 
-                : 'Tre risposte veloci per capire se la nostra democrazia fa al caso tuo!'}
+              {QUIZ_DATA.subtitle[currentLang]}
             </p>
           </div>
 
@@ -541,25 +572,23 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
                 <Smile className="w-10 h-10 text-emerald-600" />
               </div>
               <h4 className="font-serif text-[#0a1c3e] text-xl font-bold">
-                {language === 'en' ? 'RESULT: You are the ideal citizen! 🌟🎉' : 'RISULTATO: Sei il cittadino ideale! 🌟🎉'}
+                {QUIZ_DATA.resultTitle[currentLang]}
               </h4>
-              <p className="text-xs text-slate-600 max-w-md mx-auto">
-                {language === 'en' 
-                  ? 'You answered perfectly! Your choices indicate that you appreciate active participation, value freedom of thought, and look with confidence to new digital opportunities. You are ready to be part of the New World State!' 
-                  : 'Hai risposto perfettamente! Le tue risposte indicano che ami la partecipazione attiva, apprezzi la libertà di pensiero e desideri guardare con fiducia alle nuove opportunità digitali. Sei pronto per far parte del New World State!'}
+              <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                {QUIZ_DATA.resultDesc[currentLang]}
               </p>
               <div className="pt-2 flex justify-center gap-3">
                 <button 
                   onClick={onStartRegistration}
-                  className="bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide transition uppercase shadow"
+                  className="bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] px-6 py-2.5 rounded-xl text-xs font-bold tracking-wide transition uppercase shadow cursor-pointer"
                 >
-                  {language === 'en' ? 'Register now! 🚀' : 'Registrati subito! 🚀'}
+                  {QUIZ_DATA.resultCta[currentLang]}
                 </button>
                 <button 
                   onClick={resetQuiz}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer"
                 >
-                  {language === 'en' ? 'Retake the test' : 'Rifai il test'}
+                  {QUIZ_DATA.resultReset[currentLang]}
                 </button>
               </div>
             </div>
@@ -568,25 +597,23 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               {quizStep === 0 && (
                 <div className="space-y-4">
                   <div className="text-xs font-mono text-[#8a6c31] uppercase font-bold">
-                    {language === 'en' ? 'Question 1 of 3' : 'Domanda 1 di 3'}
+                    {QUIZ_DATA.q1Label[currentLang]}
                   </div>
                   <h4 className="font-bold text-[#0a1c3e] text-sm">
-                    {language === 'en' 
-                      ? 'Do you like to express your opinion on decisions that impact the common interest? 🗳️' 
-                      : 'Ti piace esprimere la tua opinione sulle decisioni di interesse comune? 🗳️'}
+                    {QUIZ_DATA.q1Question[currentLang]}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <button 
                       onClick={() => handleQuizAnswer('A')}
-                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-brand-gold hover:bg-brand-gold/5 transition text-xs font-semibold text-slate-700"
+                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-brand-gold hover:bg-brand-gold/5 transition text-xs font-semibold text-slate-700 cursor-pointer"
                     >
-                      {language === 'en' ? '💡 Yes, I love participating and speaking up directly!' : '💡 Sì, mi piace partecipare e dire la mia in modo diretto!'}
+                      {QUIZ_DATA.q1OptionA[currentLang]}
                     </button>
                     <button 
                       onClick={() => handleQuizAnswer('B')}
-                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-[#0a1c3e] hover:bg-[#0a1c3e]/5 transition text-xs font-semibold text-slate-500"
+                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-[#0a1c3e] hover:bg-[#0a1c3e]/5 transition text-xs font-semibold text-slate-500 cursor-pointer"
                     >
-                      {language === 'en' ? '😴 I prefer letting other people make those choices for me.' : '😴 Preferisco lasciare che siano gli altri a scegliere per me.'}
+                      {QUIZ_DATA.q1OptionB[currentLang]}
                     </button>
                   </div>
                 </div>
@@ -595,25 +622,23 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               {quizStep === 1 && (
                 <div className="space-y-4">
                   <div className="text-xs font-mono text-[#8a6c31] uppercase font-bold">
-                    {language === 'en' ? 'Question 2 of 3' : 'Domanda 2 di 3'}
+                    {QUIZ_DATA.q2Label[currentLang]}
                   </div>
                   <h4 className="font-bold text-[#0a1c3e] text-sm">
-                    {language === 'en' 
-                      ? 'What do you usually do when you notice an inadequate rule or procedure in the real world? 🌍' 
-                      : 'Cosa fai di solito quando noti una regola o una procedura inadeguata nel mondo reale? 🌍'}
+                    {QUIZ_DATA.q2Question[currentLang]}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <button 
                       onClick={() => handleQuizAnswer('A')}
-                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-brand-gold hover:bg-brand-gold/5 transition text-xs font-semibold text-slate-700"
+                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-brand-gold hover:bg-brand-gold/5 transition text-xs font-semibold text-slate-700 cursor-pointer"
                     >
-                      {language === 'en' ? '🔥 I would love to propose concrete solutions and work for change!' : '🔥 Vorrei poter proporre soluzioni concrete e partecipare al cambiamento!'}
+                      {QUIZ_DATA.q2OptionA[currentLang]}
                     </button>
                     <button 
                       onClick={() => handleQuizAnswer('B')}
-                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-[#0a1c3e] hover:bg-[#0a1c3e]/5 transition text-xs font-semibold text-slate-500"
+                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-[#0a1c3e] hover:bg-[#0a1c3e]/5 transition text-xs font-semibold text-slate-500 cursor-pointer"
                     >
-                      {language === 'en' ? '🪴 I let it slide because I think nothing can ever honestly change.' : '🪴 Lascio correre perché penso che non si possa cambiare nulla.'}
+                      {QUIZ_DATA.q2OptionB[currentLang]}
                     </button>
                   </div>
                 </div>
@@ -622,25 +647,23 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
               {quizStep === 2 && (
                 <div className="space-y-4">
                   <div className="text-xs font-mono text-[#8a6c31] uppercase font-bold">
-                    {language === 'en' ? 'Question 3 of 3' : 'Domanda 3 di 3'}
+                    {QUIZ_DATA.q3Label[currentLang]}
                   </div>
                   <h4 className="font-bold text-[#0a1c3e] text-sm font-serif">
-                    {language === 'en' 
-                      ? 'Would you like to belong to a peaceful Digital State and obtain a free federal passport? 💳' 
-                      : 'Ti piacerebbe far parte di uno Stato Digitale pacifico e ricevere un passaporto federale gratuito? 💳'}
+                    {QUIZ_DATA.q3Question[currentLang]}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <button 
                       onClick={() => handleQuizAnswer('A')}
-                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-brand-gold hover:bg-brand-gold/5 transition text-xs font-semibold text-slate-700"
+                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-brand-gold hover:bg-brand-gold/5 transition text-xs font-semibold text-slate-700 cursor-pointer"
                     >
-                      {language === 'en' ? '😎 Absolutely yes! It is an innovative and exciting concept.' : '😎 Assolutamente sì! È un\'idea innovativa ed emozionante.'}
+                      {QUIZ_DATA.q3OptionA[currentLang]}
                     </button>
                     <button 
                       onClick={() => handleQuizAnswer('B')}
-                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-[#0a1c3e] hover:bg-[#0a1c3e]/5 transition text-xs font-semibold text-slate-500"
+                      className="text-left p-3 rounded-xl border border-slate-200 hover:border-[#0a1c3e] hover:bg-[#0a1c3e]/5 transition text-xs font-semibold text-slate-500 cursor-pointer"
                     >
-                      {language === 'en' ? '😢 No, I prefer old paths and standard paperwork.' : '😢 No, preferisco i vecchi canali e la burocrazia ordinaria.'}
+                      {QUIZ_DATA.q3OptionB[currentLang]}
                     </button>
                   </div>
                 </div>
@@ -657,79 +680,69 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
       <div className="space-y-6">
         <div className="text-center space-y-1">
           <span className="text-xs uppercase tracking-widest font-mono text-[#0a1c3e] font-bold">
-            {language === 'en' ? 'Portal Roadmap' : 'La mappa del portale'}
+            {PORTAL_CARDS_DATA.badge[currentLang]}
           </span>
           <h3 className="text-2xl md:text-3xl font-serif text-[#0a1c3e] font-bold">
-            {language === 'en' ? 'What can you find here?' : 'Cosa trovi su questo sito?'}
+            {PORTAL_CARDS_DATA.title[currentLang]}
           </h3>
           <p className="text-sm text-slate-600">
-            {language === 'en'
-              ? 'A simple and friendly overview of the main areas of our digital environment!'
-              : 'Un riassunto amichevole e immediato delle stanze principali del nostro Stato!'}
+            {PORTAL_CARDS_DATA.subtitle[currentLang]}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start">
-            <div className="p-3 bg-amber-50 text-[#8a6c31] rounded-xl">
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start hover:shadow-md transition">
+            <div className="p-3 bg-amber-50 text-[#8a6c31] rounded-xl shrink-0">
               <Vote className="w-6 h-6" />
             </div>
             <div className="space-y-1">
               <h4 className="font-bold text-[#0a1c3e] text-sm">
-                {language === 'en' ? 'Referendum & Voting (Democracy)' : 'Referendum e Votazioni (Democrazia)'}
+                {PORTAL_CARDS_DATA.card1Title[currentLang]}
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                {language === 'en'
-                  ? 'The heart of our community! Here you can see proposals made by other citizens, view explanation details, vote \'In Favor\' or \'Against\', or submit your own ideas.'
-                  : 'È il cuore pulsante! Qui vedi le riforme proposte dai cittadini. Puoi leggere i dettagli e votare "Favorevole" o "Contrario", oppure proporre una tua idea d\'interesse collettivo.'}
+                {PORTAL_CARDS_DATA.card1Desc[currentLang]}
               </p>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start">
-            <div className="p-3 bg-blue-50 text-brand-blue rounded-xl">
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start hover:shadow-md transition">
+            <div className="p-3 bg-blue-50 text-brand-blue rounded-xl shrink-0">
               <FileText className="w-6 h-6" />
             </div>
             <div className="space-y-1">
               <h4 className="font-bold text-[#0a1c3e] text-sm">
-                {language === 'en' ? 'Rules of the State (Constitution)' : 'Le Regole dello Stato (Costituzione)'}
+                {PORTAL_CARDS_DATA.card2Title[currentLang]}
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                {language === 'en'
-                  ? 'No complicated legal jargon. Our fundamental principles are presented in a clean, straightforward, and readable Constitution and Charter of Rights.'
-                  : 'Nessun linguaggio incomprensibile o polveroso. I nostri principi fondamentali sono scritti in modo chiaro, semplice e trasparente nella Costituzione e nella Carta dei Diritti.'}
+                {PORTAL_CARDS_DATA.card2Desc[currentLang]}
               </p>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-150 rounded-2xl p-6 shadow-sm flex gap-4 items-start">
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start hover:shadow-md transition">
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div className="space-y-1">
               <h4 className="font-bold text-[#0a1c3e] text-sm">
-                {language === 'en' ? 'Data Protection & Privacy' : 'Tutela dei tuoi Dati (Privacy)'}
+                {PORTAL_CARDS_DATA.card3Title[currentLang]}
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                {language === 'en'
-                  ? 'Your safety and privacy are our highest priority. We employ robust protocols to ensure your credentials are fully safeguarded from any misuse.'
-                  : 'La tua sicurezza e la tua privacy sono per noi una priorità assoluta. Usiamo moderni protocolli di tutela per assicurarci che i dati inseriti siano protetti e al riparo da utilizzi impropri.'}
+                {PORTAL_CARDS_DATA.card3Desc[currentLang]}
               </p>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start">
-            <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start hover:shadow-md transition">
+            <div className="p-3 bg-purple-50 text-purple-600 rounded-xl shrink-0">
               <Award className="w-6 h-6" />
             </div>
             <div className="space-y-1">
               <h4 className="font-bold text-[#0a1c3e] text-sm">
-                {language === 'en' ? 'Administration Console' : 'Consolle di Amministrazione'}
+                {PORTAL_CARDS_DATA.card4Title[currentLang]}
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                {language === 'en'
-                  ? 'An area reserved for verified officers to update the civil registry, approve digital PDF passport requests, and offer support to citizens.'
-                  : 'L\'area riservata ai delegati d\'ufficio per l\'aggiornamento dell\'anagrafe, l\'attivazione dei passaporti digitali in formato PDF e il supporto diretto a tutti i cittadini.'}
+                {PORTAL_CARDS_DATA.card4Desc[currentLang]}
               </p>
             </div>
           </div>
@@ -740,24 +753,22 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
       <div className="space-y-6">
         <div className="text-center space-y-1">
           <span className="text-xs uppercase tracking-widest font-mono text-[#8a6c31] font-bold">
-            {language === 'en' ? 'Frequently Asked Questions' : 'Domande frequenti'}
+            FAQ
           </span>
           <h3 className="text-2xl md:text-3xl font-serif text-[#0a1c3e] font-bold">
-            {language === 'en' ? 'Clear Answers to Common Questions' : 'Risposte semplici a domande comuni'}
+            {FAQ_HEADER_DATA.title[currentLang]}
           </h3>
           <p className="text-sm text-slate-600">
-            {language === 'en'
-              ? 'Everything you need to know, explained in complete transparency.'
-              : 'Tutto quello che c\'è da sapere, spiegato in totale trasparenza.'}
+            {FAQ_HEADER_DATA.subtitle[currentLang]}
           </p>
         </div>
 
         <div className="max-w-3xl mx-auto space-y-3">
           {faqs.map((faq, index) => (
-            <div key={index} className="border border-slate-105 rounded-xl bg-white overflow-hidden shadow-sm">
+            <div key={index} className="border border-slate-100 rounded-xl bg-white overflow-hidden shadow-sm">
               <button 
                 onClick={() => setActiveFAQ(activeFAQ === index ? null : index)}
-                className="w-full p-4 text-left font-bold text-xs md:text-sm text-[#0a1c3e] flex justify-between items-center bg-slate-50/50 hover:bg-slate-50 transition"
+                className="w-full p-4 text-left font-bold text-xs md:text-sm text-[#0a1c3e] flex justify-between items-center bg-slate-50/50 hover:bg-slate-50 transition cursor-pointer"
               >
                 <span data-readable="true" className="faq-question-text">{faq.q}</span>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${activeFAQ === index ? 'rotate-180 text-brand-gold' : ''}`} />
@@ -772,17 +783,15 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
         </div>
       </div>
 
-      {/* BANNER FINALE: GUIDA ALLA REGISTRAZIONE ISTANTANEA */}
+      {/* BANNER FINALE */}
       <div className="bg-gradient-to-br from-[#0a1c3e] to-[#c5a880]/20 rounded-3xl p-8 border border-[#c5a880]/30 text-center space-y-6 shadow-xl relative overflow-hidden">
         <div className="text-brand-gold text-4xl">🚀</div>
         <div className="space-y-2 max-w-xl mx-auto">
           <h3 className="font-serif text-white text-2xl md:text-3xl font-bold">
-            {language === 'en' ? 'Join a New Digital Era' : 'Partecipa a una nuova era digitale'}
+            {FINAL_BANNER_DATA.title[currentLang]}
           </h3>
           <p className="text-xs md:text-sm text-white/80 leading-relaxed">
-            {language === 'en'
-              ? 'It only takes two minutes to secure your details and register into this peaceful and innovative global community.'
-              : 'Bastano soli due minuti per registrare i propri dati in totale sicurezza ed entrare a far parte di questa innovativa rete pacifica e federale.'}
+            {FINAL_BANNER_DATA.desc[currentLang]}
           </p>
         </div>
 
@@ -791,14 +800,12 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
             onClick={onStartRegistration}
             className="bg-brand-gold hover:bg-brand-gold/90 text-[#0a1c3e] px-10 py-4 rounded-xl font-bold text-sm tracking-widest uppercase transition shadow-lg hover:scale-105 active:scale-95 border-b-4 border-amber-600 cursor-pointer text-center"
           >
-            {language === 'en' ? 'Start Free Registration Now! ✍️' : 'Inizia la Registrazione Gratuita Ora! ✍️'}
+            {FINAL_BANNER_DATA.cta[currentLang]}
           </button>
         </div>
 
         <p className="text-[10px] uppercase font-mono text-white/40 tracking-[0.2em]">
-          {language === 'en' 
-            ? 'Secured and verified under the New World State Federal Protocol © 2026'
-            : 'Controllato e garantito dal Protocollo Federale New World State © 2026'}
+          {FINAL_BANNER_DATA.copyright[currentLang]}
         </p>
       </div>
 

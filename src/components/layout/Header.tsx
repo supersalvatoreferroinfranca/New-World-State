@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export default function Header({ activeTab, setActiveTab }: HeaderProps) {
-  const { language, setLanguage, t } = useI18n();
+  const { language, setLanguage, t, tText } = useI18n();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { branding } = useBranding();
 
@@ -180,7 +180,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               {/* Navigation Items Area */}
               <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
                 <p className="text-[10px] uppercase tracking-[0.25em] font-tech text-brand-gold/60 px-3 mb-4">
-                  {language === 'en' ? 'Sovereign Navigation' : 'Navigazione Sovrana'}
+                  {tText('Sovereign Navigation', 'Navigazione Sovrana')}
                 </p>
 
                 {navigationItems.map((item) => {

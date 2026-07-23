@@ -47,6 +47,237 @@ import PWANotifierBanner from '../pwa/PWANotifierBanner';
 import { LegislativeTextRenderer } from './LegislativeTextRenderer';
 import { NWSShareWidget } from './NWSShareWidget';
 import FederalChat from '../chat/FederalChat';
+import { Language } from '../../constants/translations';
+
+const AUTH_TEXTS: Record<Language, {
+  authTitle: string;
+  authDesc: string;
+  citizenInputLabel: string;
+  citizenInputPlaceholder: string;
+  tempPassNote: string;
+  detectedUserLabel: string;
+  modifyBtn: string;
+  passwordLabelStandard: string;
+  passwordLabelEmail: string;
+  passwordLabelPhone: string;
+  passwordPlaceholder: string;
+  continueBtn: string;
+  authenticateBtn: string;
+  verifyingBtn: string;
+  smsSimulatorTitle: string;
+  smsSimulatorBody: (code: string) => string;
+  adminNote: string;
+}> = {
+  it: {
+    authTitle: "Autenticazione Sovrana Richiesta",
+    authDesc: "Per garantire la genuinità della delibera e impedire il voto plurimo, inserisci le credenziali create durante la tua domanda di cittadinanza del New World State.",
+    citizenInputLabel: "Codice Cittadino, Username, Email o Telefono",
+    citizenInputPlaceholder: "es: nome@dominio.it o +39 333...",
+    tempPassNote: "Se ti sei registrato solo con email o solo con telefono, riceverai una password temporanea valida per questa sessione.",
+    detectedUserLabel: "UTENTE RILEVATO",
+    modifyBtn: "Modifica",
+    passwordLabelStandard: "Password di Registrazione",
+    passwordLabelEmail: "Inserisci Password Temporanea (inviata via Email)",
+    passwordLabelPhone: "Inserisci Password Temporanea (inviata via SMS)",
+    passwordPlaceholder: "La tua password",
+    continueBtn: "Avanti",
+    authenticateBtn: "Sblocca Diritto di Voto",
+    verifyingBtn: "Verifica...",
+    smsSimulatorTitle: "SIMULATORE SMS (Ricevuto Ora)",
+    smsSimulatorBody: (code) => `[New World State Anagrafe] La tua password temporanea per la Democrazia Online è: ${code}.`,
+    adminNote: "Sei autenticato come Amministratore nel sistema. Per validare o rifiutare le proposte in sospeso senza un account cittadino, accedi comunque con un account sovrano di test o approvato."
+  },
+  en: {
+    authTitle: "Sovereign Authentication Required",
+    authDesc: "To guarantee the authenticity of the vote and prevent multiple voting, please enter the credentials created during your New World State citizenship application.",
+    citizenInputLabel: "Citizen Code, Username, Email or Phone",
+    citizenInputPlaceholder: "e.g. name@domain.com or +44 777...",
+    tempPassNote: "If you registered only with email or phone, you will receive a temporary password valid for this session.",
+    detectedUserLabel: "DETECTED USER",
+    modifyBtn: "Modify",
+    passwordLabelStandard: "Registration Password",
+    passwordLabelEmail: "Enter Temporary Password (sent via Email)",
+    passwordLabelPhone: "Enter Temporary Password (sent via SMS)",
+    passwordPlaceholder: "Your password",
+    continueBtn: "Continue",
+    authenticateBtn: "Authenticate Identity",
+    verifyingBtn: "Verifying...",
+    smsSimulatorTitle: "SMS SIMULATOR (Received Just Now)",
+    smsSimulatorBody: (code) => `[New World State Registry] Your temporary password for Online Democracy is: ${code}.`,
+    adminNote: "You are authenticated as an Administrator in this system. To validate or reject pending proposals without a citizen account, you still need to log in with a test or approved sovereign citizen account."
+  },
+  fr: {
+    authTitle: "Authentification Souveraine Requise",
+    authDesc: "Pour garantir l'authenticité du vote et éviter le vote multiple, veuillez saisir les identifiants créés lors de votre demande de citoyenneté du New World State.",
+    citizenInputLabel: "Code Citoyen, Identifiant, E-mail ou Téléphone",
+    citizenInputPlaceholder: "ex. nom@domaine.fr ou +33 6...",
+    tempPassNote: "Si vous vous êtes inscrit uniquement par e-mail ou téléphone, vous recevrez un mot de passe temporaire pour cette session.",
+    detectedUserLabel: "UTILISATEUR DÉTECTÉ",
+    modifyBtn: "Modifier",
+    passwordLabelStandard: "Mot de passe d'inscription",
+    passwordLabelEmail: "Entrez le mot de passe temporaire (envoyé par e-mail)",
+    passwordLabelPhone: "Entrez le mot de passe temporaire (envoyé par SMS)",
+    passwordPlaceholder: "Votre mot de passe",
+    continueBtn: "Continuer",
+    authenticateBtn: "Authentifier l'identité",
+    verifyingBtn: "Vérification...",
+    smsSimulatorTitle: "SIMULATEUR SMS (Reçu à l'instant)",
+    smsSimulatorBody: (code) => `[Registre New World State] Votre mot de passe temporaire pour la Démocratie en ligne est : ${code}.`,
+    adminNote: "Vous êtes authentifié en tant qu'Administrateur dans ce système. Pour valider ou rejeter les propositions en attente sans compte citoyen, connectez-vous avec un compte citoyen souverain."
+  },
+  es: {
+    authTitle: "Autenticación Soberana Requerida",
+    authDesc: "Para garantizar la autenticidad del voto y evitar el voto múltiple, ingrese las credenciales creadas durante su solicitud de ciudadanía del New World State.",
+    citizenInputLabel: "Código Ciudadano, Usuario, Email o Teléfono",
+    citizenInputPlaceholder: "ej. nombre@dominio.es o +34 6...",
+    tempPassNote: "Si se registró solo con email o teléfono, recibirá una contraseña temporal válida para esta sesión.",
+    detectedUserLabel: "USUARIO DETECTADO",
+    modifyBtn: "Modificar",
+    passwordLabelStandard: "Contraseña de Registro",
+    passwordLabelEmail: "Ingrese Contraseña Temporal (enviada por Email)",
+    passwordLabelPhone: "Ingrese Contraseña Temporal (enviada por SMS)",
+    passwordPlaceholder: "Tu contraseña",
+    continueBtn: "Continuar",
+    authenticateBtn: "Autenticar Identidad",
+    verifyingBtn: "Verificando...",
+    smsSimulatorTitle: "SIMULADOR SMS (Recibido Ahora)",
+    smsSimulatorBody: (code) => `[Registro New World State] Su contraseña temporal para la Democracia en Línea es: ${code}.`,
+    adminNote: "Está autenticado como Administrador en este sistema. Para validar o rechazar propuestas sin cuenta de ciudadano, inicie sesión con una cuenta soberana."
+  },
+  pt: {
+    authTitle: "Autenticação Soberana Necessária",
+    authDesc: "Para garantir a autenticidade do voto e evitar voto múltiplo, insira as credenciais criadas durante seu pedido de cidadania do New World State.",
+    citizenInputLabel: "Código de Cidadão, Nome de Usuário, Email ou Telefone",
+    citizenInputPlaceholder: "ex. nome@dominio.pt ou +351 9...",
+    tempPassNote: "Se você se registrou apenas com e-mail ou telefone, receberá uma senha temporária válida para esta sessão.",
+    detectedUserLabel: "USUÁRIO DETECTADO",
+    modifyBtn: "Modificar",
+    passwordLabelStandard: "Senha de Registro",
+    passwordLabelEmail: "Insira a Senha Temporária (enviada por Email)",
+    passwordLabelPhone: "Insira a Senha Temporária (enviada por SMS)",
+    passwordPlaceholder: "Sua senha",
+    continueBtn: "Continuar",
+    authenticateBtn: "Autenticar Identidade",
+    verifyingBtn: "Verificando...",
+    smsSimulatorTitle: "SIMULADOR SMS (Recebido Agora)",
+    smsSimulatorBody: (code) => `[Registro New World State] Sua senha temporária para a Democracia Online é: ${code}.`,
+    adminNote: "Você está autenticado como Administrador neste sistema. Para validar ou rejeitar propostas sem conta de cidadão, faça login com uma conta soberana."
+  },
+  ru: {
+    authTitle: "Требуется суверенная аутентификация",
+    authDesc: "Чтобы гарантировать подлинность голосования и предотвратить повторное голосование, введите данные, созданные при подаче заявления на гражданство New World State.",
+    citizenInputLabel: "Код гражданина, имя пользователя, Email или телефон",
+    citizenInputPlaceholder: "например, name@domain.ru или +7 9...",
+    tempPassNote: "Если вы зарегистрировались только по электронной почте или телефону, вы получите временный пароль для этой сессии.",
+    detectedUserLabel: "ОБНАРУЖЕН ПОЛЬЗОВАТЕЛЬ",
+    modifyBtn: "Изменить",
+    passwordLabelStandard: "Пароль регистрации",
+    passwordLabelEmail: "Введите временный пароль (отправлен по Email)",
+    passwordLabelPhone: "Введите временный пароль (отправлен по SMS)",
+    passwordPlaceholder: "Ваш пароль",
+    continueBtn: "Продолжить",
+    authenticateBtn: "Подтвердить личность",
+    verifyingBtn: "Проверка...",
+    smsSimulatorTitle: "СИМУЛЯТОР SMS (Только что получено)",
+    smsSimulatorBody: (code) => `[Реестр New World State] Ваш временный пароль для Онлайн Демократии: ${code}.`,
+    adminNote: "Вы аутентифицированы как Администратор. Чтобы проверять или отклонять предложения без аккаунта гражданина, войдите под суверенным аккаунтом гражданина."
+  },
+  hi: {
+    authTitle: "संप्रभु प्रमाणीकरण आवश्यक है",
+    authDesc: "मतदान की प्रामाणिकता की गारंटी देने और बहु-मतदान को रोकने के लिए, कृपया अपने न्यू वर्ल्ड स्टेट नागरिकता आवेदन के दौरान बनाए गए क्रेडेंशियल दर्ज करें।",
+    citizenInputLabel: "नागरिक कोड, उपयोगकर्ता नाम, ईमेल या फोन",
+    citizenInputPlaceholder: "जैसे name@domain.in या +91 98...",
+    tempPassNote: "यदि आपने केवल ईमेल या फोन के साथ पंजीकरण किया है, तो आपको इस सत्र के लिए एक अस्थायी पासवर्ड प्राप्त होगा।",
+    detectedUserLabel: "पहचाना गया उपयोगकर्ता",
+    modifyBtn: "संशोधित करें",
+    passwordLabelStandard: "पंजीकरण पासवर्ड",
+    passwordLabelEmail: "अस्थायी पासवर्ड दर्ज करें (ईमेल द्वारा भेजा गया)",
+    passwordLabelPhone: "अस्थायी पासवर्ड दर्ज करें (एसएमएस द्वारा भेजा गया)",
+    passwordPlaceholder: "आपका पासवर्ड",
+    continueBtn: "जारी रखें",
+    authenticateBtn: "पहचान प्रमाणित करें",
+    verifyingBtn: "सत्यापित हो रहा है...",
+    smsSimulatorTitle: "एसएमएस सिम्युलेटर (अभी प्राप्त हुआ)",
+    smsSimulatorBody: (code) => `[न्यू वर्ल्ड स्टेट रजिस्ट्री] ऑनलाइन लोकतंत्र के लिए आपका अस्थायी पासवर्ड है: ${code}.`,
+    adminNote: "आप इस प्रणाली में प्रशासक के रूप में प्रमाणित हैं। नागरिक खाते के बिना प्रस्तावों को सत्यापित या अस्वीकार करने के लिए, संप्रभु नागरिक खाते से लॉगिन करें।"
+  },
+  bn: {
+    authTitle: "সার্বভৌম প্রমানীকরণ আবশ্যক",
+    authDesc: "ভোটের সত্যতা নিশ্চিত করতে এবং একাধিক ভোটিং প্রতিরোধ করতে, আপনার নিউ ওয়ার্ল্ড স্টেট নাগরিকত্ব আবেদনের সময় তৈরি করা তথ্য প্রবেশ করান।",
+    citizenInputLabel: "নাগরিক কোড, ব্যবহারকারীর নাম, ইমেইল বা ফোন",
+    citizenInputPlaceholder: "যেমন name@domain.com বা +880 1...",
+    tempPassNote: "আপনি যদি কেবল ইমেল বা ফোন দিয়ে নিবন্ধিত হন তবে আপনি এই সেশনের জন্য একটি অস্থায়ী পাসওয়ার্ড পাবেন।",
+    detectedUserLabel: "শনাক্তকৃত ব্যবহারকারী",
+    modifyBtn: "পরিবর্তন",
+    passwordLabelStandard: "নিবন্ধন পাসওয়ার্ড",
+    passwordLabelEmail: "অস্থায়ী পাসওয়ার্ড দিন (ইমেলের মাধ্যমে প্রেরিত)",
+    passwordLabelPhone: "অস্থায়ী পাসওয়ার্ড দিন (এসএমএস এর মাধ্যমে প্রেরিত)",
+    passwordPlaceholder: "আপনার পাসওয়ার্ড",
+    continueBtn: "চালিয়ে যান",
+    authenticateBtn: "পরিচয় প্রমাণীকরণ করুন",
+    verifyingBtn: "যাচাই করা হচ্ছে...",
+    smsSimulatorTitle: "এসএমএস সিমুলেটর (এখনই প্রাপ্ত)",
+    smsSimulatorBody: (code) => `[নিউ ওয়ার্ল্ড স্টেট রেজিস্ট্রি] অনলাইন ডেমোক্রেসির জন্য আপনার অস্থায়ী পাসওয়ার্ড: ${code}.`,
+    adminNote: "আপনি প্রশাসকের হিসাবে প্রমাণীকৃত। নাগরিক অ্যাকাউন্ট ছাড়া প্রস্তাবগুলি পর্যালোচনা করতে, নাগরিক অ্যাকাউন্ট দিয়ে লগইন করুন।"
+  },
+  zh: {
+    authTitle: "需要主权身份验证",
+    authDesc: "为确保表决的真实性并防止重复投票，请输入您在申请新世界国家公民身份时创建的凭据。",
+    citizenInputLabel: "公民代码、用户名、邮箱或手机号",
+    citizenInputPlaceholder: "例如：name@domain.com 或 +86 138...",
+    tempPassNote: "如果您仅使用邮箱或手机号注册，您将收到本次会话有效的临时密码。",
+    detectedUserLabel: "检测到的用户",
+    modifyBtn: "修改",
+    passwordLabelStandard: "注册密码",
+    passwordLabelEmail: "输入临时密码（通过邮件发送）",
+    passwordLabelPhone: "输入临时密码（通过短信发送）",
+    passwordPlaceholder: "您的密码",
+    continueBtn: "继续",
+    authenticateBtn: "验证主权身份",
+    verifyingBtn: "正在验证...",
+    smsSimulatorTitle: "短信模拟器（刚刚收到）",
+    smsSimulatorBody: (code) => `[新世界国家户籍局] 您的在线民主临时密码为：${code}。`,
+    adminNote: "您在此系统中作为管理员进行了身份验证。若要验证或拒绝未决提案，请使用主权公民账户登录。"
+  },
+  ja: {
+    authTitle: "主権認証が必要です",
+    authDesc: "投票の正当性を保証し、二重投票を防ぐため、新世界国家の市民権申請時に作成した資格情報を入力してください。",
+    citizenInputLabel: "市民コード、ユーザー名、メールまたは電話番号",
+    citizenInputPlaceholder: "例：name@domain.jp または +81 90...",
+    tempPassNote: "メールまたは電話番号のみで登録した場合は、このセッションで有効な一時パスワードが送信されます。",
+    detectedUserLabel: "検出されたユーザー",
+    modifyBtn: "変更",
+    passwordLabelStandard: "登録パスワード",
+    passwordLabelEmail: "一時パスワードを入力（メールで送信）",
+    passwordLabelPhone: "一時パスワードを入力（SMSで送信）",
+    passwordPlaceholder: "パスワード",
+    continueBtn: "次へ",
+    authenticateBtn: "本人認証を完了する",
+    verifyingBtn: "検証中...",
+    smsSimulatorTitle: "SMSシミュレーター（たった今受信）",
+    smsSimulatorBody: (code) => `[新世界国家 登録局] オンライン民主主義の一時パスワードは次の通りです: ${code}`,
+    adminNote: "管理者として認証されています。市民アカウントなしで提案を承認/拒否する場合は、テストまたは承認済みの市民アカウントでログインしてください。"
+  },
+  ar: {
+    authTitle: "المصادقة السيادية مطلوبة",
+    authDesc: "لضمان صحة التصويت ومنع التصويت المكرر، يرجى إدخال البيانات المعتمدة التي أنشأتها أثناء تقديم طلب مواطنة دولة العالم الجديد.",
+    citizenInputLabel: "رمز المواطن، اسم المستخدم، البريد الإلكتروني أو الهاتف",
+    citizenInputPlaceholder: "مثال: name@domain.com أو +966 5...",
+    tempPassNote: "إذا سجلت فقط ببريدك أو هاتفك، فستتلقى كلمة مرور مؤقتة صالحة لهذه الجلسة.",
+    detectedUserLabel: "المستخدم المكتشف",
+    modifyBtn: "تعديل",
+    passwordLabelStandard: "كلمة مرور التسجيل",
+    passwordLabelEmail: "أدخل كلمة المرور المؤقتة (المرسلة عبر البريد)",
+    passwordLabelPhone: "أدخل كلمة المرور المؤقتة (المرسلة عبر SMS)",
+    passwordPlaceholder: "كلمة المرور الخاصة بك",
+    continueBtn: "متابعة",
+    authenticateBtn: "المصادقة على الهوية",
+    verifyingBtn: "جاري التحقق...",
+    smsSimulatorTitle: "محاكي SMS (تم الاستلام الآن)",
+    smsSimulatorBody: (code) => `[سجل دولة العالم الجديد] كلمة المرور المؤقتة للديمقراطية عبر الإنترنت هي: ${code}.`,
+    adminNote: "أنت مسجل كمسؤول في هذا النظام. للمصادقة على المقترحات، يرجى تسجيل الدخول بحساب مواطن سيادي."
+  }
+};
 
 interface CitizenSession {
   id: number;
@@ -739,166 +970,141 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
       </div>
 
       {/* CITIZEN LOGIN BLOCK IF NOT LOGGED IN */}
-      {!citizen && (
-        <div className="py-16 px-6 max-w-md mx-auto text-center" id="democracy-auth-gate">
-          <div className="w-16 h-16 bg-brand-blue/5 border border-brand-blue/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-6 h-6 text-brand-gold" />
-          </div>
-          <h3 className="text-xl font-serif text-brand-blue font-bold tracking-tight mb-2">
-            {language === 'en' ? 'Sovereign Authentication Required' : 'Autenticazione Sovrana Richiesta'}
-          </h3>
-          <p className="text-slate-500 text-xs leading-relaxed mb-6">
-            {language === 'en'
-              ? 'To guarantee the authenticity of the vote and prevent multiple voting, please enter the credentials created during your New World State citizenship application.'
-              : 'Per garantire la genuinità della delibera e impedire il voto plurimo, inserisci le credenziali create durante la tua domanda di cittadinanza del New World State.'}
-          </p>
+      {!citizen && (() => {
+        const authTxt = AUTH_TEXTS[language as Language] || AUTH_TEXTS.en;
+        return (
+          <div className="py-16 px-6 max-w-md mx-auto text-center" id="democracy-auth-gate">
+            <div className="w-16 h-16 bg-brand-blue/5 border border-brand-blue/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Lock className="w-6 h-6 text-brand-gold" />
+            </div>
+            <h3 className="text-xl font-serif text-brand-blue font-bold tracking-tight mb-2">
+              {authTxt.authTitle}
+            </h3>
+            <p className="text-slate-500 text-xs leading-relaxed mb-6">
+              {authTxt.authDesc}
+            </p>
 
-          <form onSubmit={loginStep === 'username' ? handlePreflight : handleLogin} className="space-y-4 text-left">
-            {loginStep === 'username' ? (
-              <div>
-                <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">
-                  {language === 'en' ? 'Citizen Code, Username, Email or Phone' : 'Codice Cittadino, Username, Email o Telefono'}
-                </label>
-                <input 
-                  type="text"
-                  placeholder={language === 'en' ? 'e.g. name@domain.com or +44 777...' : 'es: nome@dominio.it o +39 333...'}
-                  id="democracy-login-username"
-                  value={usernameInput}
-                  onChange={(e) => setUsernameInput(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-3 text-xs outline-none transition text-brand-blue placeholder-slate-400 font-mono"
-                  autoFocus
-                />
-                <span className="text-[10px] text-slate-500 mt-2 block leading-normal">
-                  {language === 'en'
-                    ? 'If you registered only with email or phone, you will receive a temporary password valid for this session.'
-                    : 'Se ti sei registrato solo con email o solo con telefono, riceverai una password temporanea valida per questa sessione.'}
-                </span>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Visual state indicator/header for step 2 */}
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[9px] text-slate-400 uppercase font-mono">
-                      {language === 'en' ? 'DETECTED USER' : 'UTENTE RILEVATO'}
-                    </span>
-                    <span className="text-xs font-bold font-mono text-[#0a1c3e] truncate max-w-[200px]">{usernameInput}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginStep('username');
-                      setAuthError(null);
-                    }}
-                    className="text-[10px] text-brand-gold hover:underline font-bold uppercase tracking-wider cursor-pointer"
-                  >
-                    {language === 'en' ? 'Modify' : 'Modifica'}
-                  </button>
-                </div>
-
-                {preflightMessage && (
-                  <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-start gap-2 text-[11px] text-amber-700 leading-normal">
-                    <CheckCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                    <span>{preflightMessage}</span>
-                  </div>
-                )}
-
+            <form onSubmit={loginStep === 'username' ? handlePreflight : handleLogin} className="space-y-4 text-left">
+              {loginStep === 'username' ? (
                 <div>
                   <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">
-                    {language === 'en' ? (
-                      loginMode === 'temp-email' 
-                        ? 'Enter Temporary Password (sent via Email)' 
-                        : loginMode === 'temp-phone' 
-                        ? 'Enter Temporary Password (sent via SMS)' 
-                        : 'Registration Password'
-                    ) : (
-                      loginMode === 'temp-email' 
-                        ? 'Inserisci Password Temporanea (inviata via Email)' 
-                        : loginMode === 'temp-phone' 
-                        ? 'Inserisci Password Temporanea (inviata via SMS)' 
-                        : 'Password di Registrazione'
-                    )}
+                    {authTxt.citizenInputLabel}
                   </label>
                   <input 
-                    type="password"
-                    placeholder={language === 'en' ? 'Your password' : 'La tua password'}
-                    id="democracy-login-password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
+                    type="text"
+                    placeholder={authTxt.citizenInputPlaceholder}
+                    id="democracy-login-username"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-3 text-xs outline-none transition text-brand-blue placeholder-slate-400 font-mono"
                     autoFocus
                   />
+                  <span className="text-[10px] text-slate-500 mt-2 block leading-normal">
+                    {authTxt.tempPassNote}
+                  </span>
                 </div>
-
-                {/* Simulated SMS notification drawer for beautiful, interactive validation on the demo runtime */}
-                {loginMode === 'temp-phone' && tempPhoneCode && (
-                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl flex items-start gap-3 animate-pulse mt-1">
-                    <Smartphone className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <div className="text-left">
-                      <div className="font-semibold text-[9px] text-emerald-400 uppercase tracking-widest font-mono">
-                        {language === 'en' ? 'SMS SIMULATOR (Received Just Now)' : 'SIMULATORE SMS (Ricevuto Ora)'}
-                      </div>
-                      <p className="text-[11px] text-slate-300 font-mono mt-1 leading-normal">
-                        {language === 'en' ? (
-                          <>
-                            [New World State Registry] Your temporary password for Online Democracy is:{' '}
-                            <strong className="text-white underline font-bold bg-slate-800 px-2 py-1 rounded inline-block select-all cursor-pointer">
-                              {tempPhoneCode}
-                            </strong>.
-                          </>
-                        ) : (
-                          <>
-                            [New World State Anagrafe] La tua password temporanea per la Democrazia Online è:{' '}
-                            <strong className="text-white underline font-bold bg-slate-800 px-2 py-1 rounded inline-block select-all cursor-pointer">
-                              {tempPhoneCode}
-                            </strong>.
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {authError && (
-              <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-start gap-2 text-[11px] text-rose-500 leading-normal">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{authError}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={authLoading}
-              id={loginStep === 'username' ? 'democracy-next-login-btn' : 'democracy-submit-login-btn'}
-              className="w-full bg-brand-blue hover:bg-[#071530] text-white py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border-b-4 border-brand-gold"
-            >
-              {authLoading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> {language === 'en' ? 'Verifying...' : 'Verifica...'}
-                </>
-              ) : loginStep === 'username' ? (
-                <>
-                  {language === 'en' ? 'Continue' : 'Avanti'} <ArrowRight className="w-3.5 h-3.5" />
-                </>
               ) : (
-                language === 'en' ? 'Authenticate Identity' : 'Sblocca Diritto di Voto'
-              )}
-            </button>
-          </form>
+                <div className="space-y-4">
+                  {/* Visual state indicator/header for step 2 */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-slate-400 uppercase font-mono">
+                        {authTxt.detectedUserLabel}
+                      </span>
+                      <span className="text-xs font-bold font-mono text-[#0a1c3e] truncate max-w-[200px]">{usernameInput}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginStep('username');
+                        setAuthError(null);
+                      }}
+                      className="text-[10px] text-brand-gold hover:underline font-bold uppercase tracking-wider cursor-pointer"
+                    >
+                      {authTxt.modifyBtn}
+                    </button>
+                  </div>
 
-          {isAdmin && (
-            <div className="mt-8 pt-6 border-t border-slate-100">
-              <p className="text-xs text-slate-400">
-                {language === 'en'
-                  ? 'You are authenticated as an Administrator in this system. To validate or reject pending proposals without a citizen account, you still need to log in with a test or approved sovereign citizen account.'
-                  : 'Sei autenticato come Amministratore nel sistema. Per validare o rifiutare le proposte in sospeso senza un account cittadino, accedi comunque con un account sovrano di test o approvato.'}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+                  {preflightMessage && (
+                    <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-start gap-2 text-[11px] text-amber-700 leading-normal">
+                      <CheckCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <span>{preflightMessage}</span>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 font-tech">
+                      {loginMode === 'temp-email' 
+                        ? authTxt.passwordLabelEmail 
+                        : loginMode === 'temp-phone' 
+                        ? authTxt.passwordLabelPhone 
+                        : authTxt.passwordLabelStandard}
+                    </label>
+                    <input 
+                      type="password"
+                      placeholder={authTxt.passwordPlaceholder}
+                      id="democracy-login-password"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-brand-gold focus:ring focus:ring-brand-gold/20 rounded-xl px-4 py-3 text-xs outline-none transition text-brand-blue placeholder-slate-400 font-mono"
+                      autoFocus
+                    />
+                  </div>
+
+                  {/* Simulated SMS notification drawer for beautiful, interactive validation on the demo runtime */}
+                  {loginMode === 'temp-phone' && tempPhoneCode && (
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl flex items-start gap-3 animate-pulse mt-1">
+                      <Smartphone className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="text-left">
+                        <div className="font-semibold text-[9px] text-emerald-400 uppercase tracking-widest font-mono">
+                          {authTxt.smsSimulatorTitle}
+                        </div>
+                        <p className="text-[11px] text-slate-300 font-mono mt-1 leading-normal">
+                          {authTxt.smsSimulatorBody(tempPhoneCode)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {authError && (
+                <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-start gap-2 text-[11px] text-rose-500 leading-normal">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{authError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                id={loginStep === 'username' ? 'democracy-next-login-btn' : 'democracy-submit-login-btn'}
+                className="w-full bg-brand-blue hover:bg-[#071530] text-white py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border-b-4 border-brand-gold"
+              >
+                {authLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> {authTxt.verifyingBtn}
+                  </>
+                ) : loginStep === 'username' ? (
+                  <>
+                    {authTxt.continueBtn} <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                ) : (
+                  authTxt.authenticateBtn
+                )}
+              </button>
+            </form>
+
+            {isAdmin && (
+              <div className="mt-8 pt-6 border-t border-slate-100">
+                <p className="text-xs text-slate-400">
+                  {authTxt.adminNote}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* PORTAL MAIN AREA */}
       {citizen && (
