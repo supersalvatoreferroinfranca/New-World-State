@@ -241,6 +241,7 @@ export default function AccessibilityWidget() {
     utterance.onerror = (e) => {
       console.warn('[Accessibility TTS] Native error, trying streaming fallback:', e);
       activeUtteranceRef.current = null;
+      if (e.error === 'interrupted' || e.error === 'canceled') return;
       playFallback();
     };
 

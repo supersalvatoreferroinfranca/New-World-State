@@ -255,7 +255,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
 
     utterance.onerror = (e) => {
       console.warn("Speech Synthesis native error, attempting fallback streaming audio:", e);
-      if (e.error === 'interrupted') return;
+      if (e.error === 'interrupted' || e.error === 'canceled') return;
       playFallback();
     };
 

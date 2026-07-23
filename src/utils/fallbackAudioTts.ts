@@ -11,6 +11,7 @@ class TtsAudioPlayer {
   private chunks: string[] = [];
   private currentLang: string = 'it';
   private playbackRate: number = 1.0;
+  private playSessionId: number = 0;
   private onEndCallback?: () => void;
   private onErrorCallback?: (err: any) => void;
 
@@ -19,7 +20,7 @@ class TtsAudioPlayer {
    */
   private splitTextIntoChunks(text: string): string[] {
     const clean = text
-      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
       .replace(/[*#_`~]/g, '')
       .trim();
 
@@ -66,6 +67,7 @@ class TtsAudioPlayer {
       return;
     }
 
+    this.playSessionId++;
     this.currentChunkIndex = 0;
     this.currentLang = lang;
     this.playbackRate = rate;
@@ -76,89 +78,135 @@ class TtsAudioPlayer {
     this.playNextChunk();
   }
 
-  private playNextChunk(useDirectFallback = false) {
-    if (!this.isPlaying || this.currentChunkIndex >= this.chunks.length) {
-      this.isPlaying = false;
-      this.onEndCallback?.();
+  private playNextChunk() {
+    const sessionId = this.playSessionId;
+
+    if (!this.isPlaying || this.playSessionId !== sessionId || this.currentChunkIndex >= this.chunks.length) {
+      if (this.playSessionId === sessionId && this.isPlaying) {
+        this.isPlaying = false;
+        this.onEndCallback?.();
+      }
       return;
     }
 
-    const googleLangMap: Record<string, string> = {
-      it: 'it',
-      en: 'en',
-      fr: 'fr',
-      es: 'es',
-      pt: 'pt',
-      ru: 'ru',
-      hi: 'hi',
-      bn: 'bn',
-      zh: 'zh-CN',
-      ja: 'ja',
-      ar: 'ar'
-    };
-
     const chunkText = this.chunks[this.currentChunkIndex];
     const encodedText = encodeURIComponent(chunkText);
-    const targetLang = googleLangMap[this.currentLang] || 'it';
+    const audioUrl = `/api/tts?text=${encodedText}&lang=${encodeURIComponent(this.currentLang)}`;
 
-    const audioUrl = useDirectFallback
-      ? `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${targetLang}&client=tw-ob`
-      : `/api/tts?text=${encodedText}&lang=${encodeURIComponent(this.currentLang)}`;
+    const audio = new Audio();
+    this.activeAudio = audio;
 
-    this.activeAudio = new Audio(audioUrl);
-    this.activeAudio.playbackRate = this.playbackRate;
+    const cleanup = () => {
+      audio.onended = null;
+      audio.onerror = null;
+      audio.oncanplay = null;
+    };
 
-    this.activeAudio.onended = () => {
+    audio.onended = () => {
+      cleanup();
+      if (this.playSessionId !== sessionId || !this.isPlaying) return;
+
       this.currentChunkIndex++;
-      this.playNextChunk(false);
+      this.playNextChunk();
     };
 
-    this.activeAudio.onerror = (e) => {
-      console.warn(`[Fallback Audio TTS] Chunk ${this.currentChunkIndex} playback error (useDirectFallback=${useDirectFallback}):`, e);
-      if (!useDirectFallback) {
-        // Try direct URL fallback for this chunk
-        this.playNextChunk(true);
+    audio.onerror = (e) => {
+      cleanup();
+      if (this.playSessionId !== sessionId || !this.isPlaying) return;
+
+      console.warn(`[Fallback Audio TTS] Chunk ${this.currentChunkIndex} stream error:`, e);
+      // Skip problematic chunk and continue
+      this.currentChunkIndex++;
+      if (this.currentChunkIndex < this.chunks.length) {
+        this.playNextChunk();
       } else {
-        // Skip chunk and move on
-        this.currentChunkIndex++;
-        if (this.currentChunkIndex < this.chunks.length) {
-          this.playNextChunk(false);
-        } else {
-          this.isPlaying = false;
-          this.onErrorCallback?.(e);
-        }
+        this.isPlaying = false;
+        this.onErrorCallback?.(e);
       }
     };
 
-    this.activeAudio.play().catch((err) => {
-      console.warn(`[Fallback Audio TTS] Autoplay catch (useDirectFallback=${useDirectFallback}):`, err);
-      if (!useDirectFallback) {
-        this.playNextChunk(true);
-      } else {
-        this.currentChunkIndex++;
-        if (this.currentChunkIndex < this.chunks.length) {
-          this.playNextChunk(false);
-        } else {
-          this.isPlaying = false;
-          this.onErrorCallback?.(err);
-        }
+    audio.src = audioUrl;
+
+    const startPlay = () => {
+      if (this.playSessionId !== sessionId || !this.isPlaying) return;
+
+      try {
+        audio.playbackRate = this.playbackRate;
+      } catch (e) {
+        // Ignore playbackRate assignment errors on restricted platforms
       }
-    });
+
+      const promise = audio.play();
+      if (promise !== undefined) {
+        promise.catch((err) => {
+          if (this.playSessionId !== sessionId || !this.isPlaying) return;
+
+          // Ignore normal abort errors caused by user stop/switch
+          if (err?.name === 'AbortError' || (err?.message && err.message.includes('aborted'))) {
+            return;
+          }
+
+          console.warn(`[Fallback Audio TTS] Play exception for chunk ${this.currentChunkIndex}:`, err);
+          cleanup();
+          this.currentChunkIndex++;
+          if (this.currentChunkIndex < this.chunks.length) {
+            this.playNextChunk();
+          } else {
+            this.isPlaying = false;
+            this.onErrorCallback?.(err);
+          }
+        });
+      }
+    };
+
+    startPlay();
   }
 
   public setRate(rate: number) {
     this.playbackRate = rate;
     if (this.activeAudio) {
-      this.activeAudio.playbackRate = rate;
+      try {
+        this.activeAudio.playbackRate = rate;
+      } catch (e) {
+        // Ignore
+      }
+    }
+  }
+
+  public pause() {
+    if (this.activeAudio && this.isPlaying) {
+      try {
+        this.activeAudio.pause();
+      } catch (e) {
+        // Ignore
+      }
+    }
+  }
+
+  public resume() {
+    if (this.activeAudio && this.isPlaying) {
+      try {
+        this.activeAudio.play();
+      } catch (e) {
+        // Ignore
+      }
     }
   }
 
   public stop() {
+    this.playSessionId++;
     this.isPlaying = false;
     if (this.activeAudio) {
-      this.activeAudio.pause();
       this.activeAudio.onended = null;
       this.activeAudio.onerror = null;
+      this.activeAudio.oncanplay = null;
+      try {
+        this.activeAudio.pause();
+        this.activeAudio.removeAttribute('src');
+        this.activeAudio.load();
+      } catch (e) {
+        // Ignore
+      }
       this.activeAudio = null;
     }
     this.chunks = [];
