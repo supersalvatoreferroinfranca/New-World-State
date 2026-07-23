@@ -606,6 +606,69 @@ async function startServer() {
 
     app.use(express.json({ limit: '10mb' }));
 
+    // TTS (Text-To-Speech) Audio Proxy Endpoint for multi-language speech fallback
+    app.get('/api/tts', async (req, res) => {
+      try {
+        const text = String(req.query.text || '').trim();
+        const lang = String(req.query.lang || 'it').toLowerCase().trim();
+
+        if (!text) {
+          return res.status(400).json({ error: 'Text parameter is required' });
+        }
+
+        // BCP-47 / Google Translate TTS language code mapping
+        const googleLangMap: Record<string, string> = {
+          it: 'it',
+          en: 'en',
+          fr: 'fr',
+          es: 'es',
+          pt: 'pt',
+          ru: 'ru',
+          hi: 'hi',
+          bn: 'bn',
+          zh: 'zh-CN',
+          ja: 'ja',
+          ar: 'ar'
+        };
+
+        const targetLang = googleLangMap[lang] || 'it';
+        const cleanChunk = text.replace(/https?:\/\/\S+/g, '').substring(0, 200).trim();
+        
+        if (!cleanChunk) {
+          return res.status(400).json({ error: 'Cleaned text chunk is empty' });
+        }
+
+        const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanChunk)}&tl=${targetLang}&client=tw-ob`;
+
+        const ttsResponse = await fetch(googleTtsUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://translate.google.com/'
+          }
+        });
+
+        if (!ttsResponse.ok) {
+          console.error(`[TTS Proxy] Google TTS API returned status ${ttsResponse.status}`);
+          return res.status(502).json({ error: 'Failed to fetch TTS audio stream' });
+        }
+
+        const arrayBuffer = await ttsResponse.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        res.set({
+          'Content-Type': 'audio/mpeg',
+          'Content-Length': buffer.length.toString(),
+          'Cache-Control': 'public, max-age=86400',
+          'Accept-Ranges': 'bytes'
+        });
+
+        return res.send(buffer);
+      } catch (err: any) {
+        console.error('[TTS Proxy Error]:', err?.message || err);
+        return res.status(500).json({ error: 'Internal TTS Server Error' });
+      }
+    });
+
     // Helper per inviare email tramite SMTP (es. Aruba)
     async function sendLocalSmtpEmail({ to, subject, html, text, attachments }: { to: string; subject: string; html: string; text?: string; attachments?: any[] }) {
       const host = process.env.SMTP_HOST || 'smtps.aruba.it';

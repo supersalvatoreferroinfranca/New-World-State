@@ -349,17 +349,17 @@ export default function SovereignCustodeDebugWidget() {
                       }}
                       className="w-full bg-transparent text-xs font-bold text-[#0a1c3e] focus:outline-none cursor-pointer appearance-none"
                     >
-                      <option value="it">🇮🇹 Italiano (IT)</option>
-                      <option value="en">🇬🇧 English (EN)</option>
-                      <option value="fr">🇫🇷 Français (FR)</option>
-                      <option value="es">🇪🇸 Español (ES)</option>
-                      <option value="pt">🇵🇹 Português (PT)</option>
-                      <option value="ru">🇷🇺 Русский (RU)</option>
-                      <option value="hi">🇮🇳 हिन्दी (HI)</option>
-                      <option value="bn">🇧🇩 বাংলা (BN)</option>
-                      <option value="zh">🇨🇳 中文 (ZH)</option>
-                      <option value="ja">🇯🇵 日本語 (JA)</option>
-                      <option value="ar">🌍 العربية (AR)</option>
+                      <option value="it">IT - Italiano</option>
+                      <option value="en">EN - English</option>
+                      <option value="fr">FR - Français</option>
+                      <option value="es">ES - Español</option>
+                      <option value="pt">PT - Português</option>
+                      <option value="ru">RU - Русский</option>
+                      <option value="hi">HI - हिन्दी</option>
+                      <option value="bn">BN - বাংলা</option>
+                      <option value="zh">ZH - 中文</option>
+                      <option value="ja">JA - 日本語</option>
+                      <option value="ar">AR - العربية</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-[#0a1c3e]/60">
                       <ChevronDown className="w-3.5 h-3.5" />

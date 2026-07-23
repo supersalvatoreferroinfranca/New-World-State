@@ -26,6 +26,7 @@ import {
   getDefaultBcp47ForLanguage, 
   getLanguageNativeName 
 } from '../../utils/ttsVoices';
+import { globalFallbackTtsPlayer } from '../../utils/fallbackAudioTts';
 
 export default function AccessibilityWidget() {
   const { language } = useI18n();
@@ -167,9 +168,12 @@ export default function AccessibilityWidget() {
 
   // Text-To-Speech engine
   const speakText = (text: string, rate: number = speechRate, isContinuing: boolean = false) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (typeof window === 'undefined') return;
 
-    window.speechSynthesis.cancel();
+    globalFallbackTtsPlayer.stop();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
 
     // Clean up text and emojis for cross-platform stability
     const cleanText = text
@@ -185,19 +189,35 @@ export default function AccessibilityWidget() {
       currentCharIndexRef.current = 0;
     }
 
+    const playFallback = () => {
+      setIsPlaying(true);
+      setIsPaused(false);
+      globalFallbackTtsPlayer.play(
+        cleanText,
+        language,
+        rate,
+        () => {
+          setIsPlaying(false);
+          setIsPaused(false);
+        },
+        () => {
+          setIsPlaying(false);
+          setIsPaused(false);
+        }
+      );
+    };
+
+    const bestVoice = getBestVoiceForLanguage(voices, language as Language, selectedVoiceName);
+    if (!bestVoice || !('speechSynthesis' in window)) {
+      playFallback();
+      return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(cleanText);
     activeUtteranceRef.current = utterance; // Prevent Apple/Safari GC cleanup bug
     utterance.rate = rate;
-
-    // Apply voice selection matching current language
-    const bestVoice = getBestVoiceForLanguage(voices, language as Language, selectedVoiceName);
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-      utterance.lang = bestVoice.lang;
-    } else {
-      utterance.voice = null;
-      utterance.lang = getDefaultBcp47ForLanguage(language as Language);
-    }
+    utterance.voice = bestVoice;
+    utterance.lang = bestVoice.lang;
 
     // Keep track of index on boundary change for real-time adjustments
     utterance.onboundary = (event) => {
@@ -218,10 +238,10 @@ export default function AccessibilityWidget() {
       activeUtteranceRef.current = null;
     };
 
-    utterance.onerror = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
+    utterance.onerror = (e) => {
+      console.warn('[Accessibility TTS] Native error, trying streaming fallback:', e);
       activeUtteranceRef.current = null;
+      playFallback();
     };
 
     // Micro delay after cancel to prevent iOS/Safari/Chrome race condition
@@ -343,11 +363,12 @@ export default function AccessibilityWidget() {
   };
 
   const handleStop = () => {
+    globalFallbackTtsPlayer.stop();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setIsPaused(false);
     }
+    setIsPlaying(false);
+    setIsPaused(false);
   };
 
   const handleQuickPlayStopToggle = () => {

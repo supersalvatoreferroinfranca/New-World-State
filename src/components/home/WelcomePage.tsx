@@ -32,6 +32,7 @@ import {
   getDefaultBcp47ForLanguage, 
   getLanguageNativeName 
 } from '../../utils/ttsVoices';
+import { globalFallbackTtsPlayer } from '../../utils/fallbackAudioTts';
 
 interface WelcomePageProps {
   onStartRegistration: () => void;
@@ -94,6 +95,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     isPlayingRef.current = false;
     setIsTtsPlaying(false);
     stopKeepalive();
+    globalFallbackTtsPlayer.stop();
     if (activeUtteranceRef.current) {
       activeUtteranceRef.current.onend = null;
       activeUtteranceRef.current.onerror = null;
@@ -198,13 +200,42 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
 
     const targetVoiceName = voiceNameOverride || selectedVoiceName;
     const bestVoice = getBestVoiceForLanguage(voices, currentLang, targetVoiceName);
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-      utterance.lang = bestVoice.lang;
-    } else {
-      utterance.voice = null;
-      utterance.lang = getDefaultBcp47ForLanguage(currentLang);
+
+    const playFallback = () => {
+      stopKeepalive();
+      activeUtteranceRef.current = null;
+      if (!isPlayingRef.current) return;
+
+      globalFallbackTtsPlayer.play(
+        cleanText,
+        currentLang,
+        rateValue,
+        () => {
+          if (!isPlayingRef.current) return;
+          const nextIdx = index + 1;
+          setTtsIndex(nextIdx);
+          if (nextIdx < segments.length && isPlayingRef.current) {
+            speakTextSegment(nextIdx, rateValue, true, voiceNameOverride);
+          } else {
+            isPlayingRef.current = false;
+            setIsTtsPlaying(false);
+            setTtsIndex(0);
+          }
+        },
+        () => {
+          isPlayingRef.current = false;
+          setIsTtsPlaying(false);
+        }
+      );
+    };
+
+    if (!bestVoice) {
+      playFallback();
+      return;
     }
+
+    utterance.voice = bestVoice;
+    utterance.lang = bestVoice.lang;
 
     utterance.onend = () => {
       stopKeepalive();
@@ -223,15 +254,9 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     };
 
     utterance.onerror = (e) => {
-      console.warn("Speech Synthesis error:", e);
-      stopKeepalive();
-      activeUtteranceRef.current = null;
-      if (!isPlayingRef.current) return;
-
-      if (e.error !== 'interrupted') {
-        isPlayingRef.current = false;
-        setIsTtsPlaying(false);
-      }
+      console.warn("Speech Synthesis native error, attempting fallback streaming audio:", e);
+      if (e.error === 'interrupted') return;
+      playFallback();
     };
 
     setTimeout(() => {

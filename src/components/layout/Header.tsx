@@ -3,6 +3,7 @@ import { useI18n } from '../../contexts/I18nContext';
 import { Globe, Menu, ShieldCheck, X, Home, Landmark, BookOpen, FileText, Shield, UserPlus, Lock, Wifi, Settings, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useBranding } from '../../hooks/useBranding';
+import LanguageSelector from '../common/LanguageSelector';
 
 interface HeaderProps {
   activeTab?: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat';
@@ -101,26 +102,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
 
             <div className="h-4 w-px bg-white/10 hidden lg:block" />
 
-            <div className="flex items-center gap-2 group cursor-pointer">
-              <Globe className="w-4 h-4 text-brand-gold group-hover:rotate-12 transition-transform" />
-              <select 
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as any)}
-                className="bg-transparent text-xs font-tech font-bold uppercase tracking-widest focus:outline-none cursor-pointer hover:text-brand-gold transition-colors"
-              >
-                <option value="it" className="text-white bg-[#0a1c3e]">🇮🇹 IT</option>
-                <option value="en" className="text-white bg-[#0a1c3e]">🇬🇧 EN</option>
-                <option value="fr" className="text-white bg-[#0a1c3e]">🇫🇷 FR</option>
-                <option value="es" className="text-white bg-[#0a1c3e]">🇪🇸 ES</option>
-                <option value="pt" className="text-white bg-[#0a1c3e]">🇵🇹 PT</option>
-                <option value="ru" className="text-white bg-[#0a1c3e]">🇷🇺 RU</option>
-                <option value="hi" className="text-white bg-[#0a1c3e]">🇮🇳 HI</option>
-                <option value="bn" className="text-white bg-[#0a1c3e]">🇧🇩 BN</option>
-                <option value="zh" className="text-white bg-[#0a1c3e]">🇨🇳 ZH</option>
-                <option value="ja" className="text-white bg-[#0a1c3e]">🇯🇵 JA</option>
-                <option value="ar" className="text-white bg-[#0a1c3e]">🌍 AR</option>
-              </select>
-            </div>
+            <LanguageSelector variant="header" />
             
             <button 
               onClick={() => setIsMobileOpen(true)}
@@ -214,29 +196,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
 
               {/* Drawer Footer with Language Settings and metadata */}
               <div className="p-6 border-t border-white/10 shrink-0 bg-black/10 text-center space-y-4">
-                <div className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-brand-gold" />
-                    <span className="text-[10px] uppercase tracking-wider font-tech text-slate-400">Language</span>
-                  </div>
-                  <select 
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value as any)}
-                    className="bg-brand-blue border border-white/10 text-xs font-tech font-bold uppercase tracking-wider focus:outline-none cursor-pointer text-brand-gold p-1 rounded-lg"
-                  >
-                    <option value="it">🇮🇹 IT</option>
-                    <option value="en">🇬🇧 EN</option>
-                    <option value="fr">🇫🇷 FR</option>
-                    <option value="es">🇪🇸 ES</option>
-                    <option value="pt">🇵🇹 PT</option>
-                    <option value="ru">🇷🇺 RU</option>
-                    <option value="hi">🇮🇳 HI</option>
-                    <option value="bn">🇧🇩 BN</option>
-                    <option value="zh">🇨🇳 ZH</option>
-                    <option value="ja">🇯🇵 JA</option>
-                    <option value="ar">🌍 AR</option>
-                  </select>
-                </div>
+                <LanguageSelector variant="drawer" onSelect={() => setIsMobileOpen(false)} />
 
                 <div className="text-[9px] uppercase tracking-[0.2em] text-slate-500 font-tech">
                   New World State • v1.0.3
