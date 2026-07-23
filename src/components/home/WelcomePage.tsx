@@ -60,6 +60,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
   
   // TTS (Text-to-Speech) State
   const [isTtsPlaying, setIsTtsPlaying] = useState(false);
+  const isPlayingRef = useRef(false);
   const [ttsIndex, setTtsIndex] = useState(0);
   const [ttsRate, setTtsRate] = useState(1.0);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -87,6 +88,20 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
         stopKeepalive();
       }
     }, 10000);
+  };
+
+  const stopTts = () => {
+    isPlayingRef.current = false;
+    setIsTtsPlaying(false);
+    stopKeepalive();
+    if (activeUtteranceRef.current) {
+      activeUtteranceRef.current.onend = null;
+      activeUtteranceRef.current.onerror = null;
+      activeUtteranceRef.current = null;
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
   };
 
   // Interactive quiz state
@@ -133,18 +148,25 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     return texts;
   };
 
-  const speakTextSegment = (index: number, rateValue: number, playActive: boolean) => {
+  const speakTextSegment = (index: number, rateValue: number, playActive: boolean, voiceNameOverride?: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
+    if (activeUtteranceRef.current) {
+      activeUtteranceRef.current.onend = null;
+      activeUtteranceRef.current.onerror = null;
+      activeUtteranceRef.current = null;
+    }
     window.speechSynthesis.cancel();
 
-    if (!playActive) {
+    if (!playActive || !isPlayingRef.current) {
+      isPlayingRef.current = false;
       setIsTtsPlaying(false);
       return;
     }
 
     const segments = getSpeakTexts();
     if (index < 0 || index >= segments.length) {
+      isPlayingRef.current = false;
       setIsTtsPlaying(false);
       setTtsIndex(0);
       return;
@@ -158,12 +180,12 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
       .trim();
 
     if (!cleanText) {
-      // Skip empty text and move to next
       const nextIdx = index + 1;
       setTtsIndex(nextIdx);
-      if (nextIdx < segments.length) {
-        speakTextSegment(nextIdx, rateValue, true);
+      if (nextIdx < segments.length && isPlayingRef.current) {
+        speakTextSegment(nextIdx, rateValue, true, voiceNameOverride);
       } else {
+        isPlayingRef.current = false;
         setIsTtsPlaying(false);
         setTtsIndex(0);
       }
@@ -171,11 +193,11 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     }
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    activeUtteranceRef.current = utterance; // Prevent Safari GC garbage collection bug
+    activeUtteranceRef.current = utterance;
     utterance.rate = rateValue;
 
-    // Retrieve best voice strictly matching current language
-    const bestVoice = getBestVoiceForLanguage(voices, currentLang, selectedVoiceName);
+    const targetVoiceName = voiceNameOverride || selectedVoiceName;
+    const bestVoice = getBestVoiceForLanguage(voices, currentLang, targetVoiceName);
     if (bestVoice) {
       utterance.voice = bestVoice;
       utterance.lang = bestVoice.lang;
@@ -187,11 +209,14 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     utterance.onend = () => {
       stopKeepalive();
       activeUtteranceRef.current = null;
+      if (!isPlayingRef.current) return;
+
       const nextIdx = index + 1;
       setTtsIndex(nextIdx);
-      if (playActive && nextIdx < segments.length) {
-        speakTextSegment(nextIdx, rateValue, true);
+      if (nextIdx < segments.length && isPlayingRef.current) {
+        speakTextSegment(nextIdx, rateValue, true, voiceNameOverride);
       } else {
+        isPlayingRef.current = false;
         setIsTtsPlaying(false);
         setTtsIndex(0);
       }
@@ -201,14 +226,16 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
       console.warn("Speech Synthesis error:", e);
       stopKeepalive();
       activeUtteranceRef.current = null;
+      if (!isPlayingRef.current) return;
+
       if (e.error !== 'interrupted') {
+        isPlayingRef.current = false;
         setIsTtsPlaying(false);
       }
     };
 
-    // Micro delay after cancel to prevent iOS/Safari/Chrome race conditions
     setTimeout(() => {
-      if (window.speechSynthesis) {
+      if (typeof window !== 'undefined' && window.speechSynthesis && isPlayingRef.current) {
         startKeepalive();
         window.speechSynthesis.speak(utterance);
       }
@@ -222,19 +249,18 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     const updateVoiceList = () => {
       const systemVoices = window.speechSynthesis.getVoices();
       if (systemVoices.length > 0) {
-        setVoices(systemVoices);
+        setVoices(prev => {
+          if (prev.length === systemVoices.length && prev[0]?.name === systemVoices[0]?.name) {
+            return prev;
+          }
+          return systemVoices;
+        });
       }
     };
 
     updateVoiceList();
 
-    // Android Chrome & Safari voice load polling fallback
-    const pollInterval = setInterval(() => {
-      const v = window.speechSynthesis.getVoices();
-      if (v.length > 0) {
-        setVoices(v);
-      }
-    }, 500);
+    const pollInterval = setInterval(updateVoiceList, 1000);
 
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
       window.speechSynthesis.onvoiceschanged = updateVoiceList;
@@ -242,61 +268,51 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
 
     return () => {
       clearInterval(pollInterval);
-      stopKeepalive();
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
+      stopTts();
     };
   }, []);
 
-  // When language changes, auto-select matching voice and reset TTS if playing
+  // When language changes or voices load, select matching voice without overwriting valid choices
   useEffect(() => {
     if (voices.length === 0) return;
 
-    const bestVoice = getBestVoiceForLanguage(voices, currentLang);
-    if (bestVoice) {
-      setSelectedVoiceName(bestVoice.name);
-    } else {
-      setSelectedVoiceName('default');
+    if (isPlayingRef.current) {
+      stopTts();
+      setTtsIndex(0);
     }
 
-    if (isTtsPlaying) {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+    const matching = getMatchingVoicesForLanguage(voices, currentLang);
+    const isValidForLang = matching.some(v => v.name === selectedVoiceName);
+
+    if (!isValidForLang) {
+      const bestVoice = getBestVoiceForLanguage(voices, currentLang);
+      if (bestVoice) {
+        setSelectedVoiceName(bestVoice.name);
+      } else {
+        setSelectedVoiceName('default');
       }
-      setIsTtsPlaying(false);
-      setTtsIndex(0);
     }
   }, [currentLang, voices]);
 
   // Clean stop on component unmount
   useEffect(() => {
     return () => {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
+      stopTts();
     };
   }, []);
 
   const handleStartStopTts = () => {
     if (isTtsPlaying) {
-      // Stop
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      setIsTtsPlaying(false);
+      stopTts();
     } else {
-      // Start/Resume
+      isPlayingRef.current = true;
       setIsTtsPlaying(true);
       speakTextSegment(ttsIndex, ttsRate, true);
     }
   };
 
   const handleResetTts = () => {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    setIsTtsPlaying(false);
+    stopTts();
     setTtsIndex(0);
   };
 
@@ -383,10 +399,8 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
                   onChange={(e) => {
                     const newVoice = e.target.value;
                     setSelectedVoiceName(newVoice);
-                    if (isTtsPlaying) {
-                      setTimeout(() => {
-                        speakTextSegment(ttsIndex, ttsRate, true);
-                      }, 100);
+                    if (isPlayingRef.current) {
+                      speakTextSegment(ttsIndex, ttsRate, true, newVoice);
                     }
                   }}
                   className="bg-transparent text-xs text-brand-gold w-full focus:outline-none cursor-pointer"
