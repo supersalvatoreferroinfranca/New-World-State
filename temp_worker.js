@@ -1704,6 +1704,79 @@ CREATE TABLE citizens (
         return new Response(JSON.stringify({ status: 'connected' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
+      // Rotta: Text-To-Speech (TTS) Proxy per Sintesi Vocale Multilingua
+      if (url.pathname === '/api/tts' && request.method === 'GET') {
+        try {
+          const text = (url.searchParams.get('text') || '').trim();
+          const lang = (url.searchParams.get('lang') || 'it').toLowerCase().trim();
+
+          if (!text) {
+            return new Response(JSON.stringify({ error: 'Text parameter is required' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const googleLangMap = {
+            it: 'it',
+            en: 'en',
+            fr: 'fr',
+            es: 'es',
+            pt: 'pt',
+            ru: 'ru',
+            hi: 'hi',
+            bn: 'bn',
+            zh: 'zh-CN',
+            ja: 'ja',
+            ar: 'ar'
+          };
+
+          const targetLang = googleLangMap[lang] || 'it';
+          const cleanChunk = text.replace(/https?:\/\/\S+/g, '').substring(0, 200).trim();
+
+          if (!cleanChunk) {
+            return new Response(JSON.stringify({ error: 'Cleaned text chunk is empty' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanChunk)}&tl=${targetLang}&client=tw-ob`;
+
+          const ttsResponse = await fetch(googleTtsUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Referer': 'https://translate.google.com/'
+            }
+          });
+
+          if (!ttsResponse.ok) {
+            return new Response(JSON.stringify({ error: 'Failed to fetch TTS audio stream' }), {
+              status: 502,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const audioBuffer = await ttsResponse.arrayBuffer();
+
+          return new Response(audioBuffer, {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'audio/mpeg',
+              'Content-Length': audioBuffer.byteLength.toString(),
+              'Cache-Control': 'public, max-age=86400',
+              'Accept-Ranges': 'bytes'
+            }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ error: 'Internal TTS Worker Error: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
       // Rotta: Test Email Send
       if (url.pathname === '/api/test-email') {
         const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";

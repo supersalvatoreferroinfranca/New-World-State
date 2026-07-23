@@ -76,40 +76,73 @@ class TtsAudioPlayer {
     this.playNextChunk();
   }
 
-  private playNextChunk() {
+  private playNextChunk(useDirectFallback = false) {
     if (!this.isPlaying || this.currentChunkIndex >= this.chunks.length) {
       this.isPlaying = false;
       this.onEndCallback?.();
       return;
     }
 
+    const googleLangMap: Record<string, string> = {
+      it: 'it',
+      en: 'en',
+      fr: 'fr',
+      es: 'es',
+      pt: 'pt',
+      ru: 'ru',
+      hi: 'hi',
+      bn: 'bn',
+      zh: 'zh-CN',
+      ja: 'ja',
+      ar: 'ar'
+    };
+
     const chunkText = this.chunks[this.currentChunkIndex];
     const encodedText = encodeURIComponent(chunkText);
-    const audioUrl = `/api/tts?text=${encodedText}&lang=${encodeURIComponent(this.currentLang)}`;
+    const targetLang = googleLangMap[this.currentLang] || 'it';
+
+    const audioUrl = useDirectFallback
+      ? `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${targetLang}&client=tw-ob`
+      : `/api/tts?text=${encodedText}&lang=${encodeURIComponent(this.currentLang)}`;
 
     this.activeAudio = new Audio(audioUrl);
     this.activeAudio.playbackRate = this.playbackRate;
 
     this.activeAudio.onended = () => {
       this.currentChunkIndex++;
-      this.playNextChunk();
+      this.playNextChunk(false);
     };
 
     this.activeAudio.onerror = (e) => {
-      console.warn(`[Fallback Audio TTS] Chunk ${this.currentChunkIndex} playback error:`, e);
-      this.currentChunkIndex++;
-      if (this.currentChunkIndex < this.chunks.length) {
-        this.playNextChunk();
+      console.warn(`[Fallback Audio TTS] Chunk ${this.currentChunkIndex} playback error (useDirectFallback=${useDirectFallback}):`, e);
+      if (!useDirectFallback) {
+        // Try direct URL fallback for this chunk
+        this.playNextChunk(true);
       } else {
-        this.isPlaying = false;
-        this.onErrorCallback?.(e);
+        // Skip chunk and move on
+        this.currentChunkIndex++;
+        if (this.currentChunkIndex < this.chunks.length) {
+          this.playNextChunk(false);
+        } else {
+          this.isPlaying = false;
+          this.onErrorCallback?.(e);
+        }
       }
     };
 
     this.activeAudio.play().catch((err) => {
-      console.warn('[Fallback Audio TTS] Autoplay / Audio playback catch:', err);
-      this.isPlaying = false;
-      this.onErrorCallback?.(err);
+      console.warn(`[Fallback Audio TTS] Autoplay catch (useDirectFallback=${useDirectFallback}):`, err);
+      if (!useDirectFallback) {
+        this.playNextChunk(true);
+      } else {
+        this.currentChunkIndex++;
+        if (this.currentChunkIndex < this.chunks.length) {
+          this.playNextChunk(false);
+        } else {
+          this.isPlaying = false;
+          this.onErrorCallback?.(err);
+        }
+      }
     });
   }
 
