@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NewsArticle, NewsCategory } from '../../types/news';
 import { getCategories, getArticles, incrementArticleViews } from '../../services/newsService';
+import { useI18n } from '../../contexts/I18nContext';
 import { 
   X, 
   Calendar, 
@@ -30,6 +31,7 @@ export default function ArticleDetailModal({
   onClose,
   onSelectArticle
 }: ArticleDetailModalProps) {
+  const { tText } = useI18n();
   const [copied, setCopied] = useState(false);
 
   if (!isOpen || !article) return null;
@@ -78,10 +80,10 @@ export default function ArticleDetailModal({
               className="text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full text-white shadow-sm"
               style={{ backgroundColor: category?.color || '#c5a880' }}
             >
-              {category?.name || 'Notizia Sovrana'}
+              {category?.name || tText('Sovereign News', 'Notizia Sovrana')}
             </span>
             <span className="text-xs text-slate-300 font-tech">
-              {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Bozza'}
+              {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }) : tText('Draft', 'Bozza')}
             </span>
           </div>
 
@@ -89,10 +91,10 @@ export default function ArticleDetailModal({
             <button
               onClick={handleShare}
               className="p-2 rounded-xl bg-white/10 text-brand-gold hover:bg-white/20 transition cursor-pointer flex items-center gap-1 text-xs"
-              title="Condividi Notizia"
+              title={tText('Share News', 'Condividi Notizia')}
             >
               {copied ? <Check className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
-              <span className="hidden sm:inline">{copied ? 'Copiato!' : 'Condividi'}</span>
+              <span className="hidden sm:inline">{copied ? tText('Copied!', 'Copiato!') : tText('Share', 'Condividi')}</span>
             </button>
 
             <button
@@ -120,7 +122,7 @@ export default function ArticleDetailModal({
                 </div>
                 <div>
                   <span className="text-[#0a1c3e] font-bold">{article.authorName}</span>
-                  <span className="text-[10px] text-slate-400 block font-tech">{article.authorRole || 'Cronista'}</span>
+                  <span className="text-[10px] text-slate-400 block font-tech">{article.authorRole || tText('Official Reporter', 'Cronista')}</span>
                 </div>
               </div>
 
@@ -128,7 +130,7 @@ export default function ArticleDetailModal({
 
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span className="font-medium text-emerald-700">Verificato dai Custodi Digitali</span>
+                <span className="font-medium text-emerald-700">{tText('Verified by Digital Custodians', 'Verificato dai Custodi Digitali')}</span>
               </div>
 
               {article.viewsCount !== undefined && (
@@ -136,7 +138,7 @@ export default function ArticleDetailModal({
                   <div className="h-4 w-px bg-slate-200" />
                   <div className="flex items-center gap-1.5">
                     <Eye className="w-4 h-4 text-slate-400" />
-                    <span>{article.viewsCount} letture</span>
+                    <span>{article.viewsCount} {tText('reads', 'letture')}</span>
                   </div>
                 </>
               )}
@@ -178,7 +180,7 @@ export default function ArticleDetailModal({
             <div className="space-y-4 my-6">
               <h3 className="font-serif text-base font-bold text-[#0a1c3e] flex items-center gap-2">
                 <Video className="w-5 h-5 text-brand-gold" />
-                <span>Video Allegati</span>
+                <span>{tText('Attached Videos', 'Video Allegati')}</span>
               </h3>
               {article.videos.map((vid, idx) => {
                 const embedUrl = getEmbedVideoUrl(vid.url);
@@ -238,7 +240,7 @@ export default function ArticleDetailModal({
             <div className="pt-6 border-t border-slate-200 space-y-3">
               <h3 className="font-serif text-base font-bold text-[#0a1c3e] flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-brand-gold" />
-                <span>Articoli Correlati</span>
+                <span>{tText('Related Articles', 'Articoli Correlati')}</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -257,7 +259,7 @@ export default function ArticleDetailModal({
                       </p>
                     </div>
                     <span className="text-[10px] text-brand-gold font-bold mt-2 hover:underline inline-block">
-                      Leggi articolo →
+                      {tText('Read article →', 'Leggi articolo →')}
                     </span>
                   </div>
                 ))}
@@ -272,7 +274,7 @@ export default function ArticleDetailModal({
             onClick={onClose}
             className="px-6 py-2.5 rounded-xl bg-[#0a1c3e] text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition cursor-pointer"
           >
-            Chiudi Articolo
+            {tText('Close Article', 'Chiudi Articolo')}
           </button>
         </div>
       </div>

@@ -202,7 +202,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-gold text-[10px] font-tech uppercase tracking-widest">
               <Newspaper className="w-3.5 h-3.5" />
-              <span>Organo d'Informazione Sovrana</span>
+              <span>{tText('Official State Information Media', "Organo d'Informazione Sovrana")}</span>
             </div>
 
             <h1 className="text-3xl md:text-5xl font-serif font-bold text-brand-gold tracking-tight leading-tight">
@@ -210,7 +210,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
             </h1>
 
             <p className="text-slate-300 text-xs md:text-sm leading-relaxed font-light">
-              Notizie verificate, riforme legislative, reportage ufficiali e approfondimenti curati dai Cronisti della comunità con la moderazione garante dei Custodi Digitali.
+              {tText('Verified news, legislative reforms, official reports and analysis by community Reporters moderated by Digital Custodians.', 'Notizie verificate, riforme legislative, reportage ufficiali e approfondimenti curati dai Cronisti della comunità con la moderazione garante dei Custodi Digitali.')}
             </p>
           </div>
 
@@ -225,7 +225,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
               className="px-5 py-3 rounded-2xl bg-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:bg-white transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-brand-gold"
             >
               <PenTool className="w-4 h-4" />
-              <span>+ Scrivi Notizia</span>
+              <span>{tText('+ Write Article', '+ Scrivi Notizia')}</span>
             </button>
 
             {/* Gestione Categorie */}
@@ -234,7 +234,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
               className="px-4 py-3 rounded-2xl bg-white/10 text-white hover:bg-white/20 font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 border border-white/20"
             >
               <FolderPlus className="w-4 h-4 text-brand-gold" />
-              <span>Categorie</span>
+              <span>{tText('Categories', 'Categorie')}</span>
             </button>
 
             {/* Moderazione Custodi */}
@@ -243,7 +243,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
               className="px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 shadow-lg relative"
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>Moderazione</span>
+              <span>{tText('Moderation', 'Moderazione')}</span>
               {pendingCount > 0 && (
                 <span className="bg-amber-400 text-[#0a1c3e] font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center animate-pulse ml-1">
                   {pendingCount}
@@ -257,15 +257,15 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-2 text-slate-300">
             <UserCheck className="w-4 h-4 text-brand-gold" />
-            <span>Ruolo Attuale:</span>
+            <span>{tText('Current Role:', 'Ruolo Attuale:')}</span>
             <span className="font-bold text-white bg-white/10 px-2.5 py-0.5 rounded-lg border border-white/10">
               {isCronista && isCustode
-                ? 'Cronista & Custode Digitale'
+                ? tText('Reporter & Digital Custodian', 'Cronista & Custode Digitale')
                 : isCronista
-                ? 'Cronista Ufficiale'
+                ? tText('Official Reporter', 'Cronista Ufficiale')
                 : isCustode
-                ? 'Custode Digitale'
-                : 'Cittadino / Lettore'}
+                ? tText('Digital Custodian', 'Custode Digitale')
+                : tText('Citizen / Reader', 'Cittadino / Lettore')}
             </span>
           </div>
 
@@ -283,7 +283,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10'
               }`}
             >
-              {isSimulatedCronista ? '✓ Ruolo Cronista Attivo' : '+ Attiva Ruolo Cronista'}
+              {isSimulatedCronista ? tText('✓ Reporter Role Active', '✓ Ruolo Cronista Attivo') : tText('+ Activate Reporter Role', '+ Attiva Ruolo Cronista')}
             </button>
 
             <button
@@ -294,7 +294,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10'
               }`}
             >
-              {isSimulatedCustode ? '✓ Ruolo Custode Attivo' : '+ Attiva Ruolo Custode'}
+              {isSimulatedCustode ? tText('✓ Custodian Role Active', '✓ Ruolo Custode Attivo') : tText('+ Activate Custodian Role', '+ Attiva Ruolo Custode')}
             </button>
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cerca articoli, parole chiave, tag o autori..."
+              placeholder={tText('Search articles, keywords, tags or authors...', 'Cerca articoli, parole chiave, tag o autori...')}
               className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-[#0a1c3e] outline-none"
             />
           </div>
@@ -325,7 +325,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   : 'text-slate-600 hover:text-[#0a1c3e]'
               }`}
             >
-              Articoli Pubblicati
+              {tText('Published Articles', 'Articoli Pubblicati')}
             </button>
 
             <button
@@ -336,7 +336,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   : 'text-slate-600 hover:text-[#0a1c3e]'
               }`}
             >
-              Le Mie Notizie / Bozze
+              {tText('My News / Drafts', 'Le Mie Notizie / Bozze')}
             </button>
 
             <button
@@ -347,7 +347,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   : 'text-slate-600 hover:text-[#0a1c3e]'
               }`}
             >
-              <span>In Moderazione</span>
+              <span>{tText('Pending Moderation', 'In Moderazione')}</span>
               {pendingCount > 0 && (
                 <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-mono">
                   {pendingCount}
@@ -367,7 +367,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            Tutte le Categorie ({articles.filter(a => a.status === 'pubblicato').length})
+            {tText('All Categories', 'Tutte le Categorie')} ({articles.filter(a => a.status === 'pubblicato').length})
           </button>
 
           {categories.map((cat) => {
@@ -400,7 +400,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-xs font-bold text-[#0a1c3e] uppercase tracking-wider font-tech">
             <Star className="w-4 h-4 text-brand-gold fill-current" />
-            <span>In Evidenza in Copertina</span>
+            <span>{tText('Featured on Cover', 'In Evidenza in Copertina')}</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -420,7 +420,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
                       <div className="absolute top-4 left-4 bg-brand-gold text-[#0a1c3e] text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow">
-                        Copertina Sovrana
+                        {tText('Sovereign Cover', 'Copertina Sovrana')}
                       </div>
                     </div>
                   )}
@@ -443,9 +443,9 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                     </div>
 
                     <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-brand-gold font-bold">
-                      <span>Di {art.authorName}</span>
+                      <span>{tText('By', 'Di')} {art.authorName}</span>
                       <span className="group-hover:translate-x-1 transition flex items-center gap-1">
-                        Leggi articolo completo →
+                        {tText('Read full article →', 'Leggi articolo completo →')}
                       </span>
                     </div>
                   </div>
@@ -459,9 +459,9 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
       {/* MAIN ARTICLES GRID */}
       <div className="space-y-4">
         <div className="flex items-center justify-between text-xs font-bold text-[#0a1c3e] uppercase tracking-wider font-tech">
-          <span>{filteredArticles.length} Notizie Trovate</span>
+          <span>{filteredArticles.length} {tText('News Found', 'Notizie Trovate')}</span>
           <span className="text-slate-400 font-normal">
-            Ordinato per data di pubblicazione
+            {tText('Sorted by publication date', 'Ordinato per data di pubblicazione')}
           </span>
         </div>
 
@@ -469,10 +469,10 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
           <div className="text-center py-16 bg-white border border-dashed border-slate-300 rounded-3xl p-8 shadow-sm">
             <Newspaper className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <h3 className="font-serif text-base font-bold text-[#0a1c3e]">
-              Nessun Articolo Trovato
+              {tText('No Articles Found', 'Nessun Articolo Trovato')}
             </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-              Non sono presenti articoli per i filtri selezionati. Prova a modificare la ricerca o seleziona un'altra categoria.
+              {tText('No articles available for the selected filters. Try changing your search or selecting another category.', 'Non sono presenti articoli per i filtri selezionati. Prova a modificare la ricerca o seleziona un\'altra categoria.')}
             </p>
           </div>
         ) : (
@@ -521,8 +521,8 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                        <span>{art.publishedAt ? new Date(art.publishedAt).toLocaleDateString('it-IT') : 'Bozza'}</span>
-                        <span className="font-bold text-slate-600">Di {art.authorName}</span>
+                        <span>{art.publishedAt ? new Date(art.publishedAt).toLocaleDateString('it-IT') : tText('Draft', 'Bozza')}</span>
+                        <span className="font-bold text-slate-600">{tText('By', 'Di')} {art.authorName}</span>
                       </div>
 
                       <h3 className="font-serif text-base font-bold text-[#0a1c3e] group-hover:text-brand-gold transition leading-snug line-clamp-2">
@@ -548,10 +548,10 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                     {/* Footer link */}
                     <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a1c3e]">
                       <span className="text-[11px] text-slate-400 font-normal">
-                        {art.viewsCount || 0} letture
+                        {art.viewsCount || 0} {tText('reads', 'letture')}
                       </span>
                       <span className="text-brand-gold group-hover:translate-x-1 transition flex items-center gap-1">
-                        Leggi articolo →
+                        {tText('Read article →', 'Leggi articolo →')}
                       </span>
                     </div>
                   </div>

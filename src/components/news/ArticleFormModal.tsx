@@ -7,6 +7,7 @@ import {
   updateArticle, 
   generateSlug 
 } from '../../services/newsService';
+import { useI18n } from '../../contexts/I18nContext';
 import { 
   X, 
   Plus, 
@@ -45,6 +46,7 @@ export default function ArticleFormModal({
   authorRole = 'Cronista Ufficiale',
   onSaved
 }: ArticleFormModalProps) {
+  const { tText } = useI18n();
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [isSlugCustom, setIsSlugCustom] = useState(false);
@@ -146,7 +148,7 @@ export default function ArticleFormModal({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Per favore seleziona un file immagine valido (JPG, PNG, WebP, GIF).');
+      alert(tText('Please select a valid image file (JPG, PNG, WebP, GIF).', 'Per favore seleziona un file immagine valido (JPG, PNG, WebP, GIF).'));
       return;
     }
 
@@ -177,7 +179,7 @@ export default function ArticleFormModal({
         type: 'image',
         source: 'url',
         url: newImageUrl.trim(),
-        caption: newImageCaption.trim() || 'Immagine allegata'
+        caption: newImageCaption.trim() || tText('Attached Image', 'Immagine allegata')
       }
     ]);
     setNewImageUrl('');
@@ -194,7 +196,7 @@ export default function ArticleFormModal({
     if (!file) return;
 
     if (!file.type.startsWith('video/')) {
-      alert('Per favore seleziona un file video valido (MP4, WebM, MOV).');
+      alert(tText('Please select a valid video file (MP4, WebM, MOV).', 'Per favore seleziona un file video valido (MP4, WebM, MOV).'));
       return;
     }
 
@@ -221,7 +223,7 @@ export default function ArticleFormModal({
         type: 'video',
         source: 'url',
         url: newVideoUrl.trim(),
-        caption: newVideoCaption.trim() || 'Video allegato'
+        caption: newVideoCaption.trim() || tText('Attached Video', 'Video allegato')
       }
     ]);
     setNewVideoUrl('');
@@ -244,19 +246,19 @@ export default function ArticleFormModal({
   // Submit Handler
   const handleSubmit = (submitForModeration: boolean) => {
     if (!title.trim()) {
-      setError('Il titolo dell\'articolo è obbligatorio.');
+      setError(tText('Article title is required.', 'Il titolo dell\'articolo è obbligatorio.'));
       return;
     }
     if (!intro.trim()) {
-      setError('Il testo introduttivo (abstract) è obbligatorio.');
+      setError(tText('Introductory abstract is required.', 'Il testo introduttivo (abstract) è obbligatorio.'));
       return;
     }
     if (!content.trim()) {
-      setError('Il testo esteso dell\'articolo è obbligatorio.');
+      setError(tText('Extended article body is required.', 'Il testo esteso dell\'articolo è obbligatorio.'));
       return;
     }
     if (!categoryId) {
-      setError('Seleziona una categoria per l\'articolo.');
+      setError(tText('Please select an article category.', 'Seleziona una categoria per l\'articolo.'));
       return;
     }
 
@@ -308,10 +310,10 @@ export default function ArticleFormModal({
             </div>
             <div>
               <h2 className="font-serif text-lg font-bold text-brand-gold leading-tight">
-                {articleToEdit ? 'Modifica Articolo Cronista' : 'Redazione Nuovo Articolo'}
+                {articleToEdit ? tText('Edit Reporter Article', 'Modifica Articolo Cronista') : tText('Write New Reporter Article', 'Redazione Nuovo Articolo')}
               </h2>
               <p className="text-[10px] text-slate-300 font-tech tracking-wider uppercase">
-                Autore: <span className="text-brand-gold font-bold">{authorName}</span> ({authorRole})
+                {tText('Author', 'Autore')}: <span className="text-brand-gold font-bold">{authorName}</span> ({authorRole})
               </p>
             </div>
           </div>
@@ -337,7 +339,7 @@ export default function ArticleFormModal({
           <div className="space-y-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
             <div>
               <label className="block text-xs font-bold text-[#0a1c3e] mb-1 uppercase tracking-wider">
-                Titolo dell'Articolo *
+                {tText('Article Title', 'Titolo dell\'Articolo')} *
               </label>
               <input
                 type="text"
@@ -354,7 +356,7 @@ export default function ArticleFormModal({
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-brand-gold" />
-                  <span>Slug Automatico (URL Permanente)</span>
+                  <span>{tText('Automatic Slug (Permanent URL)', 'Slug Automatico (URL Permanente)')}</span>
                 </label>
                 <button
                   type="button"
@@ -362,7 +364,7 @@ export default function ArticleFormModal({
                   className="text-[10px] text-[#0a1c3e] font-bold hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>Rigenera da Titolo</span>
+                  <span>{tText('Regenerate from Title', 'Rigenera da Titolo')}</span>
                 </button>
               </div>
               <div className="flex items-center gap-2">
@@ -388,7 +390,7 @@ export default function ArticleFormModal({
             {/* Category */}
             <div>
               <label className="block text-xs font-bold text-[#0a1c3e] mb-1 uppercase tracking-wider">
-                Categoria dell'Articolo *
+                {tText('Article Category', 'Categoria dell\'Articolo')} *
               </label>
               <select
                 value={categoryId}
@@ -406,7 +408,7 @@ export default function ArticleFormModal({
             {/* Tags Builder */}
             <div>
               <label className="block text-xs font-bold text-[#0a1c3e] mb-1 uppercase tracking-wider">
-                Tags dell'Articolo
+                {tText('Article Tags', 'Tags dell\'Articolo')}
               </label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
@@ -458,10 +460,10 @@ export default function ArticleFormModal({
           {/* Testo Introduttivo (Excerpt / Summary) */}
           <div>
             <label className="block text-xs font-bold text-[#0a1c3e] mb-1 uppercase tracking-wider">
-              Testo Introduttivo (Abstract / Sommario) *
+              {tText('Introductory Abstract', 'Testo Introduttivo (Abstract / Sommario)')} *
             </label>
             <p className="text-[11px] text-slate-500 mb-1">
-              Breve introduzione che apparirà nell'anteprima della homepage e nella lista notizie.
+              {tText('Brief summary appearing in homepage previews.', 'Breve introduzione che apparirà nell\'anteprima della homepage e nella lista notizie.')}
             </p>
             <textarea
               value={intro}
@@ -476,10 +478,10 @@ export default function ArticleFormModal({
           {/* Testo Esteso (Full Content) */}
           <div>
             <label className="block text-xs font-bold text-[#0a1c3e] mb-1 uppercase tracking-wider">
-              Testo Esteso dell'Articolo *
+              {tText('Full Article Content', 'Testo Esteso dell\'Articolo')} *
             </label>
             <p className="text-[11px] text-slate-500 mb-1">
-              Corpo principale dell'articolo di giornale.
+              {tText('Main body of the news article.', 'Corpo principale dell\'articolo di giornale.')}
             </p>
             <textarea
               value={content}
@@ -495,7 +497,7 @@ export default function ArticleFormModal({
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
             <h3 className="font-serif text-sm font-bold text-[#0a1c3e] uppercase tracking-wider flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-brand-gold" />
-              <span>Immagini dell'Articolo</span>
+              <span>{tText('Article Images', 'Immagini dell\'Articolo')}</span>
             </h3>
 
             {/* Options to upload or paste URL */}
@@ -504,11 +506,11 @@ export default function ArticleFormModal({
               <div className="bg-white border border-dashed border-slate-300 rounded-xl p-3 text-center hover:border-[#0a1c3e] transition">
                 <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
                 <p className="text-xs font-bold text-[#0a1c3e] mb-1">
-                  Carica Immagine dal PC
+                  {tText('Upload Image from PC', 'Carica Immagine dal PC')}
                 </p>
                 <p className="text-[10px] text-slate-500 mb-2">JPG, PNG, WebP (Max 5MB)</p>
                 <label className="inline-block bg-[#0a1c3e] text-white hover:bg-brand-gold hover:text-[#0a1c3e] text-[11px] font-bold px-3 py-1.5 rounded-lg transition cursor-pointer">
-                  Sfoglia File...
+                  {tText('Browse Files...', 'Sfoglia File...')}
                   <input
                     type="file"
                     accept="image/*"
@@ -521,7 +523,7 @@ export default function ArticleFormModal({
               {/* URL Input */}
               <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
                 <p className="text-xs font-bold text-[#0a1c3e]">
-                  Allegare Immagine tramite URL Esterno
+                  {tText('Attach Image via External URL', 'Allegare Immagine tramite URL Esterno')}
                 </p>
                 <input
                   type="url"
@@ -543,7 +545,7 @@ export default function ArticleFormModal({
                   disabled={!newImageUrl.trim()}
                   className="w-full bg-[#0a1c3e] text-white disabled:opacity-50 text-[11px] font-bold py-1.5 rounded-lg hover:bg-brand-gold hover:text-[#0a1c3e] transition cursor-pointer"
                 >
-                  + Aggiungi da URL
+                  + {tText('Add from URL', 'Aggiungi da URL')}
                 </button>
               </div>
             </div>
@@ -581,7 +583,7 @@ export default function ArticleFormModal({
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
             <h3 className="font-serif text-sm font-bold text-[#0a1c3e] uppercase tracking-wider flex items-center gap-2">
               <VideoIcon className="w-4 h-4 text-brand-gold" />
-              <span>Video dell'Articolo</span>
+              <span>{tText('Article Videos', 'Video dell\'Articolo')}</span>
             </h3>
 
             {/* Options to upload or paste URL */}
@@ -590,11 +592,11 @@ export default function ArticleFormModal({
               <div className="bg-white border border-dashed border-slate-300 rounded-xl p-3 text-center hover:border-[#0a1c3e] transition">
                 <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
                 <p className="text-xs font-bold text-[#0a1c3e] mb-1">
-                  Carica Video dal PC
+                  {tText('Upload Video from PC', 'Carica Video dal PC')}
                 </p>
                 <p className="text-[10px] text-slate-500 mb-2">MP4, WebM, MOV</p>
                 <label className="inline-block bg-[#0a1c3e] text-white hover:bg-brand-gold hover:text-[#0a1c3e] text-[11px] font-bold px-3 py-1.5 rounded-lg transition cursor-pointer">
-                  Sfoglia Video...
+                  {tText('Browse Videos...', 'Sfoglia Video...')}
                   <input
                     type="file"
                     accept="video/*"
@@ -605,9 +607,9 @@ export default function ArticleFormModal({
               </div>
 
               {/* URL Input */}
-              <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+              <div className="bg-[#white] border border-slate-200 rounded-xl p-3 space-y-2">
                 <p className="text-xs font-bold text-[#0a1c3e]">
-                  Allegare Video tramite URL (YouTube / Direct MP4)
+                  {tText('Attach Video via URL (YouTube / Direct MP4)', 'Allegare Video tramite URL (YouTube / Direct MP4)')}
                 </p>
                 <input
                   type="url"
@@ -629,7 +631,7 @@ export default function ArticleFormModal({
                   disabled={!newVideoUrl.trim()}
                   className="w-full bg-[#0a1c3e] text-white disabled:opacity-50 text-[11px] font-bold py-1.5 rounded-lg hover:bg-brand-gold hover:text-[#0a1c3e] transition cursor-pointer"
                 >
-                  + Aggiungi Video da URL
+                  + {tText('Add Video from URL', 'Aggiungi Video da URL')}
                 </button>
               </div>
             </div>
@@ -644,7 +646,7 @@ export default function ArticleFormModal({
                         <VideoIcon className="w-4 h-4" />
                       </div>
                       <div className="truncate text-xs">
-                        <p className="font-bold text-[#0a1c3e] truncate">{vid.caption || 'Video allegato'}</p>
+                        <p className="font-bold text-[#0a1c3e] truncate">{vid.caption || tText('Attached Video', 'Video allegato')}</p>
                         <p className="text-[10px] text-slate-400 font-mono truncate">{vid.url}</p>
                       </div>
                     </div>
@@ -666,10 +668,10 @@ export default function ArticleFormModal({
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
               <h3 className="font-serif text-sm font-bold text-[#0a1c3e] uppercase tracking-wider flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-brand-gold" />
-                <span>Collega ad Articoli Redatti in Precedenza</span>
+                <span>{tText('Link to Previously Written Articles', 'Collega ad Articoli Redatti in Precedenza')}</span>
               </h3>
               <p className="text-[11px] text-slate-500">
-                Seleziona altri articoli per collegarli come "Articoli Correlati" al termine della lettura.
+                {tText('Select other articles to link as "Related Articles" at the end of reading.', 'Seleziona altri articoli per collegarli come "Articoli Correlati" al termine della lettura.')}
               </p>
 
               <div className="max-h-40 overflow-y-auto space-y-2 bg-white border border-slate-200 rounded-xl p-3">
@@ -709,7 +711,7 @@ export default function ArticleFormModal({
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
           >
-            Annulla
+            {tText('Cancel', 'Annulla')}
           </button>
 
           <div className="flex items-center gap-3">
@@ -720,7 +722,7 @@ export default function ArticleFormModal({
               className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-200 text-slate-700 hover:bg-slate-300 transition cursor-pointer flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
-              <span>Salva Bozza</span>
+              <span>{tText('Save Draft', 'Salva Bozza')}</span>
             </button>
 
             {/* Submit to Moderation (Custodi Digitali) */}
@@ -730,7 +732,7 @@ export default function ArticleFormModal({
               className="px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#0a1c3e] text-white hover:bg-brand-gold hover:text-[#0a1c3e] transition cursor-pointer flex items-center gap-2 shadow-lg"
             >
               <Send className="w-4 h-4" />
-              <span>Invia a Moderazione (Custodi)</span>
+              <span>{tText('Submit for Moderation (Custodians)', 'Invia a Moderazione (Custodi)')}</span>
             </button>
           </div>
         </div>

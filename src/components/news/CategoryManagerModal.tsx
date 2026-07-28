@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NewsCategory } from '../../types/news';
 import { getCategories, addCategory, updateCategory, deleteCategory } from '../../services/newsService';
+import { useI18n } from '../../contexts/I18nContext';
 import { X, Plus, Edit2, Trash2, FolderPlus, ShieldCheck, Tag, Check, AlertCircle } from 'lucide-react';
 
 interface CategoryManagerModalProps {
@@ -10,6 +11,7 @@ interface CategoryManagerModalProps {
 }
 
 export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpdated }: CategoryManagerModalProps) {
+  const { tText } = useI18n();
   const [categories, setCategories] = useState<NewsCategory[]>(getCategories);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -44,7 +46,7 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Il nome della categoria è obbligatorio.');
+      setError(tText('Category name is required.', 'Il nome della categoria è obbligatorio.'));
       return;
     }
 
@@ -70,10 +72,10 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
 
   const handleDelete = (id: string, isSystem?: boolean) => {
     if (isSystem) {
-      alert('Le categorie di sistema predefinite non possono essere eliminate.');
+      alert(tText('System default categories cannot be deleted.', 'Le categorie di sistema predefinite non possono essere eliminate.'));
       return;
     }
-    if (confirm('Sei sicuro di voler eliminare questa categoria?')) {
+    if (confirm(tText('Are you sure you want to delete this category?', 'Sei sicuro di voler eliminare questa categoria?'))) {
       deleteCategory(id);
       handleRefresh();
     }
@@ -90,10 +92,10 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
             </div>
             <div>
               <h2 className="font-serif text-lg font-bold text-brand-gold leading-tight">
-                Gestione Categorie Articoli
+                {tText('Manage Article Categories', 'Gestione Categorie Articoli')}
               </h2>
               <p className="text-[10px] text-slate-300 font-tech tracking-wider uppercase">
-                Organizzazione dei contenuti del Giornale di Stato
+                {tText('Organization of State Journal contents', 'Organizzazione dei contenuti del Giornale di Stato')}
               </p>
             </div>
           </div>
@@ -120,20 +122,20 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
             <form onSubmit={handleSave} className="bg-[#0a1c3e]/5 border border-[#0a1c3e]/15 rounded-2xl p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-serif text-sm font-bold text-[#0a1c3e] uppercase tracking-wider">
-                  {editingId === 'new' ? 'Nuova Categoria' : 'Modifica Categoria'}
+                  {editingId === 'new' ? tText('+ New Category', 'Nuova Categoria') : tText('Edit Category', 'Modifica Categoria')}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setEditingId(null)}
                   className="text-xs text-slate-500 hover:text-slate-800 underline cursor-pointer"
                 >
-                  Annulla
+                  {tText('Cancel', 'Annulla')}
                 </button>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-[#0a1c3e] mb-1">
-                  Nome Categoria *
+                  {tText('Category Name', 'Nome Categoria')} *
                 </label>
                 <input
                   type="text"
@@ -147,7 +149,7 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
 
               <div>
                 <label className="block text-xs font-bold text-[#0a1c3e] mb-1">
-                  Descrizione
+                  {tText('Description (optional)', 'Descrizione (opzionale)')}
                 </label>
                 <textarea
                   value={description}
@@ -160,7 +162,7 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
 
               <div>
                 <label className="block text-xs font-bold text-[#0a1c3e] mb-1">
-                  Colore Identificativo
+                  {tText('Badge Color', 'Colore Identificativo')}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -179,28 +181,28 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
                   onClick={() => setEditingId(null)}
                   className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
                 >
-                  Annulla
+                  {tText('Cancel', 'Annulla')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#0a1c3e] text-white hover:bg-brand-gold hover:text-[#0a1c3e] transition cursor-pointer flex items-center gap-1.5 shadow"
                 >
                   <Check className="w-4 h-4" />
-                  <span>Salva Categoria</span>
+                  <span>{tText('Save Category', 'Salva Categoria')}</span>
                 </button>
               </div>
             </form>
           ) : (
             <div className="flex justify-between items-center">
               <span className="text-xs text-slate-500 font-medium">
-                {categories.length} Categorie disponibili
+                {categories.length} {tText('Categories available', 'Categorie disponibili')}
               </span>
               <button
                 onClick={handleStartAdd}
                 className="bg-[#0a1c3e] hover:bg-brand-gold text-white hover:text-[#0a1c3e] text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow"
               >
                 <Plus className="w-4 h-4" />
-                <span>Aggiungi Categoria</span>
+                <span>{tText('+ New Category', 'Aggiungi Categoria')}</span>
               </button>
             </div>
           )}
@@ -222,7 +224,7 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
                       <h4 className="font-bold text-xs text-[#0a1c3e]">{cat.name}</h4>
                       {cat.isSystem && (
                         <span className="text-[9px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-tech">
-                          Sistema
+                          {tText('System', 'Sistema')}
                         </span>
                       )}
                     </div>
@@ -236,7 +238,7 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
                   <button
                     onClick={() => handleStartEdit(cat)}
                     className="p-1.5 rounded-lg text-slate-600 hover:text-[#0a1c3e] hover:bg-slate-200 transition cursor-pointer"
-                    title="Modifica"
+                    title={tText('Edit', 'Modifica')}
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
@@ -244,7 +246,7 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
                     <button
                       onClick={() => handleDelete(cat.id, cat.isSystem)}
                       className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition cursor-pointer"
-                      title="Elimina"
+                      title={tText('Delete', 'Elimina')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -261,7 +263,7 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
             onClick={onClose}
             className="px-6 py-2.5 rounded-xl bg-[#0a1c3e] text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition cursor-pointer"
           >
-            Chiudi
+            {tText('Close', 'Chiudi')}
           </button>
         </div>
       </div>

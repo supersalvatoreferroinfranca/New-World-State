@@ -46,13 +46,13 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-gold text-[10px] font-tech uppercase tracking-widest mb-2">
             <Newspaper className="w-3.5 h-3.5" />
-            <span>Stampa Ufficiale dello Stato Sovrano</span>
+            <span>{tText('Official State Press', 'Stampa Ufficiale dello Stato Sovrano')}</span>
           </div>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-[#0a1c3e] tracking-tight">
             {tText('Latest State News & Chronicle', 'Ultime Notizie dello Stato & Cronaca')}
           </h2>
           <p className="text-xs md:text-sm text-slate-600 font-light mt-1 max-w-2xl">
-            Informa il tuo giudizio e partecipa al dibattito democratico. Ultimi articoli redatti dai Cronisti e approvati dai Custodi Digitali.
+            {tText('Inform your judgment and participate in democratic debate. Latest articles by Reporters and approved by Digital Custodians.', 'Informa il tuo giudizio e partecipa al dibattito democratico. Ultimi articoli redatti dai Cronisti e approvati dai Custodi Digitali.')}
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
             onClick={onGoToNews}
             className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0a1c3e] hover:text-brand-gold transition cursor-pointer group bg-brand-gold/10 hover:bg-brand-gold/20 px-4 py-2.5 rounded-xl border border-brand-gold/30 shrink-0"
           >
-            <span>Tutte le Notizie dello Stato</span>
+            <span>{tText('All State News', 'Tutte le Notizie dello Stato')}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
           </button>
         )}
@@ -95,7 +95,7 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
                     {art.isFeatured && (
                       <span className="absolute top-3 right-3 bg-brand-gold text-[#0a1c3e] text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow">
                         <Star className="w-3 h-3 fill-current" />
-                        In Evidenza
+                        {tText('Featured', 'In Evidenza')}
                       </span>
                     )}
                   </div>
@@ -120,7 +120,7 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
                 <div className="p-5 space-y-3">
                   <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
                     <span>{art.publishedAt ? new Date(art.publishedAt).toLocaleDateString('it-IT') : ''}</span>
-                    <span className="font-bold text-slate-600">Di {art.authorName}</span>
+                    <span className="font-bold text-slate-600">{tText('By', 'Di')} {art.authorName}</span>
                   </div>
 
                   <h3 className="font-serif text-base font-bold text-[#0a1c3e] group-hover:text-brand-gold transition leading-snug line-clamp-2">
@@ -147,10 +147,10 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
               {/* Card Footer */}
               <div className="px-5 pb-5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a1c3e]">
                 <span className="text-[10px] text-slate-400 font-normal">
-                  {art.viewsCount || 0} letture
+                  {art.viewsCount || 0} {tText('reads', 'letture')}
                 </span>
                 <span className="text-brand-gold group-hover:translate-x-1 transition flex items-center gap-1">
-                  Leggi articolo →
+                  {tText('Read article →', 'Leggi articolo →')}
                 </span>
               </div>
             </div>
