@@ -166,6 +166,30 @@ export default function AccessibilityWidget() {
     };
   }, []);
 
+  // Listen for global TTS state changes across components
+  useEffect(() => {
+    const handleTtsStateChange = (e: Event) => {
+      const customEv = e as CustomEvent<{ isPlaying: boolean; isPaused?: boolean }>;
+      if (customEv.detail) {
+        setIsPlaying(!!customEv.detail.isPlaying);
+        if (typeof customEv.detail.isPaused === 'boolean') {
+          setIsPaused(customEv.detail.isPaused);
+        }
+      }
+    };
+
+    window.addEventListener('nws-tts-state-change', handleTtsStateChange);
+    return () => {
+      window.removeEventListener('nws-tts-state-change', handleTtsStateChange);
+    };
+  }, []);
+
+  const notifyState = (playing: boolean, paused: boolean = false) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: playing, isPaused: paused } }));
+    }
+  };
+
   // Text-To-Speech engine
   const speakText = (text: string, rate: number = speechRate, isContinuing: boolean = false) => {
     if (typeof window === 'undefined') return;
@@ -174,6 +198,10 @@ export default function AccessibilityWidget() {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
+
+    setIsPlaying(true);
+    setIsPaused(false);
+    notifyState(true, false);
 
     // Clean up text and emojis for cross-platform stability
     const cleanText = text
@@ -230,18 +258,25 @@ export default function AccessibilityWidget() {
     utterance.onstart = () => {
       setIsPlaying(true);
       setIsPaused(false);
+      notifyState(true, false);
     };
 
     utterance.onend = () => {
       setIsPlaying(false);
       setIsPaused(false);
+      notifyState(false, false);
       activeUtteranceRef.current = null;
     };
 
     utterance.onerror = (e) => {
       console.warn('[Accessibility TTS] Native error, trying streaming fallback:', e);
       activeUtteranceRef.current = null;
-      if (e.error === 'interrupted' || e.error === 'canceled') return;
+      if (e.error === 'interrupted' || e.error === 'canceled') {
+        setIsPlaying(false);
+        setIsPaused(false);
+        notifyState(false, false);
+        return;
+      }
       playFallback();
     };
 
@@ -350,16 +385,26 @@ export default function AccessibilityWidget() {
   };
 
   const handlePause = () => {
+    globalFallbackTtsPlayer.pause();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.pause();
-      setIsPaused(true);
+    }
+    setIsPaused(true);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('nws-tts-command', { detail: { action: 'pause' } }));
+      window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: true, isPaused: true } }));
     }
   };
 
   const handleResume = () => {
+    globalFallbackTtsPlayer.resume();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.resume();
-      setIsPaused(false);
+    }
+    setIsPaused(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('nws-tts-command', { detail: { action: 'resume' } }));
+      window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: true, isPaused: false } }));
     }
   };
 
@@ -370,6 +415,10 @@ export default function AccessibilityWidget() {
     }
     setIsPlaying(false);
     setIsPaused(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('nws-tts-command', { detail: { action: 'stop' } }));
+      window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: false, isPaused: false } }));
+    }
   };
 
   const handleQuickPlayStopToggle = () => {

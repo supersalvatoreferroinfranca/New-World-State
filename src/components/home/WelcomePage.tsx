@@ -104,6 +104,9 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: false, isPaused: false } }));
+    }
   };
 
   // Interactive quiz state
@@ -319,6 +322,32 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     }
   }, [currentLang, voices]);
 
+  // Listen for global TTS commands (pause, resume, stop) from AccessibilityWidget
+  useEffect(() => {
+    const handleCommand = (e: Event) => {
+      const customEv = e as CustomEvent<{ action: 'pause' | 'resume' | 'stop' }>;
+      if (!customEv.detail) return;
+      if (customEv.detail.action === 'stop') {
+        stopTts();
+      } else if (customEv.detail.action === 'pause') {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          window.speechSynthesis.pause();
+        }
+        globalFallbackTtsPlayer.pause();
+      } else if (customEv.detail.action === 'resume') {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          window.speechSynthesis.resume();
+        }
+        globalFallbackTtsPlayer.resume();
+      }
+    };
+
+    window.addEventListener('nws-tts-command', handleCommand);
+    return () => {
+      window.removeEventListener('nws-tts-command', handleCommand);
+    };
+  }, []);
+
   // Clean stop on component unmount
   useEffect(() => {
     return () => {
@@ -332,6 +361,9 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     } else {
       isPlayingRef.current = true;
       setIsTtsPlaying(true);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: true, isPaused: false } }));
+      }
       speakTextSegment(ttsIndex, ttsRate, true);
     }
   };
@@ -530,9 +562,6 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
         </div>
       </div>
 
-      {/* PWA AND BROWSER NOTIFICATIONS SYSTEM PANEL */}
-      <PWANotifierBanner />
-
       {/* LE 3 REGOLE D'ORO */}
       <div className="space-y-6">
         <div className="text-center space-y-2">
@@ -712,9 +741,6 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
         </div>
       </div>
 
-      {/* STRUMENTI DI DIVULGAZIONE COSTO ZERO */}
-      <NWSShareWidget />
-
       {/* COSA PUOI TROVARE SUL SITO: GUIDA CON INTERFACCIA COMPLETA */}
       <div className="space-y-6">
         <div className="text-center space-y-1">
@@ -847,6 +873,12 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
           {FINAL_BANNER_DATA.copyright[currentLang]}
         </p>
       </div>
+
+      {/* PWA AND BROWSER NOTIFICATIONS SYSTEM PANEL */}
+      <PWANotifierBanner />
+
+      {/* STRUMENTI DI DIVULGAZIONE COSTO ZERO */}
+      <NWSShareWidget />
 
     </div>
   );
