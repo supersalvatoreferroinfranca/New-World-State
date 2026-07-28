@@ -18,6 +18,7 @@ import VerifyCitizenPage from './components/constitution/VerifyCitizenPage';
 import DemocracyPortal from './components/democracy/DemocracyPortal';
 import WelcomePage from './components/home/WelcomePage';
 import FederalChat from './components/chat/FederalChat';
+import NewsPortal from './components/news/NewsPortal';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp, Cookie, MessageSquare, ArrowRight } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
@@ -27,10 +28,13 @@ import CookieConsentBanner from './components/pwa/CookieConsentBanner';
 import SovereignCustodeDebugWidget from './components/pwa/SovereignCustodeDebugWidget';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat'>(() => {
+  const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news'>(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
+      if (tabParam === 'news' || window.location.pathname === '/news' || window.location.pathname === '/notizie') {
+        return 'news';
+      }
       if (tabParam === 'chat' || tabParam === 'democracy') {
         return 'democracy';
       }
@@ -222,6 +226,13 @@ function AppContent() {
                   🌟 {tText('Start Here/Home', 'Inizia Qui/Home')}
                 </button>
                 <button 
+                  onClick={() => setActiveTab('news')}
+                  id="tab-news-btn"
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'news' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow font-bold' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
+                >
+                  📰 {tText('News', 'Notizie Sovrane')}
+                </button>
+                <button 
                   onClick={() => setActiveTab('register')}
                   id="tab-register-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'register' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
@@ -262,7 +273,13 @@ function AppContent() {
             </div>
             
             {activeTab === 'welcome' ? (
-              <WelcomePage onStartRegistration={() => setActiveTab('register')} onGoToDemocracy={() => setActiveTab('democracy')} />
+              <WelcomePage 
+                onStartRegistration={() => setActiveTab('register')} 
+                onGoToDemocracy={() => setActiveTab('democracy')} 
+                onGoToNews={() => setActiveTab('news')}
+              />
+            ) : activeTab === 'news' ? (
+              <NewsPortal onGoToHome={() => setActiveTab('welcome')} />
             ) : activeTab === 'register' ? (
               <RegisterForm />
             ) : activeTab === 'admin' ? (

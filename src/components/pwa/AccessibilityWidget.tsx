@@ -27,6 +27,7 @@ import {
   getLanguageNativeName 
 } from '../../utils/ttsVoices';
 import { globalFallbackTtsPlayer } from '../../utils/fallbackAudioTts';
+import { splitTextIntoSentenceChunks } from '../../utils/ttsChunker';
 
 export default function AccessibilityWidget() {
   const { language } = useI18n();
@@ -241,49 +242,62 @@ export default function AccessibilityWidget() {
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    activeUtteranceRef.current = utterance; // Prevent Apple/Safari GC cleanup bug
-    utterance.rate = rate;
-    utterance.voice = bestVoice;
-    utterance.lang = bestVoice.lang;
+    const chunks = splitTextIntoSentenceChunks(cleanText, 110);
+    if (chunks.length === 0) return;
 
-    // Keep track of index on boundary change for real-time adjustments
-    utterance.onboundary = (event) => {
-      if (event.name === 'word') {
-        // Accumulate character index offset if we were continuing
-        currentCharIndexRef.current = (isContinuing ? currentCharIndexRef.current : 0) + event.charIndex;
-      }
-    };
-
-    utterance.onstart = () => {
-      setIsPlaying(true);
-      setIsPaused(false);
-      notifyState(true, false);
-    };
-
-    utterance.onend = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
-      notifyState(false, false);
-      activeUtteranceRef.current = null;
-    };
-
-    utterance.onerror = (e) => {
-      console.warn('[Accessibility TTS] Native error, trying streaming fallback:', e);
-      activeUtteranceRef.current = null;
-      if (e.error === 'interrupted' || e.error === 'canceled') {
+    const speakChunkAtIndex = (chunkIdx: number) => {
+      if (chunkIdx >= chunks.length) {
         setIsPlaying(false);
         setIsPaused(false);
         notifyState(false, false);
+        activeUtteranceRef.current = null;
         return;
       }
-      playFallback();
+
+      const chunkText = chunks[chunkIdx];
+      const utterance = new SpeechSynthesisUtterance(chunkText);
+      activeUtteranceRef.current = utterance; // Prevent Apple/Safari GC cleanup bug
+      utterance.rate = rate;
+      utterance.voice = bestVoice;
+      utterance.lang = bestVoice.lang;
+
+      utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          currentCharIndexRef.current = (isContinuing ? currentCharIndexRef.current : 0) + event.charIndex;
+        }
+      };
+
+      utterance.onstart = () => {
+        setIsPlaying(true);
+        setIsPaused(false);
+        notifyState(true, false);
+      };
+
+      utterance.onend = () => {
+        activeUtteranceRef.current = null;
+        speakChunkAtIndex(chunkIdx + 1);
+      };
+
+      utterance.onerror = (e) => {
+        console.warn('[Accessibility TTS] Native error, trying streaming fallback:', e);
+        activeUtteranceRef.current = null;
+        if (e.error === 'interrupted' || e.error === 'canceled') {
+          setIsPlaying(false);
+          setIsPaused(false);
+          notifyState(false, false);
+          return;
+        }
+        playFallback();
+      };
+
+      setTimeout(() => {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.speak(utterance);
+        }
+      }, 20);
     };
 
-    // Micro delay after cancel to prevent iOS/Safari/Chrome race condition
-    setTimeout(() => {
-      window.speechSynthesis.speak(utterance);
-    }, 60);
+    speakChunkAtIndex(0);
   };
 
   // Handle speed rate change in real-time

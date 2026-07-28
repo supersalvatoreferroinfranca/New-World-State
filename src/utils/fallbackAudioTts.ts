@@ -4,8 +4,11 @@
  * Chinese, Japanese, and Arabic across all operating systems and browsers (even when the OS lacks native voices).
  */
 
+import { splitTextIntoSentenceChunks } from './ttsChunker';
+
 class TtsAudioPlayer {
   private activeAudio: HTMLAudioElement | null = null;
+  private nextAudioPreload: HTMLAudioElement | null = null;
   private isPlaying: boolean = false;
   private currentChunkIndex: number = 0;
   private chunks: string[] = [];
@@ -14,43 +17,6 @@ class TtsAudioPlayer {
   private playSessionId: number = 0;
   private onEndCallback?: () => void;
   private onErrorCallback?: (err: any) => void;
-
-  /**
-   * Splits long text into chunks of <= 180 characters at punctuation or word boundaries.
-   */
-  private splitTextIntoChunks(text: string): string[] {
-    const clean = text
-      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-      .replace(/[*#_`~]/g, '')
-      .trim();
-
-    if (!clean) return [];
-
-    // Split on sentence terminators: ., !, ?, ।, |, Arabic full stop, newline
-    const sentences = clean.split(/(?<=[.!?।|\u06D4\n])\s+/);
-    const resultChunks: string[] = [];
-
-    for (const sentence of sentences) {
-      if (sentence.length <= 180) {
-        if (sentence.trim()) resultChunks.push(sentence.trim());
-      } else {
-        // Split long sentence by clauses or spaces
-        const words = sentence.split(' ');
-        let currentChunk = '';
-        for (const word of words) {
-          if ((currentChunk + ' ' + word).trim().length <= 180) {
-            currentChunk = (currentChunk + ' ' + word).trim();
-          } else {
-            if (currentChunk) resultChunks.push(currentChunk);
-            currentChunk = word;
-          }
-        }
-        if (currentChunk.trim()) resultChunks.push(currentChunk.trim());
-      }
-    }
-
-    return resultChunks;
-  }
 
   public play(
     text: string,
@@ -61,7 +27,7 @@ class TtsAudioPlayer {
   ) {
     this.stop();
 
-    this.chunks = this.splitTextIntoChunks(text);
+    this.chunks = splitTextIntoSentenceChunks(text, 110);
     if (this.chunks.length === 0) {
       onEnd?.();
       return;
@@ -76,6 +42,21 @@ class TtsAudioPlayer {
     this.isPlaying = true;
 
     this.playNextChunk();
+  }
+
+  private preloadNextChunk() {
+    const nextIdx = this.currentChunkIndex + 1;
+    if (nextIdx < this.chunks.length) {
+      const nextChunkText = this.chunks[nextIdx];
+      const encodedText = encodeURIComponent(nextChunkText);
+      const audioUrl = `/api/tts?text=${encodedText}&lang=${encodeURIComponent(this.currentLang)}`;
+      const preload = new Audio();
+      preload.src = audioUrl;
+      preload.preload = 'auto';
+      this.nextAudioPreload = preload;
+    } else {
+      this.nextAudioPreload = null;
+    }
   }
 
   private playNextChunk() {
@@ -93,8 +74,20 @@ class TtsAudioPlayer {
     const encodedText = encodeURIComponent(chunkText);
     const audioUrl = `/api/tts?text=${encodedText}&lang=${encodeURIComponent(this.currentLang)}`;
 
-    const audio = new Audio();
+    // Use preloaded audio if available and matching
+    let audio: HTMLAudioElement;
+    if (this.nextAudioPreload && this.nextAudioPreload.src.endsWith(audioUrl)) {
+      audio = this.nextAudioPreload;
+      this.nextAudioPreload = null;
+    } else {
+      audio = new Audio();
+      audio.src = audioUrl;
+    }
+
     this.activeAudio = audio;
+
+    // Trigger background preload for the chunk after this
+    this.preloadNextChunk();
 
     const cleanup = () => {
       audio.onended = null;

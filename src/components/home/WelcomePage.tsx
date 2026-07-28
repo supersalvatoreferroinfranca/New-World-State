@@ -33,10 +33,14 @@ import {
   getLanguageNativeName 
 } from '../../utils/ttsVoices';
 import { globalFallbackTtsPlayer } from '../../utils/fallbackAudioTts';
+import { splitTextIntoSentenceChunks } from '../../utils/ttsChunker';
+
+import HomepageNewsSection from '../news/HomepageNewsSection';
 
 interface WelcomePageProps {
   onStartRegistration: () => void;
   onGoToDemocracy: () => void;
+  onGoToNews?: () => void;
 }
 
 const BCP47_TAGS: Record<Language, string> = {
@@ -53,7 +57,7 @@ const BCP47_TAGS: Record<Language, string> = {
   ar: 'ar-SA'
 };
 
-export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: WelcomePageProps) {
+export default function WelcomePage({ onStartRegistration, onGoToDemocracy, onGoToNews }: WelcomePageProps) {
   const { language } = useI18n();
   const currentLang: Language = language in FAQS_DATA ? language : 'en';
 
@@ -67,34 +71,12 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceName, setSelectedVoiceName] = useState<string>('');
 
-  // Garbage collection protection for Safari / Apple WebKit & keepalive for Chrome/Edge/Firefox
+  // Garbage collection protection for Safari / Apple WebKit
   const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const keepaliveIntervalRef = useRef<any>(null);
-
-  const stopKeepalive = () => {
-    if (keepaliveIntervalRef.current) {
-      clearInterval(keepaliveIntervalRef.current);
-      keepaliveIntervalRef.current = null;
-    }
-  };
-
-  const startKeepalive = () => {
-    stopKeepalive();
-    // Chromium (Chrome/Edge/Brave/Opera) 15-second SpeechSynthesis freeze workaround
-    keepaliveIntervalRef.current = setInterval(() => {
-      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.speaking) {
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
-      } else {
-        stopKeepalive();
-      }
-    }, 10000);
-  };
 
   const stopTts = () => {
     isPlayingRef.current = false;
     setIsTtsPlaying(false);
-    stopKeepalive();
     globalFallbackTtsPlayer.stop();
     if (activeUtteranceRef.current) {
       activeUtteranceRef.current.onend = null;
@@ -116,41 +98,50 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
 
   const faqs = FAQS_DATA[currentLang] || FAQS_DATA.it;
 
-  // Get current text chunks for reading aloud in active language
+  // Get current text chunks for reading aloud in active language, split into short natural sentence units
   const getSpeakTexts = (): string[] => {
     const lang = currentLang;
-    const texts: string[] = [];
+    const rawItems: string[] = [];
 
     // 1. Hero Content
-    texts.push(`${HERO_DATA.titlePart1[lang]} ${HERO_DATA.titlePart2[lang]}`);
-    texts.push(HERO_DATA.description[lang]);
+    rawItems.push(`${HERO_DATA.titlePart1[lang]} ${HERO_DATA.titlePart2[lang]}`);
+    rawItems.push(HERO_DATA.description[lang]);
 
     // 2. Three Golden Rules
-    texts.push(ROADMAP_DATA.title[lang]);
-    texts.push(`${ROADMAP_DATA.step1Title[lang]}: ${ROADMAP_DATA.step1Desc[lang]}`);
-    texts.push(`${ROADMAP_DATA.step2Title[lang]}: ${ROADMAP_DATA.step2Desc[lang]}`);
-    texts.push(`${ROADMAP_DATA.step3Title[lang]}: ${ROADMAP_DATA.step3Desc[lang]}`);
+    rawItems.push(ROADMAP_DATA.title[lang]);
+    rawItems.push(`${ROADMAP_DATA.step1Title[lang]}: ${ROADMAP_DATA.step1Desc[lang]}`);
+    rawItems.push(`${ROADMAP_DATA.step2Title[lang]}: ${ROADMAP_DATA.step2Desc[lang]}`);
+    rawItems.push(`${ROADMAP_DATA.step3Title[lang]}: ${ROADMAP_DATA.step3Desc[lang]}`);
 
     // 3. Portal Roadmap
-    texts.push(PORTAL_CARDS_DATA.title[lang]);
-    texts.push(`${PORTAL_CARDS_DATA.card1Title[lang]}: ${PORTAL_CARDS_DATA.card1Desc[lang]}`);
-    texts.push(`${PORTAL_CARDS_DATA.card2Title[lang]}: ${PORTAL_CARDS_DATA.card2Desc[lang]}`);
-    texts.push(`${PORTAL_CARDS_DATA.card3Title[lang]}: ${PORTAL_CARDS_DATA.card3Desc[lang]}`);
-    texts.push(`${PORTAL_CARDS_DATA.card4Title[lang]}: ${PORTAL_CARDS_DATA.card4Desc[lang]}`);
+    rawItems.push(PORTAL_CARDS_DATA.title[lang]);
+    rawItems.push(`${PORTAL_CARDS_DATA.card1Title[lang]}: ${PORTAL_CARDS_DATA.card1Desc[lang]}`);
+    rawItems.push(`${PORTAL_CARDS_DATA.card2Title[lang]}: ${PORTAL_CARDS_DATA.card2Desc[lang]}`);
+    rawItems.push(`${PORTAL_CARDS_DATA.card3Title[lang]}: ${PORTAL_CARDS_DATA.card3Desc[lang]}`);
+    rawItems.push(`${PORTAL_CARDS_DATA.card4Title[lang]}: ${PORTAL_CARDS_DATA.card4Desc[lang]}`);
 
     // 4. FAQs
-    texts.push(TTS_UI_DATA.title[lang]);
+    rawItems.push(TTS_UI_DATA.title[lang]);
     const activeFaqs = FAQS_DATA[lang] || FAQS_DATA.it;
     activeFaqs.forEach(faq => {
-      texts.push(faq.q);
-      texts.push(faq.a);
+      rawItems.push(faq.q);
+      rawItems.push(faq.a);
     });
 
     // 5. Final Banner
-    texts.push(FINAL_BANNER_DATA.title[lang]);
-    texts.push(FINAL_BANNER_DATA.desc[lang]);
+    rawItems.push(FINAL_BANNER_DATA.title[lang]);
+    rawItems.push(FINAL_BANNER_DATA.desc[lang]);
 
-    return texts;
+    // Split every item into short sentences (<110 chars) to guarantee 100% smooth, freeze-free playback
+    const finalChunks: string[] = [];
+    rawItems.forEach(item => {
+      const sentenceChunks = splitTextIntoSentenceChunks(item, 110);
+      sentenceChunks.forEach(chunk => {
+        if (chunk.trim()) finalChunks.push(chunk.trim());
+      });
+    });
+
+    return finalChunks;
   };
 
   const speakTextSegment = (index: number, rateValue: number, playActive: boolean, voiceNameOverride?: string) => {
@@ -177,12 +168,7 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
       return;
     }
 
-    const rawText = segments[index];
-    // Strip emojis for cross-platform engine stability (Android, Windows, iOS)
-    const cleanText = rawText
-      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const cleanText = segments[index];
 
     if (!cleanText) {
       const nextIdx = index + 1;
@@ -205,7 +191,6 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     const bestVoice = getBestVoiceForLanguage(voices, currentLang, targetVoiceName);
 
     const playFallback = () => {
-      stopKeepalive();
       activeUtteranceRef.current = null;
       if (!isPlayingRef.current) return;
 
@@ -241,7 +226,6 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
     utterance.lang = bestVoice.lang;
 
     utterance.onend = () => {
-      stopKeepalive();
       activeUtteranceRef.current = null;
       if (!isPlayingRef.current) return;
 
@@ -264,10 +248,9 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
 
     setTimeout(() => {
       if (typeof window !== 'undefined' && window.speechSynthesis && isPlayingRef.current) {
-        startKeepalive();
         window.speechSynthesis.speak(utterance);
       }
-    }, 60);
+    }, 20);
   };
 
   // Synchronously and asynchronously load voices for Android, Windows, Apple
@@ -740,6 +723,9 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy }: We
           )}
         </div>
       </div>
+
+      {/* ULTIME NOTIZIE DELLO STATO (3 ARTICOLI CRONACHE SOVRANE) */}
+      <HomepageNewsSection onGoToNews={onGoToNews} />
 
       {/* COSA PUOI TROVARE SUL SITO: GUIDA CON INTERFACCIA COMPLETA */}
       <div className="space-y-6">

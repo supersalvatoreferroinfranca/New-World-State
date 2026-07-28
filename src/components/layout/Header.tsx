@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
-import { Globe, Menu, ShieldCheck, X, Home, Landmark, BookOpen, FileText, Shield, UserPlus, Lock, Wifi, Settings, MessageSquare } from 'lucide-react';
+import { Globe, Menu, ShieldCheck, X, Home, Landmark, BookOpen, FileText, Shield, UserPlus, Lock, Wifi, Settings, MessageSquare, Newspaper } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useBranding } from '../../hooks/useBranding';
 import LanguageSelector from '../common/LanguageSelector';
 
 interface HeaderProps {
-  activeTab?: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat';
-  setActiveTab?: (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat') => void;
+  activeTab?: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news';
+  setActiveTab?: (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news') => void;
 }
 
 export default function Header({ activeTab, setActiveTab }: HeaderProps) {
@@ -16,7 +16,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
   const { branding } = useBranding();
 
   interface NavItem {
-    id: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat';
+    id: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news';
     label: string;
     icon: React.ComponentType<any>;
     highlight?: boolean;
@@ -24,7 +24,8 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
 
   const navigationItems: NavItem[] = [
     { id: 'welcome', label: t('homeIntro'), icon: Home },
-    { id: 'democracy', label: t('directDemocracy'), icon: Landmark, highlight: true },
+    { id: 'news', label: tText('News & Chronicle', 'Notizie & Cronaca'), icon: Newspaper, highlight: true },
+    { id: 'democracy', label: t('directDemocracy'), icon: Landmark },
     { id: 'constitution', label: t('constitution'), icon: BookOpen },
     { id: 'charter', label: t('charterOfRights'), icon: FileText },
     { id: 'governance', label: t('governance'), icon: Shield },
@@ -71,6 +72,13 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
                 className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'welcome' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : ''}`}
               >
                 📊 {t('homeIntro')}
+              </button>
+              <button 
+                onClick={() => setActiveTab?.('news')}
+                id="header-news-tab-btn"
+                className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'news' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : 'text-brand-gold font-bold'}`}
+              >
+                📰 {tText('News', 'Notizie')}
               </button>
               <button 
                 onClick={() => setActiveTab?.('democracy')}
