@@ -3,6 +3,45 @@ import { TRANSLATIONS, Language } from '../constants/translations';
 
 // Comprehensive dictionary for standard UI phrases found throughout the portal
 const COMMON_PHRASES: Record<string, Record<Language, string>> = {
+  "News": {
+    it: "Notizie",
+    en: "News",
+    fr: "Actualités",
+    es: "Noticias",
+    pt: "Notícias",
+    ru: "Новости",
+    hi: "समाचार",
+    bn: "সংবাদ",
+    zh: "新闻",
+    ja: "ニュース",
+    ar: "الأخبار"
+  },
+  "Notizie": {
+    it: "Notizie",
+    en: "News",
+    fr: "Actualités",
+    es: "Noticias",
+    pt: "Notícias",
+    ru: "Новости",
+    hi: "समाचार",
+    bn: "সংবাদ",
+    zh: "新闻",
+    ja: "ニュース",
+    ar: "الأخبار"
+  },
+  "Notizie Sovrane": {
+    it: "Notizie Sovrane",
+    en: "Sovereign News",
+    fr: "Actualités Souveraines",
+    es: "Noticias Soberanas",
+    pt: "Notícias Soberanas",
+    ru: "Суверенные новости",
+    hi: "संप्रभु समाचार",
+    bn: "সার্বভৌম সংবাদ",
+    zh: "主权新闻",
+    ja: "主権ニュース",
+    ar: "الأخبار السيادية"
+  },
   "Home/Intro": {
     it: "Home/Intro",
     en: "Home/Intro",

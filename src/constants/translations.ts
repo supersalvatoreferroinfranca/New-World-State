@@ -48,6 +48,8 @@ export const TRANSLATIONS = {
     networkStatus: 'Network Status',
     adminConsole: 'Admin Console',
     federalChat: 'Federal Chat',
+    news: 'News',
+    newsAndChronicle: 'News & Chronicle',
   },
   it: {
     title: 'Stato Mondiale dei Cittadini',
@@ -96,6 +98,8 @@ export const TRANSLATIONS = {
     networkStatus: 'Stato Network',
     adminConsole: 'Console Amministratore',
     federalChat: 'Chat Federale',
+    news: 'Notizie',
+    newsAndChronicle: 'Notizie & Cronaca',
   },
   fr: {
     title: 'État Citoyen Global',
@@ -144,6 +148,8 @@ export const TRANSLATIONS = {
     networkStatus: 'Statut du Réseau',
     adminConsole: 'Console d’Administration',
     federalChat: 'Chat Fédéral',
+    news: 'Actualités',
+    newsAndChronicle: 'Actualités & Chronique',
   },
   es: {
     title: 'Estado Ciudadano Global',
@@ -192,6 +198,8 @@ export const TRANSLATIONS = {
     networkStatus: 'Estado de la Red',
     adminConsole: 'Consola de Administración',
     federalChat: 'Chat Federal',
+    news: 'Noticias',
+    newsAndChronicle: 'Noticias y Crónica',
   },
   pt: {
     title: 'Estado Cidadão Global',
@@ -240,6 +248,8 @@ export const TRANSLATIONS = {
     networkStatus: 'Status da Rede',
     adminConsole: 'Console de Administração',
     federalChat: 'Chat Federal',
+    news: 'Notícias',
+    newsAndChronicle: 'Notícias e Crônica',
   },
   ru: {
     title: 'Всемирное Государство Граждан',
@@ -288,6 +298,8 @@ export const TRANSLATIONS = {
     networkStatus: 'Статус сети',
     adminConsole: 'Панель управления',
     federalChat: 'Федеральный чат',
+    news: 'Новости',
+    newsAndChronicle: 'Новости и хроника',
   },
   hi: {
     title: 'वैश्विक नागरिक राज्य',
@@ -336,6 +348,8 @@ export const TRANSLATIONS = {
     networkStatus: 'नेटवर्क की स्थिति',
     adminConsole: 'प्रशासक कंसोल',
     federalChat: 'संघीय चैट',
+    news: 'समाचार',
+    newsAndChronicle: 'समाचार और इतिहास',
   },
   bn: {
     title: 'বিশ্ব নাগরিক রাষ্ট্র',
@@ -384,6 +398,8 @@ export const TRANSLATIONS = {
     networkStatus: 'নেটওয়ার্ক স্ট্যাটাস',
     adminConsole: 'অ্যাডমিন কনসোল',
     federalChat: 'ফেডারেল চ্যাট',
+    news: 'সংবাদ',
+    newsAndChronicle: 'সংবাদ ও ইতিহাস',
   },
   zh: {
     title: '全球公民国家',
@@ -432,6 +448,8 @@ export const TRANSLATIONS = {
     networkStatus: '网络状态',
     adminConsole: '管理控制台',
     federalChat: '联邦聊天室',
+    news: '新闻',
+    newsAndChronicle: '新闻与简报',
   },
   ja: {
     title: '世界市民国家',
@@ -480,6 +498,8 @@ export const TRANSLATIONS = {
     networkStatus: '接続ステータス',
     adminConsole: '管理者コンソール',
     federalChat: '連邦チャット',
+    news: 'ニュース',
+    newsAndChronicle: 'ニュース＆クロニクル',
   },
   ar: {
     title: 'دولة المواطن العالمي',
@@ -528,5 +548,7 @@ export const TRANSLATIONS = {
     networkStatus: 'حالة الشبكة',
     adminConsole: 'لوحة التحكم للمشرف',
     federalChat: 'الدردشة الفيدرالية',
+    news: 'الأخبار',
+    newsAndChronicle: 'الأخبار والسجل',
   },
 } as const;

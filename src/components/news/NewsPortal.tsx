@@ -286,35 +286,6 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                 : tText('Citizen / Reader', 'Cittadino / Lettore')}
             </span>
           </div>
-
-          {/* Testing Toggles for Evaluation */}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-[10px] text-slate-400 uppercase font-tech tracking-wider">
-              {tText('Simulate Roles for Testing:', 'Simula Ruoli per Test:')}
-            </span>
-
-            <button
-              onClick={toggleSimulatedCronista}
-              className={`px-3 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer border ${
-                isSimulatedCronista
-                  ? 'bg-brand-gold text-[#0a1c3e] border-brand-gold shadow'
-                  : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10'
-              }`}
-            >
-              {isSimulatedCronista ? tText('✓ Reporter Role Active', '✓ Ruolo Cronista Attivo') : tText('+ Activate Reporter Role', '+ Attiva Ruolo Cronista')}
-            </button>
-
-            <button
-              onClick={toggleSimulatedCustode}
-              className={`px-3 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer border ${
-                isSimulatedCustode
-                  ? 'bg-emerald-500 text-white border-emerald-400 shadow'
-                  : 'bg-white/5 text-slate-300 border-white/15 hover:bg-white/10'
-              }`}
-            >
-              {isSimulatedCustode ? tText('✓ Custodian Role Active', '✓ Ruolo Custode Attivo') : tText('+ Activate Custodian Role', '+ Attiva Ruolo Custode')}
-            </button>
-          </div>
         </div>
       </div>
 

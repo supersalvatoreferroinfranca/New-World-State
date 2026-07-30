@@ -24,7 +24,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
 
   const navigationItems: NavItem[] = [
     { id: 'welcome', label: t('homeIntro'), icon: Home },
-    { id: 'news', label: tText('News & Chronicle', 'Notizie & Cronaca'), icon: Newspaper, highlight: true },
+    { id: 'news', label: t('newsAndChronicle'), icon: Newspaper, highlight: true },
     { id: 'democracy', label: t('directDemocracy'), icon: Landmark },
     { id: 'constitution', label: t('constitution'), icon: BookOpen },
     { id: 'charter', label: t('charterOfRights'), icon: FileText },
@@ -78,7 +78,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
                 id="header-news-tab-btn"
                 className={`hover:text-brand-gold transition-all duration-150 cursor-pointer ${activeTab === 'news' ? 'text-brand-gold font-bold scale-105 border-b border-brand-gold' : 'text-brand-gold font-bold'}`}
               >
-                📰 {tText('News', 'Notizie')}
+                📰 {t('news')}
               </button>
               <button 
                 onClick={() => setActiveTab?.('democracy')}

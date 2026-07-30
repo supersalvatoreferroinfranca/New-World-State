@@ -230,7 +230,7 @@ function AppContent() {
                   id="tab-news-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'news' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow font-bold' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
-                  📰 {tText('News', 'Notizie Sovrane')}
+                  📰 {t('news')}
                 </button>
                 <button 
                   onClick={() => setActiveTab('register')}
