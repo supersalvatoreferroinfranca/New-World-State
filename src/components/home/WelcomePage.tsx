@@ -10,7 +10,9 @@ import {
   ChevronDown,
   Volume2,
   Pause,
-  RotateCcw
+  RotateCcw,
+  Newspaper,
+  UserCheck
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 import { Language } from '../../constants/translations';
@@ -794,6 +796,34 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy, onGo
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
                 {PORTAL_CARDS_DATA.card4Desc[currentLang]}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start hover:shadow-md transition">
+            <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+              <Newspaper className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-bold text-[#0a1c3e] text-sm">
+                {PORTAL_CARDS_DATA.card5Title[currentLang]}
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {PORTAL_CARDS_DATA.card5Desc[currentLang]}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex gap-4 items-start hover:shadow-md transition">
+            <div className="p-3 bg-sky-50 text-sky-600 rounded-xl shrink-0">
+              <UserCheck className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-bold text-[#0a1c3e] text-sm">
+                {PORTAL_CARDS_DATA.card6Title[currentLang]}
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {PORTAL_CARDS_DATA.card6Desc[currentLang]}
               </p>
             </div>
           </div>

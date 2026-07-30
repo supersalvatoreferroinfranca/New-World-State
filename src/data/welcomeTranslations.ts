@@ -482,10 +482,10 @@ export const QUIZ_DATA: {
     es: "😴 Prefiero dejar que otros elijan por mí.",
     pt: "😴 Prefiro deixar que outros escolham por mim.",
     ru: "😴 Я предпочитаю, чтобы другие выбирали за меня.",
-    hi: "😴 मैं दूसरों को मेरे लिए विकल्प चुनने देना पसंद करता हूँ।",
-    bn: "😴 আমি অন্যদের আমার জন্য সিদ্ধান্ত নিতে দিতে পছন্দ করি।",
-    zh: "😴 我更喜欢让其他人替我做选择。",
-    ja: "😴 他の人に決めてもらう方がいいです。",
+    hi: "😴 मैं दूसरों को निर्णय लेने देना पसंद करता हूँ।",
+    bn: "😴 আমি অন্যদের অপশন বেছে নিতে দিতে পছন্দ করি।",
+    zh: "😴 我宁愿让其他人替我做选择。",
+    ja: "😴 他の人に選択を任せるほうが好きです。",
     ar: "😴 أفضّل ترك الآخرين يختارون نيابة عني."
   },
   q2Label: {
@@ -502,43 +502,43 @@ export const QUIZ_DATA: {
     ar: "السؤال 2 من 3"
   },
   q2Question: {
-    it: "Cosa fai di solito quando noti una regola o una procedura inadeguata nel mondo reale? 🌍",
-    en: "What do you usually do when you notice an inadequate rule or procedure in the real world? 🌍",
-    fr: "Que faites-vous habituellement quand vous remarquez une règle inadéquate dans le monde réel ? 🌍",
-    es: "¿Qué haces habitualmente cuando notas una regla inadecuada en el mundo real? 🌍",
-    pt: "O que você costuma fazer quando nota uma regra inadequada no mundo real? 🌍",
-    ru: "Что вы обычно делаете, когда замечаете неэффективное правило в реальном мире? 🌍",
-    hi: "जब आप वास्तविक दुनिया में किसी अनुचित नियम या प्रक्रिया को देखते हैं तो आप क्या करते हैं? 🌍",
-    bn: "বাস্তব জগতে যখন কোনো অনুচিত নিয়ম দেখতে পান তখন আপনি সাধারণত কী করেন? 🌍",
-    zh: "当您注意到现实世界中有不合理的规则或流程时，您通常会怎么做？ 🌍",
-    ja: "現実世界で不合理なルールや手続きに気づいたとき、どうしますか？ 🌍",
-    ar: "ماذا تفعل عادة عندما تلاحظ قاعدة أو إجراء غير مناسب في العالم الحقيقي؟ 🌍"
+    it: "Ritieni importante che le leggi e la costituzione siano scritte in modo chiaro e accessibile a tutti? 📜",
+    en: "Do you believe it is important for laws and the constitution to be clear and accessible to everyone? 📜",
+    fr: "Pensez-vous qu'il soit important que les lois et la constitution soient claires et accessibles à tous ? 📜",
+    es: "¿Crees importante que las leyes y la constitución sean claras y accesibles para todos? 📜",
+    pt: "Você acha importante que as leis e a constituição sejam claras e acessíveis a todos? 📜",
+    ru: "Считаете ли вы важным, чтобы законы и конституция были простыми и доступными для всех? 📜",
+    hi: "क्या आप मानते हैं कि कानून और संविधान सभी के लिए स्पष्ट और सुलभ होने चाहिए? 📜",
+    bn: "আপনি কি মনে করেন আইন ও সংবিধান সবার জন্য স্পষ্ট ও সহজলভ্য হওয়া উচিত? 📜",
+    zh: "您认为法律和宪法是否应当直白易懂并向所有人开放？ 📜",
+    ja: "法律や憲法が誰にでもわかりやすく透明であるべきだと思いますか？ 📜",
+    ar: "هل تعتقد أنه من المهم أن تكون القوانين والدستور واضحة ومتاحة للجميع؟ 📜"
   },
   q2OptionA: {
-    it: "🔥 Vorrei poter proporre soluzioni concrete e partecipare al cambiamento!",
-    en: "🔥 I would love to propose concrete solutions and work for change!",
-    fr: "🔥 J'aimerais proposer des solutions concrètes et participer au changement !",
-    es: "🔥 ¡Me gustaría proponer soluciones concretas y ser parte del cambio!",
-    pt: "🔥 Adoraria propor soluções concretas e fazer parte da mudança!",
-    ru: "🔥 Я хотел бы предлагать конкретные решения и участвовать в изменениях!",
-    hi: "🔥 मैं ठोस समाधान प्रस्तावित करना और बदलाव में भाग लेना चाहूंगा!",
-    bn: "🔥 আমি সুনির্দিষ্ট সমাধান প্রস্তাব করতে ও পরিবর্তনে অংশ নিতে চাই!",
-    zh: "🔥 我希望能提出具体解决方案并推动改变！",
-    ja: "🔥 具体的な解決策を提案し、変革に参加したいです！",
-    ar: "🔥 أود تقديم حلول عملية والمشاركة في التغيير!"
+    it: "✨ Assolutamente sì, la trasparenza è fondamentale!",
+    en: "✨ Absolutely, transparency is essential!",
+    fr: "✨ Absolument, la transparence est essentielle !",
+    es: "✨ ¡Absolutamente, la transparencia es fundamental!",
+    pt: "✨ Com certeza, a transparência è fundamental!",
+    ru: "✨ Безусловно, прозрачность очень важна!",
+    hi: "✨ बिल्कुल, पारदर्शिता मौलिक है!",
+    bn: "✨ অবশ্যই, স্বচ্ছতা অত্যন্ত জরুরি!",
+    zh: "✨ 当然，透明度至关重要！",
+    ja: "✨ もちろんです、透明性は不可欠です！",
+    ar: "✨ بالتأكيد، الشفافية أمر أساسي!"
   },
   q2OptionB: {
-    it: "🪴 Lascio correre perché penso che non si possa cambiare nulla.",
-    en: "🪴 I let it slide because I think nothing can ever honestly change.",
-    fr: "🪴 Je laisse passer car je pense que rien ne changera jamais.",
-    es: "🪴 Lo dejo pasar porque creo que nada puede cambiar realmente.",
-    pt: "🪴 Deixo passar porque acho que nada pode realmente mudar.",
-    ru: "🪴 Я не обращаю внимания, так как считаю, что ничего нельзя изменить.",
-    hi: "🪴 मैं इसे जाने देता हूँ क्योंकि मुझे लगता है कि कुछ भी नहीं बदला जा सकता।",
-    bn: "🪴 আমি এড়িয়ে যাই কারণ আমি মনে করি কিছুই পরিবর্তন সম্ভব নয়।",
-    zh: "🪴 我选择顺其自然，因为觉得什么都改变不了。",
-    ja: "🪴 何も変わらないと思ってあきらめます。",
-    ar: "🪴 أتغاضى عن الأمر لأنني أعتقد أن لا شيء يمكن أن يتغير."
+    it: "🤷 No, preferisco il linguaggio burocratico tradizionale.",
+    en: "🤷 No, I prefer traditional bureaucratic language.",
+    fr: "🤷 Non, je préfère le langage bureaucratique traditionnel.",
+    es: "🤷 No, prefiero el lenguaje burocrático tradicional.",
+    pt: "🤷 Não, prefiro a linguagem burocrática tradicional.",
+    ru: "🤷 Нет, я предпочитаю традиционный бюрократический язык.",
+    hi: "🤷 नहीं, मैं पारंपरिक नौकरशाही भाषा पसंद करता हूँ।",
+    bn: "🤷 না, আমি প্রথাগত আমলাতান্ত্রিক ভাষা পছন্দ করি।",
+    zh: "🤷 不，我更喜欢传统的官僚术语。",
+    ja: "🤷 いいえ、従来の官僚的な言葉遣いが好きです。",
+    ar: "🤷 لا، أفضّل اللغة البيروقراطية التقليدية."
   },
   q3Label: {
     it: "Domanda 3 di 3",
@@ -554,43 +554,43 @@ export const QUIZ_DATA: {
     ar: "السؤال 3 من 3"
   },
   q3Question: {
-    it: "Ti piacerebbe far parte di uno Stato Digitale pacifico e ricevere un passaporto federale gratuito? 💳",
-    en: "Would you like to belong to a peaceful Digital State and obtain a free federal passport? 💳",
-    fr: "Aimeriez-vous faire partie d'un État numérique paisible et obtenir un passeport gratuit ? 💳",
-    es: "¿Te gustaría pertenecer a un Estado Digital pacífico y obtener un pasaporte federal gratuito? 💳",
-    pt: "Gostaria de fazer parte de um Estado Digital pacífico e obter um passaporte gratuito? 💳",
-    ru: "Хотели бы вы стать частью мирного Цифрового Государства и получить бесплатный паспорт? 💳",
-    hi: "क्या आप एक शांतिपूर्ण डिजिटल राज्य का हिस्सा बनना और एक मुफ़्त पासपोर्ट प्राप्त करना चाहेंगे? 💳",
-    bn: "আপনি কি একটি শান্তিপূর্ণ ডিজিটাল স্টেটের অংশ হতে এবং একটি বিনামূল্যে পাসপোর্ট পেতে চান? 💳",
-    zh: "您愿意成为和平数字国家的一员并免费获得联邦护照吗？ 💳",
-    ja: "平和なデジタル国家に参加し、無料の連邦パスポートを取得したいですか？ 💳",
-    ar: "هل ترغب في الانتماء إلى دولة رقمية سلمية والحصول على جواز سفر اتحاد مجاني؟ 💳"
+    it: "Ti piacerebbe leggere notizie indipendenti o persino candidarti come Cronista Locale del tuo territorio? 📰",
+    en: "Would you like to read independent news or even apply as a Local Reporter for your area? 📰",
+    fr: "Aimeriez-vous lire des informations indépendantes ou poser votre candidature comme reporter local ? 📰",
+    es: "¿Te gustaría leer noticias independientes o postularte como cronista local de tu región? 📰",
+    pt: "Gostaria de ler notícias independentes ou se candidatar como cronista local de sua região? 📰",
+    ru: "Хотели бы вы читать независимые новости или стать местным корреспондентом своего региона? 📰",
+    hi: "क्या आप स्वतंत्र समाचार पढ़ना चाहते हैं या अपने क्षेत्र के लिए स्थानीय रिपोर्टर बनना चाहते हैं? 📰",
+    bn: "আপনি কি স্বাধীন সংবাদ পড়তে বা আপনার অঞ্চলের জন্য স্থানীয় রিপোর্টার হতে চান? 📰",
+    zh: "您希望阅读独立新闻，甚至申请成为您所在地区的地方特派记者吗？ 📰",
+    ja: "独立したニュースを読んだり、地元の地域特派員に応募したいですか？ 📰",
+    ar: "هل ترغب في قراءة أخبار مستقلة أو حتى الترشح كمراسل محلي لمنطقتك؟ 📰"
   },
   q3OptionA: {
-    it: "😎 Assolutamente sì! È un'idea innovativa ed emozionante.",
-    en: "😎 Absolutely yes! It is an innovative and exciting concept.",
-    fr: "😎 Absolument oui ! C'est un concept innovant et passionnant.",
-    es: "😎 ¡Absolutamente sí! Es un concepto innovador y emocionante.",
-    pt: "😎 Com certeza sim! É um conceito inovador e empolgante.",
-    ru: "😎 Абсолютно да! Это инновационная и увлекательная идея.",
-    hi: "😎 बिल्कुल हाँ! यह एक अभिनव और रोमांचक विचार है।",
-    bn: "😎 অবশ্যই হ্যাঁ! এটি একটি উদ্ভাবনী এবং রোমাঞ্চকর ধারণা।",
-    zh: "😎 当然想！这是一个充满创意的激动概念。",
-    ja: "😎 もちろんです！とても革新的でエキサイティングなアイデアです。",
-    ar: "😎 بالتأكيد نعم! إنها فكرة مبتكرة ومثيرة."
+    it: "🚀 Sì! L'informazione libera e dal basso è una risorsa!",
+    en: "🚀 Yes! Free grass-roots information is a great resource!",
+    fr: "🚀 Oui ! L'information libre et citoyenne est une vraie ressource !",
+    es: "🚀 ¡Sí! La información libre y ciudadana es un gran recurso.",
+    pt: "🚀 Sim! A informação livre e comunitária é um recurso valioso.",
+    ru: "🚀 Да! Свободная гражданская информация — это ценный ресурс!",
+    hi: "🚀 हां! स्वतंत्र जानकारी एक महान संसाधन है!",
+    bn: "🚀 হ্যাঁ! স্বাধীন তথ্য একটি দুর্দান্ত সম্পদ!",
+    zh: "🚀 是的！自由自下而上的新闻是非常宝贵的资源！",
+    ja: "🚀 はい！自由な地域情報は素晴らしい資産です！",
+    ar: "🚀 نعم! المعلومات الحرة من أرض الواقع هي مورد رائع!"
   },
   q3OptionB: {
-    it: "😢 No, preferisco i vecchi canali e la burocrazia ordinaria.",
-    en: "😢 No, I prefer old paths and standard paperwork.",
-    fr: "😢 Non, je préfère les voies traditionnelles et la bureaucratie.",
-    es: "😢 No, prefiero los métodos antiguos y la burocracia tradicional.",
-    pt: "😢 Não, prefiro os canais antigos e a burocracia comum.",
-    ru: "😢 Нет, я предпочитаю старые методы и обычную бюрократию.",
-    hi: "😢 नहीं, मैं पुराने तरीकों और सामान्य नौकरशाही को पसंद करता हूँ।",
-    bn: "😢 না, আমি পুরোনো উপায় এবং সাধারণ আমলাতন্ত্র পছন্দ করি।",
-    zh: "😢 不想，我更习惯传统管道和常规手续。",
-    ja: "😢 いいえ、従来のやり方と手続きが好みです。",
-    ar: "😢 لا، أفضّل الطرق القديمة والبيروقراطية التقليدية."
+    it: "💤 No, non mi interessano i giornali né la cronaca locale.",
+    en: "💤 No, I am not interested in newspapers or local news.",
+    fr: "💤 Non, les journaux et l'actualité locale ne m'intéressent pas.",
+    es: "💤 No, no me interesan los periódicos ni las noticias locales.",
+    pt: "💤 Não, não me interesso por jornais nem notícias locais.",
+    ru: "💤 Нет, меня не интересуют газеты и местные новости.",
+    hi: "💤 नहीं, मुझे समाचार पत्रों या स्थानीय समाचारों में रुचि नहीं है।",
+    bn: "💤 না, আমার সংবাদপত্রে বা স্থানীয় খবরে আগ্রহ নেই।",
+    zh: "💤 不，我对报纸或地方新闻不感兴趣。",
+    ja: "💤 いいえ、新聞や地域ニュースには興味がありません。",
+    ar: "💤 لا، لا أهتم بالصحف أو الأخبار المحلية."
   },
   resultTitle: {
     it: "RISULTATO: Sei il cittadino ideale! 🌟🎉",
@@ -658,6 +658,10 @@ export const PORTAL_CARDS_DATA: {
   card3Desc: Record<Language, string>;
   card4Title: Record<Language, string>;
   card4Desc: Record<Language, string>;
+  card5Title: Record<Language, string>;
+  card5Desc: Record<Language, string>;
+  card6Title: Record<Language, string>;
+  card6Desc: Record<Language, string>;
 } = {
   badge: {
     it: "La mappa del portale",
@@ -732,7 +736,7 @@ export const PORTAL_CARDS_DATA: {
     pt: "Regras do Estado (Constituição)",
     ru: "Правила Государства (Конституция)",
     hi: "राज्य के नियम (संविधान)",
-    bn: "রাষ্ট্রের নিয়মাবলী (সংবিধান)",
+    bn: "রাষ্ট্রের नियमাবলী (সংবিধান)",
     zh: "国家宪章与规则（宪法）",
     ja: "国家のルール（憲法）",
     ar: "قواعد الدولة (الدستور)"
@@ -784,23 +788,75 @@ export const PORTAL_CARDS_DATA: {
     pt: "Console de Administração",
     ru: "Панель администратора",
     hi: "प्रशासन कंसोल",
-    bn: "প্রশাসন কনসোল",
+    bn: "প্রशासन কনসোল",
     zh: "行政管理控制台",
     ja: "管理コンソール",
     ar: "لوحة الإدارة السريّة"
   },
   card4Desc: {
-    it: "L'area riservata ai delegati d'ufficio per l'aggiornamento dell'anagrafe, l'attivazione dei passaporti digitali in formato PDF e il supporto diretto a tutti i cittadini.",
-    en: "An area reserved for verified officers to update the civil registry, approve digital PDF passport requests, and offer support to citizens.",
-    fr: "Zone réservée aux agents pour la mise à jour du registre civil, l'activation des passeports PDF et l'assistance aux citoyens.",
-    es: "Área reservada a oficiales para actualizar el registro civil, aprobar solicitudes de pasaportes PDF y brindar asistencia a los ciudadanos.",
-    pt: "Área reservada aos oficiais para atualizar o registro civil, aprovar passaportes em PDF e dar suporte aos cidadãos.",
-    ru: "Раздел для уполномоченных сотрудников: обновление реестра, подтверждение запросов на PDF-паспорта и поддержка граждан.",
-    hi: "नागरिक पंजी का अद्यतन करने, डिजिटल पीडीएफ पासपोर्ट का अनुमोदन करने और नागरिकों की सहायता के लिए अधिकारियों का आरक्षित क्षेत्र।",
-    bn: "নাগরিক পঞ্জি আপডেট করতে, ডিপিএফ পাসপোর্ট অ্যাপ্লিকেশন অনুমোদন করতে এবং নাগরিকদের সহায়তা করতে সংরক্ষিত এলাকা।",
-    zh: "专供户籍官员更新民政名册、核发PDF数字护照以及为广大市民提供服务的专属控制台。",
-    ja: "登録の更新、PDFパスポートの承認、市民のサポートを迅速に行うための担当者専用エリアです。",
-    ar: "منطقة مخصصة للموظفين لتحديث السجل المدني، وتفعيل طلبات جوازات السفر بصيغة PDF وتقديم الدعم للمواطنين."
+    it: "L'area riservata ai delegati d'ufficio per la gestione anagrafica, l'attivazione dei passaporti PDF, la moderazione del Giornale di Stato e la valutazione delle candidature per i Cronisti Locali.",
+    en: "An area reserved for verified officers to manage civil registry, approve PDF passports, moderate State News, and evaluate Local Reporter applications.",
+    fr: "Zone réservée aux agents pour la gestion du registre civil, la validation des passeports PDF, la modération du journal et l'évaluation des candidatures de reporters.",
+    es: "Área reservada a oficiales para el registro civil, aprobación de pasaportes PDF, moderación del periódico estatal y evaluación de solicitudes de cronistas.",
+    pt: "Área reservada aos oficiais para o registro civil, aprovação de passaportes em PDF, moderação do jornal do estado e avaliação de candidaturas a cronistas.",
+    ru: "Раздел для уполномоченных сотрудников: реестр, подтверждение PDF-паспортов, модерация новостей и оценка заявок местных корреспондентов.",
+    hi: "नागरिक पंजी, पीडीएफ पासपोर्ट, राज्य समाचारों के संचालन और स्थानीय रिपोर्टर आवेदनों के मूल्यांकन के लिए आरक्षित क्षेत्र।",
+    bn: "নাগরিক পঞ্জি, ডিপিএফ পাসপোর্ট অনুমোদন, রাষ্ট্রীয় সংবাদ মডারেশন এবং স্থানীয় রিপোর্টার আবেদন মূল্যায়নের জন্য সংরক্ষিত এলাকা।",
+    zh: "专供官员更新民政名册、核发数字护照、审核国家报纸文章以及评估地方特派记者申请的控制台。",
+    ja: "民政管理、PDFパスポートの承認、新聞記事のモデレーション、地域特派員申請の審査を行う専用管理エリア。",
+    ar: "منطقة مخصصة للموظفين لإدارة السجل المدني، وتفعيل جوازات السفر PDF، وإدارة أخبار الدولة وتقييم ترشيحات المراسلين المحليين."
+  },
+  card5Title: {
+    it: "Giornale di Stato & CMS Notizie",
+    en: "State Newspaper & News CMS",
+    fr: "Journal de l'État & CMS d'Actualités",
+    es: "Periódico del Estado y CMS de Noticias",
+    pt: "Jornal do Estado e CMS de Notícias",
+    ru: "Государственная газета и новостной CMS",
+    hi: "राज्य समाचार पत्र और समाचार सीएमएस",
+    bn: "রাষ্ট্রীয় সংবাদপত্র এবং খবর সিএমএস",
+    zh: "国家报纸与新闻发布系统",
+    ja: "国家新聞＆ニュースCMS",
+    ar: "صحيفة الدولة ونظام إدارة الأخبار"
+  },
+  card5Desc: {
+    it: "Un portale d'informazione neutrale con articoli, gallerie fotografiche e video. Include un editor WYSIWYG avanzato e il caricamento automatico dei media sullo Spazio Web Aruba.",
+    en: "An independent news portal featuring rich articles, image galleries, and videos with an advanced WYSIWYG editor and direct Aruba Web Space storage.",
+    fr: "Un portail d'information indépendant avec des articles enrichis, des galeries et vidéos, un éditeur WYSIWYG avancé et stockage Espace Web Aruba.",
+    es: "Un portal de noticias independiente con artículos, galerías e imágenes, un editor WYSIWYG avanzado y almacenamiento automático en Espacio Web Aruba.",
+    pt: "Um portal de notícias independente com artigos, galerias e vídeos, editor WYSIWYG avançado e armazenamento automático no Espaço Web Aruba.",
+    ru: "Независимый новостной портал с статьями, фото и видео, продвинутым WYSIWYG-редактором и автозагрузкой на веб-пространство Aruba.",
+    hi: "लेख, फोटो और वीडियो वाला एक स्वतंत्र समाचार पोर्टल, उन्नत WYSIWYG संपादक और अरूबा वेब स्पेस स्टोरेज के साथ।",
+    bn: "উন্নত WYSIWYG এডিটর এবং আরুবা ওয়েব স্পেস স্টোরেজ সহ আর্টিকেল, ফটো এবং ভিডিও সহ একটি স্বাধীন সংবাদ পোর্টাল।",
+    zh: "包含图文与视频的多语种独立新闻门户，配备富文本 WYSIWYG 编辑器，多媒体文件自动托管至 Aruba Web 空间。",
+    ja: "記事、画像、動画を備えた独立系ニュースポータル。高度なWYSIWYGエディタとAruba Web Spaceへの直接保存に対応。",
+    ar: "بوابة إخبارية مستقلة تضم مقالات وصور وفيديوهات مع محرر WYSIWYG متقدم وتخزين تلقائي على مساحة Aruba Web."
+  },
+  card6Title: {
+    it: "Incarico Operativo Cronista Locale",
+    en: "Local Reporter Operating Role",
+    fr: "Rôle Opérationnel de Reporter Local",
+    es: "Puesto Operativo de Cronista Local",
+    pt: "Cargo Operacional de Cronista Local",
+    ru: "Оперативная должность местного корреспондента",
+    hi: "स्थानीय रिपोर्टर का कार्यशील पद",
+    bn: "স্থানীয় রিপোর্টার দায়িত্ব",
+    zh: "地方特派记者执行职务",
+    ja: "地域特派員オペレーティングロール",
+    ar: "المهمة التشغيلية للمراسل المحلي"
+  },
+  card6Desc: {
+    it: "I cittadini registrati possono presentare un dossier con credenziali, curriculum e referenze per candidarsi al ruolo di Cronista Locale e pubblicare notizie verificate dal proprio territorio.",
+    en: "Registered citizens can submit a candidacy dossier with credentials and references to become verified Local Reporters and publish news from their region.",
+    fr: "Les citoyens enregistrés peuvent soumettre un dossier de candidature avec références pour devenir reporters locaux et publier des actualités vérifiées.",
+    es: "Los ciudadanos registrados pueden presentar un expediente de candidatura con credenciales para convertirse en Cronistas Locales y publicar noticias regionales.",
+    pt: "Cidadãos registrados podem enviar um dossiê de candidatura para se tornarem Cronistas Locais e publicarem notícias de suas regiões.",
+    ru: "Зарегистрированные граждане могут подать заявку с описанием опыта и рекомендациями, чтобы стать местными корреспондентами и публиковать новости.",
+    hi: "पंजीकृत नागरिक अपने क्षेत्र से सत्यापित समाचार प्रकाशित करने के लिए स्थानीय रिपोर्टर बनने हेतु आवेदन पत्र प्रस्तुत कर सकते हैं।",
+    bn: "নিবন্ধিত নাগরিকরা তাদের অঞ্চল থেকে যাচাইকৃত সংবাদ প্রকাশ করতে স্থানীয় রিপোর্টার পদের জন্য আবেদনপত্র জমা দিতে পারেন।",
+    zh: "注册公民可提交包含专业履历和推介信的特派申请，经审核批准后担任地方特派记者，采写并发布本地一手新闻。",
+    ja: "登録市民は職歴や実績を含む申請書類を提出し、審査を経て地域特派員として地元からの検証済みニュースを発信できます。",
+    ar: "يمكن للمواطنين المسجلين تقديم ملف ترشيح مع المؤهلات والخبرات ليصبحوا مراسلين محليين معتمدين وينشروا الأخبار الموثوقة."
   }
 };
 
