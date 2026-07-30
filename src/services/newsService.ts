@@ -472,3 +472,33 @@ export async function generateArticleWithAI(
 
   return resData.data;
 }
+
+export interface MediaSearchResult {
+  id: string;
+  type: 'image' | 'video';
+  sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'youtube';
+  url: string;
+  previewUrl?: string;
+  title: string;
+  author?: string;
+}
+
+export async function searchArticleMedia(
+  query: string,
+  platform: string = 'all'
+): Promise<MediaSearchResult[]> {
+  const response = await safeFetch('/api/news/search-media', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query, platform })
+  });
+
+  const resData = await response.json();
+  if (!response.ok || !resData.success) {
+    throw new Error(resData.message || 'Impossibile completare la ricerca media.');
+  }
+
+  return resData.data || [];
+}
