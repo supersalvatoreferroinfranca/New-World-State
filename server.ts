@@ -97,8 +97,11 @@ let memoryCustomRoles: any[] = [
   { id: 4, name: "Supervisore Elettorale", description: "Gestione ed auditing delle proposte normative e voti", geographic_area_id: 1 },
   { id: 5, name: "Ambasciatore Digitale", description: "Rappresentanza e sensibilizzazione globale", geographic_area_id: 1 },
   { id: 6, name: "Ufficiale di Pace", description: "Risoluzione nonviolenta e mediazione diplomatica", geographic_area_id: 4 },
-  { id: 7, name: "Custode Digitale (IT)", description: "Incaricato dei registri territoriali", geographic_area_id: 3 }
+  { id: 7, name: "Custode Digitale (IT)", description: "Incaricato dei registri territoriali", geographic_area_id: 3 },
+  { id: 8, name: "Cronista Locale", description: "Incaricato della cronaca neutrale di eventi e accadimenti locali fornendo foto, video e testi.", geographic_area_id: 1 }
 ];
+
+let memoryRoleApplications: any[] = [];
 
 let memoryBroadcasts: any[] = [];
 
@@ -234,12 +237,43 @@ async function runMigrations() {
           (4, 'Supervisore Elettorale', 'Gestione ed auditing delle proposte normative e voti', 1),
           (5, 'Ambasciatore Digitale', 'Rappresentanza e sensibilizzazione globale', 1),
           (6, 'Ufficiale di Pace', 'Risoluzione nonviolenta e mediazione diplomatica', 4),
-          (7, 'Custode Digitale (IT)', 'Incaricato dei registri territoriali', 3)
+          (7, 'Custode Digitale (IT)', 'Incaricato dei registri territoriali', 3),
+          (8, 'Cronista Locale', 'Incaricato della cronaca neutrale di eventi e accadimenti locali fornendo foto, video e testi.', 1)
         `);
         try {
-          await client.query(`SELECT setval('nws_custom_roles_id_seq', 7)`);
+          await client.query(`SELECT setval('nws_custom_roles_id_seq', 8)`);
         } catch(e) {}
       }
+
+      // Ensure Role 8 exists even if table was already populated
+      await client.query(`
+        INSERT INTO nws_custom_roles (id, name, description, geographic_area_id)
+        VALUES (8, 'Cronista Locale', 'Incaricato della cronaca neutrale di eventi e accadimenti locali fornendo foto, video e testi.', 1)
+        ON CONFLICT (id) DO NOTHING
+      `);
+
+      // Create nws_role_applications table for operational role candidacies
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_role_applications (
+          id SERIAL PRIMARY KEY,
+          citizen_id TEXT NOT NULL,
+          citizen_name TEXT NOT NULL,
+          citizen_code TEXT,
+          citizen_email TEXT,
+          role_id INT DEFAULT 8,
+          role_name TEXT DEFAULT 'Cronista Locale',
+          professional_credentials TEXT NOT NULL,
+          motivation TEXT NOT NULL,
+          cv_summary TEXT NOT NULL,
+          references_online TEXT,
+          references_paper TEXT,
+          local_area TEXT NOT NULL,
+          status VARCHAR(20) DEFAULT 'pending',
+          rejection_reason TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          reviewed_at TIMESTAMP WITH TIME ZONE
+        )
+      `);
 
       // Create nws_broadcasts table for admin announcements
       await client.query(`
@@ -2803,6 +2837,293 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
         return res.json({ success: true, message: 'Ruolo eliminato dalla memoria.' });
       }
       return res.status(404).json({ success: false, message: 'Ruolo non trovato in memoria.' });
+    });
+
+    // --- MEDIA UPLOAD ENDPOINT (Aruba Web Space Proxy & Fallback) ---
+    apiRouter.post('/upload-media', async (req, res) => {
+      try {
+        const { fileData, fileName, fileType, authorName } = req.body || {};
+        if (!fileData) {
+          return res.status(400).json({ success: false, message: 'Fornire fileData in formato Base64 o URL.' });
+        }
+
+        const uploaderUrl = process.env.ARUBA_UPLOADER_URL ? process.env.ARUBA_UPLOADER_URL.trim() : '';
+        const uploaderKey = process.env.ARUBA_UPLOADER_KEY ? process.env.ARUBA_UPLOADER_KEY.trim() : '';
+
+        const safeName = (fileName || `media_${Date.now()}`).replace(/[^a-zA-Z0-9_.-]/g, '_');
+
+        // Check if Aruba PHP Uploader bridge is configured
+        if (uploaderUrl && uploaderKey && typeof fileData === 'string' && fileData.startsWith('data:')) {
+          console.log('[ARUBA-MEDIA-UPLOADER] Proxying media file upload to Aruba server bridge...');
+          try {
+            const separator = uploaderUrl.includes('?') ? '&' : '?';
+            const targetUrlWithKey = `${uploaderUrl}${separator}key=${encodeURIComponent(uploaderKey)}`;
+            const uploaderRes = await fetch(targetUrlWithKey, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${uploaderKey}`
+              },
+              body: JSON.stringify({
+                key: uploaderKey,
+                username: authorName || 'reporter',
+                documentFrontData: fileData,
+                documentFrontName: safeName
+              })
+            });
+
+            if (uploaderRes.ok) {
+              const uploaderData: any = await uploaderRes.json();
+              if (uploaderData.success && uploaderData.files) {
+                const arubaUrl = uploaderData.files.front || uploaderData.files.photo || '';
+                if (arubaUrl) {
+                  return res.json({ success: true, url: arubaUrl, fileName: safeName, storage: 'aruba' });
+                }
+              }
+            }
+          } catch (upErr: any) {
+            console.error('[ARUBA-MEDIA-UPLOADER] Aruba bridge exception:', upErr.message);
+          }
+        }
+
+        // Local storage / Base64 fallback if Aruba bridge is not active
+        if (typeof fileData === 'string' && fileData.startsWith('data:')) {
+          try {
+            const storageDir = path.join(process.cwd(), 'aruba_storage', 'nws_chat_files');
+            if (!fs.existsSync(storageDir)) {
+              fs.mkdirSync(storageDir, { recursive: true });
+            }
+            const matches = fileData.match(/^data:([a-zA-Z0-9-+\/]+);base64,(.+)$/);
+            if (matches) {
+              const buffer = Buffer.from(matches[2], 'base64');
+              const localFileName = `${Date.now()}_${safeName}`;
+              const filePath = path.join(storageDir, localFileName);
+              fs.writeFileSync(filePath, buffer);
+              const localUrl = `/uploads/media/${localFileName}`;
+              return res.json({ success: true, url: localUrl, fileName: safeName, storage: 'local' });
+            }
+          } catch (fileErr: any) {
+            console.error('[MEDIA-UPLOAD-LOCAL-ERR]', fileErr.message);
+          }
+        }
+
+        return res.json({ success: true, url: fileData, fileName: safeName, storage: 'direct' });
+      } catch (err: any) {
+        console.error('[API] Error in /api/upload-media:', err.message);
+        return res.status(500).json({ success: false, message: 'Errore durante il caricamento del file: ' + err.message });
+      }
+    });
+
+    // --- OPERATIONAL ROLE CANDIDACY ENDPOINTS ---
+    apiRouter.post('/role-applications', async (req, res) => {
+      try {
+        const {
+          citizen_id,
+          citizen_name,
+          citizen_code,
+          citizen_email,
+          role_id,
+          role_name,
+          professional_credentials,
+          motivation,
+          cv_summary,
+          references_online,
+          references_paper,
+          local_area
+        } = req.body || {};
+
+        if (!citizen_id || !professional_credentials || !motivation || !cv_summary || !local_area) {
+          return res.status(400).json({ success: false, message: 'Tutti i campi obbligatori devono essere compilati.' });
+        }
+
+        const appRecord = {
+          id: Date.now(),
+          citizen_id: String(citizen_id),
+          citizen_name: citizen_name || 'Cittadino',
+          citizen_code: citizen_code || 'N/A',
+          citizen_email: citizen_email || '',
+          role_id: role_id || 8,
+          role_name: role_name || 'Cronista Locale',
+          professional_credentials: professional_credentials.trim(),
+          motivation: motivation.trim(),
+          cv_summary: cv_summary.trim(),
+          references_online: (references_online || '').trim(),
+          references_paper: (references_paper || '').trim(),
+          local_area: local_area.trim(),
+          status: 'pending',
+          rejection_reason: null,
+          created_at: new Date().toISOString()
+        };
+
+        if (dbPool) {
+          try {
+            const qRes = await dbPool.query(`
+              INSERT INTO nws_role_applications (
+                citizen_id, citizen_name, citizen_code, citizen_email, role_id, role_name,
+                professional_credentials, motivation, cv_summary, references_online, references_paper, local_area, status
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending')
+              RETURNING *
+            `, [
+              appRecord.citizen_id,
+              appRecord.citizen_name,
+              appRecord.citizen_code,
+              appRecord.citizen_email,
+              appRecord.role_id,
+              appRecord.role_name,
+              appRecord.professional_credentials,
+              appRecord.motivation,
+              appRecord.cv_summary,
+              appRecord.references_online,
+              appRecord.references_paper,
+              appRecord.local_area
+            ]);
+            if (qRes.rows.length > 0) {
+              const saved = qRes.rows[0];
+              memoryRoleApplications.push(saved);
+              return res.json({ success: true, application: saved, message: 'Candidatura salvata sul database.' });
+            }
+          } catch (dbErr: any) {
+            console.error('[DB-ROLE-APP-INSERT-ERR]', dbErr.message);
+          }
+        }
+
+        memoryRoleApplications.push(appRecord);
+        return res.json({ success: true, application: appRecord, message: 'Candidatura registrata con successo.' });
+      } catch (err: any) {
+        console.error('[API] Error in /api/role-applications:', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.get('/role-applications/my', async (req, res) => {
+      const citizenId = req.query.citizenId as string;
+      if (!citizenId) return res.status(400).json({ success: false, message: 'citizenId obbligatorio.' });
+
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query(
+            'SELECT * FROM nws_role_applications WHERE citizen_id = $1 OR citizen_code = $1 OR citizen_email = $1 ORDER BY id DESC LIMIT 1',
+            [citizenId]
+          );
+          if (qRes.rows.length > 0) {
+            return res.json({ success: true, application: qRes.rows[0] });
+          }
+        } catch (dbErr: any) {
+          console.error('[DB-ROLE-APP-MY-ERR]', dbErr.message);
+        }
+      }
+
+      const found = memoryRoleApplications.find(a => 
+        String(a.citizen_id) === citizenId || 
+        String(a.citizen_code) === citizenId || 
+        String(a.citizen_email) === citizenId
+      );
+      return res.json({ success: true, application: found || null });
+    });
+
+    apiRouter.get('/admin/role-applications', async (req, res) => {
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query('SELECT * FROM nws_role_applications ORDER BY id DESC');
+          return res.json({ success: true, data: qRes.rows });
+        } catch (dbErr: any) {
+          console.error('[DB-ROLE-APP-GET-ALL-ERR]', dbErr.message);
+        }
+      }
+      return res.json({ success: true, data: memoryRoleApplications });
+    });
+
+    apiRouter.post('/admin/role-applications/:id/approve', async (req, res) => {
+      const appId = req.params.id;
+      if (!appId) return res.status(400).json({ success: false, message: 'ID candidatura mancante.' });
+
+      let targetApp = null;
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query('SELECT * FROM nws_role_applications WHERE id = $1', [appId]);
+          if (qRes.rows.length > 0) targetApp = qRes.rows[0];
+        } catch (err: any) {}
+      }
+
+      if (!targetApp) {
+        targetApp = memoryRoleApplications.find(a => String(a.id) === String(appId));
+      }
+
+      if (!targetApp) {
+        return res.status(404).json({ success: false, message: 'Candidatura non trovata.' });
+      }
+
+      if (dbPool) {
+        try {
+          await dbPool.query(
+            'UPDATE nws_role_applications SET status = $1, reviewed_at = CURRENT_TIMESTAMP WHERE id = $2',
+            ['approved', appId]
+          );
+        } catch (err: any) {}
+      }
+      targetApp.status = 'approved';
+      targetApp.reviewed_at = new Date().toISOString();
+
+      // Automatically assign operational role "Cronista Locale" to citizen
+      const citizenId = targetApp.citizen_id;
+      if (citizenId) {
+        if (dbPool) {
+          try {
+            await dbPool.query(
+              'UPDATE citizens SET "operationalRole" = $1 WHERE id = $2 OR "citizenCode" = $2 OR email = $2',
+              ['Cronista Locale', citizenId]
+            );
+          } catch (err: any) {}
+        }
+        const foundCit = memoryCitizens.find(c => 
+          String(c.id) === String(citizenId) || 
+          String(c.citizenCode) === String(citizenId) || 
+          String(c.email) === String(citizenId)
+        );
+        if (foundCit) {
+          foundCit.operationalRole = 'Cronista Locale';
+        }
+      }
+
+      return res.json({ success: true, message: 'Candidatura approvata! Ruolo di Cronista Locale assegnato al cittadino.' });
+    });
+
+    apiRouter.post('/admin/role-applications/:id/reject', async (req, res) => {
+      const appId = req.params.id;
+      const { reason } = req.body || {};
+      if (!appId) return res.status(400).json({ success: false, message: 'ID candidatura mancante.' });
+
+      let targetApp = null;
+      if (dbPool) {
+        try {
+          const qRes = await dbPool.query('SELECT * FROM nws_role_applications WHERE id = $1', [appId]);
+          if (qRes.rows.length > 0) targetApp = qRes.rows[0];
+        } catch (err: any) {}
+      }
+
+      if (!targetApp) {
+        targetApp = memoryRoleApplications.find(a => String(a.id) === String(appId));
+      }
+
+      if (!targetApp) {
+        return res.status(404).json({ success: false, message: 'Candidatura non trovata.' });
+      }
+
+      const rejectionReason = reason || 'Requisiti o referenze insufficienti per l\'incarico.';
+
+      if (dbPool) {
+        try {
+          await dbPool.query(
+            'UPDATE nws_role_applications SET status = $1, rejection_reason = $2, reviewed_at = CURRENT_TIMESTAMP WHERE id = $3',
+            ['rejected', rejectionReason, appId]
+          );
+        } catch (err: any) {}
+      }
+      targetApp.status = 'rejected';
+      targetApp.rejection_reason = rejectionReason;
+      targetApp.reviewed_at = new Date().toISOString();
+
+      return res.json({ success: true, message: 'Candidatura respinta con motivazione registrata.' });
     });
 
     // GET /api/admin/broadcasts - Ottiene l'archivio dei messaggi inviati

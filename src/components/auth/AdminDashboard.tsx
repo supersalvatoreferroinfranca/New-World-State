@@ -79,7 +79,87 @@ export default function AdminDashboard() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Core navigation state
-  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals' | 'roles' | 'broadcasts' | 'branding' | 'legal'>('citizens');
+  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals' | 'roles' | 'candidacies' | 'broadcasts' | 'branding' | 'legal'>('citizens');
+
+  // Role Applications Candidacies State
+  const [roleApplications, setRoleApplications] = useState<any[]>([]);
+  const [roleAppsLoading, setRoleAppsLoading] = useState(false);
+
+  const fetchRoleApplications = async () => {
+    setRoleAppsLoading(true);
+    try {
+      const res = await safeFetch('/api/admin/role-applications', {
+        headers: {
+          'x-admin-password': getAdminPassword()
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRoleApplications(data.data || []);
+      }
+    } catch (err) {
+      console.error('[ROLE-APPS-FETCH-ERR]', err);
+    } finally {
+      setRoleAppsLoading(false);
+    }
+  };
+
+  const handleApproveCandidacy = async (appId: number | string) => {
+    showConfirm(
+      'Approva Candidatura Cronista',
+      'Sei sicuro di voler approvare questa candidatura? Il cittadino otterrà immediatamente il ruolo di Cronista Locale e l\'accesso alla pubblicazione articoli.',
+      async () => {
+        setActionLoading(true);
+        try {
+          const res = await safeFetch(`/api/admin/role-applications/${appId}/approve`, {
+            method: 'POST',
+            headers: {
+              'x-admin-password': getAdminPassword()
+            }
+          });
+          const data = await res.json();
+          if (data.success) {
+            showAlert('Candidatura Approvata', data.message || 'Ruolo di Cronista Locale assegnato con successo!');
+            await fetchRoleApplications();
+            await fetchCitizens();
+          } else {
+            showAlert('Errore', data.message || 'Impossibile approvare la candidatura.');
+          }
+        } catch (err: any) {
+          showAlert('Errore di rete', err.message);
+        } finally {
+          setActionLoading(false);
+        }
+      }
+    );
+  };
+
+  const handleRejectCandidacy = async (appId: number | string) => {
+    const reason = prompt('Inserisci la motivazione del rifiuto della candidatura (opzionale):');
+    if (reason === null) return;
+    setActionLoading(true);
+    try {
+      const res = await safeFetch(`/api/admin/role-applications/${appId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': getAdminPassword()
+        },
+        body: JSON.stringify({ reason })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showAlert('Candidatura Respinta', data.message || 'Candidatura respinta.');
+        await fetchRoleApplications();
+      } else {
+        showAlert('Errore', data.message || 'Impossibile respingere la candidatura.');
+      }
+    } catch (err: any) {
+      showAlert('Errore di rete', err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   // Broadcast state & handlers
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
@@ -571,6 +651,8 @@ export default function AdminDashboard() {
         fetchCitizens();
       } else if (activeTab === 'proposals') {
         fetchProposals();
+      } else if (activeTab === 'candidacies') {
+        fetchRoleApplications();
       } else if (activeTab === 'broadcasts') {
         fetchBroadcasts();
       }
@@ -1101,6 +1183,12 @@ export default function AdminDashboard() {
           className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'roles' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
           <Globe className="w-4 h-4 text-brand-gold" /> Ruoli & Aree
+        </button>
+        <button
+          onClick={() => { setActiveTab('candidacies'); }}
+          className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'candidacies' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <Briefcase className="w-4 h-4 text-brand-gold" /> Candidature Cronisti ({roleApplications.length})
         </button>
         <button
           onClick={() => { setActiveTab('broadcasts'); }}
@@ -2462,6 +2550,166 @@ export default function AdminDashboard() {
                 </p>
               </div>
             )
+          )}
+
+          {/* TAB: CANDIDATURE CRONISTI LOCALI */}
+          {activeTab === 'candidacies' && (
+            <div className="space-y-6 animate-fade-in text-xs">
+              <div>
+                <span className="text-[9px] uppercase font-mono bg-brand-gold/15 text-brand-gold px-2 py-0.5 rounded-full font-bold">
+                  Dossier Incarico Operativo
+                </span>
+                <h3 className="text-lg font-serif text-slate-900 mt-2">
+                  Candidature per Incarico di "Cronista Locale" ({roleApplications.length})
+                </h3>
+                <p className="text-slate-500 text-[11px] leading-relaxed">
+                  Valutazione e approvazione dei membri candidati ad assumere l'incarico operativo di cronista neutrale per la fornitura di testo, foto e video dalle aree locali.
+                </p>
+              </div>
+
+              {roleAppsLoading ? (
+                <div className="flex justify-center py-10">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#0a1c3e]"></div>
+                </div>
+              ) : roleApplications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-12 text-slate-400 bg-white border border-dashed border-slate-200 rounded-2xl p-6">
+                  <Briefcase className="w-8 h-8 text-slate-300 mb-2" />
+                  <p className="font-semibold text-xs text-slate-600">Nessuna Candidatura Inviata</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5 max-w-[240px]">
+                    Le candidature inviate dai membri per l'incarico di Cronista Locale appariranno qui per l'approvazione degli amministratori.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {roleApplications.map((app) => {
+                    const isPending = app.status === 'pending';
+                    const isApproved = app.status === 'approved';
+                    const isRejected = app.status === 'rejected';
+
+                    return (
+                      <div
+                        key={app.id}
+                        className={`p-5 rounded-2xl border transition-all space-y-4 ${
+                          isPending
+                            ? 'bg-amber-50/40 border-amber-200'
+                            : isApproved
+                            ? 'bg-emerald-50/40 border-emerald-200'
+                            : 'bg-rose-50/40 border-rose-200'
+                        }`}
+                      >
+                        {/* Header Candidatura */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-serif font-bold text-sm text-[#0a1c3e]">
+                                {app.citizen_name || 'Candidato'}
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                ({app.citizen_code || app.email || `ID #${app.citizen_id}`})
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500">
+                              Area di Copertura Locale: <strong className="text-slate-800">{app.local_coverage_area || 'Generica / Non specificata'}</strong>
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {isPending && (
+                              <span className="bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-full font-bold text-[10px] uppercase flex items-center gap-1">
+                                <Clock className="w-3 h-3" /> In Attesa di Valutazione
+                              </span>
+                            )}
+                            {isApproved && (
+                              <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full font-bold text-[10px] uppercase flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" /> Approvato
+                              </span>
+                            )}
+                            {isRejected && (
+                              <span className="bg-rose-100 text-rose-800 border border-rose-300 px-2.5 py-1 rounded-full font-bold text-[10px] uppercase flex items-center gap-1">
+                                <XCircle className="w-3 h-3" /> Respinto
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Contenuto Candidatura */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                          {/* Credenziali Professionali */}
+                          <div className="bg-white p-3.5 rounded-xl border border-slate-200">
+                            <span className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
+                              Credenziali Professionali
+                            </span>
+                            <p className="text-slate-800 whitespace-pre-wrap leading-relaxed">
+                              {app.professional_credentials || 'Nessuna credenziale specificata'}
+                            </p>
+                          </div>
+
+                          {/* Motivazione Incarico */}
+                          <div className="bg-white p-3.5 rounded-xl border border-slate-200">
+                            <span className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
+                              Motivazione Ruolo
+                            </span>
+                            <p className="text-slate-800 whitespace-pre-wrap leading-relaxed">
+                              {app.motivation || 'Nessuna motivazione specificata'}
+                            </p>
+                          </div>
+
+                          {/* Curriculum & Lavori */}
+                          <div className="bg-white p-3.5 rounded-xl border border-slate-200 md:col-span-2 space-y-2">
+                            <span className="text-[10px] font-bold uppercase text-slate-500 block">
+                              Curriculum Professionale & Esperienza
+                            </span>
+                            <p className="text-slate-800 whitespace-pre-wrap leading-relaxed">
+                              {app.curriculum_summary || 'Nessun estratto allegato'}
+                            </p>
+
+                            {/* Referenze */}
+                            {app.references_list && (
+                              <div className="pt-2 border-t border-slate-100">
+                                <span className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
+                                  Referenze Online e Cartacee dei lavori svolti:
+                                </span>
+                                <div className="p-2.5 bg-slate-50 rounded-lg text-slate-700 font-mono text-[11px] whitespace-pre-wrap">
+                                  {app.references_list}
+                                </div>
+                              </div>
+                            )}
+
+                            {app.cv_attachment_name && (
+                              <div className="pt-2 flex items-center gap-2 text-brand-blue font-semibold text-[11px]">
+                                <FileText className="w-4 h-4 text-brand-gold" />
+                                <span>File Allegato: {app.cv_attachment_name}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Azioni Amministratore */}
+                        {isPending && (
+                          <div className="flex justify-end gap-3 pt-2 border-t border-slate-200">
+                            <button
+                              onClick={() => handleRejectCandidacy(app.id)}
+                              disabled={actionLoading}
+                              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+                            >
+                              <XCircle className="w-4 h-4" /> Respingi Candidatura
+                            </button>
+
+                            <button
+                              onClick={() => handleApproveCandidacy(app.id)}
+                              disabled={actionLoading}
+                              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
+                            >
+                              <CheckCircle className="w-4 h-4" /> Approvato (Assegna Ruolo Operativo)
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
           {/* TAB 4: HISTORICAL BROADCASTS ARCHIVE */}
           {activeTab === 'broadcasts' && (

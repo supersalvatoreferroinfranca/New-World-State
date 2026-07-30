@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NewsArticle, NewsCategory, NewsMedia } from '../../types/news';
+import WysiwygEditor from './WysiwygEditor';
 import { 
   getCategories, 
   getArticles, 
@@ -24,7 +25,8 @@ import {
   Save, 
   Layers, 
   Sparkles, 
-  AlertCircle 
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 
 interface ArticleFormModalProps {
@@ -142,8 +144,11 @@ export default function ArticleFormModal({
     setTags(tags.filter(t => t !== tagToRemove));
   };
 
-  // Image Upload or URL Addition
-  const handleFileUploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Media Uploading State
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+
+  // Image Upload or URL Addition to Aruba Space
+  const handleFileUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -152,20 +157,50 @@ export default function ArticleFormModal({
       return;
     }
 
+    setIsUploadingMedia(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const dataUrl = event.target?.result as string;
-      setImages([
-        ...images,
-        {
-          type: 'image',
-          source: 'upload',
-          url: dataUrl,
-          fileName: file.name,
-          caption: newImageCaption || file.name
-        }
-      ]);
-      setNewImageCaption('');
+      try {
+        const res = await fetch('/api/upload-media', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileData: dataUrl,
+            fileName: file.name,
+            fileType: file.type,
+            authorName
+          })
+        });
+        const data = await res.json();
+        const uploadedUrl = (data.success && data.url) ? data.url : dataUrl;
+
+        setImages(prev => [
+          ...prev,
+          {
+            type: 'image',
+            source: 'upload',
+            url: uploadedUrl,
+            fileName: file.name,
+            caption: newImageCaption || file.name
+          }
+        ]);
+        setNewImageCaption('');
+      } catch (err) {
+        console.warn('Fallback to direct dataUrl:', err);
+        setImages(prev => [
+          ...prev,
+          {
+            type: 'image',
+            source: 'upload',
+            url: dataUrl,
+            fileName: file.name,
+            caption: newImageCaption || file.name
+          }
+        ]);
+      } finally {
+        setIsUploadingMedia(false);
+      }
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -190,8 +225,8 @@ export default function ArticleFormModal({
     setImages(images.filter((_, i) => i !== index));
   };
 
-  // Video Upload or URL Addition
-  const handleFileUploadVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Video Upload or URL Addition to Aruba Space
+  const handleFileUploadVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -200,18 +235,53 @@ export default function ArticleFormModal({
       return;
     }
 
-    const videoObjectUrl = URL.createObjectURL(file);
-    setVideos([
-      ...videos,
-      {
-        type: 'video',
-        source: 'upload',
-        url: videoObjectUrl,
-        fileName: file.name,
-        caption: newVideoCaption || file.name
+    setIsUploadingMedia(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const dataUrl = event.target?.result as string;
+      try {
+        const res = await fetch('/api/upload-media', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileData: dataUrl,
+            fileName: file.name,
+            fileType: file.type,
+            authorName
+          })
+        });
+        const data = await res.json();
+        const uploadedUrl = (data.success && data.url) ? data.url : dataUrl;
+
+        setVideos(prev => [
+          ...prev,
+          {
+            type: 'video',
+            source: 'upload',
+            url: uploadedUrl,
+            fileName: file.name,
+            caption: newVideoCaption || file.name
+          }
+        ]);
+        setNewVideoCaption('');
+      } catch (err) {
+        console.warn('Fallback video url:', err);
+        const videoObjectUrl = URL.createObjectURL(file);
+        setVideos(prev => [
+          ...prev,
+          {
+            type: 'video',
+            source: 'upload',
+            url: videoObjectUrl,
+            fileName: file.name,
+            caption: newVideoCaption || file.name
+          }
+        ]);
+      } finally {
+        setIsUploadingMedia(false);
       }
-    ]);
-    setNewVideoCaption('');
+    };
+    reader.readAsDataURL(file);
     e.target.value = '';
   };
 
@@ -465,13 +535,11 @@ export default function ArticleFormModal({
             <p className="text-[11px] text-slate-500 mb-1">
               {tText('Brief summary appearing in homepage previews.', 'Breve introduzione che apparirà nell\'anteprima della homepage e nella lista notizie.')}
             </p>
-            <textarea
+            <WysiwygEditor
               value={intro}
-              onChange={(e) => setIntro(e.target.value)}
-              placeholder="Scrivi un testo introduttivo chiaro e sintetico..."
-              rows={3}
-              className="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs text-slate-800 focus:ring-2 focus:ring-[#0a1c3e] outline-none resize-none"
-              required
+              onChange={setIntro}
+              placeholder={tText('Scrivi un testo introduttivo chiaro e sintetico...', 'Write a clear, concise introductory text...')}
+              minHeight="120px"
             />
           </div>
 
@@ -483,15 +551,20 @@ export default function ArticleFormModal({
             <p className="text-[11px] text-slate-500 mb-1">
               {tText('Main body of the news article.', 'Corpo principale dell\'articolo di giornale.')}
             </p>
-            <textarea
+            <WysiwygEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Scrivi il testo completo dell'articolo qui..."
-              rows={8}
-              className="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs leading-relaxed text-slate-800 focus:ring-2 focus:ring-[#0a1c3e] outline-none"
-              required
+              onChange={setContent}
+              placeholder={tText('Scrivi il testo completo dell\'articolo qui...', 'Write the full news article body here...')}
+              minHeight="240px"
             />
           </div>
+
+          {isUploadingMedia && (
+            <div className="p-3 bg-brand-gold/10 border border-brand-gold/30 rounded-2xl flex items-center gap-3 text-xs text-[#0a1c3e] font-bold animate-pulse">
+              <Loader2 className="w-4 h-4 text-brand-gold animate-spin" />
+              <span>{tText('Uploading media file to Aruba Web Space...', 'Caricamento file nello spazio web Aruba in corso...')}</span>
+            </div>
+          )}
 
           {/* MEDIA SECTION: IMAGES */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">

@@ -11,6 +11,7 @@ import ArticleFormModal from './ArticleFormModal';
 import CategoryManagerModal from './CategoryManagerModal';
 import ArticleDetailModal from './ArticleDetailModal';
 import ModerationPanelModal from './ModerationPanelModal';
+import ReporterCandidacyModal from './ReporterCandidacyModal';
 import { 
   Newspaper, 
   Plus, 
@@ -69,6 +70,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
   const [isModerationModalOpen, setIsModerationModalOpen] = useState(false);
   const [selectedDetailArticle, setSelectedDetailArticle] = useState<NewsArticle | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isCandidacyModalOpen, setIsCandidacyModalOpen] = useState(false);
 
   // Load User Citizen
   const loadCitizen = () => {
@@ -214,19 +216,35 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
             </p>
           </div>
 
-          {/* Action Buttons for Cronisti & Custodi */}
+          {/* Action Buttons for Cronisti, Custodi & Candidati */}
           <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 shrink-0">
-            {/* Scrivi Notizia (Cronista) */}
-            <button
-              onClick={() => {
-                setArticleToEdit(null);
-                setIsArticleFormOpen(true);
-              }}
-              className="px-5 py-3 rounded-2xl bg-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:bg-white transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-brand-gold"
-            >
-              <PenTool className="w-4 h-4" />
-              <span>{tText('+ Write Article', '+ Scrivi Notizia')}</span>
-            </button>
+            {/* Scrivi Notizia (Reserved for Authorized Cronisti) */}
+            {isCronista ? (
+              <button
+                onClick={() => {
+                  setArticleToEdit(null);
+                  setIsArticleFormOpen(true);
+                }}
+                className="px-5 py-3 rounded-2xl bg-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:bg-white transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-brand-gold"
+              >
+                <PenTool className="w-4 h-4" />
+                <span>{tText('+ Write Article', '+ Scrivi Notizia')}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    alert(tText('Please log in first as a member to apply for the Local Reporter role.', 'Per favore effettua prima il login come membro per candidarti al ruolo di Cronista Locale.'));
+                    return;
+                  }
+                  setIsCandidacyModalOpen(true);
+                }}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-amber-300"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>{tText('Apply as Local Reporter', 'Candidati come Cronista Locale')}</span>
+              </button>
+            )}
 
             {/* Gestione Categorie */}
             <button
@@ -601,6 +619,14 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         onSelectArticle={(rel) => {
           setSelectedDetailArticle(rel);
         }}
+      />
+
+      {/* 5. Reporter Candidacy Modal */}
+      <ReporterCandidacyModal
+        isOpen={isCandidacyModalOpen}
+        onClose={() => setIsCandidacyModalOpen(false)}
+        citizen={citizen}
+        onApplicationSubmitted={loadCitizen}
       />
     </div>
   );
