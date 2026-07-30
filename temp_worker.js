@@ -4947,6 +4947,93 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
       }
 
+      // 1d. AI News Article Generation (Gemini REST API fetch)
+      if (url.pathname === '/api/news/ai-generate' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          const { topic, categoryName, tone } = body || {};
+          if (!topic || typeof topic !== 'string' || !topic.trim()) {
+            return new Response(JSON.stringify({ success: false, message: 'L\'argomento o tema dell\'articolo è obbligatorio per procedere con la generazione AI.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const apiKey = env.GEMINI_API_KEY;
+          if (!apiKey) {
+            return new Response(JSON.stringify({
+              success: false,
+              message: 'La chiave API di Gemini ("GEMINI_API_KEY") non è configurata nell\'ambiente del Cloudflare Worker. Assicurati di impostarla nelle credenziali/segreti di Cloudflare.'
+            }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const prompt = `Sei l'Assistente AI di Redazione Giornalistica dell'Organo di Stampa Ufficiale dello "New World State" (una nazione digitale sovrana e globale fondata sulla democrazia diretta, diritti digitali e stato di diritto).
+Il tuo compito è elaborare un articolo di giornale completo, professionale, solenne ed elegante basato sull'argomento fornito dall'amministratore/cronista.
+
+ARGOMENTO / TEMA DELL'ARTICOLO:
+"${topic.trim()}"
+
+CATEGORIA PREVISTA: "${categoryName || 'Notizie di Stato & Riforme'}"
+TONO / STILE: "${tone || 'Giornalistico Solenne, Ufficiale ed Elegante'}"
+
+Genera una risposta in formato JSON contenente i seguenti campi:
+1. "title": Un titolo di giornale d'impatto, chiaro, professionale e accattivante (in lingua italiana).
+2. "intro": Un abstract / sommario introduttivo di 2-3 frasi (circa 180-250 caratteri) che sintetizzi i punti chiave e la ratio dell'articolo.
+3. "content": Il testo esteso dell'articolo organizzato in eleganti paragrafi in formato Markdown. Utilizza intestazioni di sezione con '###', grassetto per evidenziare concetti chiave e punti elenco dove opportuno per garantire massima leggibilità.
+4. "tags": Un array di 3-5 hashtag tematici pertinenti in italiano (es. ["#NotizieSovrane", "#RiformeStato", "#InnovazioneDigitale"]).
+5. "suggestedCategory": La categoria consigliata tra le categorie del giornale.
+
+Regole tassative per il testo:
+- Non citare MAI la "Costituzione di Ginevra", "Convenzione di Ginevra" o "Ginevra". Fai riferimento unicamente al "New World State" e alle sue leggi o istituzioni sovrane.
+- Il linguaggio deve essere autorevole, impeccabile dal punto vista grammaticale e giornalistico.
+
+Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
+
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [{ text: prompt }]
+                }
+              ],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                  type: 'OBJECT',
+                  properties: {
+                    title: { type: 'STRING' },
+                    intro: { type: 'STRING' },
+                    content: { type: 'STRING' },
+                    tags: {
+                      type: 'ARRAY',
+                      items: { type: 'STRING' }
+                    },
+                    suggestedCategory: { type: 'STRING' }
+                  },
+                  required: ['title', 'intro', 'content', 'tags']
+                }
+              }
+            })
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Gemini API error (HTTP ${response.status}): ${errText}`);
+          }
+
+          const resData = await response.json();
+          const jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!jsonText) {
+            throw new Error('Nessuna risposta valida ricevuta da Gemini REST API.');
+          }
+
+          const parsed = JSON.parse(jsonText.trim());
+          return new Response(JSON.stringify({ success: true, data: parsed }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (e) {
+          console.error('[WORKER-NEWS-AI-ERR]', e);
+          return new Response(JSON.stringify({ success: false, message: 'Impossibile generare l\'articolo con l\'AI sul Worker: ' + e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
       // Schedulatore / Cron di Democrazia Diretta (promemoria e verbale scrutinio finale)
       if (url.pathname === '/api/democracy/cron' && (request.method === 'GET' || request.method === 'POST')) {
         await ensureDemocracySchema();

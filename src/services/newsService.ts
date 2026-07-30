@@ -1,5 +1,6 @@
 import { NewsArticle, NewsCategory, NewsMedia, ArticleStatus } from '../types/news';
 import { triggerNotification } from './notifications';
+import { safeFetch } from './api';
 
 const ARTICLES_STORAGE_KEY = 'nws_news_articles_v1';
 const CATEGORIES_STORAGE_KEY = 'nws_news_categories_v1';
@@ -456,7 +457,7 @@ export async function generateArticleWithAI(
   categoryName?: string,
   tone?: string
 ): Promise<AiArticleGenerationResponse> {
-  const response = await fetch('/api/news/ai-generate', {
+  const response = await safeFetch('/api/news/ai-generate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
