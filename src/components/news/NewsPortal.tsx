@@ -218,18 +218,31 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
           {/* Action Buttons for Cronisti, Custodi & Candidati */}
           <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 shrink-0">
-            {/* Scrivi Notizia (Reserved for Authorized Cronisti) */}
+            {/* Scrivi Notizia e Genera con IA (Reserved for Authorized Cronisti & Admins) */}
             {isCronista ? (
-              <button
-                onClick={() => {
-                  setArticleToEdit(null);
-                  setIsArticleFormOpen(true);
-                }}
-                className="px-5 py-3 rounded-2xl bg-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:bg-white transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-brand-gold"
-              >
-                <PenTool className="w-4 h-4" />
-                <span>{tText('+ Write Article', '+ Scrivi Notizia')}</span>
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    setArticleToEdit(null);
+                    setIsArticleFormOpen(true);
+                  }}
+                  className="px-5 py-3 rounded-2xl bg-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:bg-white transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-brand-gold"
+                >
+                  <PenTool className="w-4 h-4" />
+                  <span>{tText('+ Write Article', '+ Scrivi Notizia')}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setArticleToEdit(null);
+                    setIsArticleFormOpen(true);
+                  }}
+                  className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-brand-gold to-amber-300 text-[#0a1c3e] font-extrabold text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-amber-300 animate-pulse"
+                >
+                  <Sparkles className="w-4 h-4 text-[#0a1c3e]" />
+                  <span>{tText('✨ Create with AI', '✨ Crea con IA')}</span>
+                </button>
+              </>
             ) : (
               <button
                 onClick={() => {

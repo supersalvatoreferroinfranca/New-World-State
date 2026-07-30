@@ -4020,6 +4020,78 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       }
     });
 
+    // Assistente AI per la redazione e generazione di articoli di giornale
+    apiRouter.post('/news/ai-generate', async (req, res) => {
+      const { topic, categoryName, tone } = req.body || {};
+      if (!topic || typeof topic !== 'string' || !topic.trim()) {
+        return res.status(400).json({ success: false, message: 'L\'argomento o tema dell\'articolo è obbligatorio per procedere con la generazione AI.' });
+      }
+
+      try {
+        const ai = getGenAIClient();
+        const prompt = `Sei l'Assistente AI di Redazione Giornalistica dell'Organo di Stampa Ufficiale dello "New World State" (una nazione digitale sovrana e globale fondata sulla democrazia diretta, diritti digitali e stato di diritto).
+Il tuo compito è elaborare un articolo di giornale completo, professionale, solenne ed elegante basato sull'argomento fornito dall'amministratore/cronista.
+
+ARGOMENTO / TEMA DELL'ARTICOLO:
+"${topic.trim()}"
+
+CATEGORIA PREVISTA: "${categoryName || 'Notizie di Stato & Riforme'}"
+TONO / STILE: "${tone || 'Giornalistico Solenne, Ufficiale ed Elegante'}"
+
+Genera una risposta in formato JSON contenente i seguenti campi:
+1. "title": Un titolo di giornale d'impatto, chiaro, professionale e accattivante (in lingua italiana).
+2. "intro": Un abstract / sommario introduttivo di 2-3 frasi (circa 180-250 caratteri) che sintetizzi i punti chiave e la ratio dell'articolo.
+3. "content": Il testo esteso dell'articolo organizzato in eleganti paragrafi in formato Markdown. Utilizza intestazioni di sezione con '###', grassetto per evidenziare concetti chiave e punti elenco dove opportuno per garantire massima leggibilità.
+4. "tags": Un array di 3-5 hashtag tematici pertinenti in italiano (es. ["#NotizieSovrane", "#RiformeStato", "#InnovazioneDigitale"]).
+5. "suggestedCategory": La categoria consigliata tra le categorie del giornale.
+
+Regole tassative per il testo:
+- Non citare MAI la "Costituzione di Ginevra", "Convenzione di Ginevra" o "Ginevra". Fai riferimento unicamente al "New World State" e alle sue leggi o istituzioni sovrane.
+- Il linguaggio deve essere autorevole, impeccabile dal punto di vista grammaticale e giornalistico.
+
+Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.6-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                intro: { type: Type.STRING },
+                content: { type: Type.STRING },
+                tags: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING }
+                },
+                suggestedCategory: { type: Type.STRING }
+              },
+              required: ['title', 'intro', 'content', 'tags']
+            }
+          }
+        });
+
+        const jsonText = response.text;
+        if (!jsonText) {
+          throw new Error('Nessuna risposta ricevuta dall\'Intelligenza Artificiale.');
+        }
+
+        const parsed = JSON.parse(jsonText.trim());
+        return res.json({ success: true, data: parsed });
+      } catch (err: any) {
+        console.error('[NEWS-AI-GENERATE-ERR]', err);
+        const isKeyError = err.message && (err.message.includes('GEMINI_API_KEY') || err.message.includes('API key'));
+        return res.status(500).json({
+          success: false,
+          message: isKeyError
+            ? 'La chiave API di Gemini ("GEMINI_API_KEY") non è configurata nei segreti del portale. Configura la chiave nei segreti del pannello di controllo per sbloccare la generazione AI articoli!'
+            : 'Impossibile generare l\'articolo con l\'AI: ' + err.message
+        });
+      }
+    });
+
     // Presenta una nuova proposta normativa
     apiRouter.post('/democracy/proposals', async (req, res) => {
       const { title, description, content, category, citizen_id } = req.body || {};

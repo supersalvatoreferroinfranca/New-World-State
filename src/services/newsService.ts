@@ -442,3 +442,32 @@ export function incrementArticleViews(id: string): void {
   });
   saveArticles(updated);
 }
+
+export interface AiArticleGenerationResponse {
+  title: string;
+  intro: string;
+  content: string;
+  tags: string[];
+  suggestedCategory?: string;
+}
+
+export async function generateArticleWithAI(
+  topic: string,
+  categoryName?: string,
+  tone?: string
+): Promise<AiArticleGenerationResponse> {
+  const response = await fetch('/api/news/ai-generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ topic, categoryName, tone })
+  });
+
+  const resData = await response.json();
+  if (!response.ok || !resData.success) {
+    throw new Error(resData.message || 'Errore durante la generazione dell\'articolo con AI.');
+  }
+
+  return resData.data;
+}
