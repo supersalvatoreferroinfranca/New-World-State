@@ -76,6 +76,7 @@ export default function ArticleFormModal({
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [allArticles, setAllArticles] = useState<NewsArticle[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -143,9 +144,6 @@ export default function ArticleFormModal({
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(t => t !== tagToRemove));
   };
-
-  // Media Uploading State
-  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
 
   // Image Upload or URL Addition to Aruba Space
   const handleFileUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {

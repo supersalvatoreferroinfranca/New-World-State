@@ -101,6 +101,16 @@ export default function SovereignCustodeDebugWidget() {
 
   const isCustodeActive = checkIsCustode();
 
+  // Quick helper to show active state indicators in the top bar
+  useEffect(() => {
+    // We can also let the window object expose current simulated state for diagnostic integrations
+    (window as any).nwsSimulatedState = {
+      jurisdiction: activeJurisdiction,
+      connection: connectionState,
+      isCustode: isCustodeActive
+    };
+  }, [activeJurisdiction, connectionState, isCustodeActive]);
+
   // MUST be logged in AND have Custode Digitale role
   if (!isLoggedIn || !isCustodeActive) {
     return null;
@@ -168,16 +178,6 @@ export default function SovereignCustodeDebugWidget() {
       setShowNotification(null);
     }, 3000);
   };
-
-  // Quick helper to show active state indicators in the top bar
-  useEffect(() => {
-    // We can also let the window object expose current simulated state for diagnostic integrations
-    (window as any).nwsSimulatedState = {
-      jurisdiction: activeJurisdiction,
-      connection: connectionState,
-      isCustode: isCustodeActive
-    };
-  }, [activeJurisdiction, connectionState, isCustodeActive]);
 
   const isIt = language !== 'en';
 
