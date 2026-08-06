@@ -820,8 +820,8 @@ export default function ArticleFormModal({
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-slate-400 select-none">
-                  /notizie/
+                <span className="text-xs font-mono text-slate-400 select-none shrink-0">
+                  /?notizia=
                 </span>
                 <input
                   type="text"

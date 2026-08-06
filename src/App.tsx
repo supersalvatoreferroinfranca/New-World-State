@@ -32,7 +32,8 @@ function AppContent() {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
-      if (tabParam === 'news' || window.location.pathname === '/news' || window.location.pathname === '/notizie') {
+      const hasArticleParam = searchParams.has('notizia') || searchParams.has('article') || searchParams.has('slug');
+      if (tabParam === 'news' || hasArticleParam || window.location.pathname === '/news' || window.location.pathname === '/notizie' || window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
         return 'news';
       }
       if (tabParam === 'chat' || tabParam === 'democracy') {

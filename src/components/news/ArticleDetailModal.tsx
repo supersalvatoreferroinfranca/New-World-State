@@ -171,7 +171,7 @@ export default function ArticleDetailModal({
     .filter((a): a is NewsArticle => !!a);
 
   const handleShare = () => {
-    const url = `${window.location.origin}/notizie/${article.slug}`;
+    const url = `${window.location.origin}/?tab=news&notizia=${article.slug}`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
       setCopied(true);

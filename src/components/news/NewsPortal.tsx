@@ -115,6 +115,31 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     };
   }, []);
 
+  // Auto-open article if URL parameter or route specifies a noticia/article slug
+  useEffect(() => {
+    if (articles.length > 0 && !selectedDetailArticle) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const targetSlug = searchParams.get('notizia') || searchParams.get('article') || searchParams.get('slug');
+      let foundArticle: NewsArticle | undefined;
+
+      if (targetSlug) {
+        foundArticle = articles.find(a => a.slug === targetSlug || a.id === targetSlug);
+      } else if (window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
+        const pathParts = window.location.pathname.split('/');
+        const pathSlug = pathParts[pathParts.length - 1];
+        if (pathSlug && pathSlug !== 'notizie' && pathSlug !== 'news') {
+          foundArticle = articles.find(a => a.slug === pathSlug || a.id === pathSlug);
+        }
+      }
+
+      if (foundArticle) {
+        setSelectedDetailArticle(foundArticle);
+        setIsDetailModalOpen(true);
+        incrementArticleViews(foundArticle.id);
+      }
+    }
+  }, [articles]);
+
   // Role Checks
   const isLoggedIn = !!citizen && (!!citizen.id || !!citizen.citizenCode || !!citizen.email || !!citizen.firstName);
 
