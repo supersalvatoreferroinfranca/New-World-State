@@ -28,14 +28,12 @@ interface ModerationPanelModalProps {
   isOpen: boolean;
   onClose: () => void;
   onArticlesUpdated?: () => void;
-  onEditArticle?: (article: NewsArticle) => void;
 }
 
 export default function ModerationPanelModal({
   isOpen,
   onClose,
-  onArticlesUpdated,
-  onEditArticle
+  onArticlesUpdated
 }: ModerationPanelModalProps) {
   const { tText } = useI18n();
   const [tab, setTab] = useState<'pending' | 'all'>('pending');
@@ -345,12 +343,6 @@ export default function ModerationPanelModal({
           setIsPreviewOpen(false);
           setSelectedArticle(null);
         }}
-        onEditArticle={onEditArticle ? (art) => {
-          setIsPreviewOpen(false);
-          setSelectedArticle(null);
-          onClose();
-          onEditArticle(art);
-        } : undefined}
       />
 
       {/* Moderation Notes Dialog */}

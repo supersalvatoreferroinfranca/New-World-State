@@ -15,8 +15,7 @@ import {
   Link as LinkIcon, 
   Check, 
   Globe, 
-  ShieldCheck,
-  PenTool
+  ShieldCheck 
 } from 'lucide-react';
 
 interface ArticleDetailModalProps {
@@ -24,15 +23,13 @@ interface ArticleDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectArticle?: (article: NewsArticle) => void;
-  onEditArticle?: (article: NewsArticle) => void;
 }
 
 export default function ArticleDetailModal({
   article,
   isOpen,
   onClose,
-  onSelectArticle,
-  onEditArticle
+  onSelectArticle
 }: ArticleDetailModalProps) {
   const { tText } = useI18n();
   const [copied, setCopied] = useState(false);
@@ -91,20 +88,6 @@ export default function ArticleDetailModal({
           </div>
 
           <div className="flex items-center gap-2">
-            {onEditArticle && (
-              <button
-                onClick={() => {
-                  onEditArticle(article);
-                  onClose();
-                }}
-                className="px-3 py-2 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold hover:bg-white transition cursor-pointer flex items-center gap-1.5 text-xs shadow-md border border-brand-gold"
-                title={tText('Edit Article', 'Modifica Articolo')}
-              >
-                <PenTool className="w-4 h-4 text-[#0a1c3e]" />
-                <span className="hidden sm:inline">{tText('Edit', 'Modifica')}</span>
-              </button>
-            )}
-
             <button
               onClick={handleShare}
               className="p-2 rounded-xl bg-white/10 text-brand-gold hover:bg-white/20 transition cursor-pointer flex items-center gap-1 text-xs"
@@ -285,23 +268,8 @@ export default function ArticleDetailModal({
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="bg-slate-100 border-t border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 gap-3">
-          <div>
-            {onEditArticle && (
-              <button
-                onClick={() => {
-                  onEditArticle(article);
-                  onClose();
-                }}
-                className="px-5 py-2.5 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold text-xs uppercase tracking-wider hover:bg-[#0a1c3e] hover:text-white transition cursor-pointer flex items-center gap-2 shadow-md border border-brand-gold"
-              >
-                <PenTool className="w-4 h-4" />
-                <span>{tText('Edit Article', 'Modifica Articolo')}</span>
-              </button>
-            )}
-          </div>
-
+        {/* Footer Close */}
+        <div className="bg-slate-100 border-t border-slate-200 px-6 py-4 flex justify-end shrink-0">
           <button
             onClick={onClose}
             className="px-6 py-2.5 rounded-xl bg-[#0a1c3e] text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition cursor-pointer"

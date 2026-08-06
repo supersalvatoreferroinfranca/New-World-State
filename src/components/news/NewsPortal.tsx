@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NewsArticle, NewsCategory, ArticleStatus } from '../../types/news';
+import { NewsArticle, NewsCategory } from '../../types/news';
 import { 
   getPublishedArticles, 
   getArticles, 
@@ -187,23 +187,6 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     incrementArticleViews(art.id);
     setSelectedDetailArticle(art);
     setIsDetailModalOpen(true);
-  };
-
-  const renderStatusBadge = (status: ArticleStatus) => {
-    switch (status) {
-      case 'bozza':
-        return <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{tText('Draft', 'Bozza')}</span>;
-      case 'in_moderazione':
-        return <span className="bg-sky-100 text-sky-800 border border-sky-300 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{tText('In Moderation', 'In Moderazione')}</span>;
-      case 'in_revisione':
-        return <span className="bg-orange-100 text-orange-800 border border-orange-300 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{tText('Revision Requested', 'Modifiche Richieste')}</span>;
-      case 'rifiutato':
-        return <span className="bg-red-100 text-red-800 border border-red-300 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{tText('Rejected', 'Rifiutato')}</span>;
-      case 'pubblicato':
-        return <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{tText('Published', 'Pubblicato')}</span>;
-      default:
-        return null;
-    }
   };
 
   const currentAuthorName = citizen
@@ -504,7 +487,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   onClick={() => handleOpenDetail(art)}
                   className="group bg-white border border-slate-200 hover:border-[#0a1c3e]/40 rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 cursor-pointer flex flex-col justify-between"
                 >
-                    {/* Media Banner */}
+                  {/* Media Banner */}
                   {art.images && art.images.length > 0 ? (
                     <div className="aspect-video w-full overflow-hidden bg-slate-100 relative">
                       <img
@@ -512,29 +495,23 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                         alt={art.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
-                        <span
-                          className="text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white shadow"
-                          style={{ backgroundColor: cat?.color || '#0a1c3e' }}
-                        >
-                          {cat?.name || 'Notizia'}
-                        </span>
-                        {renderStatusBadge(art.status)}
-                      </div>
+                      <span
+                        className="absolute top-3 left-3 text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white shadow"
+                        style={{ backgroundColor: cat?.color || '#0a1c3e' }}
+                      >
+                        {cat?.name || 'Notizia'}
+                      </span>
                     </div>
                   ) : (
-                    <div className="p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span
-                          className="text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white"
-                          style={{ backgroundColor: cat?.color || '#0a1c3e' }}
-                        >
-                          {cat?.name || 'Notizia'}
-                        </span>
-                        {renderStatusBadge(art.status)}
-                      </div>
+                    <div className="p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between">
+                      <span
+                        className="text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white"
+                        style={{ backgroundColor: cat?.color || '#0a1c3e' }}
+                      >
+                        {cat?.name || 'Notizia'}
+                      </span>
                       {art.videos && art.videos.length > 0 && (
-                        <span className="text-[10px] bg-[#0a1c3e] text-white px-2 py-0.5 rounded-md flex items-center gap-1 font-tech shrink-0">
+                        <span className="text-[10px] bg-[#0a1c3e] text-white px-2 py-0.5 rounded-md flex items-center gap-1 font-tech">
                           <Video className="w-3 h-3 text-brand-gold" />
                           Video
                         </span>
@@ -570,29 +547,12 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                       </div>
                     )}
 
-                    {/* Footer link & Edit action */}
-                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a1c3e] gap-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setArticleToEdit(art);
-                            setIsArticleFormOpen(true);
-                          }}
-                          className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-[#0a1c3e] hover:text-white text-[#0a1c3e] font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 border border-amber-300 shadow-sm"
-                          title={tText('Edit Article', 'Modifica Articolo')}
-                        >
-                          <PenTool className="w-3.5 h-3.5" />
-                          <span>{tText('Edit', 'Modifica')}</span>
-                        </button>
-
-                        <span className="text-[10px] text-slate-400 font-normal hidden sm:inline">
-                          {art.viewsCount || 0} {tText('reads', 'letture')}
-                        </span>
-                      </div>
-
-                      <span className="text-brand-gold group-hover:translate-x-1 transition flex items-center gap-1 shrink-0">
+                    {/* Footer link */}
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a1c3e]">
+                      <span className="text-[11px] text-slate-400 font-normal">
+                        {art.viewsCount || 0} {tText('reads', 'letture')}
+                      </span>
+                      <span className="text-brand-gold group-hover:translate-x-1 transition flex items-center gap-1">
                         {tText('Read article →', 'Leggi articolo →')}
                       </span>
                     </div>
@@ -630,11 +590,6 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         isOpen={isModerationModalOpen}
         onClose={() => setIsModerationModalOpen(false)}
         onArticlesUpdated={loadData}
-        onEditArticle={(artToEdit) => {
-          setIsModerationModalOpen(false);
-          setArticleToEdit(artToEdit);
-          setIsArticleFormOpen(true);
-        }}
       />
 
       {/* 4. Article Detail Modal */}
@@ -647,12 +602,6 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         }}
         onSelectArticle={(rel) => {
           setSelectedDetailArticle(rel);
-        }}
-        onEditArticle={(artToEdit) => {
-          setIsDetailModalOpen(false);
-          setSelectedDetailArticle(null);
-          setArticleToEdit(artToEdit);
-          setIsArticleFormOpen(true);
         }}
       />
 
