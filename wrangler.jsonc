@@ -1,14 +1,11 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "newworldstate",
-  "compatibility_date": "2026-05-26",
-  "observability": {
-    "enabled": true
-  },
-  "assets": {
-    "not_found_handling": "single-page-application"
-  },
+  "main": "temp_worker.js",
+  "compatibility_date": "2024-01-01",
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "assets": {
+    "directory": "./dist"
+  }
 }
