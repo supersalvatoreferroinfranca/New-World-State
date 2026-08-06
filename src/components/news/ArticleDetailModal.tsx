@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { NewsArticle, NewsCategory } from '../../types/news';
 import { getCategories, getArticles, incrementArticleViews } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
@@ -16,11 +16,7 @@ import {
   Check, 
   Globe, 
   ShieldCheck,
-  PenTool,
-  Volume2,
-  Play,
-  Pause,
-  Square
+  PenTool
 } from 'lucide-react';
 
 interface ArticleDetailModalProps {
@@ -40,121 +36,6 @@ export default function ArticleDetailModal({
 }: ArticleDetailModalProps) {
   const { tText } = useI18n();
   const [copied, setCopied] = useState(false);
-
-  // TTS State
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [playbackRate, setPlaybackRate] = useState(1.0);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoiceIndex, setSelectedVoiceIndex] = useState<number>(0);
-
-  // Load available voices
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      const updateVoices = () => {
-        const available = window.speechSynthesis.getVoices();
-        setVoices(available);
-        const itIndex = available.findIndex(v => v.lang.startsWith('it'));
-        if (itIndex >= 0) {
-          setSelectedVoiceIndex(itIndex);
-        }
-      };
-      updateVoices();
-      window.speechSynthesis.onvoiceschanged = updateVoices;
-    }
-  }, []);
-
-  // Stop synthesis when modal closes or article changes
-  useEffect(() => {
-    return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
-  }, [article?.id, isOpen]);
-
-  const handlePlayTTS = () => {
-    if (!article) return;
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert(tText('Speech synthesis is not supported in this browser.', 'La sintesi vocale non è supportata da questo browser.'));
-      return;
-    }
-
-    if (isPaused) {
-      window.speechSynthesis.resume();
-      setIsPlaying(true);
-      setIsPaused(false);
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const textToRead = `${article.title}. ${article.intro || ''}. ${article.content || ''}`;
-    const utterance = new SpeechSynthesisUtterance(textToRead);
-    utterance.rate = playbackRate;
-
-    if (voices.length > 0 && voices[selectedVoiceIndex]) {
-      utterance.voice = voices[selectedVoiceIndex];
-    } else {
-      utterance.lang = 'it-IT';
-    }
-
-    utterance.onend = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
-
-    utterance.onerror = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
-
-    window.speechSynthesis.speak(utterance);
-    setIsPlaying(true);
-    setIsPaused(false);
-  };
-
-  const handlePauseTTS = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.pause();
-      setIsPlaying(false);
-      setIsPaused(true);
-    }
-  };
-
-  const handleStopTTS = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setIsPaused(false);
-    }
-  };
-
-  const handleChangeRate = (rate: number) => {
-    setPlaybackRate(rate);
-    if (isPlaying && article) {
-      window.speechSynthesis.cancel();
-      const textToRead = `${article.title}. ${article.intro || ''}. ${article.content || ''}`;
-      const utterance = new SpeechSynthesisUtterance(textToRead);
-      utterance.rate = rate;
-      if (voices.length > 0 && voices[selectedVoiceIndex]) {
-        utterance.voice = voices[selectedVoiceIndex];
-      } else {
-        utterance.lang = 'it-IT';
-      }
-      utterance.onend = () => {
-        setIsPlaying(false);
-        setIsPaused(false);
-      };
-      utterance.onerror = () => {
-        setIsPlaying(false);
-        setIsPaused(false);
-      };
-      window.speechSynthesis.speak(utterance);
-    }
-  };
 
   if (!isOpen || !article) return null;
 
@@ -278,87 +159,6 @@ export default function ArticleDetailModal({
                   </div>
                 </>
               )}
-            </div>
-          </div>
-
-          {/* Audio Reader TTS Player Widget */}
-          <div className="bg-gradient-to-r from-[#0a1c3e] via-[#122b5c] to-[#0a1c3e] rounded-2xl p-4 text-white shadow-lg border border-brand-gold/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-xl bg-brand-gold/20 text-brand-gold ${isPlaying ? 'animate-pulse' : ''}`}>
-                <Volume2 className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-sm text-brand-gold tracking-wide">
-                    {tText('TTS Audio Reader', 'Lettore Vocale TTS')}
-                  </h4>
-                  {isPlaying && (
-                    <span className="flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-tech">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                      {tText('Reading...', 'In riproduzione...')}
-                    </span>
-                  )}
-                  {isPaused && (
-                    <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30 font-tech">
-                      {tText('Paused', 'In Pausa')}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-slate-300">
-                  {tText('Listen to the article read aloud by synthesized voice', 'Ascolta l\'articolo letto a voce alta dalla sintesi vocale')}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              {isPlaying ? (
-                <button
-                  type="button"
-                  onClick={handlePauseTTS}
-                  className="px-3.5 py-2 rounded-xl bg-amber-500 text-slate-900 font-bold text-xs hover:bg-amber-400 transition cursor-pointer flex items-center gap-1.5 shadow"
-                >
-                  <Pause className="w-4 h-4 fill-current" />
-                  <span>{tText('Pause', 'Pausa')}</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handlePlayTTS}
-                  className="px-4 py-2 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold text-xs hover:bg-white transition cursor-pointer flex items-center gap-1.5 shadow-md border border-brand-gold"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>{isPaused ? tText('Resume', 'Riprendi') : tText('Listen', 'Ascolta')}</span>
-                </button>
-              )}
-
-              {(isPlaying || isPaused) && (
-                <button
-                  type="button"
-                  onClick={handleStopTTS}
-                  className="p-2 rounded-xl bg-white/10 text-slate-300 hover:text-white hover:bg-white/20 transition cursor-pointer"
-                  title={tText('Stop', 'Interrompi')}
-                >
-                  <Square className="w-4 h-4 fill-current" />
-                </button>
-              )}
-
-              {/* Speed selector */}
-              <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/10 ml-1">
-                {[0.8, 1.0, 1.25, 1.5].map((rate) => (
-                  <button
-                    key={rate}
-                    type="button"
-                    onClick={() => handleChangeRate(rate)}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${
-                      playbackRate === rate
-                        ? 'bg-brand-gold text-[#0a1c3e]'
-                        : 'text-slate-300 hover:text-white'
-                    }`}
-                  >
-                    {rate}x
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
 

@@ -31,8 +31,7 @@ import {
   UserCheck, 
   Sparkles, 
   PenTool, 
-  Layers,
-  Volume2
+  Layers 
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 
@@ -118,8 +117,8 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
   const isLoggedIn = !!citizen && (!!citizen.id || !!citizen.citizenCode || !!citizen.email || !!citizen.firstName);
 
   const checkIsCronista = () => {
-    if (!isLoggedIn) return false;
     if (isSimulatedCronista) return true;
+    if (!isLoggedIn) return false;
     if (citizen?.isAdmin || citizen?.isCronista) return true;
     
     const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || '').toLowerCase();
@@ -127,8 +126,8 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
   };
 
   const checkIsCustode = () => {
-    if (!isLoggedIn) return false;
     if (isSimulatedCustode) return true;
+    if (!isLoggedIn) return false;
     if (citizen?.isAdmin) return true;
     
     const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || '').toLowerCase();
@@ -137,17 +136,6 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
   const isCronista = checkIsCronista();
   const isCustode = checkIsCustode();
-
-  const canEditArticle = (art: NewsArticle) => {
-    if (!isLoggedIn) return false;
-    if (isCustode || citizen?.isAdmin) return true;
-    if (isCronista) {
-      const currentAuthorId = citizen?.id;
-      const currentAuthorName = `${citizen?.firstName || ''} ${citizen?.surname || ''}`.trim() || citizen?.username;
-      return String(art.authorId) === String(currentAuthorId) || art.authorName === currentAuthorName || art.status === 'bozza';
-    }
-    return false;
-  };
 
   const toggleSimulatedCronista = () => {
     const nextVal = !isSimulatedCronista;
@@ -246,85 +234,80 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
           </div>
 
           {/* Action Buttons for Cronisti, Custodi & Candidati */}
-          {isLoggedIn && (
-            <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 shrink-0">
-              {/* Scrivi Notizia e Genera con IA (Reserved for Authorized Cronisti & Admins) */}
-              {isCronista && (
-                <>
-                  <button
-                    onClick={() => {
-                      setArticleToEdit(null);
-                      setIsArticleFormOpen(true);
-                    }}
-                    className="px-5 py-3 rounded-2xl bg-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:bg-white transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-brand-gold"
-                  >
-                    <PenTool className="w-4 h-4" />
-                    <span>{tText('+ Write Article', '+ Scrivi Notizia')}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setArticleToEdit(null);
-                      setIsArticleFormOpen(true);
-                    }}
-                    className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-brand-gold to-amber-300 text-[#0a1c3e] font-extrabold text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-amber-300 animate-pulse"
-                  >
-                    <Sparkles className="w-4 h-4 text-[#0a1c3e]" />
-                    <span>{tText('✨ Create with AI', '✨ Crea con IA')}</span>
-                  </button>
-                </>
-              )}
-
-              {/* Candidati come Cronista (Reserved for Normal Logged-In Citizens) */}
-              {!isCronista && (
+          <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 shrink-0">
+            {/* Scrivi Notizia e Genera con IA (Reserved for Authorized Cronisti & Admins) */}
+            {isCronista ? (
+              <>
                 <button
-                  onClick={() => setIsCandidacyModalOpen(true)}
-                  className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-amber-300"
+                  onClick={() => {
+                    setArticleToEdit(null);
+                    setIsArticleFormOpen(true);
+                  }}
+                  className="px-5 py-3 rounded-2xl bg-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:bg-white transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-brand-gold"
                 >
-                  <UserCheck className="w-4 h-4" />
-                  <span>{tText('Apply as Local Reporter', 'Candidati come Cronista Locale')}</span>
+                  <PenTool className="w-4 h-4" />
+                  <span>{tText('+ Write Article', '+ Scrivi Notizia')}</span>
                 </button>
-              )}
 
-              {/* Gestione Categorie (Reserved for Cronisti / Custodi) */}
-              {(isCronista || isCustode) && (
                 <button
-                  onClick={() => setIsCategoryModalOpen(true)}
-                  className="px-4 py-3 rounded-2xl bg-white/10 text-white hover:bg-white/20 font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 border border-white/20"
+                  onClick={() => {
+                    setArticleToEdit(null);
+                    setIsArticleFormOpen(true);
+                  }}
+                  className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-brand-gold to-amber-300 text-[#0a1c3e] font-extrabold text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-amber-300 animate-pulse"
                 >
-                  <FolderPlus className="w-4 h-4 text-brand-gold" />
-                  <span>{tText('Categories', 'Categorie')}</span>
+                  <Sparkles className="w-4 h-4 text-[#0a1c3e]" />
+                  <span>{tText('✨ Create with AI', '✨ Crea con IA')}</span>
                 </button>
-              )}
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    alert(tText('Please log in first as a member to apply for the Local Reporter role.', 'Per favore effettua prima il login come membro per candidarti al ruolo di Cronista Locale.'));
+                    return;
+                  }
+                  setIsCandidacyModalOpen(true);
+                }}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-brand-gold text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:brightness-110 transition cursor-pointer flex items-center justify-center gap-2 shadow-lg border border-amber-300"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>{tText('Apply as Local Reporter', 'Candidati come Cronista Locale')}</span>
+              </button>
+            )}
 
-              {/* Moderazione Custodi (Reserved for Custodi) */}
-              {isCustode && (
-                <button
-                  onClick={() => setIsModerationModalOpen(true)}
-                  className="px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 shadow-lg relative"
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>{tText('Moderation', 'Moderazione')}</span>
-                  {pendingCount > 0 && (
-                    <span className="bg-amber-400 text-[#0a1c3e] font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center animate-pulse ml-1">
-                      {pendingCount}
-                    </span>
-                  )}
-                </button>
+            {/* Gestione Categorie */}
+            <button
+              onClick={() => setIsCategoryModalOpen(true)}
+              className="px-4 py-3 rounded-2xl bg-white/10 text-white hover:bg-white/20 font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 border border-white/20"
+            >
+              <FolderPlus className="w-4 h-4 text-brand-gold" />
+              <span>{tText('Categories', 'Categorie')}</span>
+            </button>
+
+            {/* Moderazione Custodi */}
+            <button
+              onClick={() => setIsModerationModalOpen(true)}
+              className="px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 shadow-lg relative"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>{tText('Moderation', 'Moderazione')}</span>
+              {pendingCount > 0 && (
+                <span className="bg-amber-400 text-[#0a1c3e] font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center animate-pulse ml-1">
+                  {pendingCount}
+                </span>
               )}
-            </div>
-          )}
+            </button>
+          </div>
         </div>
 
-        {/* ROLE PERMISSION BADGES BAR */}
+        {/* ROLE SIMULATOR & PERMISSION BADGES BAR */}
         <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-2 text-slate-300">
             <UserCheck className="w-4 h-4 text-brand-gold" />
             <span>{tText('Current Role:', 'Ruolo Attuale:')}</span>
             <span className="font-bold text-white bg-white/10 px-2.5 py-0.5 rounded-lg border border-white/10">
-              {!isLoggedIn
-                ? tText('Guest / Reader', 'Ospite / Lettore')
-                : isCronista && isCustode
+              {isCronista && isCustode
                 ? tText('Reporter & Digital Custodian', 'Cronista & Custode Digitale')
                 : isCronista
                 ? tText('Official Reporter', 'Cronista Ufficiale')
@@ -351,52 +334,46 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
             />
           </div>
 
-          {/* View Tab Switcher - Only shown for Logged-in Cronisti or Custodi */}
-          {isLoggedIn && (isCronista || isCustode) && (
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-              <button
-                onClick={() => setViewTab('published')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  viewTab === 'published'
-                    ? 'bg-[#0a1c3e] text-white shadow'
-                    : 'text-slate-600 hover:text-[#0a1c3e]'
-                }`}
-              >
-                {tText('Published Articles', 'Articoli Pubblicati')}
-              </button>
+          {/* View Tab Switcher */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+            <button
+              onClick={() => setViewTab('published')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                viewTab === 'published'
+                  ? 'bg-[#0a1c3e] text-white shadow'
+                  : 'text-slate-600 hover:text-[#0a1c3e]'
+              }`}
+            >
+              {tText('Published Articles', 'Articoli Pubblicati')}
+            </button>
 
-              {(isCronista || isCustode) && (
-                <button
-                  onClick={() => setViewTab('my_drafts')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                    viewTab === 'my_drafts'
-                      ? 'bg-[#0a1c3e] text-white shadow'
-                      : 'text-slate-600 hover:text-[#0a1c3e]'
-                  }`}
-                >
-                  {tText('My News / Drafts', 'Le Mie Notizie / Bozze')}
-                </button>
-              )}
+            <button
+              onClick={() => setViewTab('my_drafts')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                viewTab === 'my_drafts'
+                  ? 'bg-[#0a1c3e] text-white shadow'
+                  : 'text-slate-600 hover:text-[#0a1c3e]'
+              }`}
+            >
+              {tText('My News / Drafts', 'Le Mie Notizie / Bozze')}
+            </button>
 
-              {isCustode && (
-                <button
-                  onClick={() => setViewTab('pending_mod')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                    viewTab === 'pending_mod'
-                      ? 'bg-[#0a1c3e] text-white shadow'
-                      : 'text-slate-600 hover:text-[#0a1c3e]'
-                  }`}
-                >
-                  <span>{tText('Pending Moderation', 'In Moderazione')}</span>
-                  {pendingCount > 0 && (
-                    <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-mono">
-                      {pendingCount}
-                    </span>
-                  )}
-                </button>
+            <button
+              onClick={() => setViewTab('pending_mod')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                viewTab === 'pending_mod'
+                  ? 'bg-[#0a1c3e] text-white shadow'
+                  : 'text-slate-600 hover:text-[#0a1c3e]'
+              }`}
+            >
+              <span>{tText('Pending Moderation', 'In Moderazione')}</span>
+              {pendingCount > 0 && (
+                <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-mono">
+                  {pendingCount}
+                </span>
               )}
-            </div>
-          )}
+            </button>
+          </div>
         </div>
 
         {/* Categories Chips Filter */}
@@ -544,12 +521,6 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                         </span>
                         {renderStatusBadge(art.status)}
                       </div>
-                      <div className="absolute top-3 right-3">
-                        <span className="text-[10px] bg-[#0a1c3e]/90 text-brand-gold px-2.5 py-1 rounded-full font-tech flex items-center gap-1 backdrop-blur-sm border border-brand-gold/40 shadow">
-                          <Volume2 className="w-3 h-3 text-brand-gold animate-pulse" />
-                          <span>TTS</span>
-                        </span>
-                      </div>
                     </div>
                   ) : (
                     <div className="p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-2">
@@ -562,18 +533,12 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                         </span>
                         {renderStatusBadge(art.status)}
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[10px] bg-[#0a1c3e] text-brand-gold px-2 py-0.5 rounded-md flex items-center gap-1 font-tech">
-                          <Volume2 className="w-3 h-3 text-brand-gold" />
-                          TTS
+                      {art.videos && art.videos.length > 0 && (
+                        <span className="text-[10px] bg-[#0a1c3e] text-white px-2 py-0.5 rounded-md flex items-center gap-1 font-tech shrink-0">
+                          <Video className="w-3 h-3 text-brand-gold" />
+                          Video
                         </span>
-                        {art.videos && art.videos.length > 0 && (
-                          <span className="text-[10px] bg-[#0a1c3e] text-white px-2 py-0.5 rounded-md flex items-center gap-1 font-tech shrink-0">
-                            <Video className="w-3 h-3 text-brand-gold" />
-                            Video
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
                   )}
 
@@ -608,21 +573,19 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                     {/* Footer link & Edit action */}
                     <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a1c3e] gap-2">
                       <div className="flex items-center gap-2">
-                        {canEditArticle(art) && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setArticleToEdit(art);
-                              setIsArticleFormOpen(true);
-                            }}
-                            className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-[#0a1c3e] hover:text-white text-[#0a1c3e] font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 border border-amber-300 shadow-sm"
-                            title={tText('Edit Article', 'Modifica Articolo')}
-                          >
-                            <PenTool className="w-3.5 h-3.5" />
-                            <span>{tText('Edit', 'Modifica')}</span>
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setArticleToEdit(art);
+                            setIsArticleFormOpen(true);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-[#0a1c3e] hover:text-white text-[#0a1c3e] font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 border border-amber-300 shadow-sm"
+                          title={tText('Edit Article', 'Modifica Articolo')}
+                        >
+                          <PenTool className="w-3.5 h-3.5" />
+                          <span>{tText('Edit', 'Modifica')}</span>
+                        </button>
 
                         <span className="text-[10px] text-slate-400 font-normal hidden sm:inline">
                           {art.viewsCount || 0} {tText('reads', 'letture')}
@@ -643,42 +606,36 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
       {/* MODALS */}
       {/* 1. Article Form Modal for Cronista */}
-      {isLoggedIn && (isCronista || isCustode) && (
-        <ArticleFormModal
-          isOpen={isArticleFormOpen}
-          onClose={() => {
-            setIsArticleFormOpen(false);
-            setArticleToEdit(null);
-          }}
-          articleToEdit={articleToEdit}
-          authorId={citizen?.id || 'demo-author'}
-          authorName={currentAuthorName}
-          onSaved={loadData}
-        />
-      )}
+      <ArticleFormModal
+        isOpen={isArticleFormOpen}
+        onClose={() => {
+          setIsArticleFormOpen(false);
+          setArticleToEdit(null);
+        }}
+        articleToEdit={articleToEdit}
+        authorId={citizen?.id || 'demo-author'}
+        authorName={currentAuthorName}
+        onSaved={loadData}
+      />
 
       {/* 2. Category Manager Modal */}
-      {isLoggedIn && (isCronista || isCustode) && (
-        <CategoryManagerModal
-          isOpen={isCategoryModalOpen}
-          onClose={() => setIsCategoryModalOpen(false)}
-          onCategoriesUpdated={loadData}
-        />
-      )}
+      <CategoryManagerModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onCategoriesUpdated={loadData}
+      />
 
       {/* 3. Moderation Panel Modal for Custodi Digitali */}
-      {isLoggedIn && isCustode && (
-        <ModerationPanelModal
-          isOpen={isModerationModalOpen}
-          onClose={() => setIsModerationModalOpen(false)}
-          onArticlesUpdated={loadData}
-          onEditArticle={(artToEdit) => {
-            setIsModerationModalOpen(false);
-            setArticleToEdit(artToEdit);
-            setIsArticleFormOpen(true);
-          }}
-        />
-      )}
+      <ModerationPanelModal
+        isOpen={isModerationModalOpen}
+        onClose={() => setIsModerationModalOpen(false)}
+        onArticlesUpdated={loadData}
+        onEditArticle={(artToEdit) => {
+          setIsModerationModalOpen(false);
+          setArticleToEdit(artToEdit);
+          setIsArticleFormOpen(true);
+        }}
+      />
 
       {/* 4. Article Detail Modal */}
       <ArticleDetailModal
@@ -691,16 +648,12 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         onSelectArticle={(rel) => {
           setSelectedDetailArticle(rel);
         }}
-        onEditArticle={
-          selectedDetailArticle && canEditArticle(selectedDetailArticle)
-            ? (artToEdit) => {
-                setIsDetailModalOpen(false);
-                setSelectedDetailArticle(null);
-                setArticleToEdit(artToEdit);
-                setIsArticleFormOpen(true);
-              }
-            : undefined
-        }
+        onEditArticle={(artToEdit) => {
+          setIsDetailModalOpen(false);
+          setSelectedDetailArticle(null);
+          setArticleToEdit(artToEdit);
+          setIsArticleFormOpen(true);
+        }}
       />
 
       {/* 5. Reporter Candidacy Modal */}
