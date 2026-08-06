@@ -5168,7 +5168,7 @@ REGOLE TASSATIVE DI FORMATTAZIONE E STILE:
    - Il contenuto 'content' deve essere formattato ESCLUSIVAMENTE con tag HTML semantici puliti e ben strutturati:
      - Utilizza <h3 class="font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2">...</h3> per i sottotitoli di paragrafo.
      - Utilizza <p class="leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans">...</p> per ciascun paragrafo di testo.
-     - Utilizza <ul class="list-disc list-inside space-y-1.5 my-3 text-slate-700 pl-2"><li>...</li></ul> se ci sono elenchi puntati.
+     - Utilizza <ul class="list-disc list-outside space-y-2.5 my-4 text-slate-700 pl-6 font-sans"><li class="leading-relaxed text-slate-700 text-sm md:text-base my-1">...</li></ul> se ci sono elenchi puntati.
      - Utilizza <blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-4 my-4 rounded-r-2xl italic text-slate-800 text-sm leading-relaxed">...</blockquote> per citazioni o bollettini ufficiali.
    - I testi all'interno dei tag HTML devono essere puliti e privi di simboli di formattazione o asterischi.
 4. OTTIMIZZAZIONE SEO & AI:

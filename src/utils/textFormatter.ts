@@ -100,12 +100,12 @@ export function formatArticleContentToHtml(content: string | null | undefined): 
     // Convert list items (* or -)
     if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
       if (!inList) {
-        formattedBlocks.push('<ul class="list-disc list-inside space-y-1.5 my-3 text-slate-700 pl-2">');
+        formattedBlocks.push('<ul class="list-disc list-outside space-y-2.5 my-4 text-slate-700 pl-6 font-sans">');
         inList = true;
       }
       let itemText = trimmed.slice(2);
       itemText = itemText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      formattedBlocks.push(`<li>${itemText}</li>`);
+      formattedBlocks.push(`<li class="leading-relaxed text-slate-700 text-sm md:text-base font-sans my-1">${itemText}</li>`);
       return;
     }
 
