@@ -1,32 +1,64 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" prefix="og: http://ogp.me/ns#">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>NWS 1.0 | Registro Mondiale della Cittadinanza</title>
-    <meta name="title" content="NWS 1.0 | Registro Mondiale della Cittadinanza" />
-    <meta name="description" content="Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State, basata su trasparenza, pace e progresso tecnologico." />
-    <meta name="keywords" content="cittadinanza mondiale, stato digitale, registrazione cittadini, pace globale, progresso umanità, NWS" />
+    <title>New World State 1.0 | Registro Mondiale • Global Citizenship Registry</title>
+    <meta name="title" content="New World State 1.0 | Registro Mondiale • Global Citizenship Registry" />
+    <meta name="description" content="Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State. / Join the global digital community. Official citizenship registration under the New World State." />
+    <meta name="keywords" content="cittadinanza mondiale, stato digitale, registrazione cittadini, pace globale, progresso umanità, NWS, global citizenship, digital state, sovereign citizen, global peace" />
     <meta name="author" content="New World State Authority" />
 
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://newworldstate.org/" />
-    <meta property="og:title" content="NWS 1.0 | Registro Mondiale della Cittadinanza" />
-    <meta property="og:description" content="Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State." />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:site_name" content="New World State" />
+    <meta property="og:url" content="https://newworldstate.cloud/" />
+    <meta property="og:title" content="New World State 1.0 | Registro Mondiale • Global Citizenship Registry" />
+    <meta property="og:description" content="Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State. / Join the global digital community. Official citizenship registration under the New World State." />
+    
+    <!-- WhatsApp Mobile Primary Images (Lightweight 1024x1024 Square, same-domain absolute path) -->
+    <meta property="og:image" content="https://www.newworldstate.org/documents/branding_images/fronte.jpg" />
+    <meta property="og:image:secure_url" content="https://www.newworldstate.org/documents/branding_images/fronte.jpg" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:type" content="image/jpeg" />
+    
+    <!-- Alternate Web Images & Landscape Fallbacks (Perfect 16:9 for Facebook & Twitter) -->
+    <meta property="og:image" content="https://www.newworldstate.org/documents/branding_images/retro.jpg" />
+    <meta property="og:image:secure_url" content="https://www.newworldstate.org/documents/branding_images/retro.jpg" />
+    <meta property="og:image:width" content="1376" />
+    <meta property="og:image:height" content="768" />
+    <meta property="og:image:type" content="image/jpeg" />
+
+    <!-- WhatsApp & Android Mobile Specific Sharing Thumbnails -->
+    <meta name="thumbnail" content="https://www.newworldstate.org/documents/branding_images/fronte.jpg" />
+    <link rel="image_src" href="https://www.newworldstate.org/documents/branding_images/fronte.jpg" />
+
+    <!-- Schema.org / Google Search Engine & Android Previews -->
+    <meta itemprop="name" content="New World State 1.0 | Registro Mondiale • Global Citizenship Registry" />
+    <meta itemprop="description" content="Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State. / Join the global digital community. Official citizenship registration under the New World State." />
+    <meta itemprop="image" content="https://www.newworldstate.org/documents/branding_images/fronte.jpg" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://newworldstate.org/" />
-    <meta property="twitter:title" content="NWS 1.0 | Registro Mondiale della Cittadinanza" />
-    <meta property="twitter:description" content="Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State." />
-    <meta property="twitter:image" content="/og-image.png" />
+    <meta property="twitter:url" content="https://newworldstate.cloud/" />
+    <meta property="twitter:title" content="New World State 1.0 | Registro Mondiale • Global Citizenship Registry" />
+    <meta property="twitter:description" content="Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State. / Join the global digital community. Official citizenship registration under the New World State." />
+    <meta property="twitter:image" content="https://www.newworldstate.org/documents/branding_images/retro.jpg" />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- Favicon & PWA Settings -->
+    <link rel="shortcut icon" href="/favicon.ico?v=5" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=5" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=5" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=5" />
+    <meta name="theme-color" content="#0a1c3e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="New World State" />
+    <link rel="manifest" href="/manifest.json" />
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,9 +75,9 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "New World State Authority",
-      "url": "https://newworldstate.org/",
-      "logo": "https://newworldstate.org/logo.png",
-      "description": "Una piattaforma per la gestione di una comunità mondiale organizzata come uno stato sovrano digitale."
+      "url": "https://www.newworldstate.org/",
+      "logo": "https://www.newworldstate.org/documents/branding_logo/fronte.jpg",
+      "description": "Una piattaforma per la gestione di una comunità mondiale organizzata come uno stato sovrano digitale. / A digital platform for managing a global community organized as a sovereign digital state."
     }
     </script>
     <!-- Fallback static form for Cloudflare Pages Static Forms Plugin detection -->

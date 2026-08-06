@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Calendar, Flag, FileText, Globe, Shield, UserCheck, ChevronRight, ChevronLeft, Upload, AlertCircle, MapPin, Navigation, Search, Sparkles, Wand2, Loader2 } from 'lucide-react';
+import { User, Mail, Calendar, Flag, FileText, Globe, Shield, UserCheck, ChevronRight, ChevronLeft, Upload, AlertCircle, MapPin, Navigation, Search, Sparkles, Wand2, Loader2, Camera, CameraOff, RefreshCw } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { OpenLocationCode } from 'open-location-code';
@@ -257,8 +257,89 @@ function LocationMarker({ onPositionChange, position }: { onPositionChange: (pos
   );
 }
 
+const getCitizenshipFromCountryOrCity = (country: string, city: string = '', lang: 'it' | 'en' = 'it'): string => {
+  const normCountry = country.trim().toUpperCase();
+  const normCity = city.trim().toUpperCase();
+
+  const itCityMap: Record<string, string> = {
+    'ROMA': 'ITALIANA', 'MILANO': 'ITALIANA', 'NAPOLI': 'ITALIANA', 'TORINO': 'ITALIANA', 'PALERMO': 'ITALIANA',
+    'GENOVA': 'ITALIANA', 'BOLOGNA': 'ITALIANA', 'FIRENZE': 'ITALIANA', 'BARI': 'ITALIANA', 'CATANIA': 'ITALIANA',
+    'VENEZIA': 'ITALIANA', 'VERONA': 'ITALIANA', 'MESSINA': 'ITALIANA', 'PADOVA': 'ITALIANA', 'TRIESTE': 'ITALIANA',
+    'BRESCIA': 'ITALIANA', 'PRATO': 'ITALIANA', 'PARMA': 'ITALIANA', 'MODENA': 'ITALIANA', 'REGGIO CALABRIA': 'ITALIANA',
+    'REGGIO EMILIA': 'ITALIANA', 'PERUGIA': 'ITALIANA', 'LIVORNO': 'ITALIANA', 'RAVENNA': 'ITALIANA', 'CAGLIARI': 'ITALIANA',
+    'FOGGIA': 'ITALIANA', 'RIMINI': 'ITALIANA', 'SALERNO': 'ITALIANA', 'FERRARA': 'ITALIANA', 'SASSARI': 'ITALIANA',
+    'LATINA': 'ITALIANA', 'MONZA': 'ITALIANA', 'SIRACUSA': 'ITALIANA', 'PESCARA': 'ITALIANA', 'BERGAMO': 'ITALIANA',
+    'FORLÌ': 'ITALIANA', 'TRENTO': 'ITALIANA', 'VICENZA': 'ITALIANA', 'TERNI': 'ITALIANA', 'BOLZANO': 'ITALIANA',
+    'NOVARA': 'ITALIANA', 'PIACENZA': 'ITALIANA', 'ANCONA': 'ITALIANA', 'AREZZO': 'ITALIANA', 'UDINE': 'ITALIANA',
+    'CESENA': 'ITALIANA', 'LECCE': 'ITALIANA', 'PARIGI': 'FRANCESE', 'LONDRA': 'BRITANNICA', 'BERLINO': 'TEDESCA',
+    'MADRID': 'SPAGNOLA', 'NEW YORK': 'STATUNITENSE'
+  };
+
+  const enCityMap: Record<string, string> = {
+    'ROMA': 'ITALIAN', 'ROME': 'ITALIAN', 'MILAN': 'ITALIAN', 'MILANO': 'ITALIAN', 'NAPLES': 'ITALIAN', 'NAPOLI': 'ITALIAN', 'TURIN': 'ITALIAN', 'TORINO': 'ITALIAN',
+    'PALERMO': 'ITALIAN', 'GENOA': 'ITALIAN', 'GENOVA': 'ITALIAN', 'BOLOGNA': 'ITALIAN', 'FLORENCE': 'ITALIAN', 'FIRENZE': 'ITALIAN', 'VENICE': 'ITALIAN', 'VENEZIA': 'ITALIAN',
+    'VERONA': 'ITALIAN', 'PARIS': 'FRENCH', 'PARIGI': 'FRENCH', 'LONDON': 'BRITISH', 'LONDRA': 'BRITISH', 'BERLIN': 'GERMAN', 'BERLINO': 'GERMAN',
+    'MADRID': 'SPANISH', 'NEW YORK': 'AMERICAN'
+  };
+
+  const itCountryMap: Record<string, string> = {
+    'ITALIA': 'ITALIANA', 'ITALY': 'ITALIANA', 'FRANCIA': 'FRANCESE', 'FRANCE': 'FRANCESE', 'GERMANIA': 'TEDESCA',
+    'GERMANY': 'TEDESCA', 'DEUTSCHLAND': 'TEDESCA', 'SPAGNA': 'SPAGNOLA', 'SPAIN': 'SPAGNOLA', 'ESPAÑA': 'SPAGNOLA',
+    'REGNO UNITO': 'BRITANNICA', 'UNITED KINGDOM': 'BRITANNICA', 'UK': 'BRITANNICA', 'INGHILTERRA': 'BRITANNICA',
+    'STATI UNITI': 'STATUNITENSE', 'STATI UNITI D\'AMERICA': 'STATUNITENSE', 'UNITED STATES': 'STATUNITENSE', 'UNITED STATES OF AMERICA': 'STATUNITENSE', 'USA': 'STATUNITENSE',
+    'SVIZZERA': 'SVIZZERA', 'SWITZERLAND': 'SVIZZERA', 'AUSTRIA': 'AUSTRIACA', 'BELGIO': 'BELGA', 'BELGIUM': 'BELGA',
+    'PAESI BASSI': 'OLANDESE', 'NETHERLANDS': 'OLANDESE', 'PORTOGALLO': 'PORTOGHESE', 'PORTUGAL': 'PORTOGHESE',
+    'GRECIA': 'GRECA', 'GREECE': 'GRECA', 'ALBANIA': 'ALBANESE', 'MOLDAVIA': 'MOLDAVA', 'ROMANIA': 'RUMENA',
+    'POLONIA': 'POLACCA', 'POLAND': 'POLACCA', 'UCRAINA': 'UCRAINA', 'UKRAINE': 'UCRAINA', 'RUSSIA': 'RUSSA',
+    'MAROCCO': 'MAROCCHINA', 'MOROCCO': 'MAROCCHINA', 'TUNISIA': 'TUNISINA', 'EGITTO': 'EGIZIANA', 'EGYPT': 'EGIZIANA',
+    'CINA': 'CINESE', 'CHINA': 'CINESE', 'GIAPPONE': 'GIAPPONESE', 'JAPAN': 'GIAPPONESE', 'BRASILE': 'BRASILIANA',
+    'BRAZIL': 'BRASILIANA', 'ARGENTINA': 'ARGENTINA', 'MESSICO': 'MESSICANA', 'MEXICO': 'MESSICANA', 'CANADA': 'CANADESE',
+    'AUSTRALIA': 'AUSTRALIANA'
+  };
+
+  const enCountryMap: Record<string, string> = {
+    'ITALY': 'ITALIAN', 'ITALIA': 'ITALIAN', 'FRANCE': 'FRENCH', 'FRANCIA': 'FRENCH', 'GERMANY': 'GERMAN', 'GERMANIA': 'GERMAN',
+    'SPAIN': 'SPANISH', 'SPAGNA': 'SPANISH', 'ESPAÑA': 'SPANISH', 'UNITED KINGDOM': 'BRITISH', 'REGNO UNITO': 'BRITISH', 'UK': 'BRITISH',
+    'ENGLAND': 'BRITISH', 'INGHILTERRA': 'BRITISH', 'UNITED STATES': 'AMERICAN', 'STATI UNITI': 'AMERICAN', 'USA': 'AMERICAN', 'UNITED STATES OF AMERICA': 'AMERICAN',
+    'SWITZERLAND': 'SWISS', 'SVIZZERA': 'SWISS', 'AUSTRIA': 'AUSTRIAN', 'BELGIUM': 'BELGIAN', 'BELGIO': 'BELGIAN',
+    'NETHERLANDS': 'DUTCH', 'PAESI BASSI': 'DUTCH', 'PORTUGAL': 'PORTUGUESE', 'PORTOGALLO': 'PORTUGUESE', 'GREECE': 'GREEK', 'GRECIA': 'GREEK',
+    'ALBANIA': 'ALBANIAN', 'MOLDAVIA': 'MOLDAVIAN', 'ROMANIA': 'ROMANIAN', 'POLAND': 'POLISH', 'POLONIA': 'POLISH',
+    'UKRAINE': 'UKRAINIAN', 'UCRAINA': 'UKRAINIAN', 'RUSSIA': 'RUSSIAN', 'MOROCCO': 'MOROCCAN', 'MAROCCO': 'MOROCCAN',
+    'TUNISIA': 'TUNISIAN', 'EGYPT': 'EGYPTIAN', 'EGITTO': 'EGYPTIAN', 'CHINA': 'CHINESE', 'CINA': 'CHINESE',
+    'JAPAN': 'JAPANESE', 'GIAPPONE': 'JAPANESE', 'BRAZIL': 'BRAZILIAN', 'BRASILE': 'BRAZILIAN', 'ARGENTINA': 'ARGENTINE',
+    'MEXICO': 'MEXICAN', 'MESSICO': 'MEXICAN', 'CANADA': 'CANADIAN', 'AUSTRALIA': 'AUSTRALIAN'
+  };
+
+  if (lang === 'it') {
+    if (itCityMap[normCity]) return itCityMap[normCity];
+    if (itCountryMap[normCountry]) return itCountryMap[normCountry];
+    if (itCountryMap[normCity]) return itCountryMap[normCity];
+    if (normCountry.endsWith('IA')) {
+      return normCountry.substring(0, normCountry.length - 2) + 'ANA';
+    }
+    return normCountry || normCity;
+  } else {
+    if (enCityMap[normCity]) return enCityMap[normCity];
+    if (enCountryMap[normCountry]) return enCountryMap[normCountry];
+    if (enCountryMap[normCity]) return enCountryMap[normCity];
+    return normCountry || normCity;
+  }
+};
+
+const generateCitizenCode = (): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 16; i++) {
+    if (i > 0 && i % 4 === 0) {
+      result += '-';
+    }
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
+};
+
 export default function RegisterForm() {
-  const { t } = useI18n();
+  const { t, language, tText } = useI18n();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     surname: '',
@@ -288,9 +369,11 @@ export default function RegisterForm() {
     documentType: 'ID_CARD',
     documentFront: null as File | null,
     documentBack: null as File | null,
+    documentPhoto: null as File | null,
     documentHash: '',
     isAmbassador: false,
     isPeacekeeper: false,
+    citizenCode: generateCitizenCode(),
   });
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
   const [birthPlaceSuggestions, setBirthPlaceSuggestions] = useState<any[]>([]);
@@ -304,7 +387,172 @@ export default function RegisterForm() {
   const [isVerifyingAddress, setIsVerifyingAddress] = useState(false);
   const formTopRef = useRef<HTMLDivElement>(null);
   const addressSectionRef = useRef<HTMLDivElement>(null);
-  const [previews, setPreviews] = useState<{ front: string | null, back: string | null }>({ front: null, back: null });
+  const [previews, setPreviews] = useState<{ front: string | null, back: string | null, photo: string | null }>({ front: null, back: null, photo: null });
+  
+  const [photoMode, setPhotoMode] = useState<'camera' | 'upload'>('camera');
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraActiveType, setCameraActiveType] = useState<'front' | 'back' | 'photo' | null>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoFrontRef = useRef<HTMLVideoElement | null>(null);
+  const videoBackRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  useEffect(() => {
+    if (step !== 5) {
+      stopCamera();
+    }
+  }, [step]);
+
+  const startCamera = async (type: 'front' | 'back' | 'photo' = 'photo') => {
+    setCameraError(null);
+    stopCamera();
+    setCameraActiveType(type);
+    try {
+      const isDocument = type === 'front' || type === 'back';
+      const constraints = {
+        video: {
+          facingMode: isDocument ? 'environment' : 'user',
+          width: { ideal: isDocument ? 1280 : 640 },
+          height: { ideal: isDocument ? 720 : 480 }
+        }
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      setCameraStream(stream);
+      setIsCameraActive(true);
+    } catch (err: any) {
+      console.error('Errore avvio fotocamera:', err);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+        setCameraStream(stream);
+        setIsCameraActive(true);
+      } catch (errFallback) {
+        console.error('Fallback fotocamera fallito:', errFallback);
+        setCameraError(language === 'en' 
+          ? 'Unable to access camera. Please check permissions or upload a file.' 
+          : 'Impossibile accedere alla fotocamera. Verifica i permessi o carica un file.');
+      }
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setIsCameraActive(false);
+    setCameraActiveType(null);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const originalW = video.videoWidth || 640;
+      const originalH = video.videoHeight || 480;
+      
+      // We want a portrait photo with aspect ratio 3/4 (which is 0.75, matching the aspect-[3/4] UI box)
+      const targetRatio = 0.75;
+      
+      let cropW = originalW;
+      let cropH = originalH;
+      let sx = 0;
+      let sy = 0;
+      
+      if (originalW / originalH > targetRatio) {
+        // Source is wider than target ratio (standard horizontal webcam feed like 4:3 or 16:9)
+        cropW = originalH * targetRatio;
+        cropH = originalH;
+        sx = (originalW - cropW) / 2;
+        sy = 0;
+      } else {
+        // Source is narrower than target ratio (vertical/portrait stream)
+        cropW = originalW;
+        cropH = originalW / targetRatio;
+        sx = 0;
+        sy = (originalH - cropH) / 2;
+      }
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(cropW);
+      canvas.height = Math.round(cropH);
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Since the live preview is mirrored horizontally, we reflect the canvas horizontally
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        
+        ctx.drawImage(
+          video,
+          sx,                    // source starting x
+          sy,                    // source starting y
+          cropW,                 // source width
+          cropH,                 // source height
+          0,                     // destination x
+          0,                     // destination y
+          canvas.width,          // destination width
+          canvas.height          // destination height
+        );
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        setPreviews(prev => ({ ...prev, photo: dataUrl }));
+        setFormData(prev => ({ ...prev, documentPhoto: null })); 
+        stopCamera();
+      }
+    }
+  };
+
+  const captureDocumentPhoto = (type: 'front' | 'back') => {
+    const videoElement = type === 'front' ? videoFrontRef.current : videoBackRef.current;
+    if (videoElement) {
+      const originalW = videoElement.videoWidth || 1280;
+      const originalH = videoElement.videoHeight || 720;
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = originalW;
+      canvas.height = originalH;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Draw unmirrored so ID reading/OCR text goes from left to right properly
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        if (type === 'front') {
+          setPreviews(prev => ({ ...prev, front: dataUrl }));
+          setFormData(prev => ({ ...prev, documentFront: null }));
+        } else {
+          setPreviews(prev => ({ ...prev, back: dataUrl }));
+          setFormData(prev => ({ ...prev, documentBack: null }));
+        }
+        stopCamera();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isCameraActive && cameraStream) {
+      if (cameraActiveType === 'front' && videoFrontRef.current) {
+        videoFrontRef.current.srcObject = cameraStream;
+      } else if (cameraActiveType === 'back' && videoBackRef.current) {
+        videoBackRef.current.srcObject = cameraStream;
+      } else if (cameraActiveType === 'photo' && videoRef.current) {
+        videoRef.current.srcObject = cameraStream;
+      }
+    }
+  }, [isCameraActive, cameraStream, cameraActiveType]);
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const calculateFileHash = async (file: File): Promise<string> => {
@@ -320,6 +568,44 @@ export default function RegisterForm() {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const photoFileToJpegBase64 = (file: File): Promise<{ dataUrl: string; name: string }> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+              const originalName = file.name;
+              const lastDot = originalName.lastIndexOf('.');
+              const baseName = lastDot !== -1 ? originalName.substring(0, lastDot) : originalName;
+              resolve({ dataUrl, name: `${baseName}.jpg` });
+            } else {
+              resolve({ dataUrl: e.target?.result as string, name: file.name });
+            }
+          } catch (err) {
+            console.error('[JPEG-CONVERT-ERR] Fail, reusing original:', err);
+            resolve({ dataUrl: e.target?.result as string, name: file.name });
+          }
+        };
+        img.onerror = () => {
+          resolve({ dataUrl: e.target?.result as string, name: file.name });
+        };
+        img.src = e.target?.result as string;
+      };
       reader.onerror = error => reject(error);
     });
   };
@@ -450,15 +736,22 @@ export default function RegisterForm() {
     if (type === 'birthPlace') {
       const city = suggestion.address.city || suggestion.address.town || suggestion.address.village || suggestion.display_name.split(',')[0];
       const country = suggestion.address.country || suggestion.display_name.split(',').pop()?.trim();
+      const derivedCitizenship = getCitizenshipFromCountryOrCity(country, city, language);
       setFormData(prev => ({ 
         ...prev, 
         birthPlace: city.toUpperCase(),
-        birthCountry: (country || prev.birthCountry).toUpperCase()
+        birthCountry: (country || prev.birthCountry).toUpperCase(),
+        ...(derivedCitizenship ? { citizenship: derivedCitizenship } : {})
       }));
       setBirthPlaceSuggestions([]);
     } else {
       const country = suggestion.address.country || suggestion.display_name.split(',').pop()?.trim();
-      setFormData(prev => ({ ...prev, birthCountry: country.toUpperCase() }));
+      const derivedCitizenship = getCitizenshipFromCountryOrCity(country, '', language);
+      setFormData(prev => ({ 
+        ...prev, 
+        birthCountry: country.toUpperCase(),
+        ...(derivedCitizenship ? { citizenship: derivedCitizenship } : {})
+      }));
       setBirthCountrySuggestions([]);
     }
   };
@@ -724,12 +1017,20 @@ export default function RegisterForm() {
         }
         return true;
       case 5:
-        if (!formData.documentFront) {
-          setError('È necessario caricare almeno il fronte del documento.');
+        if (!formData.documentFront && !previews.front) {
+          setError(language === 'en' 
+            ? 'It is required to upload or capture the front of the document.' 
+            : 'È necessario caricare o scattare una foto del fronte del documento.');
           return false;
         }
-        if (formData.documentType !== 'PASSPORT' && !formData.documentBack) {
-          setError('Per questo tipo di documento è richiesto anche il caricamento del retro.');
+        if (formData.documentType !== 'PASSPORT' && !formData.documentBack && !previews.back) {
+          setError(language === 'en'
+            ? 'For this document type, it is also required to upload or capture the back.'
+            : 'Per questo tipo di documento è richiesto anche il caricamento o lo scatto del retro.');
+          return false;
+        }
+        if (!formData.documentPhoto && !previews.photo) {
+          setError('È necessario fornire una foto per la tessera identificativa (scatta un autoscatto o carica un file).');
           return false;
         }
         return true;
@@ -876,24 +1177,42 @@ export default function RegisterForm() {
       let documentFrontName = '';
       let documentBackData = '';
       let documentBackName = '';
+      let documentPhotoData = '';
+      let documentPhotoName = '';
 
       if (formData.documentFront) {
         documentFrontData = await fileToBase64(formData.documentFront);
         documentFrontName = formData.documentFront.name;
+      } else if (previews.front) {
+        documentFrontData = previews.front;
+        documentFrontName = 'fronte_scatto.jpg';
       }
       if (formData.documentBack) {
         documentBackData = await fileToBase64(formData.documentBack);
         documentBackName = formData.documentBack.name;
+      } else if (previews.back) {
+        documentBackData = previews.back;
+        documentBackName = 'retro_scatto.jpg';
+      }
+      if (formData.documentPhoto) {
+        const converted = await photoFileToJpegBase64(formData.documentPhoto);
+        documentPhotoData = converted.dataUrl;
+        documentPhotoName = converted.name;
+      } else if (previews.photo) {
+        documentPhotoData = previews.photo;
+        documentPhotoName = 'autoscatto.jpg';
       }
 
       // Prepare the payload by removing non-serializable File objects and adding Base64 representations
-      const { documentFront, documentBack, ...serializableData } = formData;
+      const { documentFront, documentBack, documentPhoto, ...serializableData } = formData;
       const fullPayload = {
         ...serializableData,
         documentFrontData,
         documentFrontName,
         documentBackData,
-        documentBackName
+        documentBackName,
+        documentPhotoData,
+        documentPhotoName
       };
       
       console.log('Invio dati di registrazione...', serializableData.username);
@@ -953,12 +1272,31 @@ export default function RegisterForm() {
           >
             <UserCheck className="w-10 h-10" />
           </motion.div>
-          <h2 className="text-3xl font-serif text-brand-blue">Benvenuto, Cittadino!</h2>
+          <h2 className="text-3xl font-serif text-brand-blue">
+            {language === 'en' ? 'Welcome, Citizen!' : 'Benvenuto, Cittadino!'}
+          </h2>
+          <div className="bg-brand-parchment/60 p-5 border border-brand-gold/30 rounded-2xl space-y-2 my-4 text-center shadow-inner">
+            <span className="text-[10px] uppercase font-bold text-brand-blue tracking-widest block">
+              {language === 'en' ? 'NWS Unique Identifier Code' : 'Codice Identificativo Unico NWS'}
+            </span>
+            <p className="text-xl font-mono font-bold text-brand-gold select-all tracking-wider md:text-2xl">{formData.citizenCode}</p>
+            <span className="text-[9px] text-muted block leading-normal max-w-sm mx-auto">
+              {language === 'en' 
+                ? 'Store this 16-digit alphanumeric code securely. It uniquely and inviolably identifies your sovereign identity.' 
+                : 'Conserva questo codice alfanumerico di 16 cifre. Identifica in modo univoco ed inviolabile la tua identità sovrana.'}
+            </span>
+          </div>
           <div className="space-y-4">
-            <p className="text-muted text-sm leading-relaxed">La tua richiesta è stata registrata con successo nel registro anagrafico mondiale.</p>
+            <p className="text-muted text-sm leading-relaxed">
+              {language === 'en' 
+                ? 'Your request has been successfully recorded in the global registry.' 
+                : 'La tua richiesta è stata registrata con successo nel registro anagrafico mondiale.'}
+            </p>
             {formData.email && (
               <p className="text-xs text-brand-blue/80 bg-brand-blue/5 p-4 rounded-xl border border-brand-blue/10 text-left leading-relaxed">
-                Abbiamo ricevuto la tua email. La tua richiesta sarà validata da un cittadino incaricato e riceverai un'email di inserimento definitivo al termine della procedura.
+                {language === 'en'
+                  ? 'We have received your email. Your request will be validated by an authorized registrar, and you will receive a confirmation email upon completion.'
+                  : "Abbiamo ricevuto la tua email. La tua richiesta sarà validata da un cittadino incaricato e riceverai un'email di inserimento definitivo al termine della procedura."}
               </p>
             )}
           </div>
@@ -968,7 +1306,7 @@ export default function RegisterForm() {
               onClick={() => window.location.reload()}
               className="px-8 py-3 bg-brand-blue text-white rounded-xl shadow-lg hover:bg-brand-blue/90 transition-all font-medium text-sm"
             >
-              Torna alla Home
+              {language === 'en' ? 'Back to Home' : 'Torna alla Home'}
             </button>
           </div>
         </div>
@@ -1003,8 +1341,12 @@ export default function RegisterForm() {
           <div className="py-20 flex flex-col items-center justify-center space-y-6">
             <Loader2 className="w-12 h-12 text-brand-blue animate-spin" />
             <div className="text-center">
-              <h3 className="text-xl font-serif text-brand-blue">Verifica Sistemi...</h3>
-              <p className="text-muted text-sm mt-2">Stiamo verificando la connessione al registro mondiale.</p>
+              <h3 className="text-xl font-serif text-brand-blue">
+                {language === 'en' ? 'System Verification...' : 'Verifica Sistemi...'}
+              </h3>
+              <p className="text-muted text-sm mt-2">
+                {language === 'en' ? 'We are verifying connection to the global civil registry.' : 'Stiamo verificando la connessione al registro mondiale.'}
+              </p>
             </div>
           </div>
         ) : systemStatus === 'error' ? (
@@ -1013,13 +1355,15 @@ export default function RegisterForm() {
               <AlertCircle className="w-10 h-10" />
             </div>
             <div className="text-center max-w-sm">
-              <h3 className="text-xl font-serif text-brand-blue">Sistema non pronto</h3>
+              <h3 className="text-xl font-serif text-brand-blue">
+                {language === 'en' ? 'System Not Ready' : 'Sistema non pronto'}
+              </h3>
               <p className="text-red-600 text-sm mt-2">{error}</p>
               <button 
                 onClick={() => window.location.reload()}
                 className="mt-6 px-6 py-2 bg-brand-blue text-white rounded-xl text-sm font-medium"
               >
-                Riprova
+                {language === 'en' ? 'Retry' : 'Riprova'}
               </button>
             </div>
           </div>
@@ -1035,7 +1379,9 @@ export default function RegisterForm() {
             >
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif text-brand-blue">{t('personalData')}</h2>
-                <p className="text-muted text-xs uppercase tracking-widest italic">Parte 1: Identità Individuale</p>
+                <p className="text-muted text-xs uppercase tracking-widest italic">
+                  {tText('Part 1: Individual Identity', 'Parte 1: Identità Individuale')}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1067,8 +1413,8 @@ export default function RegisterForm() {
                     value={formData.gender}
                     onChange={e => setFormData({ ...formData, gender: e.target.value })}
                   >
-                    <option value="M">Maschio</option>
-                    <option value="F">Femmina</option>
+                    <option value="M">{tText('Male', 'Maschio')}</option>
+                    <option value="F">{tText('Female', 'Femmina')}</option>
                   </select>
                 </div>
               </div>
@@ -1083,14 +1429,16 @@ export default function RegisterForm() {
                       className="text-[9px] uppercase font-bold text-brand-blue flex items-center gap-1 hover:text-brand-gold transition-colors"
                     >
                       <Calendar className="w-3 h-3" />
-                      {isManualDateEntry ? 'Usa Calendario' : 'Inserimento Manuale'}
+                      {isManualDateEntry 
+                        ? tText('Use Calendar', 'Usa Calendario') 
+                        : tText('Manual Entry', 'Inserimento Manuale')}
                     </button>
                   </div>
                   {isManualDateEntry ? (
                     <input 
                       type="text"
                       inputMode="numeric"
-                      placeholder="GG/MM/AAAA"
+                      placeholder={tText('DD/MM/YYYY', 'GG/MM/AAAA')}
                       className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.birthDate ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                       value={manualDate}
                       onChange={e => handleManualDateChange(e.target.value)}
@@ -1108,13 +1456,18 @@ export default function RegisterForm() {
                   <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('birthPlace')}</label>
                   <input 
                     type="text"
-                    placeholder="Es: Roma, Parigi..."
+                    placeholder={tText('e.g. Rome, Paris...', 'Es: Roma, Parigi...')}
                     className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.birthPlace ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                     value={formData.birthPlace}
                     onBlur={() => setTimeout(() => setBirthPlaceSuggestions([]), 200)}
                     onChange={e => {
                       const val = e.target.value.toUpperCase();
-                      setFormData({ ...formData, birthPlace: val });
+                      const derivedCitizenship = getCitizenshipFromCountryOrCity(formData.birthCountry, val, language);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        birthPlace: val,
+                        ...(derivedCitizenship ? { citizenship: derivedCitizenship } : {})
+                      }));
                       searchLocation(val, 'birthPlace');
                     }}
                   />
@@ -1138,13 +1491,18 @@ export default function RegisterForm() {
                   <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('birthCountry')}</label>
                   <input 
                     type="text"
-                    placeholder="Es: Italia, USA..."
+                    placeholder={tText('e.g. Italy, USA...', 'Es: Italia, USA...')}
                     className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.birthCountry ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                     value={formData.birthCountry}
                     onBlur={() => setTimeout(() => setBirthCountrySuggestions([]), 200)}
                     onChange={e => {
                       const val = e.target.value.toUpperCase();
-                      setFormData({ ...formData, birthCountry: val });
+                      const derivedCitizenship = getCitizenshipFromCountryOrCity(val, formData.birthPlace, language);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        birthCountry: val,
+                        ...(derivedCitizenship ? { citizenship: derivedCitizenship } : {})
+                      }));
                       searchLocation(val, 'birthCountry');
                     }}
                   />
@@ -1200,7 +1558,9 @@ export default function RegisterForm() {
             >
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif text-brand-blue">{t('personalData')} (Cont.)</h2>
-                <p className="text-muted text-xs uppercase tracking-widest italic">Cittadinanza e Stato Civile</p>
+                <p className="text-muted text-xs uppercase tracking-widest italic">
+                  {tText('Citizenship and Marital Status', 'Cittadinanza e Stato Civile')}
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -1208,7 +1568,7 @@ export default function RegisterForm() {
                   <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('citizenship')}</label>
                   <input 
                     type="text"
-                    placeholder="Es: Italiana, Francese..."
+                    placeholder={tText('e.g. Italian, French...', 'Es: Italiana, Francese...')}
                     className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.citizenship ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                     value={formData.citizenship}
                     onBlur={() => setTimeout(() => setCitizenshipSuggestions([]), 200)}
@@ -1242,11 +1602,11 @@ export default function RegisterForm() {
                     value={formData.maritalStatus}
                     onChange={e => setFormData({ ...formData, maritalStatus: e.target.value })}
                   >
-                    <option value="Single">Celibe/Nubile</option>
-                    <option value="Married">Coniugato/a</option>
-                    <option value="Divorced">Divorziato/a</option>
-                    <option value="Widow">Vedovo/a</option>
-                    <option value="CivilUnion">Unito/a civilmente</option>
+                    <option value="Single">{tText('Single', 'Celibe/Nubile')}</option>
+                    <option value="Married">{tText('Married', 'Coniugato/a')}</option>
+                    <option value="Divorced">{tText('Divorced', 'Divorziato/a')}</option>
+                    <option value="Widow">{tText('Widowed', 'Vedovo/a')}</option>
+                    <option value="CivilUnion">{tText('Civil Union', 'Unito/a civilmente')}</option>
                   </select>
                 </div>
               </div>
@@ -1292,7 +1652,9 @@ export default function RegisterForm() {
             >
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif text-brand-blue">{t('residenceData')}</h2>
-                <p className="text-muted text-xs uppercase tracking-widest italic">Localizzazione e Residenza</p>
+                <p className="text-muted text-xs uppercase tracking-widest italic">
+                  {tText('Localization and Residence', 'Localizzazione e Residenza')}
+                </p>
               </div>
 
               <div className="space-y-6">
@@ -1301,26 +1663,43 @@ export default function RegisterForm() {
                   <div className="bg-brand-blue/5 p-4 rounded-xl border border-brand-blue/10 space-y-3">
                     <div className="flex items-center gap-2 text-brand-blue">
                       <AlertCircle className="w-5 h-5" />
-                      <h3 className="text-sm font-bold uppercase tracking-wider">Quale modalità scegliere?</h3>
+                      <h3 className="text-sm font-bold uppercase tracking-wider">
+                        {tText('Which option to choose?', 'Quale modalità scegliere?')}
+                      </h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div className="text-[10px] space-y-1">
                         <p className="font-bold text-brand-blue/80 flex items-center gap-1">
-                          <User className="w-3 h-3" /> PIÙ FACILE
+                          <User className="w-3 h-3" /> {tText('EASIER', 'PIÙ FACILE')}
                         </p>
-                        <p className="text-muted leading-tight">Usa l'<b>autocompletamento</b> iniziando a scrivere la tua via. È ideale se abiti in aree urbane mappate.</p>
+                        <p className="text-muted leading-tight">
+                          {tText(
+                            'Use autocomplete by starting to type your street. Ideal for mapped urban areas.',
+                            "Usa l'autocompletamento iniziando a scrivere la tua via. È ideale se abiti in aree urbane mappate."
+                          )}
+                        </p>
                       </div>
                       <div className="text-[10px] space-y-1">
                         <p className="font-bold text-brand-blue/80 flex items-center gap-1">
-                          <Navigation className="w-3 h-3" /> PIÙ PRECISA
+                          <Navigation className="w-3 h-3" /> {tText('MORE PRECISE', 'PIÙ PRECISA')}
                         </p>
-                        <p className="text-muted leading-tight">Usa <b>"La mia posizione"</b> se sei fisicamente a casa. Estrae coordinate GPS e Plus Code univoci.</p>
+                        <p className="text-muted leading-tight">
+                          {tText(
+                            'Use "My position" if at home. Extracts coordinates and a unique Plus Code.',
+                            'Usa "La mia posizione" se sei fisicamente a casa. Estrae coordinate GPS e Plus Code univoci.'
+                          )}
+                        </p>
                       </div>
                       <div className="text-[10px] space-y-1">
                         <p className="font-bold text-brand-blue/80 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" /> AREE RURALI
+                          <MapPin className="w-3 h-3" /> {tText('RURAL AREAS', 'AREE RURALI')}
                         </p>
-                        <p className="text-muted leading-tight">Trascina il <b>Pin sulla mappa</b> e compila la <b>Descrizione Località</b> con punti di riferimento fissi.</p>
+                        <p className="text-muted leading-tight">
+                          {tText(
+                            'Drag the Pin on the map and write a description with reference landmarks.',
+                            'Trascina il Pin sulla mappa e compila la Descrizione Località con punti di riferimento fissi.'
+                          )}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1328,10 +1707,15 @@ export default function RegisterForm() {
                   <div className="bg-orange-50 p-4 rounded-xl border border-orange-200 space-y-2 animate-pulse-slow">
                     <div className="flex items-center gap-2 text-orange-600">
                       <Search className="w-5 h-5" />
-                      <h3 className="text-sm font-bold uppercase tracking-wider">Verifica i dati rilevati</h3>
+                      <h3 className="text-sm font-bold uppercase tracking-wider">
+                        {tText('Verify detected details', 'Verifica i dati rilevati')}
+                      </h3>
                     </div>
                     <p className="text-[10px] text-orange-700 leading-tight">
-                      Abbiamo estratto i dati dalla mappa. <b>Controlla attentamente CAP e Provincia</b> poiché OpenStreetMap potrebbe non essere preciso al 100%. Modifica i campi se necessario.
+                      {tText(
+                        'We extracted data from the map. Double check Zip Code and Province/State since map suggestions might not be 100% precise.',
+                        'Abbiamo estratto i dati dalla mappa. Controlla attentamente CAP e Provincia poiché OpenStreetMap potrebbe non essere preciso al 100%. Modifica i campi se necessario.'
+                      )}
                     </p>
                   </div>
                 )}
@@ -1339,10 +1723,12 @@ export default function RegisterForm() {
                 <div ref={addressSectionRef} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="md:col-span-3 relative">
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-muted ml-1 italic">{t('address')} (Inizia a scrivere per i suggerimenti)</label>
+                      <label className="text-[10px] uppercase font-bold text-muted ml-1 italic">
+                        {tText('Street / Square & Number (Start typing for suggestions)', `Street / Square & Number (Inizia a scrivere per i suggerimenti)`)}
+                      </label>
                       <input 
                         type="text"
-                        placeholder="VIA / PIAZZA / CORSO..."
+                        placeholder={tText('STREET / SQUARE / AVENUE...', 'VIA / PIAZZA / CORSO...')}
                         className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.residenceAddress && !formData.plusCode && !(formData.latitude && formData.longitude)) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                         value={formData.residenceAddress}
                         onBlur={() => setTimeout(() => setAddressSuggestions([]), 200)}
@@ -1380,10 +1766,12 @@ export default function RegisterForm() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-muted ml-1">N. Civico</label>
+                    <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                      {tText('Civic No.', 'N. Civico')}
+                    </label>
                     <input 
                       type="text"
-                      placeholder="ES: 12/A"
+                      placeholder={tText('e.g. 12/A', 'ES: 12/A')}
                       className={`w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-blue outline-none transition-all`}
                       value={formData.residenceNumber}
                       onChange={e => setFormData({ ...formData, residenceNumber: e.target.value.toUpperCase() })}
@@ -1433,7 +1821,9 @@ export default function RegisterForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold text-muted ml-1">Posizione sulla Mappa (Trascina il Pin)</label>
+                    <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                      {tText('Map Position (Drag the Pin)', 'Posizione sulla Mappa (Trascina il Pin)')}
+                    </label>
                     <div className="h-48 w-full rounded-2xl overflow-hidden border border-gray-200 shadow-inner z-0">
                       <MapContainer 
                         center={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : [41.9028, 12.4964]} 
@@ -1452,7 +1842,11 @@ export default function RegisterForm() {
                       </MapContainer>
                     </div>
                     <p className="text-[9px] text-muted italic ml-1 flex items-center gap-1">
-                      <MapPin className="w-2 h-2" /> Clicca sulla mappa o trascina il pin per validare la tua posizione esatta.
+                      <MapPin className="w-2 h-2" /> 
+                      {tText(
+                        'Click on the map or drag the pin to set your exact location.', 
+                        'Clicca sulla mappa o trascina il pin per validare la tua posizione esatta.'
+                      )}
                     </p>
                   </div>
 
@@ -1462,7 +1856,7 @@ export default function RegisterForm() {
                       <input 
                         type="text"
                         readOnly
-                        placeholder="Automatico..."
+                        placeholder={tText('Automatic...', 'Automatico...')}
                         className="flex-1 px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 text-brand-blue text-sm font-mono outline-none"
                         value={formData.plusCode}
                       />
@@ -1474,7 +1868,7 @@ export default function RegisterForm() {
                         }}
                         disabled={isDetectingLocation}
                         className="px-4 py-3 bg-brand-blue/5 text-brand-blue rounded-xl hover:bg-brand-blue/10 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-wait"
-                        title="Rileva posizione attuale"
+                        title={tText('Detect current position', 'Rileva posizione attuale')}
                       >
                         {isDetectingLocation ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -1482,7 +1876,9 @@ export default function RegisterForm() {
                           <Navigation className="w-4 h-4" />
                         )}
                         <span className="text-[10px] font-bold uppercase hidden md:inline">
-                          {isDetectingLocation ? 'Rilevamento...' : 'Usa la mia posizione'}
+                          {isDetectingLocation 
+                            ? tText('Detecting...', 'Rilevamento...') 
+                            : tText('Use my position', 'Usa la mia posizione')}
                         </span>
                       </button>
                     </div>
@@ -1490,7 +1886,9 @@ export default function RegisterForm() {
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <label className="text-[10px] uppercase font-bold text-muted ml-1">Punti di Riferimento / Descrizione (Max 500 car.)</label>
+                      <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                        {tText('Reference Landmarks / Description (Max 500 chars)', 'Punti di Riferimento / Descrizione (Max 500 car.)')}
+                      </label>
                       {formData.locationDescription.length > 10 && (
                         <button 
                           type="button"
@@ -1505,14 +1903,19 @@ export default function RegisterForm() {
                           className="flex items-center gap-1 text-[9px] font-bold text-brand-gold uppercase hover:text-brand-blue transition-colors disabled:opacity-50"
                         >
                           <Wand2 className={`w-3 h-3 ${isEnhancing ? 'animate-spin' : ''}`} />
-                          {isEnhancing ? 'Miglioramento...' : 'Migliora con AI'}
+                          {isEnhancing 
+                            ? tText('Improving...', 'Miglioramento...') 
+                            : tText('Improve with AI', 'Migliora con AI')}
                         </button>
                       )}
                     </div>
                     <textarea 
                       maxLength={500}
                       rows={2}
-                      placeholder="Se l'indirizzo non è preciso, descrivi come raggiungerti (es. vicino alla chiesa, palazzo rosso...)"
+                      placeholder={tText(
+                        'If the address is not accurate, describe how to find you (e.g., near the red building, next to the church...)', 
+                        "Se l'indirizzo non è preciso, descrivi come raggiungerti (es. vicino alla chiesa, palazzo rosso...)"
+                      )}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-blue outline-none transition-all text-sm resize-none"
                       value={formData.locationDescription}
                       onChange={e => setFormData({ ...formData, locationDescription: e.target.value.toUpperCase() })}
@@ -1561,7 +1964,9 @@ export default function RegisterForm() {
             >
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif text-brand-blue">{t('contactData')}</h2>
-                <p className="text-muted text-sm italic">Informazioni di contatto ufficiali</p>
+                <p className="text-muted text-sm italic">
+                  {tText('Official contact information', 'Informazioni di contatto ufficiali')}
+                </p>
               </div>
 
               <div className="space-y-6">
@@ -1576,20 +1981,22 @@ export default function RegisterForm() {
                         <div className="w-8 h-8 bg-brand-blue/10 rounded-full flex items-center justify-center">
                           <Mail className="w-4 h-4 text-brand-blue" />
                         </div>
-                        <span className="text-sm font-medium text-brand-blue">Hai un indirizzo email?</span>
+                        <span className="text-sm font-medium text-brand-blue">
+                          {tText('Do you have an email address?', 'Hai un indirizzo email?')}
+                        </span>
                       </div>
                       <div className="flex gap-2">
                         <button 
                           onClick={() => setEmailSelection(true)}
                           className="px-4 py-2 bg-brand-blue text-white text-xs font-bold rounded-lg hover:bg-brand-blue/90 transition-all uppercase"
                         >
-                          Sì
+                          {tText('Yes', 'Sì')}
                         </button>
                         <button 
                           onClick={() => { setEmailSelection(false); setFormData({ ...formData, email: '' }); }}
                           className="px-4 py-2 bg-white border border-brand-blue/20 text-brand-blue text-xs font-bold rounded-lg hover:bg-brand-blue/5 transition-all uppercase"
                         >
-                          No
+                          {tText('No', 'No')}
                         </button>
                       </div>
                     </motion.div>
@@ -1601,7 +2008,7 @@ export default function RegisterForm() {
                           onClick={() => { setEmailSelection(null); setFormData({ ...formData, email: '' }); }}
                           className="text-[9px] uppercase font-bold text-brand-blue hover:underline"
                         >
-                          Cambia risposta
+                          {tText('Change answer', 'Cambia risposta')}
                         </button>
                       </div>
                       {emailSelection === true ? (
@@ -1611,12 +2018,12 @@ export default function RegisterForm() {
                             className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.email || !formData.email.includes('@')) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                             value={formData.email}
                             onChange={e => setFormData({ ...formData, email: e.target.value.toUpperCase() })}
-                            placeholder="INSERISCI LA TUA EMAIL..."
+                            placeholder={tText('ENTER YOUR EMAIL...', 'INSERISCI LA TUA EMAIL...')}
                           />
                         </motion.div>
                       ) : (
                         <div className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg text-[10px] text-muted italic">
-                          Nessun indirizzo email fornito.
+                          {tText('No email address provided.', 'Nessun indirizzo email fornito.')}
                         </div>
                       )}
                     </div>
@@ -1635,20 +2042,22 @@ export default function RegisterForm() {
                           <div className="w-8 h-8 bg-brand-blue/10 rounded-full flex items-center justify-center">
                             <Navigation className="w-4 h-4 text-brand-blue" />
                           </div>
-                          <span className="text-sm font-medium text-brand-blue">Hai un numero di telefono?</span>
+                          <span className="text-sm font-medium text-brand-blue">
+                            {tText('Do you have a phone number?', 'Hai un numero di telefono?')}
+                          </span>
                         </div>
                         <div className="flex gap-2">
                           <button 
                             onClick={() => setPhoneSelection(true)}
                             className="px-4 py-2 bg-brand-blue text-white text-xs font-bold rounded-lg hover:bg-brand-blue/90 transition-all uppercase"
                           >
-                            Sì
+                            {tText('Yes', 'Sì')}
                           </button>
                           <button 
                             onClick={() => { setPhoneSelection(false); setFormData({ ...formData, phone: '' }); }}
                             className="px-4 py-2 bg-white border border-brand-blue/20 text-brand-blue text-xs font-bold rounded-lg hover:bg-brand-blue/5 transition-all uppercase"
                           >
-                            No
+                            {tText('No', 'No')}
                           </button>
                         </div>
                       </motion.div>
@@ -1660,7 +2069,7 @@ export default function RegisterForm() {
                             onClick={() => { setPhoneSelection(null); setFormData({ ...formData, phone: '' }); }}
                             className="text-[9px] uppercase font-bold text-brand-blue hover:underline"
                           >
-                            Cambia risposta
+                            {tText('Change answer', 'Cambia risposta')}
                           </button>
                         </div>
                         {phoneSelection === true ? (
@@ -1710,7 +2119,9 @@ export default function RegisterForm() {
                                         p.prefix.includes(prefixSearch) ||
                                         p.code.toLowerCase().includes(prefixSearch.toLowerCase())
                                       ).length === 0 && (
-                                      <div className="px-4 py-2 text-[10px] text-muted italic">Nessun prefisso trovato</div>
+                                      <div className="px-4 py-2 text-[10px] text-muted italic">
+                                        {tText('No prefix found', 'Nessun prefisso trovato')}
+                                      </div>
                                     )}
                                   </motion.div>
                                 )}
@@ -1719,7 +2130,7 @@ export default function RegisterForm() {
                             <div className="w-2/3">
                               <input 
                                 type="tel"
-                                placeholder="NUMERO..."
+                                placeholder={tText('NUMBER...', 'NUMERO...')}
                                 className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && !formData.phoneNumber ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                                 value={formData.phoneNumber}
                                 onChange={e => setFormData({ ...formData, phoneNumber: e.target.value.toUpperCase() })}
@@ -1728,7 +2139,7 @@ export default function RegisterForm() {
                           </motion.div>
                         ) : (
                           <div className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg text-[10px] text-muted italic">
-                            Nessun numero di telefono fornito.
+                            {tText('No phone number provided.', 'Nessun numero di telefono fornito.')}
                           </div>
                         )}
                       </div>
@@ -1746,29 +2157,38 @@ export default function RegisterForm() {
                     <div className="bg-orange-50 p-4 rounded-xl border border-orange-200 space-y-2">
                       <div className="flex items-center gap-2 text-orange-600">
                         <AlertCircle className="w-4 h-4" />
-                        <h4 className="text-[10px] font-bold uppercase">Credenziali di Accesso</h4>
+                        <h4 className="text-[10px] font-bold uppercase">
+                          {tText('Access Credentials', 'Credenziali di Accesso')}
+                        </h4>
                       </div>
                       <p className="text-[10px] text-orange-700 leading-tight">
-                        Non avendo fornito email o telefono, devi creare un <b>Nome Utente</b> e una <b>Password</b> per poter accedere al sistema in futuro.
+                        {tText(
+                          'Since you did not provide an email or phone number, you must create a Username and a Password to access the system in the future.', 
+                          'Non avendo fornito email o telefono, devi creare un Nome Utente e una Password per poter accedere al sistema in futuro.'
+                        )}
                       </p>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-muted ml-1">Nome Utente</label>
+                        <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                          {tText('Username', 'Nome Utente')}
+                        </label>
                         <input 
-                          type="text"
-                          placeholder="SCEGLI UN NOME UTENTE..."
-                          className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.username || formData.username.length < 4) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
-                          value={formData.username}
-                          onChange={e => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
+                           type="text"
+                           placeholder={tText('CHOOSE A USERNAME...', 'SCEGLI UN NOME UTENTE...')}
+                           className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.username || formData.username.length < 4) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
+                           value={formData.username}
+                           onChange={e => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-muted ml-1">Password</label>
+                        <label className="text-[10px] uppercase font-bold text-muted ml-1">
+                          {tText('Password', 'Password')}
+                        </label>
                         <input 
-                          type="password"
-                          placeholder="SCEGLI UNA PASSWORD..."
+                           type="password"
+                           placeholder={tText('CHOOSE A PASSWORD...', 'SCEGLI UNA PASSWORD...')}
                           className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${error && (!formData.password || formData.password.length < 6) ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-brand-blue'}`}
                           value={formData.password}
                           onChange={e => setFormData({ ...formData, password: e.target.value })}
@@ -1851,6 +2271,23 @@ export default function RegisterForm() {
                 <p className="text-muted text-sm italic">{t('uploadId')}</p>
               </div>
 
+              <div className="p-4 bg-brand-blue/5 border border-brand-blue/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="space-y-1 text-center sm:text-left">
+                  <span className="text-[10px] uppercase font-bold text-brand-gold tracking-widest block">
+                    {tText('Reserved Citizen Code', 'Codice Cittadino Riservato')}
+                  </span>
+                  <p className="text-[11px] text-muted leading-tight">
+                    {tText(
+                      'This 16-digit alphanumeric code will uniquely identify your certificate and ID.',
+                      'Questo codice alfanumerico di 16 cifre identificherà in modo univoco il tuo certificato e ID.'
+                    )}
+                  </p>
+                </div>
+                <div className="px-4 py-2 bg-white border border-brand-gold/25 rounded-xl text-center shadow-sm shrink-0">
+                  <span className="font-mono text-xs font-bold text-brand-blue tracking-wider select-all">{formData.citizenCode}</span>
+                </div>
+              </div>
+
               <div className="space-y-4">
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('docType')}</label>
@@ -1867,104 +2304,409 @@ export default function RegisterForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('uploadFront')}</label>
-                    <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && !formData.documentFront ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
-                      <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
-                        <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-brand-blue truncate px-2">
-                          {formData.documentFront ? formData.documentFront.name : "Seleziona Fronte"}
-                        </p>
-                        <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
-                      </div>
-                      <input 
-                        type="file" 
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={async e => {
-                          const file = e.target.files?.[0] || null;
-                          if (file) {
-                            const hash = await calculateFileHash(file);
-                            setFormData({ ...formData, documentFront: file, documentHash: hash });
-                            if (file.type.startsWith('image/')) {
-                              setPreviews(prev => ({ ...prev, front: URL.createObjectURL(file) }));
-                            }
-                          } else {
-                            setFormData({ ...formData, documentFront: null, documentHash: '' });
-                            setPreviews(prev => ({ ...prev, front: null }));
-                          }
-                        }}
-                      />
-                      {previews.front && (
-                        <div className="mt-2 relative h-32 w-full rounded-lg overflow-hidden border border-brand-gold/20">
-                          <img src={previews.front} alt="Fronte" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                          <button 
-                            className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviews(prev => ({ ...prev, front: null }));
-                              setFormData(prev => ({ ...prev, documentFront: null, documentHash: '' }));
-                            }}
-                          >
-                            <AlertCircle className="w-3 h-3" />
-                          </button>
-                        </div>
+                    <div className="flex justify-between items-center px-1">
+                      <label className="text-[10px] uppercase font-bold text-muted">{t('uploadFront')}</label>
+                      {(!previews.front && cameraActiveType !== 'front') && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startCamera('front');
+                          }}
+                          className="text-[10px] font-bold text-brand-blue hover:text-brand-gold flex items-center gap-1 bg-brand-blue/5 px-2.5 py-1 rounded-lg transition-colors border border-brand-blue/10"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          {tText('Take Photo', 'Scatta Foto')}
+                        </button>
                       )}
                     </div>
+
+                    {cameraActiveType === 'front' ? (
+                      <div className="relative border-2 border-brand-gold rounded-2xl overflow-hidden h-48 bg-black flex flex-col justify-end">
+                        <video
+                          ref={videoFrontRef}
+                          autoPlay
+                          playsInline
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="relative z-10 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              captureDocumentPhoto('front');
+                            }}
+                            className="px-3.5 py-1.5 bg-brand-gold text-brand-blue text-[10px] font-bold rounded-lg shadow-md hover:bg-brand-gold/90 flex items-center gap-1"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            {tText('Capture', 'Scatta')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              stopCamera();
+                            }}
+                            className="px-3 py-1.5 bg-gray-800 text-white text-[10px] font-medium rounded-lg shadow-md hover:bg-gray-700"
+                          >
+                            {tText('Cancel', 'Annulla')}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && !formData.documentFront && !previews.front ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
+                        {!previews.front ? (
+                          <>
+                            <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
+                              <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-brand-blue truncate px-2">
+                                {tText('Select Front', 'Seleziona Fronte')}
+                              </p>
+                              <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
+                            </div>
+                            <input 
+                              type="file" 
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={async e => {
+                                const file = e.target.files?.[0] || null;
+                                if (file) {
+                                  const hash = await calculateFileHash(file);
+                                  setFormData({ ...formData, documentFront: file, documentHash: hash });
+                                  if (file.type.startsWith('image/')) {
+                                    setPreviews(prev => ({ ...prev, front: URL.createObjectURL(file) }));
+                                  }
+                                } else {
+                                  setFormData({ ...formData, documentFront: null, documentHash: '' });
+                                  setPreviews(prev => ({ ...prev, front: null }));
+                                }
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <div className="relative h-32 w-full rounded-lg overflow-hidden border border-brand-gold/20">
+                            <img src={previews.front} alt="Fronte" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <button 
+                              type="button"
+                              className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 hover:scale-105 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviews(prev => ({ ...prev, front: null }));
+                                setFormData(prev => ({ ...prev, documentFront: null, documentHash: '' }));
+                              }}
+                            >
+                              <AlertCircle className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        {previews.front && !formData.documentFront && previews.front.startsWith('data:') && (
+                          <p className="text-[9px] text-green-600 font-medium">
+                            {tText('Snapshot saved in memory', 'Istantanea salvata in memoria')}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-bold text-muted ml-1">{t('uploadBack')}</label>
-                    <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && formData.documentType !== 'PASSPORT' && !formData.documentBack ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
-                      <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
-                        <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-medium text-brand-blue truncate px-2">
-                          {formData.documentBack ? formData.documentBack.name : "Seleziona Retro"}
-                        </p>
-                        <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
-                      </div>
-                      <input 
-                        type="file" 
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={e => {
-                          const file = e.target.files?.[0] || null;
-                          if (file) {
-                            setFormData({ ...formData, documentBack: file });
-                            if (file.type.startsWith('image/')) {
-                              setPreviews(prev => ({ ...prev, back: URL.createObjectURL(file) }));
-                            }
-                          } else {
-                            setFormData({ ...formData, documentBack: null });
-                            setPreviews(prev => ({ ...prev, back: null }));
-                          }
-                        }}
-                      />
-                      {previews.back && (
-                        <div className="mt-2 relative h-32 w-full rounded-lg overflow-hidden border border-brand-gold/20">
-                          <img src={previews.back} alt="Retro" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                          <button 
-                            className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviews(prev => ({ ...prev, back: null }));
-                              setFormData(prev => ({ ...prev, documentBack: null }));
-                            }}
-                          >
-                            <AlertCircle className="w-3 h-3" />
-                          </button>
-                        </div>
+                    <div className="flex justify-between items-center px-1">
+                      <label className="text-[10px] uppercase font-bold text-muted">{t('uploadBack')}</label>
+                      {(!previews.back && cameraActiveType !== 'back' && formData.documentType !== 'PASSPORT') && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startCamera('back');
+                          }}
+                          className="text-[10px] font-bold text-brand-blue hover:text-brand-gold flex items-center gap-1 bg-brand-blue/5 px-2.5 py-1 rounded-lg transition-colors border border-brand-blue/10"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          {tText('Take Photo', 'Scatta Foto')}
+                        </button>
                       )}
                     </div>
+
+                    {cameraActiveType === 'back' ? (
+                      <div className="relative border-2 border-brand-gold rounded-2xl overflow-hidden h-48 bg-black flex flex-col justify-end">
+                        <video
+                          ref={videoBackRef}
+                          autoPlay
+                          playsInline
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="relative z-10 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              captureDocumentPhoto('back');
+                            }}
+                            className="px-3.5 py-1.5 bg-brand-gold text-brand-blue text-[10px] font-bold rounded-lg shadow-md hover:bg-brand-gold/90 flex items-center gap-1"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            {tText('Capture', 'Scatta')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              stopCamera();
+                            }}
+                            className="px-3 py-1.5 bg-gray-800 text-white text-[10px] font-medium rounded-lg shadow-md hover:bg-gray-700"
+                          >
+                            {tText('Cancel', 'Annulla')}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && formData.documentType !== 'PASSPORT' && !formData.documentBack && !previews.back ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
+                        {!previews.back ? (
+                          <>
+                            <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
+                              <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-brand-blue truncate px-2">
+                                {tText('Select Back', 'Seleziona Retro')}
+                              </p>
+                              <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, PDF</p>
+                            </div>
+                            <input 
+                              type="file" 
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={e => {
+                                const file = e.target.files?.[0] || null;
+                                if (file) {
+                                  setFormData({ ...formData, documentBack: file });
+                                  if (file.type.startsWith('image/')) {
+                                    setPreviews(prev => ({ ...prev, back: URL.createObjectURL(file) }));
+                                  }
+                                } else {
+                                  setFormData({ ...formData, documentBack: null });
+                                  setPreviews(prev => ({ ...prev, back: null }));
+                                }
+                              }}
+                            />
+                          </>
+                        ) : (
+                          <div className="relative h-32 w-full rounded-lg overflow-hidden border border-brand-gold/20">
+                            <img src={previews.back} alt="Retro" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <button 
+                              type="button"
+                              className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 hover:scale-105 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviews(prev => ({ ...prev, back: null }));
+                                setFormData(prev => ({ ...prev, documentBack: null }));
+                              }}
+                            >
+                              <AlertCircle className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                        {previews.back && !formData.documentBack && previews.back.startsWith('data:') && (
+                          <p className="text-[9px] text-green-600 font-medium">
+                            {tText('Snapshot saved in memory', 'Istantanea salvata in memoria')}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* Foto Tessera Identificativa */}
+              <div className="border border-brand-gold/15 bg-slate-50/50 p-6 rounded-2xl space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-brand-blue block">
+                    {tText('Passport & ID Card Photo (ID Card + NWS Passport)', 'Foto Tessera per Documenti (Carta di Identità + Passaporto NWS)')}
+                  </label>
+                  <p className="text-xs text-muted">
+                    {tText(
+                      'Take a real-time selfie or upload a formal photo from your device. The photo will be saved along with your identity documents.',
+                      "Scatta un autoscatto (selfie) in tempo reale oppure carica una foto formale dal tuo dispositivo. La foto verrà posizionata nella stessa cartella dei documenti."
+                    )}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => { setPhotoMode('camera'); stopCamera(); }}
+                    className={`flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${
+                      photoMode === 'camera'
+                        ? 'bg-brand-blue text-white shadow-sm'
+                        : 'text-brand-blue/60 hover:text-brand-blue hover:bg-gray-200'
+                    }`}
+                  >
+                    <Camera className="w-4 h-4" />
+                    {tText('Camera Selfie', 'Autoscatto Camera')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPhotoMode('upload'); stopCamera(); }}
+                    className={`flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${
+                      photoMode === 'upload'
+                        ? 'bg-brand-blue text-white shadow-sm'
+                        : 'text-brand-blue/60 hover:text-brand-blue hover:bg-gray-200'
+                    }`}
+                  >
+                    <Upload className="w-4 h-4" />
+                    {tText('Upload Photo File', 'Carica File Foto')}
+                  </button>
+                </div>
+
+                {photoMode === 'camera' && (
+                  <div className="space-y-4">
+                    <div className="relative aspect-[3/4] max-w-[280px] mx-auto bg-slate-100 rounded-2xl overflow-hidden border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center">
+                      {previews.photo ? (
+                        <div className="relative w-full h-full">
+                          <img
+                            src={previews.photo}
+                            alt="Foto tessera"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviews(prev => ({ ...prev, photo: null }));
+                              startCamera();
+                            }}
+                            className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-2 bg-brand-blue text-white text-xs font-bold rounded-xl shadow-lg hover:bg-brand-blue/90"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            {tText('Retake Photo', 'Riprova Scatto')}
+                          </button>
+                        </div>
+                      ) : isCameraActive ? (
+                        <div className="relative w-full h-full bg-black">
+                          <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover scale-x-[-1]"
+                          />
+                          <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={capturePhoto}
+                              className="px-5 py-2.5 bg-brand-gold text-brand-blue text-xs font-bold rounded-xl shadow-lg hover:bg-brand-gold/90 flex items-center gap-1.5 animate-pulse"
+                            >
+                              <Camera className="w-4 h-4" />
+                              {tText('Take Photo', 'Scatta Ora')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={stopCamera}
+                              className="px-4 py-2.5 bg-gray-800/80 text-white text-xs font-medium rounded-xl shadow-lg hover:bg-gray-800"
+                            >
+                              {tText('Cancel', 'Annulla')}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-6 space-y-4">
+                          <div className="w-16 h-16 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto text-brand-blue">
+                            <Camera className="w-8 h-8" />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs font-semibold text-brand-blue">
+                              {tText('Camera Inactive', 'Fotocamera Inattiva')}
+                            </p>
+                            <p className="text-[10px] text-muted max-w-[200px] leading-normal">
+                              {tText(
+                                'Click below to enable your webcam and take a selfie.',
+                                'Clicca sotto per abilitare la webcam ed eseguire il tuo autoscatto.'
+                              )}
+                            </p>
+                          </div>
+                          {cameraError && (
+                            <p className="text-[10px] text-red-500 font-medium px-2">{cameraError}</p>
+                          )}
+                          <button
+                            type="button"
+                            onClick={startCamera}
+                            className="px-4 py-2 bg-brand-gold text-brand-blue text-xs font-bold rounded-xl shadow-sm hover:bg-brand-gold/90 inline-flex items-center gap-1.5"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            {tText('Enable Camera', 'Attiva Fotocamera')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {photoMode === 'upload' && (
+                  <div className="space-y-2">
+                    <div className={`border-2 border-dashed rounded-2xl p-6 text-center space-y-3 hover:border-brand-gold transition-colors cursor-pointer group relative ${error && !formData.documentPhoto && !previews.photo ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
+                      <div className="w-12 h-12 bg-brand-blue/5 rounded-full flex items-center justify-center mx-auto group-hover:bg-brand-gold/10 transition-colors">
+                        <Upload className="w-6 h-6 text-brand-blue group-hover:text-brand-gold" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-brand-blue truncate px-2">
+                          {formData.documentPhoto 
+                            ? formData.documentPhoto.name 
+                            : tText('Select Passport Photo', 'Seleziona Foto Tessera')}
+                        </p>
+                        <p className="text-[9px] text-muted uppercase tracking-tighter">PNG, JPG, JPEG</p>
+                      </div>
+                      <input 
+                        type="file" 
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        accept=".jpg,.jpeg,.png"
+                        onChange={e => {
+                          const file = e.target.files?.[0] || null;
+                          if (file) {
+                            setFormData({ ...formData, documentPhoto: file });
+                            setPreviews(prev => ({ ...prev, photo: URL.createObjectURL(file) }));
+                          } else {
+                            setFormData({ ...formData, documentPhoto: null });
+                            setPreviews(prev => ({ ...prev, photo: null }));
+                          }
+                        }}
+                      />
+                      {previews.photo && !formData.documentPhoto && previews.photo.startsWith('data:') && (
+                        <p className="text-[10px] text-green-600 font-medium">
+                          {tText('Webcam snapshot saved in memory', 'Scatto webcam caricato in memoria')}
+                        </p>
+                      )}
+                      {previews.photo && (
+                        <div className="mt-2 relative h-48 w-36 mx-auto rounded-lg overflow-hidden border border-brand-gold/20">
+                          <img 
+                            src={previews.photo} 
+                            alt={tText('Passport Photo Preview', 'Anteprima Foto Tessera')} 
+                            className="w-full h-full object-cover" 
+                            referrerPolicy="no-referrer" 
+                          />
+                          <button 
+                            type="button"
+                            className="absolute top-1 right-1 bg-white/80 p-1 rounded-full text-red-500 hover:scale-105 transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviews(prev => ({ ...prev, photo: null }));
+                              setFormData(prev => ({ ...prev, documentPhoto: null }));
+                            }}
+                          >
+                            <AlertCircle className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="p-4 bg-brand-parchment/50 rounded-xl border border-brand-gold/20 text-[11px] text-brand-blue/70">
-                <strong>Nota del Garante:</strong> I dati raccolti verranno utilizzati esclusivamente per la gestione dell'Anagrafe del New World State e protetti secondo i più alti standard di crittografia mondiale.
+                <strong>{tText('Privacy Notice:', 'Nota del Garante:')}</strong>{' '}
+                {tText(
+                  'The collected data will be processed solely for the New World State Civil Registry, protected under the highest global encryption standards.',
+                  "I dati raccolti verranno utilizzati esclusivamente per la gestione dell'Anagrafe del New World State e protetti secondo i più alti standard di crittografia mondiale."
+                )}
               </div>
 
               <div className="flex justify-between pt-4 border-t border-gray-50 flex-col gap-3">
@@ -1992,7 +2734,7 @@ export default function RegisterForm() {
                     disabled={isSubmitting}
                     className="px-12 py-4 bg-brand-gold text-brand-blue rounded-xl font-bold hover:bg-brand-gold/90 transition-all shadow-lg text-lg uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? 'Inviando...' : t('submit')}
+                    {isSubmitting ? tText('Submitting...', 'Inviando...') : t('submit')}
                   </button>
                 </div>
               </div>

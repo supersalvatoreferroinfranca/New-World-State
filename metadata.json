@@ -3,6 +3,7 @@
   "description": "Una piattaforma per la gestione di una comunità mondiale organizzata come uno stato sovrano digitale, con sistemi di registrazione, voto e messaggistica.",
   "requestFramePermissions": [
     "camera",
+    "microphone",
     "geolocation"
   ],
   "majorCapabilities": [
