@@ -80,42 +80,36 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
             >
               <div>
                 {/* Image / Banner */}
-                {art.images && art.images.length > 0 ? (
-                  <div className="aspect-video w-full overflow-hidden bg-slate-900 relative">
-                    <img
-                      src={art.images[0].url}
-                      alt={art.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                    />
-                    <span
-                      className="absolute top-3 left-3 text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white shadow-md"
-                      style={{ backgroundColor: cat?.color || '#0a1c3e' }}
-                    >
-                      {cat?.name || 'Notizia'}
-                    </span>
-                    {art.isFeatured && (
-                      <span className="absolute top-3 right-3 bg-brand-gold text-[#0a1c3e] text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow">
-                        <Star className="w-3 h-3 fill-current" />
-                        {tText('Featured', 'In Evidenza')}
+                {(() => {
+                  const coverImageUrl = (art.images && art.images.length > 0 && art.images[0]?.url)
+                    ? art.images[0].url
+                    : 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=800&q=80';
+
+                  return (
+                    <div className="aspect-video w-full overflow-hidden bg-slate-900 relative">
+                      <img
+                        src={coverImageUrl}
+                        alt={stripFormattingSymbols(art.title)}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=800&q=80';
+                        }}
+                      />
+                      <span
+                        className="absolute top-3 left-3 text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white shadow-md border border-white/20 z-10"
+                        style={{ backgroundColor: cat?.color || '#0a1c3e' }}
+                      >
+                        {cat?.name || 'Notizia'}
                       </span>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between">
-                    <span
-                      className="text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white"
-                      style={{ backgroundColor: cat?.color || '#0a1c3e' }}
-                    >
-                      {cat?.name || 'Notizia'}
-                    </span>
-                    {art.videos && art.videos.length > 0 && (
-                      <span className="text-[10px] bg-[#0a1c3e] text-white px-2 py-0.5 rounded-md flex items-center gap-1 font-tech">
-                        <Video className="w-3 h-3 text-brand-gold" />
-                        Video
-                      </span>
-                    )}
-                  </div>
-                )}
+                      {art.isFeatured && (
+                        <span className="absolute top-3 right-3 bg-brand-gold text-[#0a1c3e] text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md z-10">
+                          <Star className="w-3 h-3 fill-current" />
+                          {tText('Featured', 'In Evidenza')}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Content */}
                 <div className="p-5 space-y-3">

@@ -9,7 +9,8 @@ import {
   generateSlug,
   generateArticleWithAI,
   searchArticleMedia,
-  MediaSearchResult
+  MediaSearchResult,
+  RELIABLE_NEWS_SOURCES
 } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatArticleContentToHtml, stripFormattingSymbols, analyzeArticleSeoAndAi } from '../../utils/textFormatter';
@@ -36,7 +37,11 @@ import {
   Play,
   ExternalLink,
   Eye,
-  Globe
+  Globe,
+  CheckSquare,
+  Square,
+  ShieldCheck,
+  Star
 } from 'lucide-react';
 
 interface ArticleFormModalProps {
@@ -91,9 +96,37 @@ export default function ArticleFormModal({
   // AI Generator States
   const [aiTopic, setAiTopic] = useState('');
   const [aiTone, setAiTone] = useState('Giornalistico Solenne, Ufficiale ed Elegante');
+  const [selectedSources, setSelectedSources] = useState<string[]>(
+    RELIABLE_NEWS_SOURCES.filter(s => s.defaultSelected).map(s => s.name)
+  );
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiSuccessMessage, setAiSuccessMessage] = useState<string | null>(null);
   const [showAiBox, setShowAiBox] = useState(true);
+
+  const handleToggleSource = (sourceName: string) => {
+    if (selectedSources.includes(sourceName)) {
+      setSelectedSources(selectedSources.filter(s => s !== sourceName));
+    } else {
+      setSelectedSources([...selectedSources, sourceName]);
+    }
+  };
+
+  const handleToggleAllSources = () => {
+    if (selectedSources.length === RELIABLE_NEWS_SOURCES.length) {
+      setSelectedSources([]);
+    } else {
+      setSelectedSources(RELIABLE_NEWS_SOURCES.map(s => s.name));
+    }
+  };
+
+  const handleSetAsCoverImage = (indexToSet: number) => {
+    if (indexToSet <= 0 || indexToSet >= images.length) return;
+    setImages(prev => {
+      const selected = prev[indexToSet];
+      const remaining = prev.filter((_, i) => i !== indexToSet);
+      return [selected, ...remaining];
+    });
+  };
 
   // Automatic Media Search States (Unsplash, Pexels, Pixabay, YouTube)
   const [searchQuery, setSearchQuery] = useState('');
@@ -175,7 +208,8 @@ export default function ArticleFormModal({
       const result = await generateArticleWithAI(
         aiTopic.trim(),
         selectedCat?.name,
-        aiTone
+        aiTone,
+        selectedSources
       );
 
       if (result.title) {
@@ -631,6 +665,79 @@ export default function ArticleFormModal({
                     placeholder={tText('e.g. Inauguration of the sovereign digital business registry with tax relief for community members and open audit systems...', 'es. Apertura delle iscrizioni al nuovo registro delle imprese digitali con incentivi per la sostenibilità e controlli trasparenti...')}
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-brand-gold outline-none resize-none leading-relaxed"
                   />
+                </div>
+
+                {/* Trustworthy News Sources Checkboxes Box */}
+                <div className="bg-white/10 border border-white/20 rounded-2xl p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/15 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span className="text-xs font-bold text-brand-gold uppercase tracking-wider">
+                        {tText('Trustworthy & Accredited Information Sources', 'Fonti Informative Accreditate & Affidabili')}
+                      </span>
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">
+                        {selectedSources.length}/{RELIABLE_NEWS_SOURCES.length} {tText('Active', 'Attive')}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleToggleAllSources}
+                      className="text-[11px] font-bold text-amber-300 hover:text-white flex items-center gap-1.5 cursor-pointer bg-white/10 px-2.5 py-1 rounded-lg border border-amber-300/30 transition self-start sm:self-auto"
+                    >
+                      {selectedSources.length === RELIABLE_NEWS_SOURCES.length ? (
+                        <>
+                          <Square className="w-3.5 h-3.5 text-amber-300" />
+                          <span>{tText('Deselect All Sources', 'Deseleziona Tutte')}</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckSquare className="w-3.5 h-3.5 text-amber-300" />
+                          <span>{tText('Select All Sources', 'Seleziona Tutte')}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-slate-300 leading-normal">
+                    {tText('Select which accredited media agencies, Vatican press offices, and sovereign press organs the AI will analyze to draft the article with accuracy and diplomatic rigor.', 'Seleziona le fonti e le agenzie di stampa accreditate (es. Fonti Vaticane, Reuters, AP, ANSA, AFP, etc.) da cui l\'IA attingerà per elaborare l\'articolo con il massimo rigore informativo.')}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+                    {RELIABLE_NEWS_SOURCES.map((source) => {
+                      const isSelected = selectedSources.includes(source.name);
+                      return (
+                        <label
+                          key={source.id}
+                          onClick={() => handleToggleSource(source.name)}
+                          className={`group flex items-start gap-2.5 p-2.5 rounded-xl border transition cursor-pointer select-none ${
+                            isSelected
+                              ? 'bg-amber-400/20 border-amber-300/80 text-white shadow-sm'
+                              : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                          }`}
+                        >
+                          <div className="pt-0.5 shrink-0">
+                            {isSelected ? (
+                              <CheckSquare className="w-4 h-4 text-amber-300" />
+                            ) : (
+                              <Square className="w-4 h-4 text-slate-500 group-hover:text-slate-300" />
+                            )}
+                          </div>
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-bold text-white group-hover:text-amber-200 leading-tight">
+                              {source.name}
+                            </p>
+                            <p className="text-[9px] font-mono text-amber-300/90 leading-tight">
+                              {source.code}
+                            </p>
+                            <p className="text-[9px] text-slate-300/80 line-clamp-2 leading-tight font-sans">
+                              {source.description}
+                            </p>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -1175,31 +1282,81 @@ export default function ArticleFormModal({
               </div>
             </div>
 
-            {/* Images Preview Grid */}
+            {/* Images Preview Grid with Cover Selector */}
             {images.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-                {images.map((img, idx) => (
-                  <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-300 bg-black/5 aspect-video">
-                    <img
-                      src={img.url}
-                      alt={img.caption || 'Media'}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition p-2 flex flex-col justify-between text-white">
-                      <p className="text-[10px] line-clamp-2">{img.caption}</p>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(idx)}
-                        className="bg-red-600 text-white p-1 rounded-md text-[10px] self-end cursor-pointer"
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between text-xs font-bold text-[#0a1c3e]">
+                  <span>{tText('Attached Images', 'Immagini Allegate')} ({images.length}):</span>
+                  <span className="text-[10px] text-slate-500 font-normal">
+                    {tText('The first image is used as the Cover Image / Card Preview.', 'La prima immagine è utilizzata come Copertina Principale / Anteprima Scheda.')}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {images.map((img, idx) => {
+                    const isCover = idx === 0;
+                    return (
+                      <div
+                        key={idx}
+                        className={`relative group rounded-2xl overflow-hidden border transition flex flex-col justify-between ${
+                          isCover
+                            ? 'border-brand-gold ring-2 ring-brand-gold/60 bg-amber-50/50 shadow-md'
+                            : 'border-slate-300 bg-white hover:border-[#0a1c3e]'
+                        }`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                        <div className="relative aspect-video bg-slate-900 overflow-hidden">
+                          <img
+                            src={img.url}
+                            alt={img.caption || 'Media'}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=400&q=80';
+                            }}
+                          />
+                          {isCover && (
+                            <span className="absolute top-1.5 left-1.5 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-brand-gold text-[#0a1c3e] shadow-md flex items-center gap-1 border border-amber-300 z-10">
+                              <Star className="w-3 h-3 fill-current" />
+                              <span>Copertina</span>
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="p-2 space-y-1.5">
+                          <p className="text-[10px] font-medium text-slate-700 line-clamp-1" title={img.caption}>
+                            {img.caption || tText('No caption', 'Nessuna didascalia')}
+                          </p>
+
+                          <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-100">
+                            {!isCover ? (
+                              <button
+                                type="button"
+                                onClick={() => handleSetAsCoverImage(idx)}
+                                className="text-[10px] bg-amber-100 hover:bg-brand-gold text-[#0a1c3e] font-bold px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1 border border-amber-200"
+                              >
+                                <Star className="w-3 h-3 text-[#0a1c3e]" />
+                                <span>{tText('Set Cover', 'Imposta Copertina')}</span>
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                                <Check className="w-3 h-3" />
+                                <span>{tText('Main Preview', 'In Anteprima')}</span>
+                              </span>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(idx)}
+                              className="p-1 rounded-md bg-red-100 hover:bg-red-600 text-red-600 hover:text-white transition cursor-pointer ml-auto"
+                              title={tText('Remove Image', 'Rimuovi Immagine')}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

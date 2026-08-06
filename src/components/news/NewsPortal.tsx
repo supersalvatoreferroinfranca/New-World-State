@@ -529,54 +529,44 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   className="group bg-white border border-slate-200 hover:border-[#0a1c3e]/40 rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 cursor-pointer flex flex-col justify-between"
                 >
                     {/* Media Banner */}
-                  {art.images && art.images.length > 0 ? (
-                    <div className="aspect-video w-full overflow-hidden bg-slate-100 relative">
-                      <img
-                        src={art.images[0].url}
-                        alt={art.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      />
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
-                        <span
-                          className="text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white shadow"
-                          style={{ backgroundColor: cat?.color || '#0a1c3e' }}
-                        >
-                          {cat?.name || 'Notizia'}
-                        </span>
-                        {renderStatusBadge(art.status)}
-                      </div>
-                      <div className="absolute top-3 right-3">
-                        <span className="text-[10px] bg-[#0a1c3e]/90 text-brand-gold px-2.5 py-1 rounded-full font-tech flex items-center gap-1 backdrop-blur-sm border border-brand-gold/40 shadow">
-                          <Volume2 className="w-3 h-3 text-brand-gold animate-pulse" />
-                          <span>TTS</span>
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span
-                          className="text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white"
-                          style={{ backgroundColor: cat?.color || '#0a1c3e' }}
-                        >
-                          {cat?.name || 'Notizia'}
-                        </span>
-                        {renderStatusBadge(art.status)}
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[10px] bg-[#0a1c3e] text-brand-gold px-2 py-0.5 rounded-md flex items-center gap-1 font-tech">
-                          <Volume2 className="w-3 h-3 text-brand-gold" />
-                          TTS
-                        </span>
-                        {art.videos && art.videos.length > 0 && (
-                          <span className="text-[10px] bg-[#0a1c3e] text-white px-2 py-0.5 rounded-md flex items-center gap-1 font-tech shrink-0">
-                            <Video className="w-3 h-3 text-brand-gold" />
-                            Video
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                    {(() => {
+                      const coverImageUrl = (art.images && art.images.length > 0 && art.images[0]?.url)
+                        ? art.images[0].url
+                        : 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=800&q=80';
+
+                      return (
+                        <div className="aspect-video w-full overflow-hidden bg-slate-900 relative">
+                          <img
+                            src={coverImageUrl}
+                            alt={stripFormattingSymbols(art.title)}
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=800&q=80';
+                            }}
+                          />
+                          <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap z-10">
+                            <span
+                              className="text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white shadow-md border border-white/20"
+                              style={{ backgroundColor: cat?.color || '#0a1c3e' }}
+                            >
+                              {cat?.name || 'Notizia'}
+                            </span>
+                            {renderStatusBadge(art.status)}
+                          </div>
+                          <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+                            <span className="text-[10px] bg-[#0a1c3e]/90 text-brand-gold px-2.5 py-1 rounded-full font-tech flex items-center gap-1 backdrop-blur-md border border-brand-gold/40 shadow-md">
+                              <Volume2 className="w-3 h-3 text-brand-gold animate-pulse" />
+                              <span>TTS</span>
+                            </span>
+                            {art.videos && art.videos.length > 0 && (
+                              <span className="text-[10px] bg-red-600/90 text-white px-2 py-1 rounded-full font-tech flex items-center gap-1 backdrop-blur-md border border-red-400/40 shadow-md">
+                                <Video className="w-3 h-3 text-white" />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                   {/* Body Info */}
                   <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">

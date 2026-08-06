@@ -5138,35 +5138,46 @@ Restituisci unicamente un array JSON di oggetti con i campi:
     // =========================================================================
     apiRouter.post('/news/ai-generate', async (req, res) => {
       try {
-        const { topic, categoryName, tone } = req.body;
+        const { topic, categoryName, tone, sources } = req.body;
         const topicQuery = topic || req.body.prompt;
         if (!topicQuery || typeof topicQuery !== 'string' || !topicQuery.trim()) {
           return res.status(400).json({ success: false, message: 'Argomento o tema dell\'articolo non specificato.' });
         }
 
+        const selectedSourcesList = Array.isArray(sources) && sources.length > 0 
+          ? sources 
+          : ['Fonti Vaticane / Vatican News', 'Reuters', 'Associated Press (AP)', 'ANSA', 'Agence France-Presse (AFP)', 'Ufficio Stampa NWS'];
+
         const genAI = getGenAIClient();
 
         const systemPrompt = `
 Sei il Redattore Capo del Giornale di Stato e dell'Organo di Stampa Sovrana di New World State (NWS).
-Il tuo compito è scrivere un articolo di cronaca o approfondimento di altissima qualità, formattato in modo pulito, leggero, elegante e perfettamente leggibile, senza alcun simbolo di formattazione grezzo.
+Il tuo compito è scrivere un articolo di cronaca o approfondimento di altissima qualità, basato su fonti informative accreditate ed affidabili, formattato in modo pulito, leggero, elegante e perfettamente leggibile, senza alcun simbolo di formattazione grezzo.
+
+FONTI INFORMATIVE ACCREDITATE DI RIFERIMENTO SELEZIONATE DALL'UTENTE:
+${selectedSourcesList.map(s => `- ${s}`).join('\n')}
 
 REGOLE TASSATIVE DI FORMATTAZIONE E STILE:
-1. NESSUN SIMBOLO DI FORMATTAZIONE GREZZO O MARKDOWN:
+1. RIGORE INFORMATIVO BASATO SULLE FONTI SELEZIONATE:
+   - L'articolo deve basarsi su fatti, verifiche e diplomazia internazionale garantiti dalle fonti sopra citate (${selectedSourcesList.join(', ')}).
+   - Inserisci nel testo dell'articolo o nel paragrafo conclusivo la menzione esplicita delle analisi e del rigoroso riscontro informativo fornito da queste agenzie/organi ufficiali.
+2. NESSUN SIMBOLO DI FORMATTAZIONE GREZZO O MARKDOWN:
    - NON inserire MAI asterischi (es. **testo**, *testo*), hashtag (es. ### Titolo), o trattini markdown.
    - NON inserire mai tag HTML grezzi non chiusi o entità scappate nel testo.
-2. STRUTTURA DEL CONTENUTO ('content'):
+3. STRUTTURA DEL CONTENUTO ('content'):
    - Il contenuto 'content' deve essere formattato ESCLUSIVAMENTE con tag HTML semantici puliti e ben strutturati:
      - Utilizza <h3 class="font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2">...</h3> per i sottotitoli di paragrafo.
      - Utilizza <p class="leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans">...</p> per ciascun paragrafo di testo.
      - Utilizza <ul class="list-disc list-inside space-y-1.5 my-3 text-slate-700 pl-2"><li>...</li></ul> se ci sono elenchi puntati.
-     - Utilizza <blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-4 my-4 rounded-r-2xl italic text-slate-800 text-sm leading-relaxed">...</blockquote> per citazioni rilevanti.
+     - Utilizza <blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-4 my-4 rounded-r-2xl italic text-slate-800 text-sm leading-relaxed">...</blockquote> per citazioni o bollettini ufficiali.
    - I testi all'interno dei tag HTML devono essere puliti e privi di simboli di formattazione o asterischi.
-3. OTTIMIZZAZIONE SEO & AI:
+4. OTTIMIZZAZIONE SEO & AI:
    - 'title': Titolo d'impatto, giornalistico, chiaro, tra 40 e 70 caratteri. Nessuna virgoletta grezza o simbolo.
    - 'intro': Sommario/Meta description esplicativo di 2-3 frasi (80-160 caratteri). SOLO testo semplice pulito, senza tag HTML o simboli markdown.
-   - 'content': Articolo approfondito (almeno 300-600 parole), ben suddiviso con 3-5 sottotitoli <h3> per garantire un'impaginazione chiara, aria e massima leggibilità sia per lettori umani sia per motori di ricerca e LLM.
+   - 'content': Articolo approfondito (almeno 300-600 parole), ben suddiviso con 3-5 sottotitoli <h3> per garantire un'impaginazione chiara, aria e massima leggibilità sia per lettori umani sia per motori di ricerca e LLM. Include anche un piccolo box di citazione delle fonti accreditate alla fine.
    - 'tags': Array di 4-6 parole chiave altamente pertinenti per la SEO e la ricerca AI (es. ["Innovazione", "Riforme", "StatoSovrano", "Trasparenza"]).
    - 'suggestedCategory': Categoria pertinente per l'articolo.
+   - 'usedSources': Array con i nomi delle fonti utilizzate tra quelle selezionate.
 
 Rispondi ESCLUSIVAMENTE con un oggetto JSON valido privo di blocchi di codice markdown extra:
 {
@@ -5174,15 +5185,17 @@ Rispondi ESCLUSIVAMENTE con un oggetto JSON valido privo di blocchi di codice ma
   "intro": "Sommario pulito ed elegante per la meta description...",
   "content": "<p class=\"leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans\">Primo paragrafo dell'articolo...</p><h3 class=\"font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2\">Primo Sottotitolo</h3><p class=\"leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans\">Secondo paragrafo approfondito...</p>",
   "tags": ["ParolaChiave1", "ParolaChiave2", "ParolaChiave3"],
-  "suggestedCategory": "Cronaca Ufficiale"
+  "suggestedCategory": "Cronaca Ufficiale",
+  "usedSources": ["Fonti Vaticane / Vatican News", "Reuters"]
 }
 `;
 
         const userPrompt = `
-Genera l'articolo completo per:
+Genera l'articolo completo basandoti sulle fonti selezionate per:
 - Tema/Argomento: "${topicQuery.trim()}"
 - Categoria indicata: "${categoryName || 'Generale'}"
 - Tono della notizia: "${tone || 'Giornalistico e Formale'}"
+- Fonti da citare e consultare: ${selectedSourcesList.join(', ')}
 `;
 
         const response = await genAI.models.generateContent({

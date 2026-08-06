@@ -444,25 +444,103 @@ export function incrementArticleViews(id: string): void {
   saveArticles(updated);
 }
 
+export interface ReliableNewsSource {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  category: 'vatican' | 'international' | 'sovereign' | 'national';
+  defaultSelected: boolean;
+}
+
+export const RELIABLE_NEWS_SOURCES: ReliableNewsSource[] = [
+  {
+    id: 'vatican_news',
+    name: 'Fonti Vaticane / Vatican News',
+    code: 'Vatican.va • Sala Stampa Santa Sede',
+    description: 'Dichiarazioni diplomatiche, encicliche e comunicati ufficiali della Santa Sede',
+    category: 'vatican',
+    defaultSelected: true
+  },
+  {
+    id: 'reuters',
+    name: 'Reuters',
+    code: 'Thomson Reuters',
+    description: 'Agenzia di stampa multimediale internazionale per reportistica geopolitica ed economica',
+    category: 'international',
+    defaultSelected: true
+  },
+  {
+    id: 'ap',
+    name: 'Associated Press (AP)',
+    code: 'AP News Wire',
+    description: 'Agenzia di notizie globale indipendente per fatti di cronaca e affari internazionali',
+    category: 'international',
+    defaultSelected: true
+  },
+  {
+    id: 'afp',
+    name: 'Agence France-Presse (AFP)',
+    code: 'AFP Global',
+    description: 'Agenzia mondiale per verifiche sul campo, diplomazia e affari di stato',
+    category: 'international',
+    defaultSelected: true
+  },
+  {
+    id: 'ansa',
+    name: 'ANSA',
+    code: 'Agenzia Nazionale Stampa Associata',
+    description: 'Principale agenzia d’informazione primario e relazioni euro-mediterranee',
+    category: 'national',
+    defaultSelected: true
+  },
+  {
+    id: 'bbc',
+    name: 'BBC News / World Service',
+    code: 'BBC World Service',
+    description: 'Giornalismo d’inchiesta e reportage di approfondimento internazionale',
+    category: 'international',
+    defaultSelected: false
+  },
+  {
+    id: 'dw',
+    name: 'Deutsche Welle (DW)',
+    code: 'DW Media',
+    description: 'Emittente d’informazione per analisi di diritto internazionale e politiche europee',
+    category: 'international',
+    defaultSelected: false
+  },
+  {
+    id: 'nws_press',
+    name: 'Ufficio Stampa & Gazzetta Sovrana NWS',
+    code: 'New World State Official Press',
+    description: 'Organo di Stampa Sovrano, comunicati di governo e atti legislativi ed economici',
+    category: 'sovereign',
+    defaultSelected: true
+  }
+];
+
 export interface AiArticleGenerationResponse {
   title: string;
   intro: string;
   content: string;
   tags: string[];
   suggestedCategory?: string;
+  usedSources?: string[];
 }
 
 export async function generateArticleWithAI(
   topic: string,
   categoryName?: string,
-  tone?: string
+  tone?: string,
+  sources?: string[]
 ): Promise<AiArticleGenerationResponse> {
   const response = await safeFetch('/api/news/ai-generate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ topic, categoryName, tone })
+    body: JSON.stringify({ topic, categoryName, tone, sources })
   });
 
   const resData = await response.json();
