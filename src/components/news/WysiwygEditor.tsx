@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
+import { formatArticleContentToHtml } from '../../utils/textFormatter';
 import { 
   Bold, 
   Italic, 
@@ -35,10 +36,10 @@ export default function WysiwygEditor({
 
   // Sync value into contentEditable when not focused or initially
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      // Only set innerHTML if content actually differs to avoid cursor jump
-      if (!editorRef.current.contains(document.activeElement)) {
-        editorRef.current.innerHTML = value || '';
+    if (editorRef.current) {
+      const formattedHtml = formatArticleContentToHtml(value || '');
+      if (editorRef.current.innerHTML !== formattedHtml && !editorRef.current.contains(document.activeElement)) {
+        editorRef.current.innerHTML = formattedHtml;
       }
     }
   }, [value, isHtmlMode]);

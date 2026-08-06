@@ -4,6 +4,7 @@ import { getLatest3Articles, getCategories, incrementArticleViews } from '../../
 import ArticleDetailModal from './ArticleDetailModal';
 import { Newspaper, ArrowRight, Calendar, User, Eye, Video, Star, Sparkles } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
+import { stripFormattingSymbols } from '../../utils/textFormatter';
 
 interface HomepageNewsSectionProps {
   onGoToNews?: () => void;
@@ -124,11 +125,11 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
                   </div>
 
                   <h3 className="font-serif text-base font-bold text-[#0a1c3e] group-hover:text-brand-gold transition leading-snug line-clamp-2">
-                    {art.title}
+                    {stripFormattingSymbols(art.title)}
                   </h3>
 
                   <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
-                    {art.intro}
+                    {stripFormattingSymbols(art.intro)}
                   </p>
 
                   {/* Tags */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NewsArticle, NewsCategory, ArticleStatus } from '../../types/news';
+import { stripFormattingSymbols } from '../../utils/textFormatter';
 import { 
   getPublishedArticles, 
   getArticles, 
@@ -586,11 +587,11 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                       </div>
 
                       <h3 className="font-serif text-base font-bold text-[#0a1c3e] group-hover:text-brand-gold transition leading-snug line-clamp-2">
-                        {art.title}
+                        {stripFormattingSymbols(art.title)}
                       </h3>
 
                       <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
-                        {art.intro}
+                        {stripFormattingSymbols(art.intro)}
                       </p>
                     </div>
 

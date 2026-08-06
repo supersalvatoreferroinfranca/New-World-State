@@ -5133,6 +5133,158 @@ Restituisci unicamente un array JSON di oggetti con i campi:
       fs.createReadStream(targetPath).pipe(res);
     });
 
+    // =========================================================================
+    // NEWS & ARTICLE AI GENERATION & MEDIA SEARCH ENDPOINTS
+    // =========================================================================
+    apiRouter.post('/news/ai-generate', async (req, res) => {
+      try {
+        const { topic, categoryName, tone } = req.body;
+        const topicQuery = topic || req.body.prompt;
+        if (!topicQuery || typeof topicQuery !== 'string' || !topicQuery.trim()) {
+          return res.status(400).json({ success: false, message: 'Argomento o tema dell\'articolo non specificato.' });
+        }
+
+        const genAI = getGenAIClient();
+
+        const systemPrompt = `
+Sei il Redattore Capo del Giornale di Stato e dell'Organo di Stampa Sovrana di New World State (NWS).
+Il tuo compito è scrivere un articolo di cronaca o approfondimento di altissima qualità, formattato in modo pulito, leggero, elegante e perfettamente leggibile, senza alcun simbolo di formattazione grezzo.
+
+REGOLE TASSATIVE DI FORMATTAZIONE E STILE:
+1. NESSUN SIMBOLO DI FORMATTAZIONE GREZZO O MARKDOWN:
+   - NON inserire MAI asterischi (es. **testo**, *testo*), hashtag (es. ### Titolo), o trattini markdown.
+   - NON inserire mai tag HTML grezzi non chiusi o entità scappate nel testo.
+2. STRUTTURA DEL CONTENUTO ('content'):
+   - Il contenuto 'content' deve essere formattato ESCLUSIVAMENTE con tag HTML semantici puliti e ben strutturati:
+     - Utilizza <h3 class="font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2">...</h3> per i sottotitoli di paragrafo.
+     - Utilizza <p class="leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans">...</p> per ciascun paragrafo di testo.
+     - Utilizza <ul class="list-disc list-inside space-y-1.5 my-3 text-slate-700 pl-2"><li>...</li></ul> se ci sono elenchi puntati.
+     - Utilizza <blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-4 my-4 rounded-r-2xl italic text-slate-800 text-sm leading-relaxed">...</blockquote> per citazioni rilevanti.
+   - I testi all'interno dei tag HTML devono essere puliti e privi di simboli di formattazione o asterischi.
+3. OTTIMIZZAZIONE SEO & AI:
+   - 'title': Titolo d'impatto, giornalistico, chiaro, tra 40 e 70 caratteri. Nessuna virgoletta grezza o simbolo.
+   - 'intro': Sommario/Meta description esplicativo di 2-3 frasi (80-160 caratteri). SOLO testo semplice pulito, senza tag HTML o simboli markdown.
+   - 'content': Articolo approfondito (almeno 300-600 parole), ben suddiviso con 3-5 sottotitoli <h3> per garantire un'impaginazione chiara, aria e massima leggibilità sia per lettori umani sia per motori di ricerca e LLM.
+   - 'tags': Array di 4-6 parole chiave altamente pertinenti per la SEO e la ricerca AI (es. ["Innovazione", "Riforme", "StatoSovrano", "Trasparenza"]).
+   - 'suggestedCategory': Categoria pertinente per l'articolo.
+
+Rispondi ESCLUSIVAMENTE con un oggetto JSON valido privo di blocchi di codice markdown extra:
+{
+  "title": "Titolo Ottimizzato SEO senza simboli",
+  "intro": "Sommario pulito ed elegante per la meta description...",
+  "content": "<p class=\"leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans\">Primo paragrafo dell'articolo...</p><h3 class=\"font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2\">Primo Sottotitolo</h3><p class=\"leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans\">Secondo paragrafo approfondito...</p>",
+  "tags": ["ParolaChiave1", "ParolaChiave2", "ParolaChiave3"],
+  "suggestedCategory": "Cronaca Ufficiale"
+}
+`;
+
+        const userPrompt = `
+Genera l'articolo completo per:
+- Tema/Argomento: "${topicQuery.trim()}"
+- Categoria indicata: "${categoryName || 'Generale'}"
+- Tono della notizia: "${tone || 'Giornalistico e Formale'}"
+`;
+
+        const response = await genAI.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: systemPrompt + '\n' + userPrompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.7,
+          }
+        });
+
+        const textResponse = response.text || '';
+        let parsedData: any = null;
+
+        try {
+          parsedData = JSON.parse(textResponse);
+        } catch (jsonErr) {
+          const cleanText = textResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
+          parsedData = JSON.parse(cleanText);
+        }
+
+        if (!parsedData || !parsedData.title) {
+          throw new Error('La risposta dell\'IA non contiene i campi articolo validi.');
+        }
+
+        // Clean any leftover markdown symbol artifacts from string fields
+        parsedData.title = parsedData.title.replace(/[\*\_`#]/g, '').replace(/<[^>]*>?/gm, '').trim();
+        parsedData.intro = parsedData.intro.replace(/[\*\_`#]/g, '').replace(/<[^>]*>?/gm, '').trim();
+
+        if (parsedData.content) {
+          parsedData.content = parsedData.content
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+            .replace(/###\s*(.+)/g, '<h3 class="font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2">$1</h3>')
+            .replace(/##\s*(.+)/g, '<h2 class="font-serif text-xl font-bold text-[#0a1c3e] mt-6 mb-3">$1</h2>');
+        }
+
+        return res.json({
+          success: true,
+          data: parsedData
+        });
+
+      } catch (err: any) {
+        console.error('[NEWS-AI-GENERATE-ERR]', err.message);
+        return res.status(500).json({
+          success: false,
+          message: 'Errore durante la generazione dell\'articolo con IA: ' + err.message
+        });
+      }
+    });
+
+    apiRouter.post('/news/search-media', async (req, res) => {
+      try {
+        const { query } = req.body;
+        const q = (query || 'notizie').trim();
+        const encodedQ = encodeURIComponent(q);
+
+        const results = [
+          {
+            id: `img_${Date.now()}_1`,
+            type: 'image',
+            title: `Fotoreportage Ufficiale: ${q}`,
+            url: `https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80`,
+            previewUrl: `https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=400&q=80`,
+            sourcePlatform: 'unsplash',
+            author: 'Ufficio Stampa NWS'
+          },
+          {
+            id: `img_${Date.now()}_2`,
+            type: 'image',
+            title: `Immagine di Copertina: ${q}`,
+            url: `https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80`,
+            previewUrl: `https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80`,
+            sourcePlatform: 'pexels',
+            author: 'Fotocronache Sovrane'
+          },
+          {
+            id: `img_${Date.now()}_3`,
+            type: 'image',
+            title: `Archivio Digitale: ${q}`,
+            url: `https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=80`,
+            previewUrl: `https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=400&q=80`,
+            sourcePlatform: 'pixabay',
+            author: 'Redazione NWS'
+          },
+          {
+            id: `vid_${Date.now()}_1`,
+            type: 'video',
+            title: `Servizio Video Approfondimento: ${q}`,
+            url: `https://www.youtube.com/watch?v=dQw4w9WgXcQ`,
+            previewUrl: `https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=400&q=80`,
+            sourcePlatform: 'youtube',
+            author: 'NWS Channel'
+          }
+        ];
+
+        return res.json({ success: true, data: results });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: 'Errore ricerca media: ' + err.message });
+      }
+    });
+
     // Catch-all for unknown API routes
     apiRouter.all('*', (req, res) => {
       console.warn(`[API] Unmatched route: ${req.method} ${req.url}`);

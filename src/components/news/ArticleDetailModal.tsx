@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NewsArticle, NewsCategory } from '../../types/news';
 import { getCategories, getArticles, incrementArticleViews } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
+import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/textFormatter';
 import { 
   X, 
   Calendar, 
@@ -91,7 +92,10 @@ export default function ArticleDetailModal({
 
     window.speechSynthesis.cancel();
 
-    const textToRead = `${article.title}. ${article.intro || ''}. ${article.content || ''}`;
+    const cleanTitle = stripFormattingSymbols(article.title);
+    const cleanIntro = stripFormattingSymbols(article.intro);
+    const cleanContent = stripFormattingSymbols(article.content);
+    const textToRead = `${cleanTitle}. ${cleanIntro}. ${cleanContent}`;
     const utterance = new SpeechSynthesisUtterance(textToRead);
     utterance.rate = playbackRate;
 
@@ -362,10 +366,12 @@ export default function ArticleDetailModal({
             </div>
           </div>
 
-          {/* Testo Introduttivo (Abstract) */}
-          <div className="bg-amber-50/60 border-l-4 border-brand-gold p-4 rounded-r-2xl text-slate-800 font-medium text-sm md:text-base leading-relaxed italic">
-            "{article.intro}"
-          </div>
+          {/* Testo Introduttivo (Abstract / Meta Description) */}
+          {article.intro && (
+            <div className="bg-amber-50/70 border-l-4 border-brand-gold p-4 md:p-5 rounded-r-2xl text-slate-800 font-medium text-sm md:text-base leading-relaxed italic shadow-sm">
+              "{stripFormattingSymbols(article.intro)}"
+            </div>
+          )}
 
           {/* Featured Images */}
           {article.images && article.images.length > 0 && (
@@ -387,10 +393,11 @@ export default function ArticleDetailModal({
             </div>
           )}
 
-          {/* Extended Text (Body) */}
-          <div className="prose max-w-none text-slate-700 leading-relaxed text-sm md:text-base space-y-4 whitespace-pre-line font-sans">
-            {article.content}
-          </div>
+          {/* Extended Text (Body) - Formatted Clean HTML */}
+          <div 
+            className="article-body-content prose max-w-none text-slate-800 leading-relaxed text-sm md:text-base space-y-4 font-sans border-t border-slate-100 pt-4"
+            dangerouslySetInnerHTML={{ __html: formatArticleContentToHtml(article.content) }}
+          />
 
           {/* Featured Videos */}
           {article.videos && article.videos.length > 0 && (
