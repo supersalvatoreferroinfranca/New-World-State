@@ -218,7 +218,7 @@ function findArticleBySlugOrIdWorker(slugOrId, articles) {
         {
           type: 'image',
           source: 'url',
-          url: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80',
+          url: '/LOGO_NEW-WORLD-STATE.jpg',
           caption: formattedTitle
         }
       ],
