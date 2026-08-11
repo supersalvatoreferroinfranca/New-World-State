@@ -26,6 +26,319 @@ let memoryCustomRoles = [
 
 let memoryBroadcasts = [];
 
+let memoryWorkerArticles = [
+  {
+    id: 'art-101',
+    title: 'Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0',
+    slug: 'inaugurazione-registro-globale-democrazia-diretta-10',
+    categoryId: 'cat-politica',
+    intro: 'L\'Assemblea Fondativa annuncia l\'apertura del portale sovrano decentralizzato. Tutti i cittadini hanno ora diritto di voto diretto sui referendum federali.',
+    content: `Oggi segna una tappa fondamentale nella storia della governance sovrana contemporanea...`,
+    images: [
+      {
+        type: 'image',
+        source: 'url',
+        url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
+        caption: 'Sessione di apertura dell\'Assemblea Fondativa e del Registro Globale.'
+      }
+    ],
+    tags: ['Democrazia', 'Sovranità', 'Assemblea', 'Costituzione'],
+    authorName: 'Elenor Vance (Cronista Capo)',
+    authorRole: 'Cronista Ufficiale',
+    status: 'pubblicato',
+    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+    publishedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+    isFeatured: true
+  },
+  {
+    id: 'art-102',
+    title: 'Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini',
+    slug: 'protocollo-trasparenza-finanziaria-tutela-privacy',
+    categoryId: 'cat-diritti',
+    intro: 'Approvato a maggioranza qualificata il nuovo disciplinare a protezione dei dati biometrici e per la riservatezza delle transazioni comunitarie.',
+    content: `Il Corpo dei Custodi Digitali ha ratificato il nuovo Protocollo...`,
+    images: [
+      {
+        type: 'image',
+        source: 'url',
+        url: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
+        caption: 'Crittografia e protezione della privacy nel sistema New World State.'
+      }
+    ],
+    tags: ['Privacy', 'Crittografia', 'Sicurezza', 'CustodiDigitali'],
+    authorName: 'Marcus Thorne',
+    authorRole: 'Cronista di Stato',
+    status: 'pubblicato',
+    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    publishedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
+  },
+  {
+    id: 'art-103',
+    title: 'Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server',
+    slug: 'infrastrutture-decentralizzate-test-nodo-rete-ridondanza',
+    categoryId: 'cat-tecnologia',
+    intro: 'Test di resilienza completato con successo su 12 nodi distribuiti globalmente per garantire l\'operatività ininterrotta del portale.',
+    content: `Nelle ultime 48 ore la squadra di tecnici e custodi della rete ha condotto uno stress test...`,
+    images: [
+      {
+        type: 'image',
+        source: 'url',
+        url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+        caption: 'Rete di nodi e connettività globale dello Stato Sovrano.'
+      }
+    ],
+    tags: ['Tecnologia', 'ReteDecentralizzata', 'Cloud', 'Resilienza'],
+    authorName: 'Sophia Chen',
+    authorRole: 'Cronista Tecnologico',
+    status: 'pubblicato',
+    createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+    publishedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+function cleanMetaTextWorker(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function escapeHtmlWorker(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeSlugWorker(s) {
+  if (!s) return '';
+  return String(s).toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function findArticleBySlugOrIdWorker(slugOrId, articles) {
+  if (!slugOrId || !Array.isArray(articles)) return null;
+  const target = String(slugOrId).trim();
+  const normTarget = normalizeSlugWorker(target);
+
+  let found = articles.find(a => a && a.id === target);
+  if (found) return found;
+
+  found = articles.find(a => a && a.slug === target);
+  if (found) return found;
+
+  found = articles.find(a => a && normalizeSlugWorker(a.slug) === normTarget);
+  if (found) return found;
+
+  found = articles.find(a => a && a.title && normalizeSlugWorker(a.title) === normTarget);
+  if (found) return found;
+
+  found = articles.find(a => a && a.title && normalizeSlugWorker(a.title).includes(normTarget));
+  if (found) return found;
+
+  return null;
+}
+
+function injectArticleMetaTagsWorker(html, article, baseUrl) {
+  const rawTitle = cleanMetaTextWorker(article.title);
+  const fullTitle = `${rawTitle} | New World State News`;
+  const rawIntro = cleanMetaTextWorker(article.intro || article.content);
+  const description = rawIntro.length > 220 ? rawIntro.slice(0, 217) + '...' : rawIntro;
+  const fullBodyText = cleanMetaTextWorker(article.content || article.intro);
+
+  let imageUrl = `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`;
+  if (article.images && Array.isArray(article.images) && article.images.length > 0) {
+    const firstImg = article.images[0];
+    if (firstImg && firstImg.url) {
+      const u = firstImg.url.trim();
+      if (u.startsWith('http://') || u.startsWith('https://')) {
+        imageUrl = u;
+      } else if (u.startsWith('/')) {
+        imageUrl = `${baseUrl}${u}`;
+      }
+    }
+  }
+
+  const slug = article.slug || article.id;
+  const cleanArticleUrl = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
+  const authorName = cleanMetaTextWorker(article.authorName) || 'Cronista Ufficiale NWS';
+  const authorRole = cleanMetaTextWorker(article.authorRole) || 'Giornalista Sovrano';
+  const publishedDate = article.publishedAt || article.createdAt || new Date().toISOString();
+  const modifiedDate = article.updatedAt || publishedDate;
+
+  const rawTags = Array.isArray(article.tags) ? article.tags.map(t => cleanMetaTextWorker(t)).filter(Boolean) : [];
+  if (rawTags.length === 0) rawTags.push('Notizie', 'NewWorldState', 'Informazione');
+  const tagsString = rawTags.join(', ');
+
+  const metaBlock = `
+    <!-- Dynamic Article Meta Tags for SEO & Social Media Previews (Facebook, WhatsApp, Twitter, Telegram, LinkedIn, AI Engines) -->
+    <title>${escapeHtmlWorker(fullTitle)}</title>
+    <meta name="title" content="${escapeHtmlWorker(fullTitle)}" />
+    <meta name="description" content="${escapeHtmlWorker(description)}" />
+    <meta name="keywords" content="${escapeHtmlWorker(tagsString)}, notizie, new world state, giornalismo, cronaca, ai indexing" />
+    <meta name="author" content="${escapeHtmlWorker(authorName)}" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="${cleanArticleUrl}" />
+
+    <!-- Open Graph / Facebook / WhatsApp / Telegram / LinkedIn -->
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="New World State News" />
+    <meta property="og:url" content="${cleanArticleUrl}" />
+    <meta property="og:title" content="${escapeHtmlWorker(rawTitle)}" />
+    <meta property="og:description" content="${escapeHtmlWorker(description)}" />
+    <meta property="og:image" content="${escapeHtmlWorker(imageUrl)}" />
+    <meta property="og:image:secure_url" content="${escapeHtmlWorker(imageUrl)}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="it_IT" />
+    <meta property="article:published_time" content="${escapeHtmlWorker(publishedDate)}" />
+    <meta property="article:modified_time" content="${escapeHtmlWorker(modifiedDate)}" />
+    <meta property="article:author" content="${escapeHtmlWorker(authorName)}" />
+    <meta property="article:section" content="News" />
+    ${rawTags.map(t => `<meta property="article:tag" content="${escapeHtmlWorker(t)}" />`).join('\n    ')}
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="${cleanArticleUrl}" />
+    <meta name="twitter:title" content="${escapeHtmlWorker(rawTitle)}" />
+    <meta name="twitter:description" content="${escapeHtmlWorker(description)}" />
+    <meta name="twitter:image" content="${escapeHtmlWorker(imageUrl)}" />
+
+    <!-- Mobile & WhatsApp Thumbnail Fallbacks -->
+    <meta name="thumbnail" content="${escapeHtmlWorker(imageUrl)}" />
+    <link rel="image_src" href="${escapeHtmlWorker(imageUrl)}" />
+
+    <!-- Schema.org / Google News Search Engine Structured Data (NewsArticle) for Google News & AI Crawlers (ChatGPT, Claude, Perplexity, Gemini) -->
+    <meta itemprop="name" content="${escapeHtmlWorker(rawTitle)}" />
+    <meta itemprop="description" content="${escapeHtmlWorker(description)}" />
+    <meta itemprop="image" content="${escapeHtmlWorker(imageUrl)}" />
+    <script type="application/ld+json">
+    ${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": cleanArticleUrl
+      },
+      "headline": rawTitle,
+      "description": description,
+      "articleBody": fullBodyText,
+      "image": [imageUrl],
+      "datePublished": publishedDate,
+      "dateModified": modifiedDate,
+      "inLanguage": "it-IT",
+      "isAccessibleForFree": "True",
+      "author": {
+        "@type": "Person",
+        "name": authorName,
+        "jobTitle": authorRole
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "New World State News Authority",
+        "url": baseUrl,
+        "logo": {
+          "@type": "ImageObject",
+          "url": `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`
+        }
+      },
+      "keywords": tagsString
+    }, null, 2)}
+    </script>
+  `;
+
+  let cleanHtml = html
+    .replace(/<title>[\s\S]*?<\/title>/gi, '')
+    .replace(/<meta\s+name="title"[\s\S]*?>/gi, '')
+    .replace(/<meta\s+name="description"[\s\S]*?>/gi, '')
+    .replace(/<meta\s+name="author"[\s\S]*?>/gi, '')
+    .replace(/<meta\s+name="keywords"[\s\S]*?>/gi, '')
+    .replace(/<meta\s+property="og:[\s\S]*?>/gi, '')
+    .replace(/<meta\s+property="twitter:[\s\S]*?>/gi, '')
+    .replace(/<meta\s+name="twitter:[\s\S]*?>/gi, '')
+    .replace(/<meta\s+itemprop="[\s\S]*?>/gi, '')
+    .replace(/<meta\s+name="thumbnail"[\s\S]*?>/gi, '')
+    .replace(/<link\s+rel="image_src"[\s\S]*?>/gi, '')
+    .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '');
+
+  return cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
+}
+
+function injectNewsPortalMetaTagsWorker(html, baseUrl) {
+  const canonicalUrl = `${baseUrl}/?tab=news`;
+  const title = "Portale Notizie & Giornalismo Sovrano | New World State 1.0";
+  const description = "Leggi le notizie ufficiali, i reportage, le inchieste e gli approfondimenti della comunità globale New World State. Giornalismo verificato, etico e indipendente.";
+  const imageUrl = `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`;
+
+  const metaBlock = `
+    <!-- Dynamic News Portal Meta Tags -->
+    <title>${escapeHtmlWorker(title)}</title>
+    <meta name="title" content="${escapeHtmlWorker(title)}" />
+    <meta name="description" content="${escapeHtmlWorker(description)}" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="${escapeHtmlWorker(canonicalUrl)}" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="New World State News" />
+    <meta property="og:url" content="${escapeHtmlWorker(canonicalUrl)}" />
+    <meta property="og:title" content="${escapeHtmlWorker(title)}" />
+    <meta property="og:description" content="${escapeHtmlWorker(description)}" />
+    <meta property="og:image" content="${escapeHtmlWorker(imageUrl)}" />
+    <meta property="og:image:secure_url" content="${escapeHtmlWorker(imageUrl)}" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="${escapeHtmlWorker(canonicalUrl)}" />
+    <meta name="twitter:title" content="${escapeHtmlWorker(title)}" />
+    <meta name="twitter:description" content="${escapeHtmlWorker(description)}" />
+    <meta name="twitter:image" content="${escapeHtmlWorker(imageUrl)}" />
+  `;
+
+  let cleanHtml = html
+    .replace(/<title>[\s\S]*?<\/title>/gi, '')
+    .replace(/<meta\s+name="title"[\s\S]*?>/gi, '')
+    .replace(/<meta\s+name="description"[\s\S]*?>/gi, '')
+    .replace(/<meta\s+property="og:[\s\S]*?>/gi, '')
+    .replace(/<meta\s+property="twitter:[\s\S]*?>/gi, '')
+    .replace(/<meta\s+name="twitter:[\s\S]*?>/gi, '')
+    .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '');
+
+  return cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
+}
+
+const DEFAULT_INDEX_HTML = `<!doctype html>
+<html lang="it" prefix="og: http://ogp.me/ns#">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New World State 1.0 | Registro Mondiale • Global Citizenship Registry</title>
+    <meta name="description" content="Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="New World State" />
+    <meta property="og:title" content="New World State 1.0 | Registro Mondiale" />
+    <meta property="og:image" content="/LOGO_NEW-WORLD-STATE.jpg" />
+    <link rel="shortcut icon" href="/favicon.ico?v=5" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=5" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=5" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>`;
+
 const worker = {
   async fetch(request, rawEnv) {
     const env = new Proxy(rawEnv || {}, {
@@ -6462,36 +6775,128 @@ Restituisci unicamente un array JSON di oggetti con i campi:
         }
       }
 
-      // Fallback per la navigazione Single Page Application (SPA) (es. /chat, /democracy)
+      // Endpoints per Notizie e Sitemap nel Worker
+      if (url.pathname === '/api/news/articles' && request.method === 'GET') {
+        return new Response(JSON.stringify({ success: true, articles: memoryWorkerArticles }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      if (url.pathname === '/api/news/sync' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          if (body && Array.isArray(body.articles)) {
+            const map = new Map();
+            memoryWorkerArticles.forEach(a => { if (a && a.id) map.set(a.id, a); });
+            body.articles.forEach(a => { if (a && a.id) map.set(a.id, a); });
+            memoryWorkerArticles = Array.from(map.values()).sort((a, b) =>
+              new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            );
+            return new Response(JSON.stringify({ success: true, count: memoryWorkerArticles.length }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          return new Response(JSON.stringify({ success: false, message: 'Elenco articoli non fornito.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore sync articoli: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
+      if (url.pathname === '/sitemap.xml' && request.method === 'GET') {
+        const baseUrl = `${url.protocol}//${url.host}`;
+        const articleUrls = memoryWorkerArticles.map(a => {
+          const slug = a.slug || a.id;
+          const lastMod = (a.updatedAt || a.publishedAt || new Date().toISOString()).split('T')[0];
+          return `
+          <url>
+            <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
+            <lastmod>${lastMod}</lastmod>
+            <changefreq>daily</changefreq>
+            <priority>0.9</priority>
+          </url>`;
+        }).join('');
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+          <url>
+            <loc>${baseUrl}/</loc>
+            <changefreq>daily</changefreq>
+            <priority>1.0</priority>
+          </url>
+          <url>
+            <loc>${baseUrl}/?tab=news</loc>
+            <changefreq>daily</changefreq>
+            <priority>0.9</priority>
+          </url>
+          ${articleUrls}
+        </urlset>`;
+
+        return new Response(xml.trim(), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/xml; charset=utf-8' }
+        });
+      }
+
+      // Fallback per la navigazione Single Page Application (SPA) (es. /chat, /democracy, /notizie/*)
       if (request.method === 'GET' && !url.pathname.startsWith('/api/')) {
-        // Se non è un asset statico, facciamo il fallback a /index.html per permettere a React Router di gestire la rotta lato client
+        const baseUrl = `${url.protocol}//${url.host}`;
+        const targetSlug = url.searchParams.get('notizia') || url.searchParams.get('article') || url.searchParams.get('slug');
+        const isNewsRoute = url.pathname.startsWith('/notizie') || url.pathname.startsWith('/news');
+        let pathSlug = '';
+        if (isNewsRoute) {
+          const parts = url.pathname.split('/').filter(Boolean);
+          if (parts.length >= 2 && parts[1] !== 'notizie' && parts[1] !== 'news') {
+            pathSlug = parts[1];
+          }
+        }
+
+        const slugToFind = (targetSlug || pathSlug || '').trim();
+
+        // 1. Recuperiamo il template HTML base
+        let htmlText = '';
+
         if (env.ASSETS) {
           try {
             const indexRequest = new Request(new URL('/index.html', request.url).toString(), request);
             const assetResponse = await env.ASSETS.fetch(indexRequest);
             if (assetResponse.status !== 404) {
-              return assetResponse;
+              htmlText = await assetResponse.text();
             }
           } catch (assetErr) {
             console.error('[Worker] Errore in SPA fallback fetch ASSETS:', assetErr);
           }
         }
 
-        // Recuperiamo /index.html dai domini di fallback
-        const fallbackAsset = await fetchStaticAssetFromFallbacks('/index.html', request.headers);
-        if (fallbackAsset) {
-          const responseHeaders = new Headers();
-          for (const [key, val] of Object.entries(corsHeaders)) {
-            responseHeaders.set(key, val);
+        if (!htmlText) {
+          const fallbackAsset = await fetchStaticAssetFromFallbacks('/index.html', request.headers);
+          if (fallbackAsset) {
+            htmlText = await fallbackAsset.text();
           }
-          responseHeaders.set('content-type', 'text/html; charset=utf-8');
-
-          const arrayBuffer = await fallbackAsset.arrayBuffer();
-          return new Response(arrayBuffer, {
-            status: 200,
-            headers: responseHeaders
-          });
         }
+
+        if (!htmlText) {
+          htmlText = DEFAULT_INDEX_HTML;
+        }
+
+        // 2. Iniezione dinamica dei meta tag per notizie / social previews / AI engines
+        if (slugToFind || isNewsRoute || url.searchParams.get('tab') === 'news') {
+          const foundArticle = slugToFind ? findArticleBySlugOrIdWorker(slugToFind, memoryWorkerArticles) : null;
+          if (foundArticle) {
+            htmlText = injectArticleMetaTagsWorker(htmlText, foundArticle, baseUrl);
+          } else {
+            htmlText = injectNewsPortalMetaTagsWorker(htmlText, baseUrl);
+          }
+        }
+
+        const responseHeaders = new Headers();
+        for (const [key, val] of Object.entries(corsHeaders)) {
+          responseHeaders.set(key, val);
+        }
+        responseHeaders.set('content-type', 'text/html; charset=utf-8');
+
+        return new Response(htmlText, {
+          status: 200,
+          headers: responseHeaders
+        });
       }
 
       return new Response(JSON.stringify({ success: false, message: 'Endpoint non trovato sul Worker: ' + url.pathname }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
