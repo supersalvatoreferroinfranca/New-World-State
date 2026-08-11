@@ -326,6 +326,7 @@ function injectArticleMetaTagsWorker(html, article, baseUrl) {
     <link rel="canonical" href="${cleanArticleUrl}" />
 
     <!-- Open Graph / Facebook / WhatsApp / Telegram / LinkedIn -->
+    <meta property="fb:app_id" content="966242223397117" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="New World State News" />
     <meta property="og:url" content="${cleanArticleUrl}" />
@@ -398,6 +399,7 @@ function injectArticleMetaTagsWorker(html, article, baseUrl) {
     .replace(/<meta\s+name="description"[\s\S]*?>/gi, '')
     .replace(/<meta\s+name="author"[\s\S]*?>/gi, '')
     .replace(/<meta\s+name="keywords"[\s\S]*?>/gi, '')
+    .replace(/<meta\s+property="fb:[\s\S]*?>/gi, '')
     .replace(/<meta\s+property="og:[\s\S]*?>/gi, '')
     .replace(/<meta\s+property="twitter:[\s\S]*?>/gi, '')
     .replace(/<meta\s+name="twitter:[\s\S]*?>/gi, '')
@@ -423,6 +425,7 @@ function injectNewsPortalMetaTagsWorker(html, baseUrl) {
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="${escapeHtmlWorker(canonicalUrl)}" />
 
+    <meta property="fb:app_id" content="966242223397117" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="New World State News" />
     <meta property="og:url" content="${escapeHtmlWorker(canonicalUrl)}" />
@@ -457,6 +460,7 @@ const DEFAULT_INDEX_HTML = `<!doctype html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>New World State 1.0 | Registro Mondiale • Global Citizenship Registry</title>
     <meta name="description" content="Unisciti alla comunità mondiale digitale. Registrazione ufficiale dei cittadini del New World State." />
+    <meta property="fb:app_id" content="966242223397117" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="New World State" />
     <meta property="og:title" content="New World State 1.0 | Registro Mondiale" />
@@ -5484,7 +5488,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
       }
 
-      // 1e. Ricerca multimediale Unsplash, Pexels, Pixabay e YouTube
+      // 1e. Ricerca multimediale Unsplash, Pexels, Pixabay e YouTube ad alta precisione
       if (url.pathname === '/api/news/search-media' && request.method === 'POST') {
         try {
           const body = await request.json();
@@ -5494,154 +5498,155 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           }
 
           const cleanQuery = query.trim();
+          const queryLower = cleanQuery.toLowerCase();
 
-          const getFallbackMedia = () => [
-            {
-              id: 'unsp-1',
-              type: 'image',
-              sourcePlatform: 'unsplash',
-              url: `https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80`,
-              previewUrl: `https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80`,
-              title: `Unsplash: ${cleanQuery} - Fotografia Editoriale`,
-              author: 'Unsplash Community'
-            },
-            {
-              id: 'unsp-2',
-              type: 'image',
-              sourcePlatform: 'unsplash',
-              url: `https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80`,
-              previewUrl: `https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80`,
-              title: `Unsplash Global Perspective: ${cleanQuery}`,
-              author: 'Unsplash Press'
-            },
-            {
-              id: 'pex-1',
-              type: 'image',
-              sourcePlatform: 'pexels',
-              url: `https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1200`,
-              previewUrl: `https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=400`,
-              title: `Pexels: Reportage & Copertura ${cleanQuery}`,
-              author: 'Pexels Stock'
-            },
-            {
-              id: 'pex-2',
-              type: 'image',
-              sourcePlatform: 'pexels',
-              url: `https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=1200`,
-              previewUrl: `https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&w=400`,
-              title: `Pexels Focus: ${cleanQuery}`,
-              author: 'Pexels Creator'
-            },
-            {
-              id: 'pix-1',
-              type: 'image',
-              sourcePlatform: 'pixabay',
-              url: `https://cdn.pixabay.com/photo/2018/03/10/12/00/paper-3213924_1280.jpg`,
-              previewUrl: `https://cdn.pixabay.com/photo/2018/03/10/12/00/paper-3213924_1280.jpg`,
-              title: `Pixabay Stampa & Documentazione: ${cleanQuery}`,
-              author: 'Pixabay Free Collection'
-            },
-            {
-              id: 'pix-2',
-              type: 'image',
-              sourcePlatform: 'pixabay',
-              url: `https://cdn.pixabay.com/photo/2017/05/10/19/29/newspaper-2301647_1280.jpg`,
-              previewUrl: `https://cdn.pixabay.com/photo/2017/05/10/19/29/newspaper-2301647_1280.jpg`,
-              title: `Pixabay Archivo Giornalistico`,
-              author: 'Pixabay'
-            },
-            {
-              id: 'yt-1',
-              type: 'video',
-              sourcePlatform: 'youtube',
-              url: `https://www.youtube.com/embed/2ePf9rue1Ao`,
-              previewUrl: `https://img.youtube.com/vi/2ePf9rue1Ao/hqdefault.jpg`,
-              title: `YouTube Speciale Inchiesta: ${cleanQuery}`,
-              author: 'YouTube / Reportage Ufficiale'
-            },
-            {
-              id: 'yt-2',
-              type: 'video',
-              sourcePlatform: 'youtube',
-              url: `https://www.youtube.com/embed/LXb3EKWsInQ`,
-              previewUrl: `https://img.youtube.com/vi/LXb3EKWsInQ/hqdefault.jpg`,
-              title: `YouTube Analisi & Documentario approfondito`,
-              author: 'YouTube / Canale Geopolitico'
-            }
-          ];
+          const fetchedItems = [];
 
-          const apiKey = env.GEMINI_API_KEY;
-          if (!apiKey) {
-            return new Response(JSON.stringify({ success: true, data: getFallbackMedia() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          let searchTerms = [cleanQuery];
+          if (/onu|nazioni\s*unite|united\s*nations/i.test(queryLower)) {
+            searchTerms = ['United Nations', 'Organizzazione delle Nazioni Unite', 'Palazzo delle Nazioni Unite', 'Consiglio di Sicurezza ONU'];
+          } else if (/diritt|privacy|sicurezza|crittografia|legge/i.test(queryLower)) {
+            searchTerms = [cleanQuery, 'Human rights', 'Data security', 'Justice'];
+          } else if (/tecno|ai|intel|nodo|server|cloud/i.test(queryLower)) {
+            searchTerms = [cleanQuery, 'Artificial intelligence', 'Microchip'];
+          } else if (/econo|finanz|monet|banc|mercat/i.test(queryLower)) {
+            searchTerms = [cleanQuery, 'Financial markets', 'Economy'];
           }
 
-          const prompt = `Sei il motore intelligente di ricerca media per il quotidiano "New World State".
-Trova e seleziona 8-10 risorse multimediali ad alta definizione e video pertinenti per la seguente richiesta di notizie:
+          for (const term of searchTerms) {
+            try {
+              const enc = encodeURIComponent(term);
+              const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${enc}&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=960&format=json&origin=*`;
+              const wmRes = await fetch(wmUrl).then(r => r.json());
+              const wmPages = Object.values(wmRes.query?.pages || {});
 
-QUERY / ARGOMENTO ARTICOLO: "${cleanQuery}"
-PIATTAFORMA SELEZIONATA: "${platform || 'all'}"
+              for (const p of wmPages) {
+                const info = p.imageinfo?.[0];
+                const mime = info?.mime || '';
+                if (!mime.startsWith('image/jpeg') && !mime.startsWith('image/png') && !mime.startsWith('image/webp')) continue;
+                const urlStr = info?.thumburl || info?.url;
+                if (!urlStr || urlStr.includes('.svg')) continue;
 
-Devi includere contenuti appropriati da tutte e 4 le fonti:
-1. Unsplash (foto): URL direct da images.unsplash.com con tag/foto adeguate al tema (es. https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80 o photo-1451187580459-43490279c0fa o simili)
-2. Pexels (foto o video): URL direct da images.pexels.com (es. https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1200)
-3. Pixabay (foto o video): URL direct da cdn.pixabay.com
-4. YouTube (video): URL in formato embed (es. https://www.youtube.com/embed/VIDEO_ID o https://www.youtube.com/watch?v=VIDEO_ID) con un titolo di approfondimento in italiano.
+                let rawTitle = p.title.replace(/^File:/i, '').replace(/\.(jpg|jpeg|png|gif|webp)$/i, '').replace(/_/g, ' ');
+                rawTitle = rawTitle.replace(/\([^)]*\)/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+                if (rawTitle.length < 3) continue;
 
-Restituisci unicamente un array JSON di oggetti con i campi:
-- "id": stringa univoca
-- "type": "image" o "video"
-- "sourcePlatform": "unsplash" | "pexels" | "pixabay" | "youtube"
-- "url": stringa URL del contenuto
-- "previewUrl": stringa URL thumbnail anteprima
-- "title": stringa titolo/didascalia descrittiva in italiano
-- "author": stringa autore o fonte (es. "Unsplash / John Doe", "Pexels", "Pixabay", "YouTube / Channel")`;
+                const authorName = info?.extmetadata?.Artist?.value?.replace(/<[^>]+>/g, '').trim() || 'Wikimedia Commons';
 
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                  type: 'ARRAY',
-                  items: {
-                    type: 'OBJECT',
-                    properties: {
-                      id: { type: 'STRING' },
-                      type: { type: 'STRING' },
-                      sourcePlatform: { type: 'STRING' },
-                      url: { type: 'STRING' },
-                      previewUrl: { type: 'STRING' },
-                      title: { type: 'STRING' },
-                      author: { type: 'STRING' }
-                    },
-                    required: ['type', 'sourcePlatform', 'url', 'title']
+                if (!fetchedItems.some(i => i.url === urlStr)) {
+                  fetchedItems.push({
+                    id: `wm_${p.pageid || Math.random().toString(36).substring(2, 9)}`,
+                    type: 'image',
+                    sourcePlatform: 'unsplash',
+                    url: urlStr,
+                    previewUrl: urlStr,
+                    title: rawTitle,
+                    author: authorName
+                  });
+                }
+              }
+            } catch (e) {}
+          }
+
+          if (/onu|nazioni\s*unite|united\s*nations|diploma|conflitt|palazzo|assemblea/i.test(queryLower)) {
+            fetchedItems.unshift({
+              id: 'stock-onu-1',
+              type: 'image',
+              sourcePlatform: 'unsplash',
+              url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=400&q=80',
+              title: 'Sede e dibattito del Consiglio di Sicurezza delle Nazioni Unite',
+              author: 'Alex Vasey (Unsplash)'
+            });
+          }
+          if (/terra|spazio|global|pianeta|geopolit|rete|mondo/i.test(queryLower)) {
+            fetchedItems.push({
+              id: 'stock-earth-1',
+              type: 'image',
+              sourcePlatform: 'pexels',
+              url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80',
+              title: 'Pianeta Terra e connessioni globali viste dallo spazio',
+              author: 'NASA / Unsplash'
+            });
+          }
+          if (/tecno|ai|intel|nodo|server|cloud|chip|hardware|computer/i.test(queryLower)) {
+            fetchedItems.unshift({
+              id: 'stock-tech-1',
+              type: 'image',
+              sourcePlatform: 'pixabay',
+              url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80',
+              title: 'Circuito integrato e architettura microelettronica',
+              author: 'Unsplash Technology'
+            });
+          }
+
+          if (/onu|nazioni\s*unite|diploma|conflitt/i.test(queryLower)) {
+            fetchedItems.push({
+              id: 'yt-onu-1',
+              type: 'video',
+              sourcePlatform: 'youtube',
+              url: 'https://www.youtube.com/embed/LXb3EKWsInQ',
+              previewUrl: 'https://img.youtube.com/vi/LXb3EKWsInQ/hqdefault.jpg',
+              title: 'Documentario: Struttura e funzionamento delle Nazioni Unite',
+              author: 'YouTube / Reportage'
+            });
+          } else {
+            fetchedItems.push({
+              id: 'yt-gen-1',
+              type: 'video',
+              sourcePlatform: 'youtube',
+              url: 'https://www.youtube.com/embed/2ePf9rue1Ao',
+              previewUrl: 'https://img.youtube.com/vi/2ePf9rue1Ao/hqdefault.jpg',
+              title: `Speciale Inchiesta e Documentario: ${cleanQuery}`,
+              author: 'YouTube / Documentari'
+            });
+          }
+
+          const itemsToReturn = fetchedItems.slice(0, 10);
+
+          const apiKey = env.GEMINI_API_KEY;
+          if (apiKey) {
+            try {
+              const prompt = `Sei il caporedattore del quotidiano 'New World State'.
+Ho recuperato dal web i seguenti elementi multimediali REALI per la ricerca: '${cleanQuery}'.
+
+${JSON.stringify(itemsToReturn, null, 2)}
+
+Il tuo compito è ESCLUSIVAMENTE perfezionare e tradurre i titoli ('title') in italiano elegante, giornalistico e descrittivo, assicurandoti al 100% che ogni didascalia corrisponda esattamente a ciò che l'immagine o il video rappresenta.
+REGOLE TASSATIVE:
+- NON modificare assolutamente le URL, i previewUrl, la sourcePlatform, gli id o gli autore.
+- Restituisci l'array JSON completo con i campi perfezionati.`;
+
+              const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: prompt }] }],
+                  generationConfig: {
+                    responseMimeType: 'application/json'
+                  }
+                })
+              });
+
+              if (response.ok) {
+                const resData = await response.json();
+                const jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (jsonText) {
+                  const parsed = JSON.parse(jsonText.trim());
+                  if (Array.isArray(parsed) && parsed.length > 0) {
+                    return new Response(JSON.stringify({ success: true, data: parsed }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
                   }
                 }
               }
-            })
-          });
-
-          if (!response.ok) {
-            return new Response(JSON.stringify({ success: true, data: getFallbackMedia() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            } catch (e) {}
           }
 
-          const resData = await response.json();
-          const jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!jsonText) {
-            return new Response(JSON.stringify({ success: true, data: getFallbackMedia() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-          }
-
-          let items = JSON.parse(jsonText.trim());
-          if (!Array.isArray(items) || items.length === 0) {
-            items = getFallbackMedia();
-          }
-
-          return new Response(JSON.stringify({ success: true, data: items }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          return new Response(JSON.stringify({ success: true, data: itemsToReturn }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch (e) {
           console.error('[WORKER-MEDIA-SEARCH-ERR]', e);
-          return new Response(JSON.stringify({ success: true, data: getFallbackMedia() }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          return new Response(JSON.stringify({ success: false, message: 'Impossibile completare la ricerca media.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
       }
 
