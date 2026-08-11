@@ -65,7 +65,7 @@ export default function ArticleDetailModal({
     }
   }, []);
 
-  // Stop synthesis when modal closes or article changes & update document head meta tags for SEO/Tab title
+  // Stop synthesis when modal closes or article changes & update document head meta tags + Schema.org NewsArticle JSON-LD for Google News & AI
   useEffect(() => {
     if (isOpen && article) {
       const prevTitle = document.title;
@@ -73,6 +73,7 @@ export default function ArticleDetailModal({
       document.title = `${cleanTitle} | New World State News`;
 
       const cleanIntro = stripFormattingSymbols(article.intro || article.content);
+      const cleanContent = stripFormattingSymbols(article.content || article.intro);
       let metaDesc = document.querySelector('meta[name="description"]');
       let createdDesc = false;
       if (!metaDesc) {
@@ -84,6 +85,60 @@ export default function ArticleDetailModal({
       const prevDesc = metaDesc.getAttribute('content') || '';
       metaDesc.setAttribute('content', cleanIntro.slice(0, 200));
 
+      // Inject or update Schema.org NewsArticle JSON-LD
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://newworldstate.cloud';
+      const slug = article.slug || article.id;
+      const articleUrl = `${origin}/?tab=news&notizia=${encodeURIComponent(slug)}`;
+      
+      let mainImg = `${origin}/LOGO_NEW-WORLD-STATE.jpg`;
+      if (article.images && article.images.length > 0 && article.images[0]?.url) {
+        const u = article.images[0].url.trim();
+        if (u.startsWith('http://') || u.startsWith('https://')) mainImg = u;
+        else if (u.startsWith('/')) mainImg = `${origin}${u}`;
+      }
+
+      let jsonLdScript = document.getElementById('news-article-jsonld') as HTMLScriptElement | null;
+      if (!jsonLdScript) {
+        jsonLdScript = document.createElement('script');
+        jsonLdScript.id = 'news-article-jsonld';
+        jsonLdScript.type = 'application/ld+json';
+        document.head.appendChild(jsonLdScript);
+      }
+
+      const jsonLdData = {
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": articleUrl
+        },
+        "headline": cleanTitle,
+        "description": cleanIntro.slice(0, 220),
+        "articleBody": cleanContent,
+        "image": [mainImg],
+        "datePublished": article.publishedAt || article.createdAt || new Date().toISOString(),
+        "dateModified": article.updatedAt || article.publishedAt || new Date().toISOString(),
+        "inLanguage": "it-IT",
+        "isAccessibleForFree": "True",
+        "author": {
+          "@type": "Person",
+          "name": stripFormattingSymbols(article.authorName) || 'Cronista Ufficiale NWS',
+          "jobTitle": stripFormattingSymbols(article.authorRole) || 'Giornalista Sovrano'
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "New World State News Authority",
+          "url": origin,
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${origin}/LOGO_NEW-WORLD-STATE.jpg`
+          }
+        },
+        "keywords": (article.tags || []).map(stripFormattingSymbols).join(', ')
+      };
+
+      jsonLdScript.textContent = JSON.stringify(jsonLdData, null, 2);
+
       return () => {
         document.title = prevTitle;
         if (metaDesc) {
@@ -92,6 +147,10 @@ export default function ArticleDetailModal({
           } else {
             metaDesc.setAttribute('content', prevDesc);
           }
+        }
+        const existingScript = document.getElementById('news-article-jsonld');
+        if (existingScript) {
+          existingScript.remove();
         }
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
           window.speechSynthesis.cancel();

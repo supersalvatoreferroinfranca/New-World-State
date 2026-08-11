@@ -6132,6 +6132,67 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
       }
     }
 
+    function normalizeSlug(s?: string): string {
+      if (!s) return '';
+      return s.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    function findArticleBySlugOrId(slugOrId: string, articles: any[]): any | null {
+      if (!slugOrId) return null;
+      const target = slugOrId.trim();
+      const normTarget = normalizeSlug(target);
+
+      // 1. Exact ID match
+      let found = articles.find(a => a.id === target);
+      if (found) return found;
+
+      // 2. Exact slug match
+      found = articles.find(a => a.slug === target);
+      if (found) return found;
+
+      // 3. Normalized slug match
+      found = articles.find(a => normalizeSlug(a.slug) === normTarget);
+      if (found) return found;
+
+      // 4. Normalized title match
+      found = articles.find(a => normalizeSlug(a.title) === normTarget);
+      if (found) return found;
+
+      // 5. Partial/Substring slug or title match
+      if (normTarget.length > 10) {
+        found = articles.find(a => {
+          const normA = normalizeSlug(a.slug);
+          const normT = normalizeSlug(a.title);
+          return normA.includes(normTarget) || normTarget.includes(normA) || normT.includes(normTarget) || normTarget.includes(normT);
+        });
+        if (found) return found;
+      }
+
+      // 6. Synthetic fallback article generated from slug words if string contains hyphenated title
+      if (normTarget.length > 15) {
+        const readableTitle = target
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, c => c.toUpperCase());
+
+        return {
+          id: `art-synth-${normTarget.slice(0, 20)}`,
+          title: readableTitle,
+          slug: target,
+          intro: `Notizia e reportage ufficiale dal Portale New World State: ${readableTitle}.`,
+          content: `${readableTitle}. Leggi l'articolo completo su New World State News.`,
+          images: [],
+          authorName: 'Cronista Ufficiale NWS',
+          authorRole: 'Redazione Giornalistica',
+          publishedAt: new Date().toISOString(),
+          tags: ['Notizie', 'NewWorldState', 'Informazione']
+        };
+      }
+
+      return null;
+    }
+
     function cleanMetaText(str?: string): string {
       if (!str) return '';
       return str
@@ -6165,8 +6226,9 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
       const fullTitle = `${rawTitle} | New World State News`;
       const rawIntro = cleanMetaText(article.intro || article.content);
       const description = rawIntro.length > 220 ? rawIntro.slice(0, 217) + '...' : rawIntro;
+      const fullBodyText = cleanMetaText(article.content || article.intro);
 
-      let imageUrl = `${baseUrl}/documents/branding_images/fronte.jpg`;
+      let imageUrl = `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`;
       if (article.images && Array.isArray(article.images) && article.images.length > 0) {
         const firstImg = article.images[0];
         if (firstImg && firstImg.url) {
@@ -6182,6 +6244,7 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
       const slug = article.slug || article.id;
       const canonicalUrl = `${baseUrl}/?tab=news&notizia=${encodeURIComponent(slug)}`;
       const authorName = cleanMetaText(article.authorName) || 'Cronista Ufficiale NWS';
+      const authorRole = cleanMetaText(article.authorRole) || 'Giornalista Sovrano';
       const publishedDate = article.publishedAt || article.createdAt || new Date().toISOString();
       const modifiedDate = article.updatedAt || publishedDate;
 
@@ -6189,12 +6252,13 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
       const tagsString = rawTags.join(', ');
 
       const metaBlock = `
-        <!-- Dynamic Article Meta Tags for SEO & Social Media Previews (WhatsApp, Facebook, Twitter, Telegram, LinkedIn) -->
+        <!-- Dynamic Article Meta Tags for SEO & Social Media Previews (WhatsApp, Facebook, Twitter, Telegram, LinkedIn, AI Engines) -->
         <title>${escapeHtml(fullTitle)}</title>
         <meta name="title" content="${escapeHtml(fullTitle)}" />
         <meta name="description" content="${escapeHtml(description)}" />
-        <meta name="keywords" content="${escapeHtml(tagsString)}, notizie, new world state, giornalismo, cronaca" />
+        <meta name="keywords" content="${escapeHtml(tagsString)}, notizie, new world state, giornalismo, cronaca, ai indexing" />
         <meta name="author" content="${escapeHtml(authorName)}" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
 
         <!-- Open Graph / Facebook / WhatsApp / Telegram / LinkedIn -->
@@ -6207,9 +6271,11 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
         <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content="it_IT" />
         <meta property="article:published_time" content="${escapeHtml(publishedDate)}" />
         <meta property="article:modified_time" content="${escapeHtml(modifiedDate)}" />
         <meta property="article:author" content="${escapeHtml(authorName)}" />
+        <meta property="article:section" content="News" />
         ${rawTags.map((t: string) => `<meta property="article:tag" content="${escapeHtml(t)}" />`).join('\n        ')}
 
         <!-- Twitter Cards -->
@@ -6223,7 +6289,7 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
         <meta name="thumbnail" content="${escapeHtml(imageUrl)}" />
         <link rel="image_src" href="${escapeHtml(imageUrl)}" />
 
-        <!-- Schema.org / Google Search Engine Structured Data (NewsArticle) -->
+        <!-- Schema.org / Google News Search Engine Structured Data (NewsArticle) for Google News & AI Crawlers (ChatGPT, Claude, Perplexity, Gemini) -->
         <meta itemprop="name" content="${escapeHtml(rawTitle)}" />
         <meta itemprop="description" content="${escapeHtml(description)}" />
         <meta itemprop="image" content="${escapeHtml(imageUrl)}" />
@@ -6237,19 +6303,24 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
           },
           "headline": rawTitle,
           "description": description,
+          "articleBody": fullBodyText,
           "image": [imageUrl],
           "datePublished": publishedDate,
           "dateModified": modifiedDate,
+          "inLanguage": "it-IT",
+          "isAccessibleForFree": "True",
           "author": {
             "@type": "Person",
-            "name": authorName
+            "name": authorName,
+            "jobTitle": authorRole
           },
           "publisher": {
             "@type": "Organization",
             "name": "New World State News Authority",
+            "url": baseUrl,
             "logo": {
               "@type": "ImageObject",
-              "url": `${baseUrl}/apple-touch-icon.png`
+              "url": `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`
             }
           },
           "keywords": tagsString
@@ -6279,13 +6350,14 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
       const canonicalUrl = `${baseUrl}/?tab=news`;
       const title = "Portale Notizie & Giornalismo Sovrano | New World State 1.0";
       const description = "Leggi le notizie ufficiali, i reportage, le inchieste e gli approfondimenti della comunità globale New World State. Giornalismo verificato, etico e indipendente.";
-      const imageUrl = `${baseUrl}/documents/branding_images/fronte.jpg`;
+      const imageUrl = `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`;
 
       const metaBlock = `
         <!-- Dynamic News Portal Meta Tags -->
         <title>${escapeHtml(title)}</title>
         <meta name="title" content="${escapeHtml(title)}" />
         <meta name="description" content="${escapeHtml(description)}" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
 
         <meta property="og:type" content="website" />
@@ -6317,6 +6389,46 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
 
     let viteServer: any = null;
 
+    // Dynamic Sitemap XML Endpoint for Google Search & AI Crawlers
+    app.get('/sitemap.xml', (req, res) => {
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const host = req.get('host') || 'newworldstate.cloud';
+      const baseUrl = `${protocol}://${host}`;
+      const articles = getServerArticles();
+
+      const articleUrls = articles.map(a => {
+        const slug = a.slug || a.id;
+        const lastMod = (a.updatedAt || a.publishedAt || new Date().toISOString()).split('T')[0];
+        return `
+        <url>
+          <loc>${baseUrl}/?tab=news&amp;notizia=${encodeURIComponent(slug)}</loc>
+          <lastmod>${lastMod}</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.9</priority>
+        </url>`;
+      }).join('');
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        <url>
+          <loc>${baseUrl}/</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>1.0</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?tab=news</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>hourly</changefreq>
+          <priority>0.95</priority>
+        </url>
+        ${articleUrls}
+      </urlset>`.trim();
+
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      return res.send(xml);
+    });
+
     // Middleware to dynamically intercept HTML GET requests for news articles & news section
     app.use(async (req, res, next) => {
       if (req.method !== 'GET') return next();
@@ -6340,7 +6452,7 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
         const articles = getServerArticles();
         let foundArticle = null;
         if (slugToFind) {
-          foundArticle = articles.find(a => a.slug === slugToFind || a.id === slugToFind);
+          foundArticle = findArticleBySlugOrId(slugToFind, articles);
         }
 
         const indexPath = !isProd
