@@ -6139,54 +6139,108 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
         .replace(/[^a-z0-9]/g, '');
     }
 
+    function formatSlugToTitle(slug: string): string {
+      if (!slug) return 'Notizia New World State';
+      let clean = slug;
+      try {
+        clean = decodeURIComponent(slug);
+      } catch (e) {}
+
+      clean = clean.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!clean) return 'Notizia New World State';
+
+      const words = clean.split(' ');
+      const formattedWords = words.map((w, idx) => {
+        const lower = w.toLowerCase();
+        if (lower === 'onu') return 'ONU';
+        if (lower === 'ai') return 'AI';
+        if (lower === 'nws') return 'NWS';
+        if (lower === 'usa') return 'USA';
+        if (lower === 'ue') return 'UE';
+        if (lower === 'uk') return 'UK';
+
+        // Italian apostrophes
+        if (/^l[aeiouàèéìòù]/i.test(lower) && lower.length > 3) {
+          const rest = lower.slice(1);
+          return "L'" + rest.charAt(0).toUpperCase() + rest.slice(1);
+        }
+        if (/^dell[aeiouàèéìòù]/i.test(lower) && lower.length > 5 && idx > 0) {
+          const rest = lower.slice(4);
+          return "dell'" + rest.charAt(0).toUpperCase() + rest.slice(1);
+        }
+        if (/^un[aeiouàèéìòù]/i.test(lower) && lower.length > 4) {
+          const rest = lower.slice(2);
+          return "Un'" + rest.charAt(0).toUpperCase() + rest.slice(1);
+        }
+
+        if (['e', 'ed', 'o', 'od', 'a', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra', 'di', 'del', 'della', 'delle', 'degli', 'dei', 'dal', 'dalla', 'dalle', 'nel', 'nella', 'nelle', 'sul', 'sulla', 'sulle', 'nei'].includes(lower) && idx > 0) {
+          return lower;
+        }
+
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+      });
+
+      return formattedWords.join(' ');
+    }
+
     function findArticleBySlugOrId(slugOrId: string, articles: any[]): any | null {
       if (!slugOrId) return null;
       const target = slugOrId.trim();
       const normTarget = normalizeSlug(target);
 
-      // 1. Exact ID match
-      let found = articles.find(a => a.id === target);
-      if (found) return found;
-
-      // 2. Exact slug match
-      found = articles.find(a => a.slug === target);
-      if (found) return found;
-
-      // 3. Normalized slug match
-      found = articles.find(a => normalizeSlug(a.slug) === normTarget);
-      if (found) return found;
-
-      // 4. Normalized title match
-      found = articles.find(a => normalizeSlug(a.title) === normTarget);
-      if (found) return found;
-
-      // 5. Partial/Substring slug or title match
-      if (normTarget.length > 10) {
-        found = articles.find(a => {
-          const normA = normalizeSlug(a.slug);
-          const normT = normalizeSlug(a.title);
-          return normA.includes(normTarget) || normTarget.includes(normA) || normT.includes(normTarget) || normTarget.includes(normT);
-        });
+      if (Array.isArray(articles)) {
+        // 1. Exact ID match
+        let found = articles.find(a => a && a.id === target);
         if (found) return found;
+
+        // 2. Exact slug match
+        found = articles.find(a => a && a.slug === target);
+        if (found) return found;
+
+        // 3. Normalized slug match
+        found = articles.find(a => a && normalizeSlug(a.slug) === normTarget);
+        if (found) return found;
+
+        // 4. Normalized title match
+        found = articles.find(a => a && normalizeSlug(a.title) === normTarget);
+        if (found) return found;
+
+        // 5. Partial/Substring slug or title match
+        if (normTarget.length > 8) {
+          found = articles.find(a => {
+            if (!a) return false;
+            const normA = normalizeSlug(a.slug || '');
+            const normT = normalizeSlug(a.title || '');
+            return (normA && (normA.includes(normTarget) || normTarget.includes(normA))) ||
+                   (normT && (normT.includes(normTarget) || normTarget.includes(normT)));
+          });
+          if (found) return found;
+        }
       }
 
-      // 6. Synthetic fallback article generated from slug words if string contains hyphenated title
-      if (normTarget.length > 15) {
-        const readableTitle = target
-          .replace(/[-_]/g, ' ')
-          .replace(/\b\w/g, c => c.toUpperCase());
+      // 6. Synthetic fallback article generated from slug words
+      if (normTarget.length >= 3) {
+        const readableTitle = formatSlugToTitle(target);
 
         return {
-          id: `art-synth-${normTarget.slice(0, 20)}`,
+          id: `art-synth-${normTarget.slice(0, 30)}`,
           title: readableTitle,
           slug: target,
-          intro: `Notizia e reportage ufficiale dal Portale New World State: ${readableTitle}.`,
-          content: `${readableTitle}. Leggi l'articolo completo su New World State News.`,
-          images: [],
+          intro: `Notizia e reportage ufficiale dal Portale New World State: ${readableTitle}. Leggi l'articolo completo, le analisi e i dati sul Giornale Sovrano.`,
+          content: `${readableTitle}. Leggi l'articolo completo e gli approfondimenti sul Portale Ufficiale New World State News.`,
+          images: [
+            {
+              type: 'image',
+              source: 'url',
+              url: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80',
+              caption: readableTitle
+            }
+          ],
           authorName: 'Cronista Ufficiale NWS',
           authorRole: 'Redazione Giornalistica',
           publishedAt: new Date().toISOString(),
-          tags: ['Notizie', 'NewWorldState', 'Informazione']
+          updatedAt: new Date().toISOString(),
+          tags: ['Notizie', 'NewWorldState', 'Informazione', 'Cronaca']
         };
       }
 

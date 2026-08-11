@@ -124,25 +124,111 @@ function normalizeSlugWorker(s) {
     .replace(/[^a-z0-9]/g, '');
 }
 
+function formatSlugToTitleWorker(slug) {
+  if (!slug) return 'Notizia New World State';
+  let clean = slug;
+  try {
+    clean = decodeURIComponent(slug);
+  } catch (e) {}
+
+  clean = clean.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!clean) return 'Notizia New World State';
+
+  const words = clean.split(' ');
+  const formattedWords = words.map((w, idx) => {
+    const lower = w.toLowerCase();
+    if (lower === 'onu') return 'ONU';
+    if (lower === 'ai') return 'AI';
+    if (lower === 'nws') return 'NWS';
+    if (lower === 'usa') return 'USA';
+    if (lower === 'ue') return 'UE';
+    if (lower === 'uk') return 'UK';
+
+    // Italian apostrophes
+    if (/^l[aeiouàèéìòù]/i.test(lower) && lower.length > 3) {
+      const rest = lower.slice(1);
+      return "L'" + rest.charAt(0).toUpperCase() + rest.slice(1);
+    }
+    if (/^dell[aeiouàèéìòù]/i.test(lower) && lower.length > 5 && idx > 0) {
+      const rest = lower.slice(4);
+      return "dell'" + rest.charAt(0).toUpperCase() + rest.slice(1);
+    }
+    if (/^un[aeiouàèéìòù]/i.test(lower) && lower.length > 4) {
+      const rest = lower.slice(2);
+      return "Un'" + rest.charAt(0).toUpperCase() + rest.slice(1);
+    }
+
+    if (['e', 'ed', 'o', 'od', 'a', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra', 'di', 'del', 'della', 'delle', 'degli', 'dei', 'dal', 'dalla', 'dalle', 'nel', 'nella', 'nelle', 'sul', 'sulla', 'sulle', 'nei'].includes(lower) && idx > 0) {
+      return lower;
+    }
+
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  });
+
+  let title = formattedWords.join(' ');
+  if (title.length > 5) {
+    title = title.replace(/\b(Analisi|Cause|Paralisi|Riforma|Dichiarazione|Inaugurazione)\b/gi, (match) => match);
+  }
+  return title;
+}
+
 function findArticleBySlugOrIdWorker(slugOrId, articles) {
-  if (!slugOrId || !Array.isArray(articles)) return null;
+  if (!slugOrId) return null;
   const target = String(slugOrId).trim();
   const normTarget = normalizeSlugWorker(target);
 
-  let found = articles.find(a => a && a.id === target);
-  if (found) return found;
+  if (Array.isArray(articles)) {
+    let found = articles.find(a => a && a.id === target);
+    if (found) return found;
 
-  found = articles.find(a => a && a.slug === target);
-  if (found) return found;
+    found = articles.find(a => a && a.slug === target);
+    if (found) return found;
 
-  found = articles.find(a => a && normalizeSlugWorker(a.slug) === normTarget);
-  if (found) return found;
+    found = articles.find(a => a && normalizeSlugWorker(a.slug) === normTarget);
+    if (found) return found;
 
-  found = articles.find(a => a && a.title && normalizeSlugWorker(a.title) === normTarget);
-  if (found) return found;
+    found = articles.find(a => a && a.title && normalizeSlugWorker(a.title) === normTarget);
+    if (found) return found;
 
-  found = articles.find(a => a && a.title && normalizeSlugWorker(a.title).includes(normTarget));
-  if (found) return found;
+    found = articles.find(a => a && a.title && normalizeSlugWorker(a.title).includes(normTarget));
+    if (found) return found;
+
+    if (normTarget.length > 8) {
+      found = articles.find(a => {
+        if (!a) return false;
+        const normA = normalizeSlugWorker(a.slug || '');
+        const normT = normalizeSlugWorker(a.title || '');
+        return (normA && (normA.includes(normTarget) || normTarget.includes(normA))) ||
+               (normT && (normT.includes(normTarget) || normTarget.includes(normT)));
+      });
+      if (found) return found;
+    }
+  }
+
+  // Fallback: ALWAYS generate dynamic article metadata from slug if slug is provided
+  if (normTarget.length >= 3) {
+    const formattedTitle = formatSlugToTitleWorker(target);
+    return {
+      id: `art-synth-${normTarget.slice(0, 30)}`,
+      title: formattedTitle,
+      slug: target,
+      intro: `Notizia e reportage ufficiale dal Portale New World State: ${formattedTitle}. Leggi l'articolo completo, le analisi e i dati sul Giornale Sovrano.`,
+      content: `${formattedTitle}. Leggi l'articolo completo e gli approfondimenti sul Portale Ufficiale New World State News.`,
+      images: [
+        {
+          type: 'image',
+          source: 'url',
+          url: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80',
+          caption: formattedTitle
+        }
+      ],
+      authorName: 'Cronista Ufficiale NWS',
+      authorRole: 'Redazione Giornalistica',
+      publishedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      tags: ['Notizie', 'NewWorldState', 'Informazione', 'Cronaca']
+    };
+  }
 
   return null;
 }
