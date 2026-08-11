@@ -6242,29 +6242,31 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
       }
 
       const slug = article.slug || article.id;
-      const canonicalUrl = `${baseUrl}/?tab=news&notizia=${encodeURIComponent(slug)}`;
+      // Clean URL for Facebook, Twitter, LinkedIn & Search Engines
+      const cleanArticleUrl = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
       const authorName = cleanMetaText(article.authorName) || 'Cronista Ufficiale NWS';
       const authorRole = cleanMetaText(article.authorRole) || 'Giornalista Sovrano';
       const publishedDate = article.publishedAt || article.createdAt || new Date().toISOString();
       const modifiedDate = article.updatedAt || publishedDate;
 
       const rawTags = Array.isArray(article.tags) ? article.tags.map((t: string) => cleanMetaText(t)).filter(Boolean) : [];
+      if (rawTags.length === 0) rawTags.push('Notizie', 'NewWorldState', 'Informazione');
       const tagsString = rawTags.join(', ');
 
       const metaBlock = `
-        <!-- Dynamic Article Meta Tags for SEO & Social Media Previews (WhatsApp, Facebook, Twitter, Telegram, LinkedIn, AI Engines) -->
+        <!-- Dynamic Article Meta Tags for SEO & Social Media Previews (Facebook, WhatsApp, Twitter, Telegram, LinkedIn, AI Engines) -->
         <title>${escapeHtml(fullTitle)}</title>
         <meta name="title" content="${escapeHtml(fullTitle)}" />
         <meta name="description" content="${escapeHtml(description)}" />
         <meta name="keywords" content="${escapeHtml(tagsString)}, notizie, new world state, giornalismo, cronaca, ai indexing" />
         <meta name="author" content="${escapeHtml(authorName)}" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-        <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+        <link rel="canonical" href="${cleanArticleUrl}" />
 
         <!-- Open Graph / Facebook / WhatsApp / Telegram / LinkedIn -->
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="New World State News" />
-        <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+        <meta property="og:url" content="${cleanArticleUrl}" />
         <meta property="og:title" content="${escapeHtml(rawTitle)}" />
         <meta property="og:description" content="${escapeHtml(description)}" />
         <meta property="og:image" content="${escapeHtml(imageUrl)}" />
@@ -6280,7 +6282,7 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
 
         <!-- Twitter Cards -->
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="${escapeHtml(canonicalUrl)}" />
+        <meta name="twitter:url" content="${cleanArticleUrl}" />
         <meta name="twitter:title" content="${escapeHtml(rawTitle)}" />
         <meta name="twitter:description" content="${escapeHtml(description)}" />
         <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
@@ -6299,7 +6301,7 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
           "@type": "NewsArticle",
           "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": canonicalUrl
+            "@id": cleanArticleUrl
           },
           "headline": rawTitle,
           "description": description,
@@ -6332,6 +6334,8 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
         .replace(/<title>[\s\S]*?<\/title>/gi, '')
         .replace(/<meta\s+name="title"[\s\S]*?>/gi, '')
         .replace(/<meta\s+name="description"[\s\S]*?>/gi, '')
+        .replace(/<meta\s+name="author"[\s\S]*?>/gi, '')
+        .replace(/<meta\s+name="keywords"[\s\S]*?>/gi, '')
         .replace(/<meta\s+property="og:[\s\S]*?>/gi, '')
         .replace(/<meta\s+property="twitter:[\s\S]*?>/gi, '')
         .replace(/<meta\s+name="twitter:[\s\S]*?>/gi, '')

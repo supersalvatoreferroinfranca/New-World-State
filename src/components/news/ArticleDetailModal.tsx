@@ -88,7 +88,7 @@ export default function ArticleDetailModal({
       // Inject or update Schema.org NewsArticle JSON-LD
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://newworldstate.cloud';
       const slug = article.slug || article.id;
-      const articleUrl = `${origin}/?tab=news&notizia=${encodeURIComponent(slug)}`;
+      const articleUrl = `${origin}/notizie/${encodeURIComponent(slug)}`;
       
       let mainImg = `${origin}/LOGO_NEW-WORLD-STATE.jpg`;
       if (article.images && article.images.length > 0 && article.images[0]?.url) {
@@ -256,7 +256,8 @@ export default function ArticleDetailModal({
     .filter((a): a is NewsArticle => !!a);
 
   const handleShare = () => {
-    const url = `${window.location.origin}/?tab=news&notizia=${article.slug}`;
+    const slug = article.slug || article.id;
+    const url = `${window.location.origin}/notizie/${encodeURIComponent(slug)}`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
       setCopied(true);
