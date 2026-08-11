@@ -96,8 +96,57 @@ let memoryWorkerArticles = [
     createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     publishedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'art-104',
+    title: 'L\'Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali',
+    slug: 'limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali',
+    categoryId: 'cat-politica',
+    intro: 'Analisi di approfondimento geopolitico sulla paralisi del Consiglio di Sicurezza ONU nei conflitti contemporanei e sulla necessità di nuove strutture di governance globale decentralizzata.',
+    content: `Il sistema di sicurezza collettiva nato nel 1945 mostra crepe strutturali non più rinviabili. Di fronte all'escalation delle crisi internazionali e al ricorso sistematico al diritto di veto da parte dei membri permanenti del Consiglio di Sicurezza, le Nazioni Unite si trovano in uno stato di sostanziale paralisi operativa.
+
+Questo reportage speciale del Giornale Sovrano New World State analizza le ragioni storiche, giuridiche e diplomatiche del blocco istituzionale, proponendo la transizione verso un modello federale di democrazia diretta digitale e risoluzione pacifica delle controversie.
+
+"Senza una riforma radicale che superi i privilegi del dopoguerra," sottolinea il centro studi NWS, "la diplomazia tradizionale continuerà ad arrestarsi di fronte agli interessi particolari delle grandi potenze."`,
+    images: [
+      {
+        type: 'image',
+        source: 'url',
+        url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
+        caption: 'Assemblea e Consiglio di Sicurezza delle Nazioni Unite'
+      }
+    ],
+    tags: ['ONU', 'Geopolitica', 'Diplomazia', 'Pace', 'Sovranità'],
+    authorName: 'Elenor Vance (Cronista Capo)',
+    authorRole: 'Cronista Ufficiale',
+    status: 'pubblicato',
+    createdAt: new Date().toISOString(),
+    publishedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ];
+
+function getThematicImageForSlugWorker(slug, title) {
+  const text = (String(slug || '') + ' ' + String(title || '')).toLowerCase();
+  
+  if (/onu|united\s*nations|diploma|conflitt|paralisi|palazzo|assemblea|referendum|voto|governo|politica|stato/i.test(text)) {
+    return 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80';
+  }
+  if (/diritt|privacy|sicurezza|crittografia|custodi|legge|costituz|giustiz/i.test(text)) {
+    return 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80';
+  }
+  if (/tecno|innovaz|rete|nodo|server|cloud|ai|intel|cyber|digital|dati/i.test(text)) {
+    return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80';
+  }
+  if (/econo|finanz|monet|banc|mercat|invest|fond/i.test(text)) {
+    return 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80';
+  }
+  if (/cultur|societ|arte|istruz|scuola|evento|comunita/i.test(text)) {
+    return 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1200&q=80';
+  }
+
+  return 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80';
+}
 
 function cleanMetaTextWorker(str) {
   if (!str) return '';
@@ -208,6 +257,8 @@ function findArticleBySlugOrIdWorker(slugOrId, articles) {
   // Fallback: ALWAYS generate dynamic article metadata from slug if slug is provided
   if (normTarget.length >= 3) {
     const formattedTitle = formatSlugToTitleWorker(target);
+    const thematicImgUrl = getThematicImageForSlugWorker(target, formattedTitle);
+
     return {
       id: `art-synth-${normTarget.slice(0, 30)}`,
       title: formattedTitle,
@@ -218,7 +269,7 @@ function findArticleBySlugOrIdWorker(slugOrId, articles) {
         {
           type: 'image',
           source: 'url',
-          url: '/LOGO_NEW-WORLD-STATE.jpg',
+          url: thematicImgUrl,
           caption: formattedTitle
         }
       ],
@@ -240,10 +291,10 @@ function injectArticleMetaTagsWorker(html, article, baseUrl) {
   const description = rawIntro.length > 220 ? rawIntro.slice(0, 217) + '...' : rawIntro;
   const fullBodyText = cleanMetaTextWorker(article.content || article.intro);
 
-  let imageUrl = `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`;
+  let imageUrl = getThematicImageForSlugWorker(article.slug || '', rawTitle);
   if (article.images && Array.isArray(article.images) && article.images.length > 0) {
     const firstImg = article.images[0];
-    if (firstImg && firstImg.url) {
+    if (firstImg && firstImg.url && firstImg.url !== '/LOGO_NEW-WORLD-STATE.jpg') {
       const u = firstImg.url.trim();
       if (u.startsWith('http://') || u.startsWith('https://')) {
         imageUrl = u;

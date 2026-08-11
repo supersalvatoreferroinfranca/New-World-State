@@ -154,6 +154,38 @@ Il piano di espansione prevede l'integrazione di ulteriori 8 nodi comunitari ges
     updatedAt: new Date().toISOString(),
     isFeatured: true,
     viewsCount: 615
+  },
+  {
+    id: 'art-104',
+    title: 'L\'Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali',
+    slug: 'limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali',
+    categoryId: 'cat-politica',
+    intro: 'Analisi di approfondimento geopolitico sulla paralisi del Consiglio di Sicurezza ONU nei conflitti contemporanei e sulla necessità di nuove strutture di governance globale decentralizzata.',
+    content: `Il sistema di sicurezza collettiva nato nel 1945 mostra crepe strutturali non più rinviabili. Di fronte all'escalation delle crisi internazionali e al ricorso sistematico al diritto di veto da parte dei membri permanenti del Consiglio di Sicurezza, le Nazioni Unite si trovano in uno stato di sostanziale paralisi operativa.
+
+Questo reportage speciale del Giornale Sovrano New World State analizza le ragioni storiche, giuridiche e diplomatiche del blocco istituzionale, proponendo la transizione verso un modello federale di democrazia diretta digitale e risoluzione pacifica delle controversie.
+
+"Senza una riforma radicale che superi i privilegi del dopoguerra," sottolinea il centro studi NWS, "la diplomazia tradizionale continuerà ad arrestarsi di fronte agli interessi particolari delle grandi potenze."`,
+    images: [
+      {
+        type: 'image',
+        source: 'url',
+        url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
+        caption: 'Assemblea e Consiglio di Sicurezza delle Nazioni Unite'
+      }
+    ],
+    videos: [],
+    tags: ['#ONU', '#Geopolitica', '#Diplomazia', '#Pace', '#Sovranità'],
+    relatedArticleIds: ['art-101'],
+    authorId: 1004,
+    authorName: 'Elenor Vance (Cronista Capo)',
+    authorRole: 'Cronista Ufficiale',
+    status: 'pubblicato',
+    createdAt: new Date().toISOString(),
+    publishedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isFeatured: true,
+    viewsCount: 1420
   }
 ];
 
