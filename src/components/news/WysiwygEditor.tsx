@@ -66,16 +66,16 @@ export default function WysiwygEditor({
   };
 
   return (
-    <div className="border border-slate-300 rounded-2xl overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#0a1c3e] transition">
+    <div className="border border-slate-300 rounded-2xl overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#0a1c3e] transition text-slate-900">
       {/* WYSIWYG Toolbar */}
-      <div className="bg-slate-100 border-b border-slate-200 px-3 py-2 flex flex-wrap items-center justify-between gap-1 text-slate-700 select-none">
+      <div className="bg-slate-100 border-b border-slate-200 px-3 py-2 flex flex-wrap items-center justify-between gap-1 text-slate-900 select-none">
         <div className="flex flex-wrap items-center gap-1">
           <button
             type="button"
             onClick={() => execCommand('bold')}
             disabled={isHtmlMode}
             title={tText('Bold', 'Grassetto')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
             <Bold className="w-4 h-4" />
           </button>
@@ -85,7 +85,7 @@ export default function WysiwygEditor({
             onClick={() => execCommand('italic')}
             disabled={isHtmlMode}
             title={tText('Italic', 'Corsivo')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
             <Italic className="w-4 h-4" />
           </button>
@@ -95,7 +95,7 @@ export default function WysiwygEditor({
             onClick={() => execCommand('underline')}
             disabled={isHtmlMode}
             title={tText('Underline', 'Sottolineato')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
             <Underline className="w-4 h-4" />
           </button>
@@ -105,7 +105,7 @@ export default function WysiwygEditor({
             onClick={() => execCommand('strikeThrough')}
             disabled={isHtmlMode}
             title={tText('Strikethrough', 'Barrato')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
             <Strikethrough className="w-4 h-4" />
           </button>
@@ -117,7 +117,7 @@ export default function WysiwygEditor({
             onClick={() => execCommand('formatBlock', '<h3>')}
             disabled={isHtmlMode}
             title={tText('Heading 3', 'Intestazione H3')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
             <Heading3 className="w-4 h-4" />
           </button>
@@ -127,7 +127,7 @@ export default function WysiwygEditor({
             onClick={() => execCommand('insertUnorderedList')}
             disabled={isHtmlMode}
             title={tText('Bullet List', 'Elenco Puntato')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
             <List className="w-4 h-4" />
           </button>
@@ -137,7 +137,7 @@ export default function WysiwygEditor({
             onClick={() => execCommand('insertOrderedList')}
             disabled={isHtmlMode}
             title={tText('Numbered List', 'Elenco Numerato')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
             <ListOrdered className="w-4 h-4" />
           </button>
@@ -147,7 +147,7 @@ export default function WysiwygEditor({
             onClick={() => execCommand('formatBlock', '<blockquote>')}
             disabled={isHtmlMode}
             title={tText('Quote', 'Citazione')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
             <Quote className="w-4 h-4" />
           </button>
@@ -159,7 +159,7 @@ export default function WysiwygEditor({
             onClick={handleAddLink}
             disabled={isHtmlMode}
             title={tText('Insert Link', 'Inserisci Link')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
             <LinkIcon className="w-4 h-4" />
           </button>
@@ -169,9 +169,9 @@ export default function WysiwygEditor({
             onClick={() => execCommand('removeFormat')}
             disabled={isHtmlMode}
             title={tText('Clear Formatting', 'Rimuovi Formattazione')}
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition cursor-pointer disabled:opacity-40"
+            className="p-1.5 rounded-lg hover:bg-slate-300 text-slate-900 transition cursor-pointer disabled:opacity-40"
           >
-            <Eraser className="w-4 h-4 text-slate-500" />
+            <Eraser className="w-4 h-4 text-slate-600" />
           </button>
         </div>
 
@@ -179,10 +179,10 @@ export default function WysiwygEditor({
         <button
           type="button"
           onClick={() => setIsHtmlMode(!isHtmlMode)}
-          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1 border ${
+          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1 border ${
             isHtmlMode
               ? 'bg-[#0a1c3e] text-brand-gold border-[#0a1c3e]'
-              : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-200'
+              : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-200'
           }`}
         >
           {isHtmlMode ? (
@@ -205,7 +205,7 @@ export default function WysiwygEditor({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={7}
-          className="w-full p-3 font-mono text-xs text-slate-800 bg-slate-900 text-emerald-400 outline-none resize-none"
+          className="w-full p-4 font-mono text-xs bg-slate-950 text-emerald-300 placeholder-slate-500 outline-none resize-none selection:bg-emerald-800 selection:text-white"
           style={{ minHeight }}
         />
       ) : (
@@ -215,7 +215,7 @@ export default function WysiwygEditor({
           onInput={handleInput}
           onBlur={handleInput}
           data-placeholder={placeholder}
-          className="p-4 text-xs text-slate-800 leading-relaxed outline-none min-h-[160px] prose prose-slate max-w-none focus:outline-none"
+          className="p-4 text-sm text-slate-900 leading-relaxed outline-none min-h-[160px] bg-white focus:outline-none font-sans"
           style={{ minHeight }}
         />
       )}

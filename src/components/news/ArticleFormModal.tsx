@@ -128,9 +128,9 @@ export default function ArticleFormModal({
     });
   };
 
-  // Automatic Media Search States (Unsplash, Pexels, Pixabay, YouTube)
+  // Automatic Media Search States (Unsplash, Pexels, Pixabay, Wikimedia, YouTube)
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPlatform, setSelectedPlatform] = useState<'all' | 'unsplash' | 'pexels' | 'pixabay' | 'youtube'>('all');
+  const [selectedPlatform, setSelectedPlatform] = useState<'all' | 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia' | 'youtube'>('all');
   const [isSearchingMedia, setIsSearchingMedia] = useState(false);
   const [mediaSearchResults, setMediaSearchResults] = useState<MediaSearchResult[]>([]);
   const [mediaSearchError, setMediaSearchError] = useState<string | null>(null);
@@ -1091,6 +1091,7 @@ export default function ArticleFormModal({
                   { id: 'unsplash', label: 'Unsplash', icon: ImageIcon },
                   { id: 'pexels', label: 'Pexels', icon: ImageIcon },
                   { id: 'pixabay', label: 'Pixabay', icon: ImageIcon },
+                  { id: 'wikimedia', label: 'Wikimedia Commons', icon: Globe },
                   { id: 'youtube', label: 'YouTube (Video)', icon: Film }
                 ].map((p) => {
                   const Icon = p.icon;

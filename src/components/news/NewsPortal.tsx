@@ -7,7 +7,8 @@ import {
   getCategories, 
   getArticlesPendingModeration,
   incrementArticleViews,
-  syncArticlesWithServer
+  syncArticlesWithServer,
+  deleteArticle
 } from '../../services/newsService';
 import ArticleFormModal from './ArticleFormModal';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -33,6 +34,7 @@ import {
   UserCheck, 
   Sparkles, 
   PenTool, 
+  Trash2,
   Layers,
   Volume2
 } from 'lucide-react';
@@ -181,6 +183,17 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
       return String(art.authorId) === String(currentAuthorId) || art.authorName === currentAuthorName || art.status === 'bozza';
     }
     return false;
+  };
+
+  const handleDeleteArticle = (art: NewsArticle) => {
+    if (window.confirm(tText(`Are you sure you want to permanently delete the article "${art.title}"?`, `Sei sicuro di voler eliminare definitivamente l'articolo "${art.title}"?`))) {
+      deleteArticle(art.id);
+      loadData();
+      if (selectedDetailArticle?.id === art.id) {
+        setIsDetailModalOpen(false);
+        setSelectedDetailArticle(null);
+      }
+    }
   };
 
   const toggleSimulatedCronista = () => {
@@ -633,19 +646,34 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                     <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a1c3e] gap-2">
                       <div className="flex items-center gap-2">
                         {canEditArticle(art) && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setArticleToEdit(art);
-                              setIsArticleFormOpen(true);
-                            }}
-                            className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-[#0a1c3e] hover:text-white text-[#0a1c3e] font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 border border-amber-300 shadow-sm"
-                            title={tText('Edit Article', 'Modifica Articolo')}
-                          >
-                            <PenTool className="w-3.5 h-3.5" />
-                            <span>{tText('Edit', 'Modifica')}</span>
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setArticleToEdit(art);
+                                setIsArticleFormOpen(true);
+                              }}
+                              className="px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-[#0a1c3e] hover:text-white text-[#0a1c3e] font-extrabold text-xs transition cursor-pointer flex items-center gap-1 border border-amber-300 shadow-sm"
+                              title={tText('Edit Article', 'Modifica Articolo')}
+                            >
+                              <PenTool className="w-3.5 h-3.5" />
+                              <span>{tText('Edit', 'Modifica')}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteArticle(art);
+                              }}
+                              className="px-2.5 py-1.5 rounded-xl bg-red-100 hover:bg-red-600 text-red-700 hover:text-white font-extrabold text-xs transition cursor-pointer flex items-center gap-1 border border-red-200 shadow-sm"
+                              title={tText('Delete Article', 'Elimina Articolo')}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>{tText('Delete', 'Elimina')}</span>
+                            </button>
+                          </div>
                         )}
 
                         <span className="text-[10px] text-slate-400 font-normal hidden sm:inline">
@@ -723,6 +751,11 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                 setArticleToEdit(artToEdit);
                 setIsArticleFormOpen(true);
               }
+            : undefined
+        }
+        onDeleteArticle={
+          selectedDetailArticle && canEditArticle(selectedDetailArticle)
+            ? handleDeleteArticle
             : undefined
         }
       />

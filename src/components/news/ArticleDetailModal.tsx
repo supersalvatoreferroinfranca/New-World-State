@@ -18,6 +18,7 @@ import {
   Globe, 
   ShieldCheck,
   PenTool,
+  Trash2,
   Volume2,
   Play,
   Pause,
@@ -30,6 +31,7 @@ interface ArticleDetailModalProps {
   onClose: () => void;
   onSelectArticle?: (article: NewsArticle) => void;
   onEditArticle?: (article: NewsArticle) => void;
+  onDeleteArticle?: (article: NewsArticle) => void;
 }
 
 export default function ArticleDetailModal({
@@ -37,7 +39,8 @@ export default function ArticleDetailModal({
   isOpen,
   onClose,
   onSelectArticle,
-  onEditArticle
+  onEditArticle,
+  onDeleteArticle
 }: ArticleDetailModalProps) {
   const { tText } = useI18n();
   const [copied, setCopied] = useState(false);
@@ -311,6 +314,19 @@ export default function ArticleDetailModal({
               >
                 <PenTool className="w-4 h-4 text-[#0a1c3e]" />
                 <span className="hidden sm:inline">{tText('Edit', 'Modifica')}</span>
+              </button>
+            )}
+
+            {onDeleteArticle && (
+              <button
+                onClick={() => {
+                  onDeleteArticle(article);
+                }}
+                className="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold transition cursor-pointer flex items-center gap-1.5 text-xs shadow-md border border-red-500"
+                title={tText('Delete Article', 'Elimina Articolo')}
+              >
+                <Trash2 className="w-4 h-4 text-white" />
+                <span className="hidden sm:inline">{tText('Delete', 'Elimina')}</span>
               </button>
             )}
 

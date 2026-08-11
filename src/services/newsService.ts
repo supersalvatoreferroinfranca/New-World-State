@@ -640,7 +640,7 @@ export async function generateArticleWithAI(
 export interface MediaSearchResult {
   id: string;
   type: 'image' | 'video';
-  sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'youtube';
+  sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'youtube' | 'wikimedia';
   url: string;
   previewUrl?: string;
   title: string;
