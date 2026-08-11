@@ -112,7 +112,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       {
         type: 'image',
         source: 'url',
-        url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
+        url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
         caption: 'Assemblea e Consiglio di Sicurezza delle Nazioni Unite'
       }
     ],
@@ -130,7 +130,7 @@ function getThematicImageForSlugWorker(slug, title) {
   const text = (String(slug || '') + ' ' + String(title || '')).toLowerCase();
   
   if (/onu|united\s*nations|diploma|conflitt|paralisi|palazzo|assemblea|referendum|voto|governo|politica|stato/i.test(text)) {
-    return 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80';
+    return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80';
   }
   if (/diritt|privacy|sicurezza|crittografia|custodi|legge|costituz|giustiz/i.test(text)) {
     return 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80';

@@ -170,7 +170,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       {
         type: 'image',
         source: 'url',
-        url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
+        url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
         caption: 'Assemblea e Consiglio di Sicurezza delle Nazioni Unite'
       }
     ],
