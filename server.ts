@@ -5298,6 +5298,35 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
       }
     });
 
+    apiRouter.get('/news/articles', (req, res) => {
+      try {
+        const articles = getServerArticles();
+        return res.json({ success: true, articles });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: 'Errore lettura articoli: ' + err.message });
+      }
+    });
+
+    apiRouter.post('/news/sync', (req, res) => {
+      try {
+        const { articles } = req.body;
+        if (Array.isArray(articles)) {
+          const existing = getServerArticles();
+          const map = new Map<string, any>();
+          existing.forEach(a => { if (a && a.id) map.set(a.id, a); });
+          articles.forEach(a => { if (a && a.id) map.set(a.id, a); });
+          const merged = Array.from(map.values()).sort((a, b) =>
+            new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+          );
+          saveServerArticles(merged);
+          return res.json({ success: true, count: merged.length });
+        }
+        return res.status(400).json({ success: false, message: 'Elenco articoli non fornito.' });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: 'Errore sincronizzazione articoli: ' + err.message });
+      }
+    });
+
     // Catch-all for unknown API routes
     apiRouter.all('*', (req, res) => {
       console.warn(`[API] Unmatched route: ${req.method} ${req.url}`);
@@ -5998,14 +6027,359 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
       `);
     });
 
+    // =========================================================================
+    // NEWS ARTICLES SERVER STORAGE & DYNAMIC META TAG INJECTION FOR SEO & SHARING
+    // =========================================================================
+    const SERVER_NEWS_FILE = path.join(process.cwd(), 'data', 'news_articles.json');
+
+    const INITIAL_SERVER_ARTICLES = [
+      {
+        id: 'art-101',
+        title: 'Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0',
+        slug: 'inaugurazione-registro-globale-democrazia-diretta-10',
+        categoryId: 'cat-politica',
+        intro: 'L\'Assemblea Fondativa annuncia l\'apertura del portale sovrano decentralizzato. Tutti i cittadini hanno ora diritto di voto diretto sui referendum federali.',
+        content: `Oggi segna una tappa fondamentale nella storia della governance sovrana contemporanea...`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Sessione di apertura dell\'Assemblea Fondativa e del Registro Globale.'
+          }
+        ],
+        tags: ['Democrazia', 'Sovranità', 'Assemblea', 'Costituzione'],
+        authorName: 'Elenor Vance (Cronista Capo)',
+        authorRole: 'Cronista Ufficiale',
+        status: 'pubblicato',
+        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+        publishedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+        isFeatured: true
+      },
+      {
+        id: 'art-102',
+        title: 'Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini',
+        slug: 'protocollo-trasparenza-finanziaria-tutela-privacy',
+        categoryId: 'cat-diritti',
+        intro: 'Approvato a maggioranza qualificata il nuovo disciplinare a protezione dei dati biometrici e per la riservatezza delle transazioni comunitarie.',
+        content: `Il Corpo dei Custodi Digitali ha ratificato il nuovo Protocollo...`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Crittografia e protezione della privacy nel sistema New World State.'
+          }
+        ],
+        tags: ['Privacy', 'Crittografia', 'Sicurezza', 'CustodiDigitali'],
+        authorName: 'Marcus Thorne',
+        authorRole: 'Cronista di Stato',
+        status: 'pubblicato',
+        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+        publishedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
+      },
+      {
+        id: 'art-103',
+        title: 'Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server',
+        slug: 'infrastrutture-decentralizzate-test-nodo-rete-ridondanza',
+        categoryId: 'cat-tecnologia',
+        intro: 'Test di resilienza completato con successo su 12 nodi distribuiti globalmente per garantire l\'operatività ininterrotta del portale.',
+        content: `Nelle ultime 48 ore la squadra di tecnici e custodi della rete ha condotto uno stress test...`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Rete di nodi e connettività globale dello Stato Sovrano.'
+          }
+        ],
+        tags: ['Tecnologia', 'ReteDecentralizzata', 'Cloud', 'Resilienza'],
+        authorName: 'Sophia Chen',
+        authorRole: 'Cronista Tecnologico',
+        status: 'pubblicato',
+        createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+        publishedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
+
+    function getServerArticles(): any[] {
+      try {
+        if (fs.existsSync(SERVER_NEWS_FILE)) {
+          const raw = fs.readFileSync(SERVER_NEWS_FILE, 'utf-8');
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e: any) {
+        console.error('[SERVER-NEWS] Read error:', e.message);
+      }
+      return INITIAL_SERVER_ARTICLES;
+    }
+
+    function saveServerArticles(articles: any[]): void {
+      try {
+        const parentDir = path.dirname(SERVER_NEWS_FILE);
+        if (!fs.existsSync(parentDir)) {
+          fs.mkdirSync(parentDir, { recursive: true });
+        }
+        fs.writeFileSync(SERVER_NEWS_FILE, JSON.stringify(articles, null, 2), 'utf-8');
+      } catch (e: any) {
+        console.error('[SERVER-NEWS] Save error:', e.message);
+      }
+    }
+
+    function cleanMetaText(str?: string): string {
+      if (!str) return '';
+      return str
+        .replace(/<[^>]*>?/gm, '')
+        .replace(/^#{1,6}\s+/gm, '')
+        .replace(/(\*\*|__)(.*?)\1/g, '$2')
+        .replace(/(\*|_)(.*?)\1/g, '$2')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/[\*\_\#\`]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function escapeHtml(str: string): string {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function injectArticleMetaTags(html: string, article: any, req: express.Request): string {
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const host = req.get('host') || 'newworldstate.cloud';
+      const baseUrl = `${protocol}://${host}`;
+
+      const rawTitle = cleanMetaText(article.title);
+      const fullTitle = `${rawTitle} | New World State News`;
+      const rawIntro = cleanMetaText(article.intro || article.content);
+      const description = rawIntro.length > 220 ? rawIntro.slice(0, 217) + '...' : rawIntro;
+
+      let imageUrl = `${baseUrl}/documents/branding_images/fronte.jpg`;
+      if (article.images && Array.isArray(article.images) && article.images.length > 0) {
+        const firstImg = article.images[0];
+        if (firstImg && firstImg.url) {
+          const u = firstImg.url.trim();
+          if (u.startsWith('http://') || u.startsWith('https://')) {
+            imageUrl = u;
+          } else if (u.startsWith('/')) {
+            imageUrl = `${baseUrl}${u}`;
+          }
+        }
+      }
+
+      const slug = article.slug || article.id;
+      const canonicalUrl = `${baseUrl}/?tab=news&notizia=${encodeURIComponent(slug)}`;
+      const authorName = cleanMetaText(article.authorName) || 'Cronista Ufficiale NWS';
+      const publishedDate = article.publishedAt || article.createdAt || new Date().toISOString();
+      const modifiedDate = article.updatedAt || publishedDate;
+
+      const rawTags = Array.isArray(article.tags) ? article.tags.map((t: string) => cleanMetaText(t)).filter(Boolean) : [];
+      const tagsString = rawTags.join(', ');
+
+      const metaBlock = `
+        <!-- Dynamic Article Meta Tags for SEO & Social Media Previews (WhatsApp, Facebook, Twitter, Telegram, LinkedIn) -->
+        <title>${escapeHtml(fullTitle)}</title>
+        <meta name="title" content="${escapeHtml(fullTitle)}" />
+        <meta name="description" content="${escapeHtml(description)}" />
+        <meta name="keywords" content="${escapeHtml(tagsString)}, notizie, new world state, giornalismo, cronaca" />
+        <meta name="author" content="${escapeHtml(authorName)}" />
+        <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+
+        <!-- Open Graph / Facebook / WhatsApp / Telegram / LinkedIn -->
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="New World State News" />
+        <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+        <meta property="og:title" content="${escapeHtml(rawTitle)}" />
+        <meta property="og:description" content="${escapeHtml(description)}" />
+        <meta property="og:image" content="${escapeHtml(imageUrl)}" />
+        <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="article:published_time" content="${escapeHtml(publishedDate)}" />
+        <meta property="article:modified_time" content="${escapeHtml(modifiedDate)}" />
+        <meta property="article:author" content="${escapeHtml(authorName)}" />
+        ${rawTags.map((t: string) => `<meta property="article:tag" content="${escapeHtml(t)}" />`).join('\n        ')}
+
+        <!-- Twitter Cards -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="${escapeHtml(canonicalUrl)}" />
+        <meta name="twitter:title" content="${escapeHtml(rawTitle)}" />
+        <meta name="twitter:description" content="${escapeHtml(description)}" />
+        <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+
+        <!-- Mobile & WhatsApp Thumbnail Fallbacks -->
+        <meta name="thumbnail" content="${escapeHtml(imageUrl)}" />
+        <link rel="image_src" href="${escapeHtml(imageUrl)}" />
+
+        <!-- Schema.org / Google Search Engine Structured Data (NewsArticle) -->
+        <meta itemprop="name" content="${escapeHtml(rawTitle)}" />
+        <meta itemprop="description" content="${escapeHtml(description)}" />
+        <meta itemprop="image" content="${escapeHtml(imageUrl)}" />
+        <script type="application/ld+json">
+        ${JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": canonicalUrl
+          },
+          "headline": rawTitle,
+          "description": description,
+          "image": [imageUrl],
+          "datePublished": publishedDate,
+          "dateModified": modifiedDate,
+          "author": {
+            "@type": "Person",
+            "name": authorName
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "New World State News Authority",
+            "logo": {
+              "@type": "ImageObject",
+              "url": `${baseUrl}/apple-touch-icon.png`
+            }
+          },
+          "keywords": tagsString
+        }, null, 2)}
+        </script>
+      `;
+
+      let cleanHtml = html
+        .replace(/<title>[\s\S]*?<\/title>/gi, '')
+        .replace(/<meta\s+name="title"[\s\S]*?>/gi, '')
+        .replace(/<meta\s+name="description"[\s\S]*?>/gi, '')
+        .replace(/<meta\s+property="og:[\s\S]*?>/gi, '')
+        .replace(/<meta\s+property="twitter:[\s\S]*?>/gi, '')
+        .replace(/<meta\s+name="twitter:[\s\S]*?>/gi, '')
+        .replace(/<meta\s+itemprop="[\s\S]*?>/gi, '')
+        .replace(/<meta\s+name="thumbnail"[\s\S]*?>/gi, '')
+        .replace(/<link\s+rel="image_src"[\s\S]*?>/gi, '')
+        .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '');
+
+      return cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
+    }
+
+    function injectNewsPortalMetaTags(html: string, req: express.Request): string {
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const host = req.get('host') || 'newworldstate.cloud';
+      const baseUrl = `${protocol}://${host}`;
+      const canonicalUrl = `${baseUrl}/?tab=news`;
+      const title = "Portale Notizie & Giornalismo Sovrano | New World State 1.0";
+      const description = "Leggi le notizie ufficiali, i reportage, le inchieste e gli approfondimenti della comunità globale New World State. Giornalismo verificato, etico e indipendente.";
+      const imageUrl = `${baseUrl}/documents/branding_images/fronte.jpg`;
+
+      const metaBlock = `
+        <!-- Dynamic News Portal Meta Tags -->
+        <title>${escapeHtml(title)}</title>
+        <meta name="title" content="${escapeHtml(title)}" />
+        <meta name="description" content="${escapeHtml(description)}" />
+        <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="New World State News" />
+        <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+        <meta property="og:title" content="${escapeHtml(title)}" />
+        <meta property="og:description" content="${escapeHtml(description)}" />
+        <meta property="og:image" content="${escapeHtml(imageUrl)}" />
+        <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="${escapeHtml(canonicalUrl)}" />
+        <meta name="twitter:title" content="${escapeHtml(title)}" />
+        <meta name="twitter:description" content="${escapeHtml(description)}" />
+        <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+      `;
+
+      let cleanHtml = html
+        .replace(/<title>[\s\S]*?<\/title>/gi, '')
+        .replace(/<meta\s+name="title"[\s\S]*?>/gi, '')
+        .replace(/<meta\s+name="description"[\s\S]*?>/gi, '')
+        .replace(/<meta\s+property="og:[\s\S]*?>/gi, '')
+        .replace(/<meta\s+property="twitter:[\s\S]*?>/gi, '')
+        .replace(/<meta\s+name="twitter:[\s\S]*?>/gi, '')
+        .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '');
+
+      return cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
+    }
+
+    let viteServer: any = null;
+
+    // Middleware to dynamically intercept HTML GET requests for news articles & news section
+    app.use(async (req, res, next) => {
+      if (req.method !== 'GET') return next();
+      if (req.path.startsWith('/api')) return next();
+      if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff2?|ttf|eot)$/i)) return next();
+
+      const targetSlug = (req.query.notizia || req.query.article || req.query.slug) as string;
+      const isNewsRoute = req.path.startsWith('/notizie') || req.path.startsWith('/news');
+      let pathSlug = '';
+
+      if (isNewsRoute) {
+        const parts = req.path.split('/').filter(Boolean);
+        if (parts.length >= 2 && parts[1] !== 'notizie' && parts[1] !== 'news') {
+          pathSlug = parts[1];
+        }
+      }
+
+      const slugToFind = (targetSlug || pathSlug || '').trim();
+
+      if (slugToFind || isNewsRoute || req.query.tab === 'news') {
+        const articles = getServerArticles();
+        let foundArticle = null;
+        if (slugToFind) {
+          foundArticle = articles.find(a => a.slug === slugToFind || a.id === slugToFind);
+        }
+
+        const indexPath = !isProd
+          ? path.join(process.cwd(), 'index.html')
+          : path.join(distPath, 'index.html');
+
+        if (fs.existsSync(indexPath)) {
+          try {
+            let html = fs.readFileSync(indexPath, 'utf-8');
+            if (!isProd && viteServer) {
+              html = await viteServer.transformIndexHtml(req.originalUrl, html);
+            }
+
+            if (foundArticle) {
+              const customHtml = injectArticleMetaTags(html, foundArticle, req);
+              res.setHeader('Content-Type', 'text/html; charset=utf-8');
+              return res.send(customHtml);
+            } else if (isNewsRoute || req.query.tab === 'news') {
+              const portalHtml = injectNewsPortalMetaTags(html, req);
+              res.setHeader('Content-Type', 'text/html; charset=utf-8');
+              return res.send(portalHtml);
+            }
+          } catch (err: any) {
+            console.error('[SERVER-META-INJECT-ERR]', err.message);
+          }
+        }
+      }
+
+      next();
+    });
+
     // Static file serving logic
     if (!isProd) {
       console.log('[SERVER] Starting Vite in middleware mode...');
-      const vite = await createViteServer({
+      viteServer = await createViteServer({
         server: { middlewareMode: true },
         appType: 'spa',
       });
-      app.use(vite.middlewares);
+      app.use(viteServer.middlewares);
     } else {
       console.log(`[SERVER] Serving static files from: ${distPath}`);
       

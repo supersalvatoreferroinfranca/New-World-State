@@ -65,15 +65,41 @@ export default function ArticleDetailModal({
     }
   }, []);
 
-  // Stop synthesis when modal closes or article changes
+  // Stop synthesis when modal closes or article changes & update document head meta tags for SEO/Tab title
   useEffect(() => {
-    return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+    if (isOpen && article) {
+      const prevTitle = document.title;
+      const cleanTitle = stripFormattingSymbols(article.title);
+      document.title = `${cleanTitle} | New World State News`;
+
+      const cleanIntro = stripFormattingSymbols(article.intro || article.content);
+      let metaDesc = document.querySelector('meta[name="description"]');
+      let createdDesc = false;
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+        createdDesc = true;
       }
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
+      const prevDesc = metaDesc.getAttribute('content') || '';
+      metaDesc.setAttribute('content', cleanIntro.slice(0, 200));
+
+      return () => {
+        document.title = prevTitle;
+        if (metaDesc) {
+          if (createdDesc) {
+            metaDesc.remove();
+          } else {
+            metaDesc.setAttribute('content', prevDesc);
+          }
+        }
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        setIsPlaying(false);
+        setIsPaused(false);
+      };
+    }
   }, [article?.id, isOpen]);
 
   const handlePlayTTS = () => {

@@ -254,9 +254,63 @@ export function saveArticles(articles: NewsArticle[]): void {
   try {
     localStorage.setItem(ARTICLES_STORAGE_KEY, JSON.stringify(articles));
     window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
+
+    // Asynchronously sync articles with server for social preview generation & SEO
+    safeFetch('/api/news/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articles })
+    }).catch(err => console.warn('[NEWS-SERVICE] Server sync error:', err));
   } catch (e) {
     console.error('[NEWS-SERVICE] Error saving articles:', e);
   }
+}
+
+export async function syncArticlesWithServer(): Promise<NewsArticle[]> {
+  try {
+    const res = await safeFetch('/api/news/articles');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.articles) && data.articles.length > 0) {
+        const local = getArticles();
+        const map = new Map<string, NewsArticle>();
+        
+        // Add server articles first
+        data.articles.forEach((a: NewsArticle) => {
+          if (a && a.id) map.set(a.id, a);
+        });
+        
+        // Add or update with local articles if local exists and is newer
+        local.forEach((a: NewsArticle) => {
+          if (a && a.id) {
+            const existing = map.get(a.id);
+            if (!existing || new Date(a.updatedAt || 0).getTime() >= new Date(existing.updatedAt || 0).getTime()) {
+              map.set(a.id, a);
+            }
+          }
+        });
+
+        const merged = Array.from(map.values()).sort((a, b) => 
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+
+        localStorage.setItem(ARTICLES_STORAGE_KEY, JSON.stringify(merged));
+        window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
+
+        // Push back merged state to server
+        safeFetch('/api/news/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ articles: merged })
+        }).catch(() => {});
+
+        return merged;
+      }
+    }
+  } catch (err) {
+    console.warn('[NEWS-SERVICE] Could not sync with server:', err);
+  }
+  return getArticles();
 }
 
 export function getPublishedArticles(): NewsArticle[] {

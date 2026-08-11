@@ -6,7 +6,8 @@ import {
   getArticles, 
   getCategories, 
   getArticlesPendingModeration,
-  incrementArticleViews
+  incrementArticleViews,
+  syncArticlesWithServer
 } from '../../services/newsService';
 import ArticleFormModal from './ArticleFormModal';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -97,6 +98,13 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
     const allArts = getArticles();
     setArticles(allArts);
+
+    // Sync with server asynchronously to load any new server-side news
+    syncArticlesWithServer().then(synced => {
+      if (synced && synced.length > 0) {
+        setArticles(synced);
+      }
+    }).catch(() => {});
   };
 
   useEffect(() => {
