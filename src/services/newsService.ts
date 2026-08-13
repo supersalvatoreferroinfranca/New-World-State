@@ -643,6 +643,7 @@ export interface MediaSearchResult {
   sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'youtube' | 'wikimedia' | 'flickr';
   url: string;
   previewUrl?: string;
+  sourceUrl?: string;
   title: string;
   author?: string;
 }
@@ -665,6 +666,7 @@ export interface MediaSearchDebugInfo {
   totalTimeMs?: number;
   totalResultsCount?: number;
   providers: MediaSearchProviderDebug[];
+  logs?: string[];
 }
 
 export async function searchArticleMedia(

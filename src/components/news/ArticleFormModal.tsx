@@ -1259,6 +1259,46 @@ export default function ArticleFormModal({
                         );
                       })}
                     </div>
+
+                    {/* Step-by-Step Execution Logs Console */}
+                    {searchDebugInfo.logs && searchDebugInfo.logs.length > 0 && (
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center justify-between text-[10px] text-slate-300 font-bold">
+                          <span className="flex items-center gap-1.5 text-sky-300">
+                            <Activity className="w-3.5 h-3.5 text-sky-400" />
+                            Log di Esecuzione e Tracciamento in Tempo Reale:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(searchDebugInfo.logs?.join('\n') || '');
+                              alert('Log diagnostici copiati negli appunti!');
+                            }}
+                            className="text-[9px] text-slate-400 hover:text-white underline cursor-pointer"
+                          >
+                            Copia Log Negli Appunti
+                          </button>
+                        </div>
+
+                        <div className="bg-black/80 border border-slate-700/80 rounded-lg p-2.5 max-h-40 overflow-y-auto font-mono text-[10px] space-y-1 leading-relaxed text-slate-300 shadow-inner">
+                          {searchDebugInfo.logs.map((logLine, lIdx) => {
+                            let textColor = 'text-slate-300';
+                            if (logLine.includes('✅')) textColor = 'text-emerald-300';
+                            else if (logLine.includes('❌') || logLine.includes('💥')) textColor = 'text-red-300 font-bold';
+                            else if (logLine.includes('📡')) textColor = 'text-sky-300';
+                            else if (logLine.includes('🤖') || logLine.includes('✨')) textColor = 'text-purple-300';
+                            else if (logLine.includes('🔍') || logLine.includes('📋')) textColor = 'text-amber-300';
+                            else if (logLine.includes('⚠️')) textColor = 'text-yellow-300';
+
+                            return (
+                              <div key={lIdx} className={`${textColor} whitespace-pre-wrap break-all`}>
+                                {logLine}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center justify-between p-3 bg-slate-800/60 rounded-lg border border-slate-700">
@@ -1363,28 +1403,41 @@ export default function ArticleFormModal({
                               )}
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={() => handleAttachMediaItem(item)}
-                              disabled={isAlreadyAdded}
-                              className={`w-full py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1 border ${
-                                isAlreadyAdded
-                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 cursor-default'
-                                  : 'bg-amber-400 text-[#0a1c3e] hover:bg-white border-amber-300'
-                              }`}
-                            >
-                              {isAlreadyAdded ? (
-                                <>
-                                  <Check className="w-3 h-3 text-emerald-400" />
-                                  <span>{tText('Attached', 'Allegato')}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Plus className="w-3 h-3 text-[#0a1c3e]" />
-                                  <span>{tText('+ Attach to Article', '+ Aggiungi all\'Articolo')}</span>
-                                </>
-                              )}
-                            </button>
+                            <div className="space-y-1.5 pt-1">
+                              <a
+                                href={item.sourceUrl || item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full py-1 px-2 rounded-md text-[9.5px] font-bold text-sky-300 hover:text-white bg-slate-800/80 hover:bg-sky-600/70 border border-sky-500/30 transition flex items-center justify-center gap-1 cursor-pointer truncate"
+                                title="Apri e verifica la pagina originale della fonte in una nuova scheda"
+                              >
+                                <ExternalLink className="w-3 h-3 shrink-0" />
+                                <span className="truncate">Apri Sorgente Live ↗</span>
+                              </a>
+
+                              <button
+                                type="button"
+                                onClick={() => handleAttachMediaItem(item)}
+                                disabled={isAlreadyAdded}
+                                className={`w-full py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1 border ${
+                                  isAlreadyAdded
+                                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 cursor-default'
+                                    : 'bg-amber-400 text-[#0a1c3e] hover:bg-white border-amber-300'
+                                }`}
+                              >
+                                {isAlreadyAdded ? (
+                                  <>
+                                    <Check className="w-3 h-3 text-emerald-400" />
+                                    <span>{tText('Attached', 'Allegato')}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="w-3 h-3 text-[#0a1c3e]" />
+                                    <span>{tText('+ Attach to Article', '+ Aggiungi all\'Articolo')}</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
