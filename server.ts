@@ -4124,9 +4124,11 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       const debugProviders: Array<{
         name: string;
         platform: string;
+        endpoint?: string;
         status: string;
         count: number;
         latencyMs: number;
+        details?: string;
         error?: string;
       }> = [];
 
@@ -4144,8 +4146,9 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         // 1. YouTube real video scraper
         if (reqPlatform === 'all' || reqPlatform === 'youtube') {
           const ytStart = Date.now();
+          const ytUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(cleanQuery);
           try {
-            const ytRes = await fetch('https://www.youtube.com/results?search_query=' + encodeURIComponent(cleanQuery), {
+            const ytRes = await fetch(ytUrl, {
               headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
             });
             const html = await ytRes.text();
@@ -4170,17 +4173,20 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
               if (ytCount >= 4) break;
             }
             debugProviders.push({
-              name: 'YouTube Video Search',
+              name: 'YouTube Video Scraper',
               platform: 'youtube',
+              endpoint: ytUrl,
               status: '200 OK',
               count: ytCount,
-              latencyMs: Date.now() - ytStart
+              latencyMs: Date.now() - ytStart,
+              details: `Estratti ${ytCount} filmati reali in alta definizione da YouTube.`
             });
           } catch (e: any) {
             console.warn('[YT-SCRAPE-WARN]', e);
             debugProviders.push({
-              name: 'YouTube Video Search',
+              name: 'YouTube Video Scraper',
               platform: 'youtube',
+              endpoint: ytUrl,
               status: 'Error',
               count: 0,
               latencyMs: Date.now() - ytStart,
@@ -4192,8 +4198,8 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         // 2. Wikimedia Commons API Search
         if (reqPlatform === 'all' || reqPlatform === 'wikimedia') {
           const wmStart = Date.now();
+          const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=800&format=json&origin=*`;
           try {
-            const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=800&format=json&origin=*`;
             const wmRes = await fetch(wmUrl, {
               headers: {
                 'User-Agent': 'NewWorldStateNews/1.0 (https://newworldstate.cloud; contact@newworldstate.cloud)'
@@ -4230,15 +4236,18 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             debugProviders.push({
               name: 'Wikimedia Commons API',
               platform: 'wikimedia',
+              endpoint: 'commons.wikimedia.org/w/api.php',
               status: '200 OK',
               count: wmCount,
-              latencyMs: Date.now() - wmStart
+              latencyMs: Date.now() - wmStart,
+              details: `Ottenute ${wmCount} foto ad alta risoluzione con licenza libera Creative Commons.`
             });
           } catch (e: any) {
             console.warn('[WM-WARN]', e);
             debugProviders.push({
               name: 'Wikimedia Commons API',
               platform: 'wikimedia',
+              endpoint: 'commons.wikimedia.org/w/api.php',
               status: 'Error',
               count: 0,
               latencyMs: Date.now() - wmStart,
@@ -4250,8 +4259,9 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         // 3. Flickr Open Public Feed Search
         if (reqPlatform === 'all' || reqPlatform === 'flickr') {
           const flStart = Date.now();
+          const flUrl = `https://www.flickr.com/services/feeds/photos_public.gne?tags=${encodeURIComponent(cleanQuery)}&format=json&nojsoncallback=1`;
           try {
-            const flRes = await fetch(`https://www.flickr.com/services/feeds/photos_public.gne?tags=${encodeURIComponent(cleanQuery)}&format=json&nojsoncallback=1`).then(r => r.json());
+            const flRes = await fetch(flUrl).then(r => r.json());
             const flItems = (flRes.items || []).slice(0, 6);
             let flCount = 0;
             for (const item of flItems) {
@@ -4263,7 +4273,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
                   fetchedItems.push({
                     id: 'fl_' + Math.random().toString(36).substring(2, 9),
                     type: 'image',
-                    sourcePlatform: 'flickr', // STRICTLY FLICKR!
+                    sourcePlatform: 'flickr',
                     url: imgUrl,
                     previewUrl: item.media.m,
                     title: itemTitle,
@@ -4276,15 +4286,18 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             debugProviders.push({
               name: 'Flickr Public Feed',
               platform: 'flickr',
+              endpoint: 'flickr.com/services/feeds/photos_public.gne',
               status: '200 OK',
               count: flCount,
-              latencyMs: Date.now() - flStart
+              latencyMs: Date.now() - flStart,
+              details: `Recuperate ${flCount} scatti reportistica da fotografi indipendenti Flickr.`
             });
           } catch (e: any) {
             console.warn('[FLICKR-WARN]', e);
             debugProviders.push({
               name: 'Flickr Public Feed',
               platform: 'flickr',
+              endpoint: 'flickr.com/services/feeds/photos_public.gne',
               status: 'Error',
               count: 0,
               latencyMs: Date.now() - flStart,
@@ -4334,9 +4347,11 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           debugProviders.push({
             name: 'Unsplash Stock API',
             platform: 'unsplash',
+            endpoint: 'api.unsplash.com/search/photos',
             status: '200 OK',
             count: unCount,
-            latencyMs: Date.now() - unStart
+            latencyMs: Date.now() - unStart,
+            details: `Caricate ${unCount} fotografie editoriali Unsplash.`
           });
         }
 
@@ -4375,9 +4390,11 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           debugProviders.push({
             name: 'Pexels Stock API',
             platform: 'pexels',
+            endpoint: 'api.pexels.com/v1/search',
             status: '200 OK',
             count: pxCount,
-            latencyMs: Date.now() - pxStart
+            latencyMs: Date.now() - pxStart,
+            details: `Fornite ${pxCount} immagini reportage da Pexels.`
           });
         }
 
@@ -4416,9 +4433,11 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           debugProviders.push({
             name: 'Pixabay Stock API',
             platform: 'pixabay',
+            endpoint: 'pixabay.com/api',
             status: '200 OK',
             count: pbCount,
-            latencyMs: Date.now() - pbStart
+            latencyMs: Date.now() - pbStart,
+            details: `Selezionate ${pbCount} fotografie concettuali Pixabay.`
           });
         }
 
@@ -4480,6 +4499,7 @@ REGOLE TASSATIVE:
           platform: reqPlatform,
           timestamp: new Date().toISOString(),
           totalTimeMs: Date.now() - startTime,
+          totalResultsCount: itemsToReturn.length,
           providers: debugProviders
         };
 

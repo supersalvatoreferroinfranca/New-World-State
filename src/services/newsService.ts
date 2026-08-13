@@ -650,9 +650,11 @@ export interface MediaSearchResult {
 export interface MediaSearchProviderDebug {
   name: string;
   platform: string;
+  endpoint?: string;
   status: string;
   count: number;
   latencyMs: number;
+  details?: string;
   error?: string;
 }
 
@@ -660,6 +662,8 @@ export interface MediaSearchDebugInfo {
   query: string;
   platform: string;
   timestamp: string;
+  totalTimeMs?: number;
+  totalResultsCount?: number;
   providers: MediaSearchProviderDebug[];
 }
 

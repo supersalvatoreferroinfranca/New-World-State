@@ -165,6 +165,17 @@ export default function ArticleFormModal({
     }
   };
 
+  const handleToggleDebugPanel = async () => {
+    const nextShow = !showDebugPanel;
+    setShowDebugPanel(nextShow);
+    if (nextShow && (!searchDebugInfo || !searchDebugInfo.providers)) {
+      const q = (searchQuery || title || aiTopic || (articleToEdit ? articleToEdit.title : '')).trim();
+      if (q) {
+        handleSearchMedia(q, selectedPlatform);
+      }
+    }
+  };
+
   const handleAttachMediaItem = (item: MediaSearchResult) => {
     if (item.type === 'image') {
       if (!images.some(img => img.url === item.url)) {
@@ -312,6 +323,7 @@ export default function ArticleFormModal({
 
       if (articleToEdit) {
         setTitle(articleToEdit.title);
+        setSearchQuery(articleToEdit.title);
         setSlug(articleToEdit.slug);
         setIsSlugCustom(true);
         setCategoryId(articleToEdit.categoryId);
@@ -1133,7 +1145,7 @@ export default function ArticleFormModal({
                 {/* Debug Panel Toggle Button */}
                 <button
                   type="button"
-                  onClick={() => setShowDebugPanel(!showDebugPanel)}
+                  onClick={handleToggleDebugPanel}
                   className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer border ${
                     showDebugPanel
                       ? 'bg-sky-500 text-white border-sky-400 shadow'
@@ -1149,60 +1161,124 @@ export default function ArticleFormModal({
             {/* Diagnostic Debug Panel */}
             {showDebugPanel && (
               <div className="p-3.5 bg-slate-900/95 border border-sky-500/40 rounded-xl space-y-3 text-xs shadow-xl animate-fadeIn">
-                <div className="flex items-center justify-between border-b border-sky-500/20 pb-2">
+                <div className="flex flex-wrap items-center justify-between border-b border-sky-500/20 pb-2.5 gap-2">
                   <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-sky-400" />
-                    <span className="font-bold text-sky-200">
-                      Console di Diagnostica e Stato dei Provider di Ricerca
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span className="font-bold text-sky-200 text-sm">
+                      Console di Diagnostica & Monitoraggio API Media
                     </span>
                   </div>
-                  {searchDebugInfo && (
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      Query: "{searchDebugInfo.query}" | Filtro: {searchDebugInfo.platform.toUpperCase()}
-                    </span>
-                  )}
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const q = (searchQuery || title || aiTopic || (articleToEdit ? articleToEdit.title : '')).trim();
+                        if (q) handleSearchMedia(q, selectedPlatform);
+                      }}
+                      disabled={isSearchingMedia}
+                      className="px-2.5 py-1 rounded-md bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold flex items-center gap-1 transition shadow cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isSearchingMedia ? 'animate-spin' : ''}`} />
+                      <span>{isSearchingMedia ? 'Test in corso...' : 'Esegui Test Diagnostico'}</span>
+                    </button>
+                  </div>
                 </div>
 
                 {searchDebugInfo && searchDebugInfo.providers ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                    {searchDebugInfo.providers.map((p, idx) => {
-                      const isOk = p.status.includes('200') || p.status.toLowerCase().includes('ok');
-                      return (
-                        <div
-                          key={idx}
-                          className={`p-2.5 rounded-lg border text-[11px] flex flex-col justify-between space-y-1 ${
-                            isOk
-                              ? 'bg-slate-800/70 border-emerald-500/30 text-emerald-100'
-                              : 'bg-red-950/40 border-red-500/40 text-red-200'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between font-bold">
-                            <span className="text-white">{p.name}</span>
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-[9px] font-mono ${
-                                isOk ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
-                              }`}
-                            >
-                              {p.status}
-                            </span>
+                  <div className="space-y-2.5">
+                    {/* Header Summary Badges */}
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono bg-slate-800/80 p-2 rounded-lg border border-slate-700">
+                      <span className="text-slate-400">
+                        Argomento Cercato: <strong className="text-amber-300">"{searchDebugInfo.query}"</strong>
+                      </span>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-slate-400">
+                        Filtro Canale: <strong className="text-sky-300">{searchDebugInfo.platform.toUpperCase()}</strong>
+                      </span>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-slate-400">
+                        Latenza Totale: <strong className="text-emerald-300">{searchDebugInfo.totalTimeMs || 0}ms</strong>
+                      </span>
+                      <span className="text-slate-500">•</span>
+                      <span className="text-slate-400">
+                        Risultati Restituiti: <strong className="text-purple-300">{searchDebugInfo.totalResultsCount || mediaSearchResults.length}</strong>
+                      </span>
+                    </div>
+
+                    {/* Providers Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                      {searchDebugInfo.providers.map((p, idx) => {
+                        const isOk = p.status.includes('200') || p.status.toLowerCase().includes('ok');
+                        return (
+                          <div
+                            key={idx}
+                            className={`p-2.5 rounded-lg border text-[11px] flex flex-col justify-between space-y-1.5 ${
+                              isOk
+                                ? 'bg-slate-800/70 border-emerald-500/30 text-emerald-100'
+                                : 'bg-red-950/40 border-red-500/40 text-red-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between font-bold">
+                              <span className="text-white text-[12px]">{p.name}</span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-mono ${
+                                  isOk ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-red-500/20 text-red-300 border border-red-500/40'
+                                }`}
+                              >
+                                {p.status}
+                              </span>
+                            </div>
+
+                            {p.endpoint && (
+                              <div className="text-[9px] font-mono text-slate-400 bg-black/40 px-1.5 py-0.5 rounded truncate">
+                                GET {p.endpoint}
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between text-[10px] text-slate-300 pt-0.5">
+                              <span>Elementi Trovati: <strong className="text-amber-300">{p.count}</strong></span>
+                              <span>Latenza API: <strong className="text-sky-300">{p.latencyMs}ms</strong></span>
+                            </div>
+
+                            {p.details && (
+                              <p className="text-[9.5px] text-slate-300 line-clamp-2 italic bg-slate-900/50 p-1 rounded border border-white/5">
+                                {p.details}
+                              </p>
+                            )}
+
+                            {p.error && (
+                              <p className="text-[9px] text-red-300 line-clamp-2 mt-1 bg-red-900/30 p-1 rounded border border-red-500/30">
+                                Errore: {p.error}
+                              </p>
+                            )}
                           </div>
-                          <div className="flex items-center justify-between text-[10px] text-slate-300">
-                            <span>Risultati: <strong className="text-amber-300">{p.count}</strong></span>
-                            <span>Latenza: <strong className="text-sky-300">{p.latencyMs}ms</strong></span>
-                          </div>
-                          {p.error && (
-                            <p className="text-[9px] text-red-300 line-clamp-2 mt-1">
-                              Errore: {p.error}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 ) : (
-                  <p className="text-[11px] text-slate-400 italic">
-                    Esegui una ricerca per visualizzare i dettagli di latenza, stato HTTP e conteggio risultati per ciascuna API di immagini.
-                  </p>
+                  <div className="flex items-center justify-between p-3 bg-slate-800/60 rounded-lg border border-slate-700">
+                    <p className="text-[11px] text-slate-300 italic">
+                      {isSearchingMedia
+                        ? 'Analisi della connessione e interrogazione simultanea dei provider in corso...'
+                        : 'Fai clic sul pulsante a destra per avviare la diagnostica in tempo reale.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const q = (searchQuery || title || aiTopic || (articleToEdit ? articleToEdit.title : '')).trim();
+                        if (q) handleSearchMedia(q, selectedPlatform);
+                      }}
+                      disabled={isSearchingMedia}
+                      className="px-3 py-1.5 rounded-md bg-amber-400 hover:bg-amber-300 text-[#0a1c3e] text-xs font-bold transition shadow cursor-pointer disabled:opacity-50"
+                    >
+                      {isSearchingMedia ? 'Ricerca in corso...' : 'Avvia Diagnostica Ora'}
+                    </button>
+                  </div>
                 )}
               </div>
             )}
