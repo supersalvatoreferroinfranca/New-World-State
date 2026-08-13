@@ -1279,7 +1279,10 @@ export default function ArticleFormModal({
                               </p>
                               {item.author && (
                                 <p className="text-[9px] text-slate-400 mt-0.5 line-clamp-1">
-                                  {tText('Source:', 'Fonte:')} {item.author}
+                                  {tText('Source:', 'Fonte:')} {
+                                    item.author.replace(/nobody@flickr\.com/gi, '').replace(/mailto:\S+/gi, '').trim() ||
+                                    (item.sourcePlatform === 'flickr' ? 'Flickr Contributor' : 'Fotografo Indipendente')
+                                  }
                                 </p>
                               )}
                             </div>

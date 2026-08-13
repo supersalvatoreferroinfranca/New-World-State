@@ -4439,8 +4439,10 @@ Ho recuperato dal web i seguenti elementi multimediali per la ricerca: '${cleanQ
 ${JSON.stringify(itemsToReturn, null, 2)}
 
 Il tuo compito è ESCLUSIVAMENTE perfezionare e tradurre i titoli ('title') in italiano elegante, giornalistico e descrittivo.
-NON modificare assolutamente le URL, i previewUrl, la sourcePlatform, gli id o gli autore.
-Restituisci l'array JSON completo.`;
+REGOLE TASSATIVE:
+- NON modificare assolutamente 'url', 'previewUrl', 'sourcePlatform', 'id' o 'author'.
+- In particolare, mantieni 'author' invariato senza mai inserire 'nobody@flickr.com'.
+- Restituisci l'array JSON con gli stessi oggetti ma con 'title' perfezionati.`;
 
           const response = await ai.models.generateContent({
             model: 'gemini-3.6-flash',
@@ -4466,6 +4468,12 @@ Restituisci l'array JSON completo.`;
         } catch (aiErr) {
           console.warn('[MEDIA-SEARCH-AI-POLISH-WARN]', aiErr);
         }
+
+        // Sanifica definitivamente tutti gli autori prima di restituire il risultato
+        itemsToReturn = itemsToReturn.map(item => ({
+          ...item,
+          author: cleanAuthorName(item.author, item.sourcePlatform === 'flickr' ? 'Flickr Contributor' : item.sourcePlatform === 'wikimedia' ? 'Wikimedia Commons Contributor' : 'Fotografo Indipendente')
+        }));
 
         const debugInfo = {
           query: cleanQuery,
