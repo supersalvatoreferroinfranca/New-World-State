@@ -640,17 +640,33 @@ export async function generateArticleWithAI(
 export interface MediaSearchResult {
   id: string;
   type: 'image' | 'video';
-  sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'youtube' | 'wikimedia';
+  sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'youtube' | 'wikimedia' | 'flickr';
   url: string;
   previewUrl?: string;
   title: string;
   author?: string;
 }
 
+export interface MediaSearchProviderDebug {
+  name: string;
+  platform: string;
+  status: string;
+  count: number;
+  latencyMs: number;
+  error?: string;
+}
+
+export interface MediaSearchDebugInfo {
+  query: string;
+  platform: string;
+  timestamp: string;
+  providers: MediaSearchProviderDebug[];
+}
+
 export async function searchArticleMedia(
   query: string,
   platform: string = 'all'
-): Promise<MediaSearchResult[]> {
+): Promise<{ results: MediaSearchResult[]; debug?: MediaSearchDebugInfo }> {
   const response = await safeFetch('/api/news/search-media', {
     method: 'POST',
     headers: {
@@ -664,5 +680,9 @@ export async function searchArticleMedia(
     throw new Error(resData.message || 'Impossibile completare la ricerca media.');
   }
 
-  return resData.results || resData.data || [];
+  const results = resData.results || resData.data || [];
+  return {
+    results,
+    debug: resData.debug
+  };
 }

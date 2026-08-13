@@ -10,6 +10,7 @@ import {
   generateArticleWithAI,
   searchArticleMedia,
   MediaSearchResult,
+  MediaSearchDebugInfo,
   RELIABLE_NEWS_SOURCES
 } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
@@ -38,6 +39,9 @@ import {
   ExternalLink,
   Eye,
   Globe,
+  Camera,
+  Bug,
+  Activity,
   CheckSquare,
   Square,
   ShieldCheck,
@@ -128,16 +132,19 @@ export default function ArticleFormModal({
     });
   };
 
-  // Automatic Media Search States (Unsplash, Pexels, Pixabay, Wikimedia, YouTube)
+  // Automatic Media Search States (Unsplash, Pexels, Pixabay, Wikimedia, Flickr, YouTube)
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPlatform, setSelectedPlatform] = useState<'all' | 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia' | 'youtube'>('all');
+  const [selectedPlatform, setSelectedPlatform] = useState<'all' | 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia' | 'flickr' | 'youtube'>('all');
   const [isSearchingMedia, setIsSearchingMedia] = useState(false);
   const [mediaSearchResults, setMediaSearchResults] = useState<MediaSearchResult[]>([]);
   const [mediaSearchError, setMediaSearchError] = useState<string | null>(null);
   const [previewMediaItem, setPreviewMediaItem] = useState<MediaSearchResult | null>(null);
+  const [searchDebugInfo, setSearchDebugInfo] = useState<MediaSearchDebugInfo | null>(null);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
-  const handleSearchMedia = async (overrideQuery?: string) => {
+  const handleSearchMedia = async (overrideQuery?: string, overridePlatform?: string) => {
     const q = (overrideQuery || searchQuery || title || aiTopic).trim();
+    const targetPlatform = overridePlatform || selectedPlatform;
     if (!q) {
       setError(tText('Please specify a topic or title to search media.', 'Inserisci un argomento o un titolo per la ricerca automatica di foto e filmati.'));
       return;
@@ -147,8 +154,9 @@ export default function ArticleFormModal({
     if (!searchQuery) setSearchQuery(q);
 
     try {
-      const results = await searchArticleMedia(q, selectedPlatform);
+      const { results, debug } = await searchArticleMedia(q, targetPlatform);
       setMediaSearchResults(results);
+      if (debug) setSearchDebugInfo(debug);
     } catch (err: any) {
       console.error('[MEDIA-SEARCH-ERR]', err);
       setMediaSearchError(err.message || tText('Failed to search media.', 'Errore durante la ricerca media.'));
@@ -1082,43 +1090,121 @@ export default function ArticleFormModal({
               </div>
 
               {/* Platform Filters */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">
-                  {tText('Source Filter:', 'Filtra Fonte:')}
-                </span>
-                {[
-                  { id: 'all', label: tText('All Channels', 'Tutti i Canali'), icon: Globe },
-                  { id: 'unsplash', label: 'Unsplash', icon: ImageIcon },
-                  { id: 'pexels', label: 'Pexels', icon: ImageIcon },
-                  { id: 'pixabay', label: 'Pixabay', icon: ImageIcon },
-                  { id: 'wikimedia', label: 'Wikimedia Commons', icon: Globe },
-                  { id: 'youtube', label: 'YouTube (Video)', icon: Film }
-                ].map((p) => {
-                  const Icon = p.icon;
-                  const isActive = selectedPlatform === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedPlatform(p.id as any);
-                        if (searchQuery || title || aiTopic) {
-                          handleSearchMedia();
-                        }
-                      }}
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer border ${
-                        isActive
-                          ? 'bg-amber-400 text-[#0a1c3e] border-amber-300 font-extrabold'
-                          : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/15'
-                      }`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{p.label}</span>
-                    </button>
-                  );
-                })}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">
+                    {tText('Source Filter:', 'Filtra Fonte:')}
+                  </span>
+                  {[
+                    { id: 'all', label: tText('All Channels', 'Tutti i Canali'), icon: Globe },
+                    { id: 'unsplash', label: 'Unsplash', icon: ImageIcon },
+                    { id: 'pexels', label: 'Pexels', icon: ImageIcon },
+                    { id: 'pixabay', label: 'Pixabay', icon: ImageIcon },
+                    { id: 'wikimedia', label: 'Wikimedia', icon: Globe },
+                    { id: 'flickr', label: 'Flickr', icon: Camera },
+                    { id: 'youtube', label: 'YouTube', icon: Film }
+                  ].map((p) => {
+                    const Icon = p.icon;
+                    const isActive = selectedPlatform === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedPlatform(p.id as any);
+                          if (searchQuery || title || aiTopic) {
+                            handleSearchMedia(undefined, p.id);
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer border ${
+                          isActive
+                            ? 'bg-amber-400 text-[#0a1c3e] border-amber-300 font-extrabold shadow'
+                            : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/15'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        <span>{p.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Debug Panel Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowDebugPanel(!showDebugPanel)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer border ${
+                    showDebugPanel
+                      ? 'bg-sky-500 text-white border-sky-400 shadow'
+                      : 'bg-slate-800/80 text-sky-300 border-sky-500/30 hover:bg-slate-700'
+                  }`}
+                >
+                  <Bug className="w-3.5 h-3.5 text-sky-300" />
+                  <span>{showDebugPanel ? 'Nascondi Diagnostica' : '🛠️ Diagnostica Ricerca'}</span>
+                </button>
               </div>
             </div>
+
+            {/* Diagnostic Debug Panel */}
+            {showDebugPanel && (
+              <div className="p-3.5 bg-slate-900/95 border border-sky-500/40 rounded-xl space-y-3 text-xs shadow-xl animate-fadeIn">
+                <div className="flex items-center justify-between border-b border-sky-500/20 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-sky-400" />
+                    <span className="font-bold text-sky-200">
+                      Console di Diagnostica e Stato dei Provider di Ricerca
+                    </span>
+                  </div>
+                  {searchDebugInfo && (
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Query: "{searchDebugInfo.query}" | Filtro: {searchDebugInfo.platform.toUpperCase()}
+                    </span>
+                  )}
+                </div>
+
+                {searchDebugInfo && searchDebugInfo.providers ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {searchDebugInfo.providers.map((p, idx) => {
+                      const isOk = p.status.includes('200') || p.status.toLowerCase().includes('ok');
+                      return (
+                        <div
+                          key={idx}
+                          className={`p-2.5 rounded-lg border text-[11px] flex flex-col justify-between space-y-1 ${
+                            isOk
+                              ? 'bg-slate-800/70 border-emerald-500/30 text-emerald-100'
+                              : 'bg-red-950/40 border-red-500/40 text-red-200'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between font-bold">
+                            <span className="text-white">{p.name}</span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-mono ${
+                                isOk ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
+                              }`}
+                            >
+                              {p.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-slate-300">
+                            <span>Risultati: <strong className="text-amber-300">{p.count}</strong></span>
+                            <span>Latenza: <strong className="text-sky-300">{p.latencyMs}ms</strong></span>
+                          </div>
+                          {p.error && (
+                            <p className="text-[9px] text-red-300 line-clamp-2 mt-1">
+                              Errore: {p.error}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-400 italic">
+                    Esegui una ricerca per visualizzare i dettagli di latenza, stato HTTP e conteggio risultati per ciascuna API di immagini.
+                  </p>
+                )}
+              </div>
+            )}
 
             {mediaSearchError && (
               <div className="p-3 bg-red-500/20 border border-red-400/40 text-red-200 text-xs rounded-xl flex items-center gap-2">
@@ -1135,7 +1221,7 @@ export default function ArticleFormModal({
                     {tText('Results for', 'Risultati trovati per')} "<strong>{searchQuery}</strong>":
                   </span>
                   <span className="text-[10px] text-amber-300 font-mono">
-                    {mediaSearchResults.length} {tText('items found', 'elementi disponibili')}
+                    {mediaSearchResults.filter(m => selectedPlatform === 'all' || m.sourcePlatform === selectedPlatform).length} {tText('items available', 'elementi visibili')}
                   </span>
                 </div>
 
@@ -1151,6 +1237,7 @@ export default function ArticleFormModal({
                         pexels: 'bg-teal-700 text-white border-teal-500',
                         pixabay: 'bg-sky-700 text-white border-sky-500',
                         wikimedia: 'bg-emerald-700 text-white border-emerald-500',
+                        flickr: 'bg-pink-700 text-white border-pink-500',
                         youtube: 'bg-red-600 text-white border-red-400'
                       };
 
