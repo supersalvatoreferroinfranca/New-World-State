@@ -4109,7 +4109,90 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       return clean;
     }
 
-    // Helper universale DuckDuckGo Image Search per scavalcare i blocchi Cloudflare sui provider
+    // Helper universale Bing Image Search + DDG per scavalcare i blocchi Cloudflare sui provider
+    function decodeHtmlEntities(str: string) {
+      if (!str) return '';
+      return str
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+    }
+
+    async function searchBingForPlatform(
+      platformId: 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia' | 'flickr',
+      cleanQuery: string,
+      maxItems: number = 8
+    ) {
+      const queryMap: Record<string, string> = {
+        unsplash: `unsplash ${cleanQuery}`,
+        pexels: `pexels photo ${cleanQuery}`,
+        pixabay: `pixabay photo ${cleanQuery}`,
+        wikimedia: `wikimedia commons photo ${cleanQuery}`,
+        flickr: `flickr photo ${cleanQuery}`
+      };
+
+      const searchQ = queryMap[platformId] || `${platformId} photo ${cleanQuery}`;
+      const url = `https://www.bing.com/images/async?q=${encodeURIComponent(searchQ)}&first=1&count=30&rel=1`;
+
+      try {
+        const res = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7'
+          }
+        });
+        const html = await res.text();
+        const murls = [...html.matchAll(/murl&quot;:&quot;(.*?)&quot;/g)].map(m => decodeHtmlEntities(m[1]));
+        const purls = [...html.matchAll(/purl&quot;:&quot;(.*?)&quot;/g)].map(m => decodeHtmlEntities(m[1]));
+        const turls = [...html.matchAll(/turl&quot;:&quot;(.*?)&quot;/g)].map(m => decodeHtmlEntities(m[1]));
+        const titles = [...html.matchAll(/t&quot;:&quot;(.*?)&quot;/g)].map(m => decodeHtmlEntities(m[1]));
+
+        const items = [];
+        const seenUrls = new Set<string>();
+
+        for (let i = 0; i < murls.length; i++) {
+          const imgUrl = murls[i];
+          const pageUrl = purls[i] || `https://${platformId}.com`;
+          const thumbUrl = turls[i] || imgUrl;
+          let rawTitle = titles[i] || `${cleanQuery} - Fotografia ${platformId.toUpperCase()}`;
+
+          if (!imgUrl || seenUrls.has(imgUrl)) continue;
+
+          let isMatch = false;
+          if (platformId === 'unsplash' && (imgUrl.includes('unsplash.com') || pageUrl.includes('unsplash.com'))) isMatch = true;
+          else if (platformId === 'pexels' && (imgUrl.includes('pexels.com') || pageUrl.includes('pexels.com'))) isMatch = true;
+          else if (platformId === 'pixabay' && (imgUrl.includes('pixabay.com') || pageUrl.includes('pixabay.com'))) isMatch = true;
+          else if (platformId === 'wikimedia' && (imgUrl.includes('wikimedia.org') || pageUrl.includes('wikimedia.org'))) isMatch = true;
+          else if (platformId === 'flickr' && (imgUrl.includes('staticflickr.com') || imgUrl.includes('flickr.com') || pageUrl.includes('flickr.com'))) isMatch = true;
+
+          if (isMatch) {
+            seenUrls.add(imgUrl);
+            rawTitle = rawTitle.replace(/[-|_].*$/i, '').trim();
+            if (!rawTitle || rawTitle.length < 3) rawTitle = `${cleanQuery} - Fotografia ${platformId.toUpperCase()}`;
+
+            items.push({
+              id: `${platformId.substring(0, 2)}_${Math.random().toString(36).substring(2, 9)}`,
+              type: 'image' as const,
+              sourcePlatform: platformId,
+              url: imgUrl,
+              previewUrl: thumbUrl,
+              sourceUrl: pageUrl,
+              title: rawTitle,
+              author: `${platformId.toUpperCase()} Contributor`
+            });
+
+            if (items.length >= maxItems) break;
+          }
+        }
+        return items;
+      } catch (err) {
+        console.warn(`[Bing-${platformId.toUpperCase()}-ERR]`, err);
+        return [];
+      }
+    }
+
     async function searchDDGForPlatform(
       platformId: 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia' | 'flickr',
       cleanQuery: string,
@@ -4263,7 +4346,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             const ytLatency = Date.now() - ytStart;
             execLogs.push(`[${nowStr()}] ✅ [YouTube] HTTP 200 OK (${ytCount} video estratti in ${ytLatency}ms). URL: www.youtube.com`);
             debugProviders.push({
-              name: 'YouTube Video Scraper',
+              name: 'YouTube Video Engine',
               platform: 'youtube',
               endpoint: 'www.youtube.com/results',
               status: '200 OK',
@@ -4276,7 +4359,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
             execLogs.push(`[${nowStr()}] ❌ [YouTube] Errore di scansione (${e.message}) in ${ytLatency}ms.`);
             console.warn('[YT-SCRAPE-WARN]', e);
             debugProviders.push({
-              name: 'YouTube Video Scraper',
+              name: 'YouTube Video Engine',
               platform: 'youtube',
               endpoint: 'www.youtube.com/results',
               status: 'Error',
@@ -4287,51 +4370,54 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           }
         }
 
-        // 2. Wikimedia Commons Engine (DDG Search + MediaWiki API Fallback)
+        // 2. Wikimedia Commons Engine (MediaWiki API + Bing Search Fallback)
         if (reqPlatform === 'all' || reqPlatform === 'wikimedia') {
           const wmStart = Date.now();
-          execLogs.push(`[${nowStr()}] 📡 [2/6 Wikimedia] Scansione Wikimedia Commons per '${cleanQuery}'...`);
+          execLogs.push(`[${nowStr()}] 📡 [2/6 Wikimedia] Interrogazione MediaWiki API + Bing per '${cleanQuery}'...`);
           try {
-            const wmItems = await searchDDGForPlatform('wikimedia', cleanQuery, 8);
-            let wmCount = wmItems.length;
+            let wmCount = 0;
 
-            for (const item of wmItems) {
-              if (!fetchedItems.some(i => i.url === item.url)) {
-                fetchedItems.push(item);
+            // Direct MediaWiki API First
+            const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=800&format=json&origin=*`;
+            const wmRes = await fetch(wmUrl, {
+              headers: { 'User-Agent': 'NewWorldStateNews/1.0 (https://newworldstate.cloud; news@newworldstate.cloud)' }
+            }).then(r => r.json()).catch(() => ({}));
+
+            const pages = Object.values(wmRes.query?.pages || {});
+            for (const p of (pages as any[])) {
+              const info = p.imageinfo?.[0];
+              const mime = info?.mime || '';
+              if (!mime.startsWith('image/jpeg') && !mime.startsWith('image/png') && !mime.startsWith('image/webp')) continue;
+              const urlStr = info?.thumburl || info?.url;
+              if (!urlStr || urlStr.includes('.svg')) continue;
+
+              let rawTitle = p.title.replace(/^File:/i, '').replace(/\.(jpg|jpeg|png|gif|webp)$/i, '').replace(/_/g, ' ');
+              rawTitle = rawTitle.replace(/\([^)]*\)/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+
+              const cleanArtist = cleanAuthorName(info?.extmetadata?.Artist?.value, 'Wikimedia Commons Contributor');
+              const descriptionPage = info?.descriptionurl || `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title || '')}`;
+
+              if (!fetchedItems.some(i => i.url === urlStr)) {
+                fetchedItems.push({
+                  id: 'wm_' + (p.pageid || Math.random().toString(36).substring(2, 9)),
+                  type: 'image',
+                  sourcePlatform: 'wikimedia',
+                  url: urlStr,
+                  previewUrl: urlStr,
+                  sourceUrl: descriptionPage,
+                  title: rawTitle || cleanQuery,
+                  author: cleanArtist
+                });
+                wmCount++;
               }
             }
 
-            // MediaWiki API Fallback if needed
+            // Bing Fallback if needed
             if (wmCount < 4) {
-              const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=800&format=json&origin=*`;
-              const wmRes = await fetch(wmUrl, {
-                headers: { 'User-Agent': 'NewWorldStateNews/1.0' }
-              }).then(r => r.json());
-              const pages = Object.values(wmRes.query?.pages || {});
-              for (const p of (pages as any[])) {
-                const info = p.imageinfo?.[0];
-                const mime = info?.mime || '';
-                if (!mime.startsWith('image/jpeg') && !mime.startsWith('image/png') && !mime.startsWith('image/webp')) continue;
-                const urlStr = info?.thumburl || info?.url;
-                if (!urlStr || urlStr.includes('.svg')) continue;
-
-                let rawTitle = p.title.replace(/^File:/i, '').replace(/\.(jpg|jpeg|png|gif|webp)$/i, '').replace(/_/g, ' ');
-                rawTitle = rawTitle.replace(/\([^)]*\)/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
-
-                const cleanArtist = cleanAuthorName(info?.extmetadata?.Artist?.value, 'Wikimedia Commons Contributor');
-                const descriptionPage = info?.descriptionurl || `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title || '')}`;
-
-                if (!fetchedItems.some(i => i.url === urlStr)) {
-                  fetchedItems.push({
-                    id: 'wm_' + (p.pageid || Math.random().toString(36).substring(2, 9)),
-                    type: 'image',
-                    sourcePlatform: 'wikimedia',
-                    url: urlStr,
-                    previewUrl: urlStr,
-                    sourceUrl: descriptionPage,
-                    title: rawTitle || cleanQuery,
-                    author: cleanArtist
-                  });
+              const wmItems = await searchBingForPlatform('wikimedia', cleanQuery, 8);
+              for (const item of wmItems) {
+                if (!fetchedItems.some(i => i.url === item.url)) {
+                  fetchedItems.push(item);
                   wmCount++;
                 }
               }
@@ -4363,44 +4449,45 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           }
         }
 
-        // 3. Flickr Search Engine (DDG Search + RSS Feed Fallback)
+        // 3. Flickr Search Engine (RSS Feed + Bing Fallback)
         if (reqPlatform === 'all' || reqPlatform === 'flickr') {
           const flStart = Date.now();
-          execLogs.push(`[${nowStr()}] 📡 [3/6 Flickr] Scansione Flickr per '${cleanQuery}'...`);
+          execLogs.push(`[${nowStr()}] 📡 [3/6 Flickr] Interrogazione Flickr RSS + Bing per '${cleanQuery}'...`);
           try {
-            const flItems = await searchDDGForPlatform('flickr', cleanQuery, 8);
-            let flCount = flItems.length;
+            let flCount = 0;
 
-            for (const item of flItems) {
-              if (!fetchedItems.some(i => i.url === item.url)) {
-                fetchedItems.push(item);
+            const flUrl = `https://www.flickr.com/services/feeds/photos_public.gne?tags=${encodeURIComponent(cleanQuery)}&format=json&nojsoncallback=1`;
+            const flRes = await fetch(flUrl).then(r => r.json()).catch(() => ({}));
+            const flFeedItems = (flRes.items || []).slice(0, 8);
+            for (const item of flFeedItems) {
+              if (item.media?.m) {
+                const imgUrl = item.media.m.replace('_m.jpg', '_b.jpg');
+                const authorClean = cleanAuthorName(item.author, 'Flickr Photographer');
+                const itemTitle = item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia Flickr`;
+                const itemSourceUrl = item.link || `https://www.flickr.com/search/?text=${encodeURIComponent(cleanQuery)}`;
+
+                if (!fetchedItems.some(i => i.url === imgUrl)) {
+                  fetchedItems.push({
+                    id: 'fl_' + Math.random().toString(36).substring(2, 9),
+                    type: 'image',
+                    sourcePlatform: 'flickr',
+                    url: imgUrl,
+                    previewUrl: item.media.m,
+                    sourceUrl: itemSourceUrl,
+                    title: itemTitle,
+                    author: authorClean
+                  });
+                  flCount++;
+                }
               }
             }
 
             if (flCount < 4) {
-              const flUrl = `https://www.flickr.com/services/feeds/photos_public.gne?tags=${encodeURIComponent(cleanQuery)}&format=json&nojsoncallback=1`;
-              const flRes = await fetch(flUrl).then(r => r.json());
-              const flFeedItems = (flRes.items || []).slice(0, 6);
-              for (const item of flFeedItems) {
-                if (item.media?.m) {
-                  const imgUrl = item.media.m.replace('_m.jpg', '_b.jpg');
-                  const authorClean = cleanAuthorName(item.author, 'Flickr Photographer');
-                  const itemTitle = item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia Flickr`;
-                  const itemSourceUrl = item.link || `https://www.flickr.com/search/?text=${encodeURIComponent(cleanQuery)}`;
-
-                  if (!fetchedItems.some(i => i.url === imgUrl)) {
-                    fetchedItems.push({
-                      id: 'fl_' + Math.random().toString(36).substring(2, 9),
-                      type: 'image',
-                      sourcePlatform: 'flickr',
-                      url: imgUrl,
-                      previewUrl: item.media.m,
-                      sourceUrl: itemSourceUrl,
-                      title: itemTitle,
-                      author: authorClean
-                    });
-                    flCount++;
-                  }
+              const flBing = await searchBingForPlatform('flickr', cleanQuery, 8);
+              for (const item of flBing) {
+                if (!fetchedItems.some(i => i.url === item.url)) {
+                  fetchedItems.push(item);
+                  flCount++;
                 }
               }
             }
@@ -4431,12 +4518,17 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           }
         }
 
-        // 4. Unsplash Search Engine
+        // 4. Unsplash Search Engine (Bing Hybrid + DDG Fallback)
         if (reqPlatform === 'all' || reqPlatform === 'unsplash') {
           const unStart = Date.now();
           execLogs.push(`[${nowStr()}] 📡 [4/6 Unsplash] Scansione Unsplash per '${cleanQuery}'...`);
           try {
-            const unItems = await searchDDGForPlatform('unsplash', cleanQuery, 8);
+            let unItems = await searchBingForPlatform('unsplash', cleanQuery, 8);
+            if (unItems.length < 4) {
+              const unDdg = await searchDDGForPlatform('unsplash', cleanQuery, 8);
+              unItems = [...unItems, ...unDdg];
+            }
+
             let unCount = 0;
             for (const item of unItems) {
               if (!fetchedItems.some(i => i.url === item.url)) {
@@ -4470,12 +4562,17 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           }
         }
 
-        // 5. Pexels Search Engine
+        // 5. Pexels Search Engine (Bing Hybrid + DDG Fallback)
         if (reqPlatform === 'all' || reqPlatform === 'pexels') {
           const pxStart = Date.now();
           execLogs.push(`[${nowStr()}] 📡 [5/6 Pexels] Scansione Pexels per '${cleanQuery}'...`);
           try {
-            const pxItems = await searchDDGForPlatform('pexels', cleanQuery, 8);
+            let pxItems = await searchBingForPlatform('pexels', cleanQuery, 8);
+            if (pxItems.length < 4) {
+              const pxDdg = await searchDDGForPlatform('pexels', cleanQuery, 8);
+              pxItems = [...pxItems, ...pxDdg];
+            }
+
             let pxCount = 0;
             for (const item of pxItems) {
               if (!fetchedItems.some(i => i.url === item.url)) {
@@ -4509,12 +4606,17 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           }
         }
 
-        // 6. Pixabay Search Engine
+        // 6. Pixabay Search Engine (Bing Hybrid + DDG Fallback)
         if (reqPlatform === 'all' || reqPlatform === 'pixabay') {
           const pbStart = Date.now();
           execLogs.push(`[${nowStr()}] 📡 [6/6 Pixabay] Scansione Pixabay per '${cleanQuery}'...`);
           try {
-            const pbItems = await searchDDGForPlatform('pixabay', cleanQuery, 8);
+            let pbItems = await searchBingForPlatform('pixabay', cleanQuery, 8);
+            if (pbItems.length < 4) {
+              const pbDdg = await searchDDGForPlatform('pixabay', cleanQuery, 8);
+              pbItems = [...pbItems, ...pbDdg];
+            }
+
             let pbCount = 0;
             for (const item of pbItems) {
               if (!fetchedItems.some(i => i.url === item.url)) {
@@ -4627,6 +4729,7 @@ REGOLE TASSATIVE:
         return res.json({
           success: true,
           results: itemsToReturn,
+          items: itemsToReturn,
           data: itemsToReturn,
           debug: debugInfo
         });

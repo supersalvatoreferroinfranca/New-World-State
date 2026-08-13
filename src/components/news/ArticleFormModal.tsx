@@ -1368,9 +1368,15 @@ export default function ArticleFormModal({
                             <img
                               src={item.previewUrl || item.url}
                               alt={item.title}
+                              referrerPolicy="no-referrer"
                               className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80';
+                                const target = e.target as HTMLImageElement;
+                                if (item.url && target.src !== item.url) {
+                                  target.src = item.url;
+                                } else {
+                                  target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80';
+                                }
                               }}
                             />
 
@@ -1530,6 +1536,7 @@ export default function ArticleFormModal({
                           <img
                             src={img.url}
                             alt={img.caption || 'Media'}
+                            referrerPolicy="no-referrer"
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=400&q=80';
