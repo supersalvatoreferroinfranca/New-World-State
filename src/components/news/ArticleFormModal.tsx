@@ -242,12 +242,13 @@ export default function ArticleFormModal({
       try {
         const queryForMedia = aiTopic.trim() || result.title;
         setSearchQuery(queryForMedia);
-        const mediaResults = await searchArticleMedia(queryForMedia, 'all');
-        setMediaSearchResults(mediaResults);
+        const { results: mediaResults, debug: mediaDebug } = await searchArticleMedia(queryForMedia, 'all');
+        setMediaSearchResults(mediaResults || []);
+        if (mediaDebug) setSearchDebugInfo(mediaDebug);
 
         // Auto-attach top 2 photos & top 1 video
-        const topImages = mediaResults.filter(m => m.type === 'image').slice(0, 2);
-        const topVideo = mediaResults.filter(m => m.type === 'video').slice(0, 1);
+        const topImages = (mediaResults || []).filter(m => m.type === 'image').slice(0, 2);
+        const topVideo = (mediaResults || []).filter(m => m.type === 'video').slice(0, 1);
 
         topImages.forEach(img => {
           setImages(prev => {

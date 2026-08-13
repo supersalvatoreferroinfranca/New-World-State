@@ -4099,9 +4099,14 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         .replace(/<[^>]*>?/gm, '') // rimuove tag HTML
         .replace(/nobody@flickr\.com/gi, '') // rimuove stringa nobody@flickr.com
         .replace(/http[s]?:\/\/\S+/gi, '') // rimuove URL
+        .replace(/mailto:\S+/gi, '')
         .replace(/["()]/g, '') // rimuove virgolette e parentesi
+        .replace(/\s+/g, ' ')
         .trim();
-      return clean.length >= 2 ? clean : fallback;
+      if (!clean || clean.toLowerCase().includes('nobody@') || clean.length < 2) {
+        return fallback;
+      }
+      return clean;
     }
 
     // Endpoint di Ricerca Automatica Multimediale (Unsplash, Pexels, Pixabay, Wikimedia, Flickr, YouTube) con Debug
