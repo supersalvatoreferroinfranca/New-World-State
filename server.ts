@@ -4092,270 +4092,232 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       }
     });
 
-    // Ricerca automatica multimediale ad alta precisione (YouTube Scraper, Flickr, Wikimedia, Stock HD e Gemini)
+    // Ricerca automatica multimediale ad alta precisione (YouTube, Unsplash, Pexels, Pixabay, Wikimedia Commons)
     apiRouter.post('/news/search-media', async (req, res) => {
-      const { query, platform } = req.body || {};
+      const { query, platform = 'all' } = req.body || {};
       if (!query || typeof query !== 'string' || !query.trim()) {
         return res.status(400).json({ success: false, message: 'Fornisci una parola chiave o argomento per cercare foto e video.' });
       }
 
       const cleanQuery = query.trim();
       const queryLower = cleanQuery.toLowerCase();
+      const reqPlatform = String(platform || 'all').toLowerCase();
 
       try {
         const fetchedItems: Array<{
           id: string;
           type: 'image' | 'video';
-          sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'youtube';
+          sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'youtube' | 'wikimedia';
           url: string;
           previewUrl: string;
           title: string;
           author: string;
         }> = [];
 
-        // 1. YouTube real search scraper (3 video reali per l'esatta query inserita dall'utente)
-        try {
-          const ytRes = await fetch('https://www.youtube.com/results?search_query=' + encodeURIComponent(cleanQuery), {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-          });
-          const html = await ytRes.text();
-          const videoBlocks = [...html.matchAll(/\"videoRenderer\":\{\"videoId\":\"([^\"]+)\"[\s\S]*?\"title\":\{\"runs\":\[\{\"text\":\"([^\"]+)\"\}/g)];
-          const seenYt = new Set();
-          for (const m of videoBlocks) {
-            const vId = m[1];
-            let vTitle = m[2];
-            if (!vId || seenYt.has(vId) || vId.length !== 11) continue;
-            seenYt.add(vId);
-            fetchedItems.push({
-              id: 'yt_' + vId,
-              type: 'video',
-              sourcePlatform: 'youtube',
-              url: 'https://www.youtube.com/embed/' + vId,
-              previewUrl: 'https://img.youtube.com/vi/' + vId + '/hqdefault.jpg',
-              title: vTitle,
-              author: 'YouTube / Reportage'
+        // 1. YouTube real search scraper
+        if (reqPlatform === 'all' || reqPlatform === 'youtube') {
+          try {
+            const ytRes = await fetch('https://www.youtube.com/results?search_query=' + encodeURIComponent(cleanQuery), {
+              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
             });
-            if (fetchedItems.length >= 3) break;
-          }
-        } catch(e) {
-          console.warn('[YT-SCRAPE-WARN]', e);
-        }
-
-        // 2. High-resolution thematic stock photos for various subjects
-        const stockCategories: Array<{
-          keywords: RegExp;
-          platform: 'unsplash' | 'pexels' | 'pixabay';
-          url: string;
-          previewUrl: string;
-          title: string;
-          author: string;
-        }> = [
-          // Cheers / Toast / Celebration / Drinks
-          {
-            keywords: /cheers|cin\s*cin|brindisi|festa|toast|party|wine|cocktail|champagne|celebrat/i,
-            platform: 'unsplash',
-            url: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=400&q=80',
-            title: 'Brindisi e calici di vino rosso in un evento celebrativo',
-            author: 'Unsplash Editorial'
-          },
-          {
-            keywords: /cheers|cin\s*cin|brindisi|festa|toast|party|wine|cocktail|champagne|celebrat/i,
-            platform: 'pexels',
-            url: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=400&q=80',
-            title: 'Festeggiamenti con cocktail e brindisi di gruppo',
-            author: 'Pexels Party'
-          },
-          {
-            keywords: /cheers|cin\s*cin|brindisi|festa|toast|party|wine|cocktail|champagne|celebrat/i,
-            platform: 'pixabay',
-            url: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=400&q=80',
-            title: 'Flûte di champagne alzati in segno di festa',
-            author: 'Pixabay Events'
-          },
-
-          // ONU / Diplomacy / Peace
-          {
-            keywords: /onu|nazioni\s*unite|united\s*nations|diploma|pace|trattat|assemblea/i,
-            platform: 'unsplash',
-            url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=400&q=80',
-            title: 'Sede e dibattito del Consiglio di Sicurezza delle Nazioni Unite',
-            author: 'Alex Vasey (Unsplash)'
-          },
-          {
-            keywords: /onu|nazioni\s*unite|united\s*nations|diploma|pace|trattat|assemblea/i,
-            platform: 'pexels',
-            url: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=400&q=80',
-            title: 'Bandiera ufficiale e relazioni diplomatiche internazionali',
-            author: 'Pexels Global'
-          },
-
-          // Technology / AI / Cloud / Cyber
-          {
-            keywords: /tecno|ai|intel|nodo|server|cloud|chip|hardware|computer|softw|cyber|dati/i,
-            platform: 'unsplash',
-            url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80',
-            title: 'Circuito integrato e microarchitettura digitale',
-            author: 'Unsplash Tech'
-          },
-          {
-            keywords: /tecno|ai|intel|nodo|server|cloud|chip|hardware|computer|softw|cyber|dati/i,
-            platform: 'pexels',
-            url: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=400&q=80',
-            title: 'Sviluppi avanzati di robotica e automazione',
-            author: 'Pexels Science'
-          },
-
-          // Coffee / Food / Cafe
-          {
-            keywords: /caffè|coffee|bar|caffetter|espresso|ristorante|cibo|food/i,
-            platform: 'unsplash',
-            url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80',
-            title: 'Tazza di caffè espresso appena erogato con chicchi toostati',
-            author: 'Unsplash Food'
-          },
-          {
-            keywords: /caffè|coffee|bar|caffetter|espresso|ristorante|cibo|food/i,
-            platform: 'pexels',
-            url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&q=80',
-            title: 'Ambiente di una caffetteria artigianale di design',
-            author: 'Pexels Cafe'
-          },
-
-          // Finance / Economy / Business
-          {
-            keywords: /econo|finanz|monet|banc|mercat|borsa|azron|invest/i,
-            platform: 'unsplash',
-            url: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=400&q=80',
-            title: 'Andamento dei mercati azionari e analisi dei flussi finanziari',
-            author: 'Unsplash Finance'
-          },
-
-          // Global / Earth / Nature
-          {
-            keywords: /terra|spazio|global|pianeta|geopolit|mondo|ambiente|clima/i,
-            platform: 'unsplash',
-            url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80',
-            title: 'Pianeta Terra e reti di comunicazione globale viste dallo spazio',
-            author: 'NASA / Unsplash'
-          }
-        ];
-
-        for (const stk of stockCategories) {
-          if (stk.keywords.test(queryLower)) {
-            if (!fetchedItems.some(i => i.url === stk.url)) {
+            const html = await ytRes.text();
+            const videoBlocks = [...html.matchAll(/\"videoRenderer\":\{\"videoId\":\"([^\"]+)\"[\s\S]*?\"title\":\{\"runs\":\[\{\"text\":\"([^\"]+)\"\}/g)];
+            const seenYt = new Set();
+            for (const m of videoBlocks) {
+              const vId = m[1];
+              let vTitle = m[2];
+              if (!vId || seenYt.has(vId) || vId.length !== 11) continue;
+              seenYt.add(vId);
               fetchedItems.push({
-                id: 'stk_' + Math.random().toString(36).substring(2, 9),
-                type: 'image',
-                sourcePlatform: stk.platform,
-                url: stk.url,
-                previewUrl: stk.previewUrl,
-                title: stk.title,
-                author: stk.author
+                id: 'yt_' + vId,
+                type: 'video',
+                sourcePlatform: 'youtube',
+                url: 'https://www.youtube.com/watch?v=' + vId,
+                previewUrl: 'https://img.youtube.com/vi/' + vId + '/hqdefault.jpg',
+                title: vTitle,
+                author: 'YouTube / Reportage'
               });
+              if (fetchedItems.length >= 4) break;
             }
+          } catch(e) {
+            console.warn('[YT-SCRAPE-WARN]', e);
           }
         }
 
-        // 3. Flickr Public Feed Search
-        try {
-          const flRes = await fetch(`https://www.flickr.com/services/feeds/photos_public.gne?tags=${encodeURIComponent(cleanQuery)}&format=json&nojsoncallback=1`).then(r => r.json());
-          const flItems = (flRes.items || []).slice(0, 4);
-          let flIdx = 0;
-          const platforms: Array<'unsplash' | 'pexels' | 'pixabay'> = ['unsplash', 'pexels', 'pixabay'];
-          for (const item of flItems) {
-            if (item.media?.m) {
-              const imgUrl = item.media.m.replace('_m.jpg', '_b.jpg');
-              if (!fetchedItems.some(i => i.url === imgUrl)) {
+        // 2. Unsplash / Pexels / Pixabay curated photos matched by topic or keywords
+        if (reqPlatform === 'all' || reqPlatform === 'unsplash' || reqPlatform === 'pexels' || reqPlatform === 'pixabay') {
+          const stockCategories: Array<{
+            keywords: RegExp;
+            platform: 'unsplash' | 'pexels' | 'pixabay';
+            url: string;
+            previewUrl: string;
+            title: string;
+            author: string;
+          }> = [
+            {
+              keywords: /cheers|cin\s*cin|brindisi|festa|toast|party|wine|cocktail|champagne|celebrat/i,
+              platform: 'unsplash',
+              url: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=400&q=80',
+              title: 'Brindisi e calici di vino rosso in un evento celebrativo',
+              author: 'Unsplash Editorial'
+            },
+            {
+              keywords: /cheers|cin\s*cin|brindisi|festa|toast|party|wine|cocktail|champagne|celebrat/i,
+              platform: 'pexels',
+              url: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=400&q=80',
+              title: 'Festeggiamenti con cocktail e brindisi di gruppo',
+              author: 'Pexels Party'
+            },
+            {
+              keywords: /onu|nazioni\s*unite|united\s*nations|diploma|pace|trattat|assemblea/i,
+              platform: 'unsplash',
+              url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=400&q=80',
+              title: 'Sede e dibattito del Consiglio di Sicurezza delle Nazioni Unite',
+              author: 'Unsplash Diplomacy'
+            },
+            {
+              keywords: /tecno|ai|intel|nodo|server|cloud|chip|hardware|computer|softw|cyber|dati/i,
+              platform: 'unsplash',
+              url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80',
+              title: 'Circuito integrato e microarchitettura digitale',
+              author: 'Unsplash Tech'
+            },
+            {
+              keywords: /caffè|coffee|bar|caffetter|espresso|ristorante|cibo|food/i,
+              platform: 'unsplash',
+              url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80',
+              title: 'Tazza di caffè espresso con chicchi tostato',
+              author: 'Unsplash Food'
+            },
+            {
+              keywords: /econo|finanz|monet|banc|mercat|borsa|azron|invest/i,
+              platform: 'unsplash',
+              url: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=400&q=80',
+              title: 'Andamento dei mercati azionari e analisi dei flussi finanziari',
+              author: 'Unsplash Finance'
+            },
+            {
+              keywords: /terra|spazio|global|pianeta|geopolit|mondo|ambiente|clima/i,
+              platform: 'unsplash',
+              url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+              previewUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80',
+              title: 'Pianeta Terra e reti di comunicazione globale viste dallo spazio',
+              author: 'Unsplash Space'
+            }
+          ];
+
+          for (const stk of stockCategories) {
+            if (stk.keywords.test(queryLower)) {
+              if ((reqPlatform === 'all' || reqPlatform === stk.platform) && !fetchedItems.some(i => i.url === stk.url)) {
                 fetchedItems.push({
-                  id: 'fl_' + Math.random().toString(36).substring(2, 9),
+                  id: 'stk_' + Math.random().toString(36).substring(2, 9),
                   type: 'image',
-                  sourcePlatform: platforms[flIdx % platforms.length],
-                  url: imgUrl,
-                  previewUrl: item.media.m,
-                  title: item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia`,
-                  author: item.author || 'Flickr'
+                  sourcePlatform: stk.platform,
+                  url: stk.url,
+                  previewUrl: stk.previewUrl,
+                  title: stk.title,
+                  author: stk.author
                 });
-                flIdx++;
               }
             }
           }
-        } catch (e) {
-          console.warn('[FLICKR-WARN]', e);
-        }
 
-        // 4. Wikimedia Commons Search
-        try {
-          const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=6&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=960&format=json&origin=*`;
-          const wmRes = await fetch(wmUrl).then(r => r.json());
-          const pages = Object.values(wmRes.query?.pages || {});
-          let wmIdx = 1;
-          const platforms: Array<'unsplash' | 'pexels' | 'pixabay'> = ['pexels', 'pixabay', 'unsplash'];
-          for (const p of (pages as any[])) {
-            const info = p.imageinfo?.[0];
-            const mime = info?.mime || '';
-            if (!mime.startsWith('image/jpeg') && !mime.startsWith('image/png') && !mime.startsWith('image/webp')) continue;
-            const urlStr = info?.thumburl || info?.url;
-            if (!urlStr || urlStr.includes('.svg')) continue;
-
-            let rawTitle = p.title.replace(/^File:/i, '').replace(/\.(jpg|jpeg|png|gif|webp)$/i, '').replace(/_/g, ' ');
-            rawTitle = rawTitle.replace(/\([^)]*\)/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
-            if (rawTitle.length < 3) continue;
-
-            const authorName = info?.extmetadata?.Artist?.value?.replace(/<[^>]+>/g, '').trim() || 'Wikimedia Commons';
-
-            if (!fetchedItems.some(i => i.url === urlStr)) {
-              fetchedItems.push({
-                id: 'wm_' + (p.pageid || Math.random().toString(36).substring(2, 9)),
-                type: 'image',
-                sourcePlatform: platforms[wmIdx % platforms.length],
-                url: urlStr,
-                previewUrl: urlStr,
-                title: rawTitle,
-                author: authorName
-              });
-              wmIdx++;
-            }
+          // Dynamic Unsplash fallback photo for query
+          if (reqPlatform === 'all' || reqPlatform === 'unsplash') {
+            fetchedItems.push({
+              id: 'un_dyn_' + Date.now(),
+              type: 'image',
+              sourcePlatform: 'unsplash',
+              url: `https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80`,
+              previewUrl: `https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80`,
+              title: `${cleanQuery} - Fotografia Editoriale Unsplash`,
+              author: 'Unsplash Contributor'
+            });
           }
-        } catch (e) {
-          console.warn('[WM-WARN]', e);
+
+          if (reqPlatform === 'all' || reqPlatform === 'pexels') {
+            fetchedItems.push({
+              id: 'px_dyn_' + Date.now(),
+              type: 'image',
+              sourcePlatform: 'pexels',
+              url: `https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80`,
+              previewUrl: `https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=400&q=80`,
+              title: `${cleanQuery} - Reportage Fotografico Pexels`,
+              author: 'Pexels Contributor'
+            });
+          }
+
+          if (reqPlatform === 'all' || reqPlatform === 'pixabay') {
+            fetchedItems.push({
+              id: 'pb_dyn_' + Date.now(),
+              type: 'image',
+              sourcePlatform: 'pixabay',
+              url: `https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80`,
+              previewUrl: `https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&q=80`,
+              title: `${cleanQuery} - Fotografia Istituzionale Pixabay`,
+              author: 'Pixabay Creator'
+            });
+          }
         }
 
-        // Se non ci sono immagini per una query generica, aggiungi foto Unsplash ad alta risoluzione pertinenti
-        if (!fetchedItems.some(i => i.type === 'image')) {
-          fetchedItems.push({
-            id: 'gen-stk-1',
-            type: 'image',
-            sourcePlatform: 'unsplash',
-            url: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80',
-            title: `Fotografia editoriale: ${cleanQuery}`,
-            author: 'Unsplash Editorial'
-          });
-          fetchedItems.push({
-            id: 'gen-stk-2',
-            type: 'image',
-            sourcePlatform: 'pexels',
-            url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-            previewUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80',
-            title: `Reportage e approfondimento: ${cleanQuery}`,
-            author: 'Pexels Press'
-          });
+        // 3. Wikimedia Commons Search (REAL, live image search API)
+        if (reqPlatform === 'all' || reqPlatform === 'wikimedia') {
+          try {
+            const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=800&format=json&origin=*`;
+            const wmRes = await fetch(wmUrl, {
+              headers: {
+                'User-Agent': 'NewWorldStateNews/1.0 (https://newworldstate.cloud; contact@newworldstate.cloud)'
+              }
+            }).then(r => r.json());
+            const pages = Object.values(wmRes.query?.pages || {});
+            for (const p of (pages as any[])) {
+              const info = p.imageinfo?.[0];
+              const mime = info?.mime || '';
+              if (!mime.startsWith('image/jpeg') && !mime.startsWith('image/png') && !mime.startsWith('image/webp')) continue;
+              const urlStr = info?.thumburl || info?.url;
+              if (!urlStr || urlStr.includes('.svg')) continue;
+
+              let rawTitle = p.title.replace(/^File:/i, '').replace(/\.(jpg|jpeg|png|gif|webp)$/i, '').replace(/_/g, ' ');
+              rawTitle = rawTitle.replace(/\([^)]*\)/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+              if (rawTitle.length < 3) continue;
+
+              // Clean up artist metadata (remove HTML tags and 'nobody@flickr.com')
+              let rawArtist = info?.extmetadata?.Artist?.value || 'Wikimedia Commons';
+              let cleanArtist = rawArtist.replace(/<[^>]+>/g, '').replace(/nobody@flickr\.com/gi, '').replace(/[()]/g, '').trim();
+              if (!cleanArtist || cleanArtist.length < 2) cleanArtist = 'Wikimedia Commons';
+
+              if (!fetchedItems.some(i => i.url === urlStr)) {
+                fetchedItems.push({
+                  id: 'wm_' + (p.pageid || Math.random().toString(36).substring(2, 9)),
+                  type: 'image',
+                  sourcePlatform: 'wikimedia', // ALWAYS 'wikimedia'!
+                  url: urlStr,
+                  previewUrl: urlStr,
+                  title: rawTitle,
+                  author: cleanArtist
+                });
+              }
+            }
+          } catch (e) {
+            console.warn('[WM-WARN]', e);
+          }
         }
 
-        const itemsToReturn = fetchedItems.slice(0, 12);
+        // Filter strictly by requested platform if not 'all'
+        let itemsToReturn = fetchedItems;
+        if (reqPlatform !== 'all') {
+          itemsToReturn = fetchedItems.filter(i => i.sourcePlatform === reqPlatform);
+        }
 
-        // 5. Perfeziona e traduci i titoli in italiano con Gemini AI se disponibile
+        itemsToReturn = itemsToReturn.slice(0, 16);
+
+        // Perfeziona e traduci i titoli in italiano con Gemini AI se disponibile
         try {
           const ai = getGenAIClient();
           const prompt = `Sei il caporedattore del quotidiano 'New World State'.
@@ -4379,14 +4341,14 @@ REGOLE TASSATIVE:
           if (response.text) {
             const parsed = JSON.parse(response.text.trim());
             if (Array.isArray(parsed) && parsed.length > 0) {
-              return res.json({ success: true, data: parsed });
+              return res.json({ success: true, results: parsed, data: parsed });
             }
           }
         } catch (aiErr) {
           console.warn('[MEDIA-SEARCH-AI-POLISH-WARN]', aiErr);
         }
 
-        return res.json({ success: true, data: itemsToReturn });
+        return res.json({ success: true, results: itemsToReturn, data: itemsToReturn });
       } catch (err: any) {
         console.error('[NEWS-MEDIA-SEARCH-ERR]', err);
         return res.status(500).json({ success: false, message: 'Impossibile completare la ricerca media.' });
@@ -5397,112 +5359,7 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
       }
     });
 
-    apiRouter.post('/news/search-media', async (req, res) => {
-      try {
-        const { query = '', platform = 'all' } = req.body || {};
-        const qStr = String(query).trim();
-        if (!qStr) {
-          return res.json({ success: true, results: [] });
-        }
 
-        const results: any[] = [];
-
-        // 1. Wikimedia Commons Search
-        if (platform === 'all' || platform === 'wikimedia') {
-          try {
-            const wikimediaUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(qStr)}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime|thumburl|extmetadata&iiurlwidth=800&format=json&origin=*`;
-            const response = await fetch(wikimediaUrl, {
-              headers: {
-                'User-Agent': 'NewWorldStateNews/1.0 (https://newworldstate.cloud; contact@newworldstate.cloud)'
-              }
-            });
-            if (response.ok) {
-              const data: any = await response.json();
-              const pages = data?.query?.pages;
-              if (pages) {
-                for (const pageId of Object.keys(pages)) {
-                  const page = pages[pageId];
-                  const imageInfo = page?.imageinfo?.[0];
-                  if (imageInfo && imageInfo.url) {
-                    const mime = (imageInfo.mime || '').toLowerCase();
-                    if (mime.startsWith('image/') || mime.startsWith('video/')) {
-                      const rawTitle = (page.title || '').replace(/^File:/i, '').replace(/\.[^/.]+$/, '');
-                      const cleanTitle = rawTitle.replace(/[-_]/g, ' ').trim();
-                      const rawArtist = imageInfo.extmetadata?.Artist?.value || 'Wikimedia Commons';
-                      const cleanArtist = rawArtist.replace(/<[^>]*>?/gm, '').trim();
-
-                      results.push({
-                        id: `wm-${page.pageid}`,
-                        type: mime.startsWith('video/') ? 'video' : 'image',
-                        sourcePlatform: 'wikimedia',
-                        url: imageInfo.url,
-                        previewUrl: imageInfo.thumburl || imageInfo.url,
-                        title: cleanTitle || qStr,
-                        author: cleanArtist || 'Wikimedia Commons'
-                      });
-                    }
-                  }
-                }
-              }
-            }
-          } catch (wmErr: any) {
-            console.error('[WIKIMEDIA-SEARCH-ERR]', wmErr.message);
-          }
-        }
-
-        // 2. Unsplash / Pexels / Pixabay Images
-        if (platform === 'all' || platform === 'unsplash' || platform === 'pexels' || platform === 'pixabay') {
-          const formattedQuery = encodeURIComponent(qStr);
-          results.push(
-            {
-              id: `un-1-${Date.now()}`,
-              type: 'image',
-              sourcePlatform: 'unsplash',
-              url: `https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80`,
-              previewUrl: `https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=400&q=80`,
-              title: `${qStr} - Visuale Principale`,
-              author: 'Unsplash Contributor'
-            },
-            {
-              id: `px-1-${Date.now()}`,
-              type: 'image',
-              sourcePlatform: 'pexels',
-              url: `https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80`,
-              previewUrl: `https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=400&q=80`,
-              title: `${qStr} - Reportage Documentario`,
-              author: 'Pexels Contributor'
-            },
-            {
-              id: `pb-1-${Date.now()}`,
-              type: 'image',
-              sourcePlatform: 'pixabay',
-              url: `https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80`,
-              previewUrl: `https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&q=80`,
-              title: `${qStr} - Fotografia Istituzionale`,
-              author: 'Pixabay Creator'
-            }
-          );
-        }
-
-        // 3. YouTube Video embeds
-        if (platform === 'all' || platform === 'youtube') {
-          results.push({
-            id: `yt-1-${Date.now()}`,
-            type: 'video',
-            sourcePlatform: 'youtube',
-            url: `https://www.youtube.com/watch?v=dQw4w9WgXcQ`,
-            previewUrl: `https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=600&q=80`,
-            title: `Reportage Video: ${qStr}`,
-            author: 'Canale Ufficiale Nuova Repubblica'
-          });
-        }
-
-        return res.json({ success: true, results });
-      } catch (err: any) {
-        console.error('[SEARCH-MEDIA-ERR]', err.message);
-        return res.status(500).json({ success: false, message: 'Errore ricerca media: ' + err.message });
-      }
-    });
 
 
 

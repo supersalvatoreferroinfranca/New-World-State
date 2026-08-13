@@ -664,5 +664,5 @@ export async function searchArticleMedia(
     throw new Error(resData.message || 'Impossibile completare la ricerca media.');
   }
 
-  return resData.data || [];
+  return resData.results || resData.data || [];
 }

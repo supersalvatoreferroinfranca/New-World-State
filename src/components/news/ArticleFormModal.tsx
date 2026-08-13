@@ -1150,6 +1150,7 @@ export default function ArticleFormModal({
                         unsplash: 'bg-slate-900 text-white border-slate-700',
                         pexels: 'bg-teal-700 text-white border-teal-500',
                         pixabay: 'bg-sky-700 text-white border-sky-500',
+                        wikimedia: 'bg-emerald-700 text-white border-emerald-500',
                         youtube: 'bg-red-600 text-white border-red-400'
                       };
 
@@ -1171,7 +1172,7 @@ export default function ArticleFormModal({
 
                             {/* Platform Badge */}
                             <span className={`absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border shadow ${platformBadgeColors[item.sourcePlatform] || 'bg-slate-800 text-white'}`}>
-                              {item.sourcePlatform}
+                              {item.sourcePlatform === 'wikimedia' ? 'WIKIMEDIA' : item.sourcePlatform.toUpperCase()}
                             </span>
 
                             {/* Type Icon Badge */}
