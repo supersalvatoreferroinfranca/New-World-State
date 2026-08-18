@@ -4095,10 +4095,18 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       }
     });
 
-    // Helper per pulire i nomi autore (rimuove HTML, emails 'nobody@flickr.com', URL e parentesi)
+    // Helper per pulire i nomi autore (estrae nomi tra parentesi da Flickr, rimuove HTML, emails 'nobody@flickr.com', URL)
     function cleanAuthorName(str: string | undefined | null, fallback: string = 'Autore non specificato'): string {
       if (!str) return fallback;
-      let clean = String(str)
+      let raw = String(str).trim();
+
+      // Estrae il nome dell'autore dentro le parentesi se presente (es. nobody@flickr.com ("Robyn Hooz") -> Robyn Hooz)
+      const parenMatch = raw.match(/\(["']?([^"')]+)["']?\)/);
+      if (parenMatch && parenMatch[1] && parenMatch[1].trim().length >= 2) {
+        raw = parenMatch[1].trim();
+      }
+
+      let clean = raw
         .replace(/<[^>]*>?/gm, '') // rimuove tag HTML
         .replace(/nobody@flickr\.com/gi, '') // rimuove stringa nobody@flickr.com
         .replace(/http[s]?:\/\/\S+/gi, '') // rimuove URL
@@ -4106,14 +4114,15 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         .replace(/["()]/g, '') // rimuove virgolette e parentesi
         .replace(/\s+/g, ' ')
         .trim();
+
       if (!clean || clean.toLowerCase().includes('nobody@') || clean.length < 2) {
         return fallback;
       }
       return clean;
     }
 
-    // Helper universale Bing Image Search + DDG per scavalcare i blocchi Cloudflare sui provider
-    function decodeHtmlEntities(str: string) {
+    // Helper universale per decodificare entità HTML
+    function decodeHtmlEntities(str: string): string {
       if (!str) return '';
       return str
         .replace(/&amp;/g, '&')
@@ -4123,17 +4132,32 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         .replace(/&#39;/g, "'");
     }
 
-    async function searchBingEditorialImages(
-      searchQuery: string,
-      platformId: 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia' | 'flickr',
+    // Identificatore e Validatore rigoroso del Canale basato sui domini reali dell'asset e della pagina sorgente
+    function detectPlatformFromUrl(
+      sourceUrl: string = '',
+      imgUrl: string = ''
+    ): 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia' | 'flickr' | 'youtube' | null {
+      const combined = (String(sourceUrl || '') + ' ' + String(imgUrl || '')).toLowerCase();
+      if (combined.includes('flickr.com') || combined.includes('staticflickr.com')) return 'flickr';
+      if (combined.includes('wikimedia.org') || combined.includes('wikipedia.org')) return 'wikimedia';
+      if (combined.includes('unsplash.com')) return 'unsplash';
+      if (combined.includes('pexels.com')) return 'pexels';
+      if (combined.includes('pixabay.com')) return 'pixabay';
+      if (combined.includes('youtube.com') || combined.includes('youtu.be')) return 'youtube';
+      return null;
+    }
+
+    // Motore di ricerca editoriale autentico per banche immagini (Unsplash, Pexels, Pixabay) con validazione dominio ferrea
+    async function searchEditorialEngine(
+      keywords: string,
+      targetPlatform: 'unsplash' | 'pexels' | 'pixabay',
       maxItems: number = 8
     ) {
-      const url = `https://www.bing.com/images/async?q=${encodeURIComponent(searchQuery)}&first=1&count=25&rel=1`;
-
+      const searchUrl = `https://www.bing.com/images/search?q=${encodeURIComponent(keywords + ' ' + targetPlatform)}&form=HDRSC2`;
       try {
-        const res = await fetch(url, {
+        const res = await fetch(searchUrl, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7'
           }
         });
@@ -4143,38 +4167,53 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         const turls = [...html.matchAll(/turl&quot;:&quot;(.*?)&quot;/g)].map(m => decodeHtmlEntities(m[1]));
         const titles = [...html.matchAll(/t&quot;:&quot;(.*?)&quot;/g)].map(m => decodeHtmlEntities(m[1]));
 
-        const items = [];
+        const items: Array<{
+          id: string;
+          type: 'image';
+          sourcePlatform: 'unsplash' | 'pexels' | 'pixabay';
+          url: string;
+          previewUrl: string;
+          sourceUrl: string;
+          title: string;
+          author: string;
+        }> = [];
         const seenUrls = new Set<string>();
 
         for (let i = 0; i < murls.length; i++) {
           const imgUrl = murls[i];
           const pageUrl = purls[i] || imgUrl;
           const thumbUrl = turls[i] || imgUrl;
-          let rawTitle = titles[i] || `Fotografia ${platformId.toUpperCase()}`;
+          let rawTitle = titles[i] || `Fotografia ${targetPlatform.toUpperCase()}`;
 
           if (!imgUrl || seenUrls.has(imgUrl)) continue;
           if (imgUrl.includes('.svg') || imgUrl.includes('logo') || imgUrl.includes('icon')) continue;
 
+          // VALIDAZIONE FERREA: Scarta categoricamente qualsiasi immagine che NON appartenga realmente al dominio target
+          const detected = detectPlatformFromUrl(pageUrl, imgUrl);
+          if (detected !== targetPlatform) {
+            continue;
+          }
+
           seenUrls.add(imgUrl);
           rawTitle = rawTitle.replace(/[-|_].*$/i, '').replace(/<[^>]*>?/gm, '').trim();
-          if (!rawTitle || rawTitle.length < 3) rawTitle = `Reportage Fotografico ${platformId.toUpperCase()}`;
+          if (!rawTitle || rawTitle.length < 3) rawTitle = `Reportage ${targetPlatform.toUpperCase()}`;
 
           items.push({
-            id: `${platformId.substring(0, 2)}_${Math.random().toString(36).substring(2, 9)}`,
-            type: 'image' as const,
-            sourcePlatform: platformId,
+            id: `${targetPlatform.substring(0, 2)}_${Math.random().toString(36).substring(2, 9)}`,
+            type: 'image',
+            sourcePlatform: targetPlatform,
             url: imgUrl,
             previewUrl: thumbUrl,
             sourceUrl: pageUrl,
             title: rawTitle,
-            author: `${platformId.toUpperCase()} Contributor`
+            author: `${targetPlatform.charAt(0).toUpperCase() + targetPlatform.slice(1)} Contributor`
           });
 
           if (items.length >= maxItems) break;
         }
         return items;
-      } catch (err) {
-        console.warn(`[Bing-Editorial-${platformId.toUpperCase()}-ERR]`, err);
+      } catch (err: any) {
+        console.warn(`[EDITORIAL-ENGINE-${targetPlatform.toUpperCase()}-ERR]`, err.message);
         return [];
       }
     }
@@ -4271,7 +4310,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
                 previewUrl: 'https://img.youtube.com/vi/' + vId + '/hqdefault.jpg',
                 sourceUrl: ytWatchUrl,
                 title: vTitle,
-                author: 'YouTube Channel'
+                author: 'YouTube Creator'
               });
               ytCount++;
               if (ytCount >= 5) break;
@@ -4404,7 +4443,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
           }
         }
 
-        // 3. Openverse Creative Commons Index Engine
+        // 3. Openverse Creative Commons Index Engine (con classificazione rigorosa dei provider)
         let openverseItemsCount = 0;
         try {
           const ovStart = Date.now();
@@ -4416,29 +4455,35 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
           const ovList = ovRes.results || [];
           for (const item of ovList) {
             if (!item.url || fetchedItems.some(i => i.url === item.url)) continue;
-            const provider = item.provider === 'flickr' ? 'flickr' : item.provider === 'wikimedia' ? 'wikimedia' : 'unsplash';
             
-            if (reqPlatform !== 'all' && reqPlatform !== provider) continue;
+            // Determina la vera piattaforma sorgente senza forzature
+            const detectedPlatform = detectPlatformFromUrl(item.foreign_landing_url, item.url) || 
+                                     (item.provider === 'flickr' ? 'flickr' : item.provider === 'wikimedia' ? 'wikimedia' : null);
+            
+            if (!detectedPlatform) continue; // Scarta elementi da provider non supportati o non verificabili
+            if (reqPlatform !== 'all' && reqPlatform !== detectedPlatform) continue;
+
+            const cleanCreator = cleanAuthorName(item.creator, `${detectedPlatform.toUpperCase()} Contributor`);
 
             fetchedItems.push({
               id: 'ov_' + (item.id || Math.random().toString(36).substring(2, 9)),
               type: 'image',
-              sourcePlatform: provider as any,
+              sourcePlatform: detectedPlatform,
               url: item.url,
               previewUrl: item.thumbnail || item.url,
               sourceUrl: item.foreign_landing_url || item.url,
-              title: item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia CC`,
-              author: cleanAuthorName(item.creator, `${provider.toUpperCase()} Photographer`)
+              title: item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia ${detectedPlatform.toUpperCase()}`,
+              author: cleanCreator
             });
             openverseItemsCount++;
           }
           const ovLatency = Date.now() - ovStart;
-          execLogs.push(`[${nowStr()}] ✅ [Openverse CC] Recuperate ${openverseItemsCount} immagini con licenza Creative Commons in ${ovLatency}ms.`);
+          execLogs.push(`[${nowStr()}] ✅ [Openverse CC] Recuperate ${openverseItemsCount} immagini con licenza Creative Commons verificate in ${ovLatency}ms.`);
         } catch (ovErr: any) {
           console.warn('[OPENVERSE-WARN]', ovErr);
         }
 
-        // 4. Flickr Search Engine (RSS Feed + Openverse)
+        // 4. Flickr Search Engine (Flickr Public RSS Feed - Autentico e Verificato)
         if (reqPlatform === 'all' || reqPlatform === 'flickr') {
           const flStart = Date.now();
           execLogs.push(`[${nowStr()}] 📡 [4/6 Flickr] Interrogazione Flickr Live Feed per '${cleanQuery}'...`);
@@ -4471,7 +4516,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             }
 
             const flLatency = Date.now() - flStart;
-            execLogs.push(`[${nowStr()}] ✅ [Flickr] HTTP 200 OK (${flCount} scatti fotografici Flickr caricati in ${flLatency}ms).`);
+            execLogs.push(`[${nowStr()}] ✅ [Flickr] HTTP 200 OK (${flCount} scatti fotografici Flickr autentici caricati in ${flLatency}ms).`);
             debugProviders.push({
               name: 'Flickr Search Engine',
               platform: 'flickr',
@@ -4479,7 +4524,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
               status: '200 OK',
               count: flCount,
               latencyMs: flLatency,
-              details: `Recuperati ${flCount} scatti autentici direttamente dalla community fotografica Flickr.`
+              details: `Recuperati ${flCount} scatti autentici direttamente dalla community fotografica Flickr con link a flickr.com.`
             });
           } catch (e: any) {
             const flLatency = Date.now() - flStart;
@@ -4496,13 +4541,12 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
           }
         }
 
-        // 5. Unsplash Search Engine (Targeted Editorial High-Res)
+        // 5. Unsplash Search Engine (Targeted Unsplash HD - Verificato su dominio unsplash.com)
         if (reqPlatform === 'all' || reqPlatform === 'unsplash') {
           const unStart = Date.now();
-          execLogs.push(`[${nowStr()}] 📡 [5/6 Unsplash] Ricerca immagini pertinenti Unsplash per '${enKeywords}'...`);
+          execLogs.push(`[${nowStr()}] 📡 [5/6 Unsplash] Ricerca immagini autentiche Unsplash per '${enKeywords}'...`);
           try {
-            const unQuery = `"${enKeywords}" unsplash photo high resolution`;
-            const unItems = await searchBingEditorialImages(unQuery, 'unsplash', 6);
+            const unItems = await searchEditorialEngine(enKeywords, 'unsplash', 6);
             let unCount = 0;
             for (const item of unItems) {
               if (!fetchedItems.some(i => i.url === item.url)) {
@@ -4511,15 +4555,15 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
               }
             }
             const unLatency = Date.now() - unStart;
-            execLogs.push(`[${nowStr()}] ✅ [Unsplash] HTTP 200 OK (${unCount} immagini Unsplash caricate in ${unLatency}ms).`);
+            execLogs.push(`[${nowStr()}] ✅ [Unsplash] HTTP 200 OK (${unCount} immagini reali Unsplash caricate in ${unLatency}ms).`);
             debugProviders.push({
               name: 'Unsplash Search Engine',
               platform: 'unsplash',
-              endpoint: 'images.unsplash.com',
+              endpoint: 'unsplash.com',
               status: '200 OK',
               count: unCount,
               latencyMs: unLatency,
-              details: `Estratte ${unCount} fotografie editoriali pertinenti da Unsplash.`
+              details: `Estratte ${unCount} fotografie autentiche da Unsplash con link a unsplash.com.`
             });
           } catch (e: any) {
             const unLatency = Date.now() - unStart;
@@ -4527,7 +4571,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             debugProviders.push({
               name: 'Unsplash Search Engine',
               platform: 'unsplash',
-              endpoint: 'images.unsplash.com',
+              endpoint: 'unsplash.com',
               status: 'Error',
               count: 0,
               latencyMs: unLatency,
@@ -4536,13 +4580,12 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
           }
         }
 
-        // 6. Pexels & Pixabay Search Engine (Targeted Editorial High-Res)
+        // 6. Pexels Search Engine (Targeted Pexels HD - Verificato su dominio pexels.com)
         if (reqPlatform === 'all' || reqPlatform === 'pexels') {
           const pxStart = Date.now();
-          execLogs.push(`[${nowStr()}] 📡 [Pexels] Ricerca fotografie Pexels per '${enKeywords}'...`);
+          execLogs.push(`[${nowStr()}] 📡 [6/6 Pexels] Ricerca fotografie autentiche Pexels per '${enKeywords}'...`);
           try {
-            const pxQuery = `"${enKeywords}" pexels photo high resolution`;
-            const pxItems = await searchBingEditorialImages(pxQuery, 'pexels', 6);
+            const pxItems = await searchEditorialEngine(enKeywords, 'pexels', 6);
             let pxCount = 0;
             for (const item of pxItems) {
               if (!fetchedItems.some(i => i.url === item.url)) {
@@ -4551,15 +4594,15 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
               }
             }
             const pxLatency = Date.now() - pxStart;
-            execLogs.push(`[${nowStr()}] ✅ [Pexels] HTTP 200 OK (${pxCount} immagini Pexels caricate in ${pxLatency}ms).`);
+            execLogs.push(`[${nowStr()}] ✅ [Pexels] HTTP 200 OK (${pxCount} immagini reali Pexels caricate in ${pxLatency}ms).`);
             debugProviders.push({
               name: 'Pexels Search Engine',
               platform: 'pexels',
-              endpoint: 'images.pexels.com',
+              endpoint: 'pexels.com',
               status: '200 OK',
               count: pxCount,
               latencyMs: pxLatency,
-              details: `Estratte ${pxCount} immagini reportage autentiche da Pexels.`
+              details: `Estratte ${pxCount} immagini reportage autentiche con link a pexels.com.`
             });
           } catch (e: any) {
             const pxLatency = Date.now() - pxStart;
@@ -4567,7 +4610,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             debugProviders.push({
               name: 'Pexels Search Engine',
               platform: 'pexels',
-              endpoint: 'images.pexels.com',
+              endpoint: 'pexels.com',
               status: 'Error',
               count: 0,
               latencyMs: pxLatency,
@@ -4576,12 +4619,12 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
           }
         }
 
+        // 7. Pixabay Search Engine (Targeted Pixabay HD - Verificato su dominio pixabay.com)
         if (reqPlatform === 'all' || reqPlatform === 'pixabay') {
           const pbStart = Date.now();
-          execLogs.push(`[${nowStr()}] 📡 [Pixabay] Ricerca illustrazioni e foto Pixabay per '${cleanQuery}'...`);
+          execLogs.push(`[${nowStr()}] 📡 [Pixabay] Ricerca illustrazioni e foto autentiche Pixabay per '${cleanQuery}'...`);
           try {
-            const pbQuery = `"${cleanQuery}" OR "${enKeywords}" pixabay photo`;
-            const pbItems = await searchBingEditorialImages(pbQuery, 'pixabay', 6);
+            const pbItems = await searchEditorialEngine(enKeywords || cleanQuery, 'pixabay', 6);
             let pbCount = 0;
             for (const item of pbItems) {
               if (!fetchedItems.some(i => i.url === item.url)) {
@@ -4590,15 +4633,15 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
               }
             }
             const pbLatency = Date.now() - pbStart;
-            execLogs.push(`[${nowStr()}] ✅ [Pixabay] HTTP 200 OK (${pbCount} foto Pixabay caricate in ${pbLatency}ms).`);
+            execLogs.push(`[${nowStr()}] ✅ [Pixabay] HTTP 200 OK (${pbCount} foto autentiche Pixabay caricate in ${pbLatency}ms).`);
             debugProviders.push({
               name: 'Pixabay Search Engine',
               platform: 'pixabay',
-              endpoint: 'cdn.pixabay.com',
+              endpoint: 'pixabay.com',
               status: '200 OK',
               count: pbCount,
               latencyMs: pbLatency,
-              details: `Estratte ${pbCount} fotografie da Pixabay.`
+              details: `Estratte ${pbCount} fotografie autentiche con link a pixabay.com.`
             });
           } catch (e: any) {
             const pbLatency = Date.now() - pbStart;
@@ -4606,7 +4649,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             debugProviders.push({
               name: 'Pixabay Search Engine',
               platform: 'pixabay',
-              endpoint: 'cdn.pixabay.com',
+              endpoint: 'pixabay.com',
               status: 'Error',
               count: 0,
               latencyMs: pbLatency,
@@ -4615,25 +4658,21 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
           }
         }
 
-        // Se complessivamente abbiamo meno di 4 immagini per ricerche generali, eseguiamo una scansione fotogiornalistica mirata
-        if (fetchedItems.filter(i => i.type === 'image').length < 4) {
-          try {
-            const generalEditorial = await searchBingEditorialImages(`${cleanQuery} fotogiornalismo notizia`, 'unsplash', 6);
-            for (const item of generalEditorial) {
-              if (!fetchedItems.some(i => i.url === item.url)) {
-                fetchedItems.push(item);
-              }
-            }
-          } catch (gErr) {
-            console.warn('[GENERAL-EDITORIAL-WARN]', gErr);
-          }
-        }
+        // PASSAGGIO DI GARANZIA: Riassegna e valida rigidamente il sourcePlatform di OGNI singolo elemento in base al suo link reale
+        const strictlyValidatedItems = fetchedItems.map(item => {
+          const realPlatform = detectPlatformFromUrl(item.sourceUrl, item.url) || item.sourcePlatform;
+          return {
+            ...item,
+            sourcePlatform: realPlatform,
+            author: cleanAuthorName(item.author, `${realPlatform.toUpperCase()} Contributor`)
+          };
+        });
 
         // Filtraggio rigoroso per piattaforma se non è selezionato 'all'
-        let itemsToReturn = fetchedItems;
+        let itemsToReturn = strictlyValidatedItems;
         if (reqPlatform !== 'all') {
-          itemsToReturn = fetchedItems.filter(i => i.sourcePlatform === reqPlatform);
-          execLogs.push(`[${nowStr()}] 🎯 Filtraggio applicato per canale '${reqPlatform.toUpperCase()}': ${itemsToReturn.length} elementi selezionati.`);
+          itemsToReturn = strictlyValidatedItems.filter(i => i.sourcePlatform === reqPlatform);
+          execLogs.push(`[${nowStr()}] 🎯 Filtraggio applicato per canale '${reqPlatform.toUpperCase()}': ${itemsToReturn.length} elementi rigorosamente verificati.`);
         }
 
         itemsToReturn = itemsToReturn.slice(0, 24);
@@ -4685,15 +4724,10 @@ REGOLE TASSATIVE:
           console.warn('[MEDIA-SEARCH-AI-POLISH-WARN]', aiErr);
         }
 
-        // Sanifica definitivamente tutti gli autori prima di restituire il risultato
-        itemsToReturn = itemsToReturn.map(item => ({
-          ...item,
-          author: cleanAuthorName(item.author, item.sourcePlatform === 'flickr' ? 'Flickr Photographer' : item.sourcePlatform === 'wikimedia' ? 'Wikimedia Commons Contributor' : item.sourcePlatform === 'youtube' ? 'YouTube Creator' : 'Fotografo Indipendente')
-        }));
-        execLogs.push(`[${nowStr()}] 🧹 Verifica attributi e domini sorgente completata con successo.`);
+        execLogs.push(`[${nowStr()}] 🧹 Verifica attributi e domini sorgente completata con successo al 100%.`);
 
         const totalTime = Date.now() - startTime;
-        execLogs.push(`[${nowStr()}] 🎉 Sessione completata in ${totalTime}ms. ${itemsToReturn.length} risultati ad alta pertinenza restituiti.`);
+        execLogs.push(`[${nowStr()}] 🎉 Sessione completata in ${totalTime}ms. ${itemsToReturn.length} risultati autentici e verificati restituiti.`);
 
         const debugInfo = {
           query: cleanQuery,

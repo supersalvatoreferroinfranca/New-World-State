@@ -376,7 +376,15 @@ ${debugInfo.logs.join('\n')}
                             }
                           }}
                         />
-                        <span className="absolute top-1.5 left-1.5 bg-slate-950/80 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-white/20">
+                        <span className={`absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border shadow ${
+                          item.sourcePlatform === 'unsplash' ? 'bg-emerald-600/90 text-white border-emerald-400/40' :
+                          item.sourcePlatform === 'pexels' ? 'bg-teal-600/90 text-white border-teal-400/40' :
+                          item.sourcePlatform === 'pixabay' ? 'bg-indigo-600/90 text-white border-indigo-400/40' :
+                          item.sourcePlatform === 'flickr' ? 'bg-pink-600/90 text-white border-pink-400/40' :
+                          item.sourcePlatform === 'wikimedia' ? 'bg-blue-600/90 text-white border-blue-400/40' :
+                          item.sourcePlatform === 'youtube' ? 'bg-red-600/90 text-white border-red-400/40' :
+                          'bg-slate-950/80 text-white border-white/20'
+                        }`}>
                           {item.sourcePlatform}
                         </span>
 
@@ -435,7 +443,7 @@ ${debugInfo.logs.join('\n')}
                               className="w-full py-1 px-2 rounded text-[10px] font-bold text-sky-300 hover:text-white bg-slate-800 hover:bg-sky-600 border border-sky-500/30 transition flex items-center justify-center gap-1 cursor-pointer truncate"
                             >
                               <ExternalLink className="w-3 h-3 shrink-0" />
-                              <span className="truncate">Apri Foto Originale ↗</span>
+                              <span className="truncate">Apri su {item.sourcePlatform.toUpperCase()} ↗</span>
                             </a>
                           )}
 
