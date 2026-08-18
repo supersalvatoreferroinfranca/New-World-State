@@ -259,6 +259,8 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy, onGo
   useEffect(() => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
+    let pollInterval: any = null;
+
     const updateVoiceList = () => {
       const systemVoices = window.speechSynthesis.getVoices();
       if (systemVoices.length > 0) {
@@ -277,7 +279,10 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy, onGo
 
     updateVoiceList();
 
-    let pollInterval: any = setInterval(updateVoiceList, 1000);
+    // Only start interval if voices were not already found immediately
+    if (window.speechSynthesis.getVoices().length === 0) {
+      pollInterval = setInterval(updateVoiceList, 1000);
+    }
 
     // Timeout after 5 seconds to prevent permanent background timers
     const safetyTimeout = setTimeout(() => {

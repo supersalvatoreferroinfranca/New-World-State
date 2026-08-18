@@ -124,17 +124,31 @@ export default function AccessibilityWidget() {
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
 
-    // Android Chrome & Safari async voice load polling
-    const pollInterval = setInterval(() => {
-      const v = window.speechSynthesis.getVoices();
-      if (v.length > 0) {
-        setVoices(v);
+    let pollInterval: any = null;
+    const safetyTimeout = setTimeout(() => {
+      if (pollInterval) {
         clearInterval(pollInterval);
+        pollInterval = null;
       }
-    }, 250);
+    }, 4000);
+
+    // Android Chrome & Safari async voice load polling
+    if (window.speechSynthesis.getVoices().length === 0) {
+      pollInterval = setInterval(() => {
+        const v = window.speechSynthesis.getVoices();
+        if (v.length > 0) {
+          setVoices(v);
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
+        }
+      }, 250);
+    }
 
     return () => {
-      clearInterval(pollInterval);
+      if (pollInterval) clearInterval(pollInterval);
+      clearTimeout(safetyTimeout);
     };
   }, [language]);
 
