@@ -13,6 +13,8 @@ import {
   MediaSearchDebugInfo,
   RELIABLE_NEWS_SOURCES
 } from '../../services/newsService';
+import { MediaDebuggerModal } from './MediaDebuggerModal';
+import { VideoPreviewModal } from './VideoPreviewModal';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatArticleContentToHtml, stripFormattingSymbols, analyzeArticleSeoAndAi } from '../../utils/textFormatter';
 import { 
@@ -141,6 +143,8 @@ export default function ArticleFormModal({
   const [previewMediaItem, setPreviewMediaItem] = useState<MediaSearchResult | null>(null);
   const [searchDebugInfo, setSearchDebugInfo] = useState<MediaSearchDebugInfo | null>(null);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [isDebuggerModalOpen, setIsDebuggerModalOpen] = useState(false);
+  const [previewingVideo, setPreviewingVideo] = useState<{ url: string; title: string; sourceUrl?: string } | null>(null);
 
   const handleSearchMedia = async (overrideQuery?: string, overridePlatform?: string) => {
     const q = (overrideQuery || searchQuery || title || aiTopic).trim();
@@ -1143,18 +1147,28 @@ export default function ArticleFormModal({
                 </div>
 
                 {/* Debug Panel Toggle Button */}
-                <button
-                  type="button"
-                  onClick={handleToggleDebugPanel}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer border ${
-                    showDebugPanel
-                      ? 'bg-sky-500 text-white border-sky-400 shadow'
-                      : 'bg-slate-800/80 text-sky-300 border-sky-500/30 hover:bg-slate-700'
-                  }`}
-                >
-                  <Bug className="w-3.5 h-3.5 text-sky-300" />
-                  <span>{showDebugPanel ? 'Nascondi Diagnostica' : '🛠️ Diagnostica Ricerca'}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsDebuggerModalOpen(true)}
+                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-sky-500 hover:bg-sky-400 text-white border border-sky-300 shadow transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Bug className="w-3.5 h-3.5 text-white animate-pulse" />
+                    <span>🛠️ Open Media Debugger Console</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleToggleDebugPanel}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer border ${
+                      showDebugPanel
+                        ? 'bg-slate-700 text-sky-200 border-sky-400'
+                        : 'bg-slate-800/80 text-sky-300 border-sky-500/30 hover:bg-slate-700'
+                    }`}
+                  >
+                    <span>{showDebugPanel ? 'In-page Log ▲' : 'In-page Log ▼'}</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1358,13 +1372,26 @@ export default function ArticleFormModal({
                         youtube: 'bg-red-600 text-white border-red-400'
                       };
 
+                      const isVideo = item.type === 'video' || item.sourcePlatform === 'youtube';
+
                       return (
                         <div
                           key={item.id || item.url}
                           className="group relative bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-amber-400/60 transition flex flex-col justify-between"
                         >
                           {/* Media Thumbnail */}
-                          <div className="relative aspect-video bg-black/40 overflow-hidden">
+                          <div 
+                            className={`relative aspect-video bg-black/40 overflow-hidden ${isVideo ? 'cursor-pointer' : ''}`}
+                            onClick={() => {
+                              if (isVideo) {
+                                setPreviewingVideo({
+                                  url: item.url,
+                                  title: item.title,
+                                  sourceUrl: item.sourceUrl
+                                });
+                              }
+                            }}
+                          >
                             <img
                               src={item.previewUrl || item.url}
                               alt={item.title}
@@ -1385,11 +1412,13 @@ export default function ArticleFormModal({
                               {item.sourcePlatform === 'wikimedia' ? 'WIKIMEDIA' : item.sourcePlatform.toUpperCase()}
                             </span>
 
-                            {/* Type Icon Badge */}
-                            {item.type === 'video' && (
-                              <span className="absolute top-1.5 right-1.5 bg-red-600 text-white p-1 rounded-full shadow">
-                                <Play className="w-3 h-3 fill-current" />
-                              </span>
+                            {/* Video Play Overlay */}
+                            {isVideo && (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition">
+                                <div className="p-2 bg-red-600/90 text-white rounded-full shadow-lg group-hover:scale-110 transition">
+                                  <Play className="w-4 h-4 fill-current" />
+                                </div>
+                              </div>
                             )}
                           </div>
 
@@ -1410,16 +1439,45 @@ export default function ArticleFormModal({
                             </div>
 
                             <div className="space-y-1.5 pt-1">
-                              <a
-                                href={item.sourceUrl || item.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full py-1 px-2 rounded-md text-[9.5px] font-bold text-sky-300 hover:text-white bg-slate-800/80 hover:bg-sky-600/70 border border-sky-500/30 transition flex items-center justify-center gap-1 cursor-pointer truncate"
-                                title="Apri e verifica la pagina originale della fonte in una nuova scheda"
-                              >
-                                <ExternalLink className="w-3 h-3 shrink-0" />
-                                <span className="truncate">Apri Sorgente Live ↗</span>
-                              </a>
+                              {isVideo ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setPreviewingVideo({
+                                        url: item.url,
+                                        title: item.title,
+                                        sourceUrl: item.sourceUrl
+                                      });
+                                    }}
+                                    className="w-full py-1 px-2 rounded-md text-[9.5px] font-bold text-white bg-red-600/80 hover:bg-red-600 border border-red-500/40 transition flex items-center justify-center gap-1 cursor-pointer"
+                                  >
+                                    <Play className="w-3 h-3 fill-current" />
+                                    <span>▶️ Anteprima Video Live</span>
+                                  </button>
+
+                                  <a
+                                    href={item.sourceUrl || item.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full py-0.5 px-2 rounded-md text-[9px] font-semibold text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 transition flex items-center justify-center gap-1 cursor-pointer truncate"
+                                  >
+                                    <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                                    <span className="truncate">Guarda su YouTube ↗</span>
+                                  </a>
+                                </>
+                              ) : (
+                                <a
+                                  href={item.sourceUrl || item.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full py-1 px-2 rounded-md text-[9.5px] font-bold text-sky-300 hover:text-white bg-slate-800/80 hover:bg-sky-600/70 border border-sky-500/30 transition flex items-center justify-center gap-1 cursor-pointer truncate"
+                                  title="Apri e verifica la pagina o immagine originale in una nuova scheda"
+                                >
+                                  <ExternalLink className="w-3 h-3 shrink-0" />
+                                  <span className="truncate">Apri Foto Originale ↗</span>
+                                </a>
+                              )}
 
                               <button
                                 type="button"
@@ -1748,6 +1806,43 @@ export default function ArticleFormModal({
           </div>
         </div>
       </div>
+
+      <MediaDebuggerModal
+        isOpen={isDebuggerModalOpen}
+        onClose={() => setIsDebuggerModalOpen(false)}
+        initialQuery={searchQuery || title || aiTopic || 'roma'}
+        onAttachMedia={handleAttachMediaItem}
+      />
+
+      <VideoPreviewModal
+        isOpen={!!previewingVideo}
+        onClose={() => setPreviewingVideo(null)}
+        videoUrl={previewingVideo?.url || null}
+        videoTitle={previewingVideo?.title}
+        sourceUrl={previewingVideo?.sourceUrl}
+        onAttach={
+          previewingVideo
+            ? () => {
+                const matched = mediaSearchResults.find(r => r.url === previewingVideo.url);
+                if (matched) handleAttachMediaItem(matched);
+                else {
+                  // Direct attachment if needed
+                  setVideos(prev => [
+                    ...prev,
+                    {
+                      id: `video-${Date.now()}`,
+                      url: previewingVideo.url,
+                      type: 'video',
+                      caption: previewingVideo.title,
+                      sourceUrl: previewingVideo.sourceUrl,
+                      sourcePlatform: 'youtube'
+                    }
+                  ]);
+                }
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

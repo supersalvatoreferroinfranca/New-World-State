@@ -15,6 +15,7 @@ import CategoryManagerModal from './CategoryManagerModal';
 import ArticleDetailModal from './ArticleDetailModal';
 import ModerationPanelModal from './ModerationPanelModal';
 import ReporterCandidacyModal from './ReporterCandidacyModal';
+import { MediaDebuggerModal } from './MediaDebuggerModal';
 import { 
   Newspaper, 
   Plus, 
@@ -36,7 +37,8 @@ import {
   PenTool, 
   Trash2,
   Layers,
-  Volume2
+  Volume2,
+  Bug
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 
@@ -76,6 +78,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
   const [selectedDetailArticle, setSelectedDetailArticle] = useState<NewsArticle | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCandidacyModalOpen, setIsCandidacyModalOpen] = useState(false);
+  const [isDebuggerModalOpen, setIsDebuggerModalOpen] = useState(false);
 
   // Load User Citizen
   const loadCitizen = () => {
@@ -332,6 +335,16 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   <span>{tText('Apply as Local Reporter', 'Candidati come Cronista Locale')}</span>
                 </button>
               )}
+
+              {/* Debugger Media Button */}
+              <button
+                onClick={() => setIsDebuggerModalOpen(true)}
+                className="px-4 py-3 rounded-2xl bg-sky-600/90 hover:bg-sky-500 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 border border-sky-400/50 shadow-lg shrink-0"
+                title="Apri la Console Debugger per ispezionare e testare le 6 piattaforme media"
+              >
+                <Bug className="w-4 h-4 text-sky-200 animate-pulse" />
+                <span>{tText('Media Debugger', '🛠️ Debugger Media')}</span>
+              </button>
 
               {/* Gestione Categorie (Reserved for Cronisti / Custodi) */}
               {(isCronista || isCustode) && (
@@ -766,6 +779,13 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         onClose={() => setIsCandidacyModalOpen(false)}
         citizen={citizen}
         onApplicationSubmitted={loadCitizen}
+      />
+
+      {/* 6. Media Debugger & Diagnostic Console Modal */}
+      <MediaDebuggerModal
+        isOpen={isDebuggerModalOpen}
+        onClose={() => setIsDebuggerModalOpen(false)}
+        initialQuery="roma"
       />
     </div>
   );
