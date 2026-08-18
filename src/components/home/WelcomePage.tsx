@@ -268,19 +268,32 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy, onGo
           }
           return systemVoices;
         });
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
       }
     };
 
     updateVoiceList();
 
-    const pollInterval = setInterval(updateVoiceList, 1000);
+    let pollInterval: any = setInterval(updateVoiceList, 1000);
+
+    // Timeout after 5 seconds to prevent permanent background timers
+    const safetyTimeout = setTimeout(() => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    }, 5000);
 
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
       window.speechSynthesis.onvoiceschanged = updateVoiceList;
     }
 
     return () => {
-      clearInterval(pollInterval);
+      if (pollInterval) clearInterval(pollInterval);
+      clearTimeout(safetyTimeout);
       stopTts();
     };
   }, []);

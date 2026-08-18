@@ -214,18 +214,37 @@ export async function triggerNotification(title: string, body: string, type: 're
 let syncIntervalId: any = null;
 let lastKnownProposalsCount = -1;
 let lastKnownStatus = '';
+let lastCheckTime = 0;
+let visibilityListenerAttached = false;
 
 export function startBackgroundSync(citizenId: number | null, onStatusChange?: (newStatus: string) => void) {
   if (typeof window === 'undefined') return;
   if (syncIntervalId) clearInterval(syncIntervalId);
 
-  // Initial checks
+  // Initial check
+  lastCheckTime = Date.now();
   performSyncChecks(citizenId, onStatusChange);
 
-  // Poll every 30 seconds for live direct response updates
+  // Poll every 90 seconds (1.5 min) instead of 30s, and only when tab is visible
   syncIntervalId = setInterval(() => {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    lastCheckTime = Date.now();
     performSyncChecks(citizenId, onStatusChange);
-  }, 30000);
+  }, 90000);
+
+  if (!visibilityListenerAttached && typeof document !== 'undefined') {
+    visibilityListenerAttached = true;
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        const now = Date.now();
+        // If it's been more than 60s since last check, sync immediately on tab focus
+        if (now - lastCheckTime >= 60000) {
+          lastCheckTime = now;
+          performSyncChecks(citizenId, onStatusChange);
+        }
+      }
+    });
+  }
 }
 
 export function stopBackgroundSync() {

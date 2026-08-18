@@ -308,17 +308,32 @@ export default function FederalChat() {
     }
   };
 
-  // Periodic active DMs sync to auto-detect incoming private chats
+  // Periodic active DMs sync to auto-detect incoming private chats (Adaptive & Visibility-Aware)
   useEffect(() => {
     if (!citizenCode) return;
     
     syncActiveDMs();
 
+    // Poll every 25 seconds only if tab is visible to conserve Cloudflare requests
     const timer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       syncActiveDMs();
-    }, 4000);
+    }, 25000);
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        syncActiveDMs();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
     
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+    };
   }, [citizenCode]);
 
   // Auto-detect profile from local storage/registration cache
@@ -415,12 +430,28 @@ export default function FederalChat() {
     };
   }, [activeRoom]);
 
-  // Set up periodic smart long-polling (every 3 seconds) for responsive chat
+  // Set up periodic adaptive polling (every 7 seconds when active/visible) for responsive chat
   useEffect(() => {
+    // Poll every 7 seconds when tab is active and in foreground
     const timer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       fetchMessages(true);
-    }, 3000);
-    return () => clearInterval(timer);
+    }, 7000);
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        fetchMessages(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+    };
   }, [activeRoom]);
 
   // Handle scroll event to monitor if user is near the bottom

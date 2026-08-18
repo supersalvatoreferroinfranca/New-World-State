@@ -845,6 +845,7 @@ async function startServer() {
 
     apiRouter.get('/legal-config', async (req, res) => {
       try {
+        res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300, stale-while-revalidate=600');
         const config: {[key: string]: string} = {
           legal_controller_name: "New World State Authority",
           legal_controller_address: "Infrastruttura Decentralizzata Globale / Global Decentralized Infrastructure",
@@ -3393,6 +3394,7 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
 
     // GET /api/broadcasts/latest - Endpoint pubblico per recuperare gli ultimi broadcast (usato dal client per notifiche push)
     apiRouter.get('/broadcasts/latest', async (req, res) => {
+      res.setHeader('Cache-Control', 'public, max-age=20, s-maxage=40, stale-while-revalidate=120');
       if (dbPool) {
         try {
           const qRes = await dbPool.query('SELECT id, title, content, target, sent_at FROM nws_broadcasts ORDER BY id DESC LIMIT 10');
@@ -3887,6 +3889,7 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
 
     // Ottieni tutte le proposte normative (con conteggio voti real-time)
     apiRouter.get('/democracy/proposals', async (req, res) => {
+      res.setHeader('Cache-Control', 'public, max-age=15, s-maxage=30, stale-while-revalidate=60');
       if (!dbPool) {
         return res.status(500).json({ success: false, message: 'Database non disponibile.' });
       }
@@ -5726,6 +5729,7 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
 
     apiRouter.get('/news/articles', (req, res) => {
       try {
+        res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=180');
         const articles = getServerArticles();
         return res.json({ success: true, articles });
       } catch (err: any) {
@@ -7034,7 +7038,15 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       console.log(`[SERVER] Serving static files from: ${distPath}`);
       
       app.use(express.static(distPath, {
-        index: false
+        index: false,
+        maxAge: '30d',
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache');
+          } else if (filePath.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          }
+        }
       }));
       
       app.get('*', (req, res, next) => {

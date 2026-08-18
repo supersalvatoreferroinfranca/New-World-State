@@ -244,13 +244,13 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Self-healing interval polling when active
+// Self-healing interval polling when active (spaced to 3 minutes to avoid Cloudflare rate limit issues)
 let pollInterval = null;
 function startIntervalPolling() {
   if (pollInterval) clearInterval(pollInterval);
   pollInterval = setInterval(() => {
     checkNewContent();
-  }, 45000); // Check every 45 seconds when SW is awake
+  }, 180000); // Check every 3 minutes when SW is awake
 }
 
 self.addEventListener('activate', (event) => {
@@ -277,13 +277,43 @@ self.addEventListener('sync', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network-first strategy with cached fallback for maximum interactive reliability
   if (event.request.method !== 'GET') return;
   
+  const url = new URL(event.request.url);
+  const isApi = url.pathname.startsWith('/api');
+  const isStaticAsset = url.pathname.startsWith('/assets/') || 
+                        url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i);
+
+  // For static assets: Cache-first with background update
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          // Fetch in background to keep cache fresh without blocking or causing origin traffic
+          fetch(event.request).then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
+            }
+          }).catch(() => {});
+          return cachedResponse;
+        }
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // For API and HTML pages: Network-first with cache fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (response && response.status === 200) {
+        if (response && response.status === 200 && !isApi) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
