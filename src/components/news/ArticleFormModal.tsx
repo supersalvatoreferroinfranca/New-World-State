@@ -1430,10 +1430,7 @@ export default function ArticleFormModal({
                               </p>
                               {item.author && (
                                 <p className="text-[9px] text-slate-400 mt-0.5 line-clamp-1">
-                                  {tText('Source:', 'Fonte:')} {
-                                    item.author.replace(/nobody@flickr\.com/gi, '').replace(/mailto:\S+/gi, '').trim() ||
-                                    (item.sourcePlatform === 'flickr' ? 'Flickr Contributor' : 'Fotografo Indipendente')
-                                  }
+                                  {tText('Author:', 'Autore:')} {item.author}
                                 </p>
                               )}
                             </div>
@@ -1475,7 +1472,7 @@ export default function ArticleFormModal({
                                   title="Apri e verifica la pagina o immagine originale in una nuova scheda"
                                 >
                                   <ExternalLink className="w-3 h-3 shrink-0" />
-                                  <span className="truncate">Apri Foto Originale ↗</span>
+                                  <span className="truncate">Apri su {item.sourcePlatform.toUpperCase()} ↗</span>
                                 </a>
                               )}
 
