@@ -4138,12 +4138,12 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       imgUrl: string = ''
     ): 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia' | 'flickr' | 'youtube' | null {
       const combined = (String(sourceUrl || '') + ' ' + String(imgUrl || '')).toLowerCase();
-      if (combined.includes('flickr.com') || combined.includes('staticflickr.com')) return 'flickr';
-      if (combined.includes('wikimedia.org') || combined.includes('wikipedia.org')) return 'wikimedia';
-      if (combined.includes('unsplash.com')) return 'unsplash';
-      if (combined.includes('pexels.com')) return 'pexels';
-      if (combined.includes('pixabay.com')) return 'pixabay';
-      if (combined.includes('youtube.com') || combined.includes('youtu.be')) return 'youtube';
+      if (combined.includes('flickr.com') || combined.includes('staticflickr.com') || combined.includes('flic.kr')) return 'flickr';
+      if (combined.includes('wikimedia.org') || combined.includes('wikipedia.org') || combined.includes('commons.wikimedia')) return 'wikimedia';
+      if (combined.includes('youtube.com') || combined.includes('youtu.be') || combined.includes('ytimg.com')) return 'youtube';
+      if (combined.includes('unsplash.com') || combined.includes('images.unsplash') || combined.includes('plus.unsplash')) return 'unsplash';
+      if (combined.includes('pexels.com') || combined.includes('images.pexels')) return 'pexels';
+      if (combined.includes('pixabay.com') || combined.includes('cdn.pixabay')) return 'pixabay';
       return null;
     }
 

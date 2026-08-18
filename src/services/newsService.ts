@@ -669,6 +669,50 @@ export interface MediaSearchDebugInfo {
   logs?: string[];
 }
 
+export function sanitizeMediaPlatform(item: MediaSearchResult): MediaSearchResult {
+  const combined = (String(item.sourceUrl || '') + ' ' + String(item.url || '') + ' ' + String(item.previewUrl || '')).toLowerCase();
+  let verifiedPlatform: MediaSearchResult['sourcePlatform'] = item.sourcePlatform;
+
+  if (combined.includes('flickr') || combined.includes('staticflickr.com') || combined.includes('flic.kr')) {
+    verifiedPlatform = 'flickr';
+  } else if (combined.includes('wikimedia') || combined.includes('wikipedia.org')) {
+    verifiedPlatform = 'wikimedia';
+  } else if (combined.includes('youtube.com') || combined.includes('youtu.be') || combined.includes('ytimg.com')) {
+    verifiedPlatform = 'youtube';
+  } else if (combined.includes('unsplash.com')) {
+    verifiedPlatform = 'unsplash';
+  } else if (combined.includes('pexels.com')) {
+    verifiedPlatform = 'pexels';
+  } else if (combined.includes('pixabay.com')) {
+    verifiedPlatform = 'pixabay';
+  }
+
+  // Clean author name
+  let cleanAuthor = String(item.author || '').trim();
+  const parenMatch = cleanAuthor.match(/\(["']?([^"')]+)["']?\)/);
+  if (parenMatch && parenMatch[1] && parenMatch[1].trim().length >= 2) {
+    cleanAuthor = parenMatch[1].trim();
+  }
+  cleanAuthor = cleanAuthor
+    .replace(/<[^>]*>?/gm, '')
+    .replace(/nobody@flickr\.com/gi, '')
+    .replace(/http[s]?:\/\/\S+/gi, '')
+    .replace(/mailto:\S+/gi, '')
+    .replace(/["()]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanAuthor || cleanAuthor.toLowerCase().includes('nobody@') || cleanAuthor.length < 2) {
+    cleanAuthor = `${verifiedPlatform.charAt(0).toUpperCase() + verifiedPlatform.slice(1)} Contributor`;
+  }
+
+  return {
+    ...item,
+    sourcePlatform: verifiedPlatform,
+    author: cleanAuthor
+  };
+}
+
 export async function searchArticleMedia(
   query: string,
   platform: string = 'all'
@@ -686,7 +730,9 @@ export async function searchArticleMedia(
     throw new Error(resData.message || 'Impossibile completare la ricerca media.');
   }
 
-  const results = resData.results || resData.data || [];
+  const rawResults: MediaSearchResult[] = resData.results || resData.data || [];
+  const results = rawResults.map(sanitizeMediaPlatform);
+
   return {
     results,
     debug: resData.debug
