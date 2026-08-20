@@ -284,6 +284,25 @@ function findArticleBySlugOrIdWorker(slugOrId, articles) {
   return null;
 }
 
+function formatOgImageUrlWorker(url) {
+  if (!url) return url;
+  if (url.includes('images.unsplash.com')) {
+    try {
+      const u = new URL(url);
+      u.searchParams.set('w', '1200');
+      u.searchParams.set('h', '630');
+      u.searchParams.set('fit', 'crop');
+      u.searchParams.set('crop', 'faces,edges,entropy');
+      u.searchParams.set('q', '85');
+      u.searchParams.set('auto', 'format');
+      return u.toString();
+    } catch {
+      return url;
+    }
+  }
+  return url;
+}
+
 function injectArticleMetaTagsWorker(html, article, baseUrl) {
   const rawTitle = cleanMetaTextWorker(article.title);
   const fullTitle = `${rawTitle} | New World State News`;
@@ -312,6 +331,8 @@ function injectArticleMetaTagsWorker(html, article, baseUrl) {
     }
   }
 
+  imageUrl = formatOgImageUrlWorker(imageUrl);
+
   const slug = article.slug || article.id;
   const cleanArticleUrl = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
   const authorName = cleanMetaTextWorker(article.authorName) || 'Cronista Ufficiale NWS';
@@ -333,7 +354,7 @@ function injectArticleMetaTagsWorker(html, article, baseUrl) {
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="${cleanArticleUrl}" />
 
-    <!-- Open Graph / Facebook / WhatsApp / Telegram / LinkedIn -->
+    <!-- Open Graph / Facebook (1200x630 Large Landscape Preview) -->
     <meta property="fb:app_id" content="966242223397117" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="New World State News" />
@@ -344,6 +365,8 @@ function injectArticleMetaTagsWorker(html, article, baseUrl) {
     <meta property="og:image:secure_url" content="${escapeHtmlWorker(imageUrl)}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:alt" content="${escapeHtmlWorker(rawTitle)}" />
     <meta property="og:locale" content="it_IT" />
     <meta property="article:published_time" content="${escapeHtmlWorker(publishedDate)}" />
     <meta property="article:modified_time" content="${escapeHtmlWorker(modifiedDate)}" />
@@ -351,12 +374,14 @@ function injectArticleMetaTagsWorker(html, article, baseUrl) {
     <meta property="article:section" content="News" />
     ${rawTags.map(t => `<meta property="article:tag" content="${escapeHtmlWorker(t)}" />`).join('\n    ')}
 
-    <!-- Twitter Cards -->
+    <!-- Twitter Large Cards -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="${cleanArticleUrl}" />
     <meta name="twitter:title" content="${escapeHtmlWorker(rawTitle)}" />
     <meta name="twitter:description" content="${escapeHtmlWorker(description)}" />
     <meta name="twitter:image" content="${escapeHtmlWorker(imageUrl)}" />
+    <meta name="twitter:image:alt" content="${escapeHtmlWorker(rawTitle)}" />
 
     <!-- Mobile & WhatsApp Thumbnail Fallbacks -->
     <meta name="thumbnail" content="${escapeHtmlWorker(imageUrl)}" />

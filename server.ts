@@ -6735,6 +6735,25 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         .replace(/'/g, '&#039;');
     }
 
+    function formatOgImageUrl(url: string): string {
+      if (!url) return url;
+      if (url.includes('images.unsplash.com')) {
+        try {
+          const u = new URL(url);
+          u.searchParams.set('w', '1200');
+          u.searchParams.set('h', '630');
+          u.searchParams.set('fit', 'crop');
+          u.searchParams.set('crop', 'faces,edges,entropy');
+          u.searchParams.set('q', '85');
+          u.searchParams.set('auto', 'format');
+          return u.toString();
+        } catch {
+          return url;
+        }
+      }
+      return url;
+    }
+
     function injectArticleMetaTags(html: string, article: any, req: express.Request): string {
       const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
       const host = req.get('host') || 'newworldstate.cloud';
@@ -6767,6 +6786,8 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         }
       }
 
+      imageUrl = formatOgImageUrl(imageUrl);
+
       const slug = article.slug || article.id;
       // Clean URL for Facebook, Twitter, LinkedIn & Search Engines
       const cleanArticleUrl = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
@@ -6789,7 +6810,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <link rel="canonical" href="${cleanArticleUrl}" />
 
-        <!-- Open Graph / Facebook / WhatsApp / Telegram / LinkedIn -->
+        <!-- Open Graph / Facebook (1200x630 Large Landscape Preview) -->
         <meta property="fb:app_id" content="${escapeHtml(process.env.FB_APP_ID || '966242223397117')}" />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="New World State News" />
@@ -6800,6 +6821,8 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:alt" content="${escapeHtml(rawTitle)}" />
         <meta property="og:locale" content="it_IT" />
         <meta property="article:published_time" content="${escapeHtml(publishedDate)}" />
         <meta property="article:modified_time" content="${escapeHtml(modifiedDate)}" />
@@ -6807,12 +6830,14 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         <meta property="article:section" content="News" />
         ${rawTags.map((t: string) => `<meta property="article:tag" content="${escapeHtml(t)}" />`).join('\n        ')}
 
-        <!-- Twitter Cards -->
+        <!-- Twitter Large Cards -->
         <meta name="twitter:card" content="summary_large_image" />
+        <meta property="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content="${cleanArticleUrl}" />
         <meta name="twitter:title" content="${escapeHtml(rawTitle)}" />
         <meta name="twitter:description" content="${escapeHtml(description)}" />
         <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+        <meta name="twitter:image:alt" content="${escapeHtml(rawTitle)}" />
 
         <!-- Mobile & WhatsApp Thumbnail Fallbacks -->
         <meta name="thumbnail" content="${escapeHtml(imageUrl)}" />

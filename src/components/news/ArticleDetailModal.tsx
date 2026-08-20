@@ -56,15 +56,30 @@ export default function ArticleDetailModal({
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       const updateVoices = () => {
-        const available = window.speechSynthesis.getVoices();
-        setVoices(available);
-        const itIndex = available.findIndex(v => v.lang.startsWith('it'));
-        if (itIndex >= 0) {
-          setSelectedVoiceIndex(itIndex);
+        try {
+          const available = window.speechSynthesis.getVoices() || [];
+          setVoices(available);
+          const itIndex = available.findIndex(v => v.lang && v.lang.startsWith('it'));
+          if (itIndex >= 0) {
+            setSelectedVoiceIndex(itIndex);
+          }
+        } catch (e) {
+          // Ignore browser speech engine warnings
         }
       };
-      updateVoices();
-      window.speechSynthesis.onvoiceschanged = updateVoices;
+      
+      try {
+        updateVoices();
+        window.speechSynthesis.onvoiceschanged = updateVoices;
+      } catch (e) {}
+
+      return () => {
+        try {
+          if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = null;
+          }
+        } catch (e) {}
+      };
     }
   }, []);
 
