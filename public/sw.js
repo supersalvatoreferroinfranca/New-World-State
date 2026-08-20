@@ -1,5 +1,5 @@
-// New World State PWA Service Worker - v2.1
-const CACHE_NAME = 'nws-cache-v2';
+// New World State PWA Service Worker - v3.0
+const CACHE_NAME = 'nws-cache-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -257,6 +257,15 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
+      caches.keys().then((keys) => {
+        return Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME && key !== 'nws-notif-state') {
+              return caches.delete(key);
+            }
+          })
+        );
+      }),
       checkNewContent().then(() => startIntervalPolling())
     ])
   );
