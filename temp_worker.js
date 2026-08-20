@@ -5488,7 +5488,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
       }
 
-      // 1e. Ricerca multimediale Unsplash, Pexels, Pixabay e YouTube ad alta precisione
+      // 1e. Ricerca multimediale ad alta precisione su Unsplash, Pexels, Pixabay, Wikimedia, Flickr e YouTube
       if (url.pathname === '/api/news/search-media' && request.method === 'POST') {
         try {
           const body = await request.json();
@@ -5498,286 +5498,423 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
           }
 
           const cleanQuery = query.trim();
-          const queryLower = cleanQuery.toLowerCase();
+          const reqPlatform = String(platform || 'all').toLowerCase();
+          const startTime = Date.now();
+          const nowStr = () => new Date().toISOString().substring(11, 23);
 
-          const fetchedItems = [];
+          const execLogs = [];
+          execLogs.push(`[${nowStr()}] 🔍 Inizio ricerca multimediale sul Worker.`);
+          execLogs.push(`[${nowStr()}] 📋 Parametri: Query="${cleanQuery}", Canale="${reqPlatform.toUpperCase()}".`);
 
-          // 1. YouTube real search scraper (3 video reali per l'esatta query inserita dall'utente)
-          try {
-            const ytRes = await fetch('https://www.youtube.com/results?search_query=' + encodeURIComponent(cleanQuery), {
-              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-            });
-            const html = await ytRes.text();
-            const videoBlocks = [...html.matchAll(/\"videoRenderer\":\{\"videoId\":\"([^\"]+)\"[\s\S]*?\"title\":\{\"runs\":\[\{\"text\":\"([^\"]+)\"\}/g)];
-            const seenYt = new Set();
-            for (const m of videoBlocks) {
-              const vId = m[1];
-              let vTitle = m[2];
-              if (!vId || seenYt.has(vId) || vId.length !== 11) continue;
-              seenYt.add(vId);
-              fetchedItems.push({
-                id: 'yt_' + vId,
-                type: 'video',
-                sourcePlatform: 'youtube',
-                url: 'https://www.youtube.com/embed/' + vId,
-                previewUrl: 'https://img.youtube.com/vi/' + vId + '/hqdefault.jpg',
-                title: vTitle,
-                author: 'YouTube / Reportage'
-              });
-              if (fetchedItems.length >= 3) break;
+          const debugProviders = [];
+
+          function cleanWorkerAuthor(rawAuthor, defaultName = 'Autore') {
+            if (!rawAuthor || typeof rawAuthor !== 'string') return defaultName;
+            let clean = rawAuthor;
+            const parenMatch = clean.match(/\(["']?([^"')]+)["']?\)/);
+            if (parenMatch && parenMatch[1] && parenMatch[1].trim().length >= 2) {
+              clean = parenMatch[1].trim();
             }
-          } catch(e) {
-            console.warn('[WORKER-YT-SCRAPE-WARN]', e);
+            clean = clean
+              .replace(/<[^>]*>?/gm, '')
+              .replace(/nobody@flickr\.com/gi, '')
+              .replace(/http[s]?:\/\/\S+/gi, '')
+              .replace(/mailto:\S+/gi, '')
+              .replace(/["()]/g, '')
+              .replace(/\s+/g, ' ')
+              .trim();
+            if (!clean || clean.length < 2 || clean.toLowerCase().includes('nobody@')) {
+              return defaultName;
+            }
+            return clean;
           }
 
-          // 2. High-resolution thematic stock photos for various subjects
-          const stockCategories = [
-            // Cheers / Toast / Celebration / Drinks
-            {
-              keywords: /cheers|cin\s*cin|brindisi|festa|toast|party|wine|cocktail|champagne|celebrat/i,
-              platform: 'unsplash',
-              url: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=400&q=80',
-              title: 'Brindisi e calici di vino rosso in un evento celebrativo',
-              author: 'Unsplash Editorial'
-            },
-            {
-              keywords: /cheers|cin\s*cin|brindisi|festa|toast|party|wine|cocktail|champagne|celebrat/i,
-              platform: 'pexels',
-              url: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=400&q=80',
-              title: 'Festeggiamenti con cocktail e brindisi di gruppo',
-              author: 'Pexels Party'
-            },
-            {
-              keywords: /cheers|cin\s*cin|brindisi|festa|toast|party|wine|cocktail|champagne|celebrat/i,
-              platform: 'pixabay',
-              url: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=400&q=80',
-              title: 'Flûte di champagne alzati in segno di festa',
-              author: 'Pixabay Events'
-            },
+          function detectWorkerPlatform(sourceUrl = '', imgUrl = '') {
+            const combined = (String(sourceUrl || '') + ' ' + String(imgUrl || '')).toLowerCase();
+            if (combined.includes('flickr.com') || combined.includes('staticflickr.com') || combined.includes('flic.kr')) return 'flickr';
+            if (combined.includes('wikimedia.org') || combined.includes('wikipedia.org') || combined.includes('commons.wikimedia')) return 'wikimedia';
+            if (combined.includes('youtube.com') || combined.includes('youtu.be') || combined.includes('ytimg.com')) return 'youtube';
+            if (combined.includes('unsplash.com') || combined.includes('images.unsplash') || combined.includes('plus.unsplash')) return 'unsplash';
+            if (combined.includes('pexels.com') || combined.includes('images.pexels')) return 'pexels';
+            if (combined.includes('pixabay.com') || combined.includes('cdn.pixabay')) return 'pixabay';
+            return null;
+          }
 
-            // ONU / Diplomacy / Peace
-            {
-              keywords: /onu|nazioni\s*unite|united\s*nations|diploma|pace|trattat|assemblea/i,
-              platform: 'unsplash',
-              url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=400&q=80',
-              title: 'Sede e dibattito del Consiglio di Sicurezza delle Nazioni Unite',
-              author: 'Alex Vasey (Unsplash)'
-            },
-            {
-              keywords: /onu|nazioni\s*unite|united\s*nations|diploma|pace|trattat|assemblea/i,
-              platform: 'pexels',
-              url: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=400&q=80',
-              title: 'Bandiera ufficiale e relazioni diplomatiche internazionali',
-              author: 'Pexels Global'
-            },
+          async function searchWorkerDDG(keywordsList, plat, maxCount = 8) {
+            const list = Array.isArray(keywordsList) ? keywordsList.filter(Boolean) : [keywordsList];
+            const primaryTerm = list[0] || '';
+            const secondaryTerm = list[1] || list[0] || '';
 
-            // Technology / AI / Cloud / Cyber
-            {
-              keywords: /tecno|ai|intel|nodo|server|cloud|chip|hardware|computer|softw|cyber|dati/i,
-              platform: 'unsplash',
-              url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80',
-              title: 'Circuito integrato e microarchitettura digitale',
-              author: 'Unsplash Tech'
-            },
-            {
-              keywords: /tecno|ai|intel|nodo|server|cloud|chip|hardware|computer|softw|cyber|dati/i,
-              platform: 'pexels',
-              url: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=400&q=80',
-              title: 'Sviluppi avanzati di robotica e automazione',
-              author: 'Pexels Science'
-            },
+            const searchTerms = [
+              `"${plat}.com" ${primaryTerm}`,
+              `"${plat} photo" ${primaryTerm}`,
+              `"${plat}.com" ${secondaryTerm}`,
+              `"${plat} photo" ${secondaryTerm}`,
+              `site:${plat}.com ${primaryTerm}`
+            ].filter(t => t.trim().length > 3);
 
-            // Coffee / Food / Cafe
-            {
-              keywords: /caffè|coffee|bar|caffetter|espresso|ristorante|cibo|food/i,
-              platform: 'unsplash',
-              url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80',
-              title: 'Tazza di caffè espresso appena erogato con chicchi toostati',
-              author: 'Unsplash Food'
-            },
-            {
-              keywords: /caffè|coffee|bar|caffetter|espresso|ristorante|cibo|food/i,
-              platform: 'pexels',
-              url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=400&q=80',
-              title: 'Ambiente di una caffetteria artigianale di design',
-              author: 'Pexels Cafe'
-            },
+            const items = [];
+            const seenUrls = new Set();
 
-            // Finance / Economy / Business
-            {
-              keywords: /econo|finanz|monet|banc|mercat|borsa|azron|invest/i,
-              platform: 'unsplash',
-              url: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=400&q=80',
-              title: 'Andamento dei mercati azionari e analisi dei flussi finanziari',
-              author: 'Unsplash Finance'
-            },
-
-            // Global / Earth / Nature
-            {
-              keywords: /terra|spazio|global|pianeta|geopolit|mondo|ambiente|clima/i,
-              platform: 'unsplash',
-              url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80',
-              title: 'Pianeta Terra e reti di comunicazione globale viste dallo spazio',
-              author: 'NASA / Unsplash'
-            }
-          ];
-
-          for (const stk of stockCategories) {
-            if (stk.keywords.test(queryLower)) {
-              if (!fetchedItems.some(i => i.url === stk.url)) {
-                fetchedItems.push({
-                  id: 'stk_' + Math.random().toString(36).substring(2, 9),
-                  type: 'image',
-                  sourcePlatform: stk.platform,
-                  url: stk.url,
-                  previewUrl: stk.previewUrl,
-                  title: stk.title,
-                  author: stk.author
+            for (const term of searchTerms) {
+              if (items.length >= maxCount) break;
+              try {
+                const res1 = await fetch('https://duckduckgo.com/?q=' + encodeURIComponent(term) + '&iax=images&ia=images', {
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+                  }
                 });
-              }
-            }
-          }
+                const text1 = await res1.text();
+                const vqdMatch = text1.match(/vqd=([0-9-]+)/) || text1.match(/vqd="([^"]+)"/);
+                if (!vqdMatch) continue;
 
-          // 3. Flickr Public Feed Search
-          try {
-            const flRes = await fetch(`https://www.flickr.com/services/feeds/photos_public.gne?tags=${encodeURIComponent(cleanQuery)}&format=json&nojsoncallback=1`).then(r => r.json());
-            const flItems = (flRes.items || []).slice(0, 4);
-            let flIdx = 0;
-            const platforms = ['unsplash', 'pexels', 'pixabay'];
-            for (const item of flItems) {
-              if (item.media?.m) {
-                const imgUrl = item.media.m.replace('_m.jpg', '_b.jpg');
-                if (!fetchedItems.some(i => i.url === imgUrl)) {
-                  fetchedItems.push({
-                    id: 'fl_' + Math.random().toString(36).substring(2, 9),
+                const vqd = vqdMatch[1];
+                const res2 = await fetch('https://duckduckgo.com/i.js?l=it-it&o=json&q=' + encodeURIComponent(term) + '&vqd=' + vqd + '&f=,,,', {
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+                  }
+                });
+                const data = await res2.json();
+                const rawList = data.results || [];
+
+                for (const r of rawList) {
+                  const imgUrl = r.image;
+                  const pageUrl = r.url || imgUrl;
+                  const thumbUrl = r.thumbnail || imgUrl;
+                  if (!imgUrl || seenUrls.has(imgUrl)) continue;
+                  if (imgUrl.includes('.svg') || imgUrl.includes('logo') || imgUrl.includes('icon')) continue;
+
+                  const detected = detectWorkerPlatform(pageUrl, imgUrl);
+                  if (detected !== plat) continue;
+
+                  seenUrls.add(imgUrl);
+                  let rawTitle = r.title || '';
+                  rawTitle = rawTitle
+                    .replace(/[-|–—].*$/i, '')
+                    .replace(/<[^>]*>?/gm, '')
+                    .replace(/Download Free.*$/i, '')
+                    .replace(/Free Stock.*$/i, '')
+                    .replace(/Gratis.*$/i, '')
+                    .trim();
+                  if (!rawTitle || rawTitle.length < 3) rawTitle = list[0] || 'Fotografia ' + plat;
+
+                  items.push({
+                    id: `${plat.substring(0, 2)}_${Math.random().toString(36).substring(2, 9)}`,
                     type: 'image',
-                    sourcePlatform: platforms[flIdx % platforms.length],
+                    sourcePlatform: plat,
                     url: imgUrl,
-                    previewUrl: item.media.m,
-                    title: item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia`,
-                    author: item.author || 'Flickr'
+                    previewUrl: thumbUrl,
+                    sourceUrl: pageUrl,
+                    title: rawTitle,
+                    author: `${plat.charAt(0).toUpperCase() + plat.slice(1)} Contributor`
                   });
-                  flIdx++;
+
+                  if (items.length >= maxCount) break;
                 }
-              }
+              } catch (err) {}
             }
-          } catch (e) {
-            console.warn('[WORKER-FLICKR-WARN]', e);
+            return items;
           }
 
-          // 4. Wikimedia Commons Search
-          try {
-            const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=6&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=960&format=json&origin=*`;
-            const wmRes = await fetch(wmUrl).then(r => r.json());
-            const pages = Object.values(wmRes.query?.pages || {});
-            let wmIdx = 1;
-            const platforms = ['pexels', 'pixabay', 'unsplash'];
-            for (const p of pages) {
-              const info = p.imageinfo?.[0];
-              const mime = info?.mime || '';
-              if (!mime.startsWith('image/jpeg') && !mime.startsWith('image/png') && !mime.startsWith('image/webp')) continue;
-              const urlStr = info?.thumburl || info?.url;
-              if (!urlStr || urlStr.includes('.svg')) continue;
-
-              let rawTitle = p.title.replace(/^File:/i, '').replace(/\.(jpg|jpeg|png|gif|webp)$/i, '').replace(/_/g, ' ');
-              rawTitle = rawTitle.replace(/\([^)]*\)/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
-              if (rawTitle.length < 3) continue;
-
-              const authorName = info?.extmetadata?.Artist?.value?.replace(/<[^>]+>/g, '').trim() || 'Wikimedia Commons';
-
-              if (!fetchedItems.some(i => i.url === urlStr)) {
-                fetchedItems.push({
-                  id: 'wm_' + (p.pageid || Math.random().toString(36).substring(2, 9)),
-                  type: 'image',
-                  sourcePlatform: platforms[wmIdx % platforms.length],
-                  url: urlStr,
-                  previewUrl: urlStr,
-                  title: rawTitle,
-                  author: authorName
-                });
-                wmIdx++;
-              }
-            }
-          } catch (e) {
-            console.warn('[WORKER-WM-WARN]', e);
-          }
-
-          // Se non ci sono immagini per una query generica, aggiungi foto Unsplash ad alta risoluzione pertinenti
-          if (!fetchedItems.some(i => i.type === 'image')) {
-            fetchedItems.push({
-              id: 'gen-stk-1',
-              type: 'image',
-              sourcePlatform: 'unsplash',
-              url: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80',
-              title: `Fotografia editoriale: ${cleanQuery}`,
-              author: 'Unsplash Editorial'
-            });
-            fetchedItems.push({
-              id: 'gen-stk-2',
-              type: 'image',
-              sourcePlatform: 'pexels',
-              url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-              previewUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=400&q=80',
-              title: `Reportage e approfondimento: ${cleanQuery}`,
-              author: 'Pexels Press'
-            });
-          }
-
-          const itemsToReturn = fetchedItems.slice(0, 12);
-
+          let enKeywords = cleanQuery;
+          let itKeywords = cleanQuery;
           const apiKey = env.GEMINI_API_KEY;
           if (apiKey) {
             try {
+              const expandPrompt = `Dato l'argomento di ricerca: "${cleanQuery}"
+Restituisci un oggetto JSON con:
+- "enQuery": 2-3 parole chiave in inglese per stock photo (es. Unsplash, Pexels).
+- "itQuery": 2-3 parole chiave in italiano.
+Formato: {"enQuery": "...", "itQuery": "..."}`;
+
+              const expRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: expandPrompt }] }],
+                  generationConfig: { responseMimeType: 'application/json' }
+                })
+              });
+              if (expRes.ok) {
+                const expData = await expRes.json();
+                const expText = expData.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (expText) {
+                  const parsedExp = JSON.parse(expText.trim());
+                  if (parsedExp.enQuery) enKeywords = parsedExp.enQuery;
+                  if (parsedExp.itQuery) itKeywords = parsedExp.itQuery;
+                }
+              }
+            } catch (e) {}
+          }
+
+          const isAll = reqPlatform === 'all';
+          const quotaPerProvider = isAll ? 4 : 24;
+
+          const [ytResult, wmResult, flResult, unResult, pxResult, pbResult] = await Promise.allSettled([
+            // 1. YouTube
+            (async () => {
+              if (!isAll && reqPlatform !== 'youtube') return [];
+              const ytStart = Date.now();
+              try {
+                const ytRes = await fetch('https://www.youtube.com/results?search_query=' + encodeURIComponent(cleanQuery), {
+                  headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+                });
+                const html = await ytRes.text();
+                const videoBlocks = [...html.matchAll(/\"videoRenderer\":\{\"videoId\":\"([^\"]+)\"[\s\S]*?\"title\":\{\"runs\":\[\{\"text\":\"([^\"]+)\"\}/g)];
+                const items = [];
+                const seenYt = new Set();
+                for (const m of videoBlocks) {
+                  const vId = m[1];
+                  const vTitle = m[2];
+                  if (!vId || seenYt.has(vId) || vId.length !== 11) continue;
+                  seenYt.add(vId);
+                  const ytWatchUrl = 'https://www.youtube.com/watch?v=' + vId;
+                  items.push({
+                    id: 'yt_' + vId,
+                    type: 'video',
+                    sourcePlatform: 'youtube',
+                    url: ytWatchUrl,
+                    previewUrl: 'https://img.youtube.com/vi/' + vId + '/hqdefault.jpg',
+                    sourceUrl: ytWatchUrl,
+                    title: vTitle,
+                    author: 'YouTube Creator'
+                  });
+                  if (items.length >= quotaPerProvider) break;
+                }
+                debugProviders.push({
+                  name: 'YouTube Video Engine',
+                  platform: 'youtube',
+                  status: '200 OK',
+                  count: items.length,
+                  latencyMs: Date.now() - ytStart
+                });
+                return items;
+              } catch (e) {
+                debugProviders.push({ name: 'YouTube Video Engine', platform: 'youtube', status: 'Error', count: 0, latencyMs: Date.now() - ytStart, error: e.message });
+                return [];
+              }
+            })(),
+
+            // 2. Wikimedia Commons
+            (async () => {
+              if (!isAll && reqPlatform !== 'wikimedia') return [];
+              const wmStart = Date.now();
+              const items = [];
+              try {
+                const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=1280&format=json&origin=*`;
+                const wmRes = await fetch(wmUrl, { headers: { 'User-Agent': 'NewWorldStateNews/1.0' } }).then(r => r.json()).catch(() => ({}));
+                const pages = Object.values(wmRes.query?.pages || {});
+                for (const p of pages) {
+                  const info = p.imageinfo?.[0];
+                  const mime = info?.mime || '';
+                  if (!mime.startsWith('image/jpeg') && !mime.startsWith('image/png') && !mime.startsWith('image/webp')) continue;
+                  const urlStr = info?.thumburl || info?.url;
+                  if (!urlStr || urlStr.includes('.svg')) continue;
+
+                  let rawTitle = p.title.replace(/^File:/i, '').replace(/\.(jpg|jpeg|png|gif|webp)$/i, '').replace(/_/g, ' ');
+                  rawTitle = rawTitle.replace(/\([^)]*\)/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+                  const cleanArtist = cleanWorkerAuthor(info?.extmetadata?.Artist?.value, 'Wikimedia Commons Contributor');
+                  const descriptionPage = info?.descriptionurl || `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title || '')}`;
+
+                  items.push({
+                    id: 'wm_' + (p.pageid || Math.random().toString(36).substring(2, 9)),
+                    type: 'image',
+                    sourcePlatform: 'wikimedia',
+                    url: urlStr,
+                    previewUrl: urlStr,
+                    sourceUrl: descriptionPage,
+                    title: rawTitle || cleanQuery,
+                    author: cleanArtist
+                  });
+                  if (items.length >= quotaPerProvider) break;
+                }
+
+                if (items.length < quotaPerProvider) {
+                  const extra = await searchWorkerDDG(cleanQuery, 'wikimedia', quotaPerProvider - items.length);
+                  for (const ex of extra) {
+                    if (!items.some(i => i.url === ex.url)) items.push(ex);
+                  }
+                }
+
+                debugProviders.push({ name: 'Wikimedia Commons Engine', platform: 'wikimedia', status: '200 OK', count: items.length, latencyMs: Date.now() - wmStart });
+                return items;
+              } catch (e) {
+                debugProviders.push({ name: 'Wikimedia Commons Engine', platform: 'wikimedia', status: 'Error', count: 0, latencyMs: Date.now() - wmStart, error: e.message });
+                return [];
+              }
+            })(),
+
+            // 3. Flickr
+            (async () => {
+              if (!isAll && reqPlatform !== 'flickr') return [];
+              const flStart = Date.now();
+              const items = [];
+              try {
+                const flUrl = `https://www.flickr.com/services/feeds/photos_public.gne?text=${encodeURIComponent(cleanQuery)}&format=json&nojsoncallback=1`;
+                const flRes = await fetch(flUrl).then(r => r.json()).catch(() => ({}));
+                const flFeedItems = flRes.items || [];
+                for (const item of flFeedItems) {
+                  if (item.media?.m) {
+                    const imgUrl = item.media.m.replace('_m.jpg', '_b.jpg');
+                    const authorClean = cleanWorkerAuthor(item.author, 'Flickr Photographer');
+                    const itemTitle = item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia Flickr`;
+                    const itemSourceUrl = item.link || `https://www.flickr.com/search/?text=${encodeURIComponent(cleanQuery)}`;
+
+                    items.push({
+                      id: 'fl_' + Math.random().toString(36).substring(2, 9),
+                      type: 'image',
+                      sourcePlatform: 'flickr',
+                      url: imgUrl,
+                      previewUrl: item.media.m,
+                      sourceUrl: itemSourceUrl,
+                      title: itemTitle,
+                      author: authorClean
+                    });
+                    if (items.length >= quotaPerProvider) break;
+                  }
+                }
+                debugProviders.push({ name: 'Flickr Search Engine', platform: 'flickr', status: '200 OK', count: items.length, latencyMs: Date.now() - flStart });
+                return items;
+              } catch (e) {
+                debugProviders.push({ name: 'Flickr Search Engine', platform: 'flickr', status: 'Error', count: 0, latencyMs: Date.now() - flStart, error: e.message });
+                return [];
+              }
+            })(),
+
+            // 4. Unsplash
+            (async () => {
+              if (!isAll && reqPlatform !== 'unsplash') return [];
+              const unStart = Date.now();
+              try {
+                const queryList = [enKeywords, cleanQuery, cleanQuery.split(' ')[0], enKeywords.split(' ')[0]];
+                const items = await searchWorkerDDG(queryList, 'unsplash', quotaPerProvider);
+                debugProviders.push({ name: 'Unsplash Search Engine', platform: 'unsplash', status: '200 OK', count: items.length, latencyMs: Date.now() - unStart });
+                return items;
+              } catch (e) {
+                debugProviders.push({ name: 'Unsplash Search Engine', platform: 'unsplash', status: 'Error', count: 0, latencyMs: Date.now() - unStart, error: e.message });
+                return [];
+              }
+            })(),
+
+            // 5. Pexels
+            (async () => {
+              if (!isAll && reqPlatform !== 'pexels') return [];
+              const pxStart = Date.now();
+              try {
+                const queryList = [enKeywords, cleanQuery, cleanQuery.split(' ')[0], enKeywords.split(' ')[0]];
+                const items = await searchWorkerDDG(queryList, 'pexels', quotaPerProvider);
+                debugProviders.push({ name: 'Pexels Search Engine', platform: 'pexels', status: '200 OK', count: items.length, latencyMs: Date.now() - pxStart });
+                return items;
+              } catch (e) {
+                debugProviders.push({ name: 'Pexels Search Engine', platform: 'pexels', status: 'Error', count: 0, latencyMs: Date.now() - pxStart, error: e.message });
+                return [];
+              }
+            })(),
+
+            // 6. Pixabay
+            (async () => {
+              if (!isAll && reqPlatform !== 'pixabay') return [];
+              const pbStart = Date.now();
+              try {
+                const queryList = [cleanQuery, enKeywords, cleanQuery.split(' ')[0], enKeywords.split(' ')[0]];
+                const items = await searchWorkerDDG(queryList, 'pixabay', quotaPerProvider);
+                debugProviders.push({ name: 'Pixabay Search Engine', platform: 'pixabay', status: '200 OK', count: items.length, latencyMs: Date.now() - pbStart });
+                return items;
+              } catch (e) {
+                debugProviders.push({ name: 'Pixabay Search Engine', platform: 'pixabay', status: 'Error', count: 0, latencyMs: Date.now() - pbStart, error: e.message });
+                return [];
+              }
+            })()
+          ]);
+
+          const allCollected = [];
+          const seenUrls = new Set();
+          const addItems = (list) => {
+            for (const it of (list || [])) {
+              if (it && it.url && !seenUrls.has(it.url)) {
+                seenUrls.add(it.url);
+                allCollected.push(it);
+              }
+            }
+          };
+
+          if (ytResult.status === 'fulfilled') addItems(ytResult.value);
+          if (unResult.status === 'fulfilled') addItems(unResult.value);
+          if (pxResult.status === 'fulfilled') addItems(pxResult.value);
+          if (pbResult.status === 'fulfilled') addItems(pbResult.value);
+          if (wmResult.status === 'fulfilled') addItems(wmResult.value);
+          if (flResult.status === 'fulfilled') addItems(flResult.value);
+
+          const strictlyValidatedItems = allCollected.map(item => {
+            const realPlatform = detectWorkerPlatform(item.sourceUrl, item.url) || item.sourcePlatform;
+            return {
+              ...item,
+              sourcePlatform: realPlatform,
+              author: cleanWorkerAuthor(item.author, `${realPlatform.charAt(0).toUpperCase() + realPlatform.slice(1)} Contributor`)
+            };
+          });
+
+          let itemsToReturn = strictlyValidatedItems;
+          if (reqPlatform !== 'all') {
+            itemsToReturn = strictlyValidatedItems.filter(i => i.sourcePlatform === reqPlatform);
+          }
+          itemsToReturn = itemsToReturn.slice(0, 24);
+
+          // Ottimizza titoli con Gemini AI se disponibile
+          if (apiKey && itemsToReturn.length > 0) {
+            try {
               const prompt = `Sei il caporedattore del quotidiano 'New World State'.
-Ho recuperato dal web i seguenti elementi multimediali REALI per la ricerca: '${cleanQuery}'.
+Perfeziona i titoli ('title') in italiano elegante e giornalistico per la ricerca "${cleanQuery}".
+NON modificare id, url, previewUrl, sourcePlatform, sourceUrl, type, author.
+Elementi: ${JSON.stringify(itemsToReturn.map(i => ({ id: i.id, title: i.title, sourcePlatform: i.sourcePlatform })))}
+Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "..."}]`;
 
-${JSON.stringify(itemsToReturn, null, 2)}
-
-Il tuo compito è ESCLUSIVAMENTE perfezionare e tradurre i titoli ('title') in italiano elegante, giornalistico e descrittivo, assicurandoti al 100% che ogni didascalia corrisponda esattamente a ciò che l'immagine o il video rappresenta.
-REGOLE TASSATIVE:
-- NON modificare assolutamente le URL, i previewUrl, la sourcePlatform, gli id o gli autore.
-- Restituisci l'array JSON completo con i campi perfezionati.`;
-
-              const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+              const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   contents: [{ parts: [{ text: prompt }] }],
-                  generationConfig: {
-                    responseMimeType: 'application/json'
-                  }
+                  generationConfig: { responseMimeType: 'application/json' }
                 })
               });
-
-              if (response.ok) {
-                const resData = await response.json();
-                const jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (jsonText) {
-                  const parsed = JSON.parse(jsonText.trim());
-                  if (Array.isArray(parsed) && parsed.length > 0) {
-                    return new Response(JSON.stringify({ success: true, data: parsed }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+              if (aiRes.ok) {
+                const aiData = await aiRes.json();
+                const aiText = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (aiText) {
+                  const titleMap = new Map();
+                  const parsed = JSON.parse(aiText.trim());
+                  if (Array.isArray(parsed)) {
+                    parsed.forEach(p => { if (p.id && p.title) titleMap.set(p.id, p.title); });
+                    itemsToReturn = itemsToReturn.map(item => ({
+                      ...item,
+                      title: titleMap.get(item.id) || item.title
+                    }));
                   }
                 }
               }
             } catch (e) {}
           }
 
-          return new Response(JSON.stringify({ success: true, data: itemsToReturn }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          const responsePayload = {
+            success: true,
+            results: itemsToReturn,
+            data: itemsToReturn,
+            count: itemsToReturn.length,
+            debug: {
+              query: cleanQuery,
+              platform: reqPlatform,
+              timestamp: new Date().toISOString(),
+              totalTimeMs: Date.now() - startTime,
+              totalResultsCount: itemsToReturn.length,
+              providers: debugProviders,
+              logs: execLogs
+            }
+          };
+
+          return new Response(JSON.stringify(responsePayload), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch (e) {
           console.error('[WORKER-MEDIA-SEARCH-ERR]', e);
-          return new Response(JSON.stringify({ success: false, message: 'Impossibile completare la ricerca media.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          return new Response(JSON.stringify({ success: false, message: 'Impossibile completare la ricerca media: ' + e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
       }
 
