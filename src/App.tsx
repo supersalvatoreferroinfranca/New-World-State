@@ -29,7 +29,7 @@ import CookieConsentBanner from './components/pwa/CookieConsentBanner';
 import SovereignCustodeDebugWidget from './components/pwa/SovereignCustodeDebugWidget';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news'>(() => {
+  const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news'>(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
@@ -43,6 +43,16 @@ function AppContent() {
       if (window.location.pathname === '/chat' || window.location.pathname === '/democracy') {
         return 'democracy';
       }
+      if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network'].includes(tabParam)) {
+        return tabParam as any;
+      }
+      // Check last visited tab in localStorage
+      try {
+        const lastTab = localStorage.getItem('nws_last_active_tab');
+        if (lastTab && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'democracy', 'news'].includes(lastTab)) {
+          return lastTab as any;
+        }
+      } catch (e) {}
     }
     try {
       const saved = localStorage.getItem('nws_democracy_citizen') || sessionStorage.getItem('nws_democracy_citizen');
@@ -57,6 +67,55 @@ function AppContent() {
     }
     return 'welcome';
   });
+
+  const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news') => {
+    setActiveTabState(tab);
+    try {
+      localStorage.setItem('nws_last_active_tab', tab);
+      if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+        const url = new URL(window.location.href);
+        if (tab === 'welcome') {
+          url.searchParams.delete('tab');
+          if (url.pathname !== '/' && !url.pathname.startsWith('/verify')) {
+            url.pathname = '/';
+          }
+        } else if (tab === 'news') {
+          if (!url.pathname.startsWith('/notizie/') && !url.pathname.startsWith('/news/')) {
+            url.searchParams.set('tab', 'news');
+          }
+        } else {
+          url.searchParams.set('tab', tab);
+          if (url.pathname.startsWith('/notizie/') || url.pathname.startsWith('/news/')) {
+            url.pathname = '/';
+          }
+          url.searchParams.delete('notizia');
+          url.searchParams.delete('article');
+          url.searchParams.delete('slug');
+        }
+        window.history.pushState({}, '', url.toString());
+      }
+    } catch (e) {}
+  };
+
+  // Sync state on browser back / forward navigation
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get('tab');
+      const hasArticleParam = searchParams.has('notizia') || searchParams.has('article') || searchParams.has('slug');
+      if (tabParam === 'news' || hasArticleParam || window.location.pathname === '/news' || window.location.pathname === '/notizie' || window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
+        setActiveTabState('news');
+      } else if (tabParam === 'democracy' || tabParam === 'chat' || window.location.pathname === '/democracy' || window.location.pathname === '/chat') {
+        setActiveTabState('democracy');
+      } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network'].includes(tabParam)) {
+        setActiveTabState(tabParam as any);
+      } else {
+        setActiveTabState('welcome');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   const [isVerifyPath] = useState<boolean>(() => {
     const searchParams = new URLSearchParams(window.location.search);
     return window.location.pathname === '/verify' || 

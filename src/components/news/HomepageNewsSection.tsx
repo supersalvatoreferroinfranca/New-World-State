@@ -36,6 +36,15 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
     incrementArticleViews(art.id);
     setSelectedArticle(art);
     setIsDetailOpen(true);
+    try {
+      if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+        const url = new URL(window.location.href);
+        const slug = art.slug || art.id;
+        url.searchParams.set('tab', 'news');
+        url.searchParams.set('notizia', slug);
+        window.history.pushState({ articleId: art.id, slug }, '', url.toString());
+      }
+    } catch (e) {}
   };
 
   if (latestArticles.length === 0) return null;
@@ -160,9 +169,28 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
         onClose={() => {
           setIsDetailOpen(false);
           setSelectedArticle(null);
+          try {
+            if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+              const url = new URL(window.location.href);
+              url.searchParams.delete('notizia');
+              url.searchParams.delete('article');
+              url.searchParams.delete('slug');
+              window.history.pushState({}, '', url.toString());
+            }
+          } catch (e) {}
         }}
         onSelectArticle={(rel) => {
           setSelectedArticle(rel);
+          incrementArticleViews(rel.id);
+          try {
+            if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+              const url = new URL(window.location.href);
+              const slug = rel.slug || rel.id;
+              url.searchParams.set('tab', 'news');
+              url.searchParams.set('notizia', slug);
+              window.history.pushState({ articleId: rel.id, slug }, '', url.toString());
+            }
+          } catch (e) {}
         }}
       />
     </section>

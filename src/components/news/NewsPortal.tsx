@@ -247,6 +247,15 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     incrementArticleViews(art.id);
     setSelectedDetailArticle(art);
     setIsDetailModalOpen(true);
+    try {
+      if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+        const url = new URL(window.location.href);
+        const slug = art.slug || art.id;
+        url.searchParams.set('tab', 'news');
+        url.searchParams.set('notizia', slug);
+        window.history.pushState({ articleId: art.id, slug }, '', url.toString());
+      }
+    } catch (e) {}
   };
 
   const renderStatusBadge = (status: ArticleStatus) => {
@@ -750,9 +759,32 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         onClose={() => {
           setIsDetailModalOpen(false);
           setSelectedDetailArticle(null);
+          try {
+            if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+              const url = new URL(window.location.href);
+              url.searchParams.delete('notizia');
+              url.searchParams.delete('article');
+              url.searchParams.delete('slug');
+              if (url.pathname.startsWith('/notizie/') || url.pathname.startsWith('/news/')) {
+                url.pathname = '/';
+                url.searchParams.set('tab', 'news');
+              }
+              window.history.pushState({}, '', url.toString());
+            }
+          } catch (e) {}
         }}
         onSelectArticle={(rel) => {
           setSelectedDetailArticle(rel);
+          incrementArticleViews(rel.id);
+          try {
+            if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+              const url = new URL(window.location.href);
+              const slug = rel.slug || rel.id;
+              url.searchParams.set('tab', 'news');
+              url.searchParams.set('notizia', slug);
+              window.history.pushState({ articleId: rel.id, slug }, '', url.toString());
+            }
+          } catch (e) {}
         }}
         onEditArticle={
           selectedDetailArticle && canEditArticle(selectedDetailArticle)
