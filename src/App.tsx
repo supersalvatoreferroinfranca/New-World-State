@@ -22,6 +22,7 @@ import NewsPortal from './components/news/NewsPortal';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp, Cookie, MessageSquare, ArrowRight } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
+import { syncArticlesWithServer } from './services/newsService';
 import LegalComplianceModal from './components/pwa/LegalComplianceModal';
 import AccessibilityWidget from './components/pwa/AccessibilityWidget';
 import CookieConsentBanner from './components/pwa/CookieConsentBanner';
@@ -102,6 +103,9 @@ function AppContent() {
 
     // Avvia la sincronizzazione globale per le notifiche
     startBackgroundSync(citizenId);
+
+    // Sincronizza articoli con il backend/DB
+    syncArticlesWithServer().catch(() => {});
 
     // Forza check istantaneo quando la finestra riprende il focus
     const handleFocus = () => {

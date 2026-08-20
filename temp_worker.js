@@ -294,13 +294,21 @@ function injectArticleMetaTagsWorker(html, article, baseUrl) {
   let imageUrl = getThematicImageForSlugWorker(article.slug || '', rawTitle);
   if (article.images && Array.isArray(article.images) && article.images.length > 0) {
     const firstImg = article.images[0];
-    if (firstImg && firstImg.url && firstImg.url !== '/LOGO_NEW-WORLD-STATE.jpg') {
-      const u = firstImg.url.trim();
+    const rawImgUrl = firstImg ? (firstImg.url || firstImg.sourceUrl || firstImg.previewUrl || '') : '';
+    if (rawImgUrl && rawImgUrl !== '/LOGO_NEW-WORLD-STATE.jpg') {
+      const u = rawImgUrl.trim();
       if (u.startsWith('http://') || u.startsWith('https://')) {
         imageUrl = u;
       } else if (u.startsWith('/')) {
         imageUrl = `${baseUrl}${u}`;
       }
+    }
+  } else if (article.image && typeof article.image === 'string' && article.image.trim()) {
+    const u = article.image.trim();
+    if (u.startsWith('http://') || u.startsWith('https://')) {
+      imageUrl = u;
+    } else if (u.startsWith('/')) {
+      imageUrl = `${baseUrl}${u}`;
     }
   }
 
@@ -4849,6 +4857,15 @@ CREATE TABLE citizens (
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
           `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_news_articles (
+              id TEXT PRIMARY KEY,
+              slug TEXT UNIQUE,
+              title TEXT NOT NULL,
+              data JSONB NOT NULL,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
           // Ensure new admin and role columns are present in the citizens table
           try {
             await queryDb('ALTER TABLE citizens ADD COLUMN IF NOT EXISTS "isAdmin" BOOLEAN DEFAULT FALSE');
@@ -7187,6 +7204,21 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
 
       // Endpoints per Notizie e Sitemap nel Worker
       if (url.pathname === '/api/news/articles' && request.method === 'GET') {
+        try {
+          const dbRows = await queryDb('SELECT data FROM nws_news_articles ORDER BY updated_at DESC LIMIT 300');
+          if (dbRows && Array.isArray(dbRows) && dbRows.length > 0) {
+            const dbArticles = dbRows.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data).filter(Boolean);
+            const map = new Map();
+            memoryWorkerArticles.forEach(a => { if (a && a.id) map.set(a.id, a); });
+            dbArticles.forEach(a => { if (a && a.id) map.set(a.id, a); });
+            memoryWorkerArticles = Array.from(map.values()).sort((a, b) =>
+              new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            );
+          }
+        } catch (dbErr) {
+          console.warn('[WORKER-GET-ARTICLES-DB-WARN]', dbErr.message);
+        }
+
         return new Response(JSON.stringify({ success: true, articles: memoryWorkerArticles }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
@@ -7202,6 +7234,29 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
             memoryWorkerArticles = Array.from(map.values()).sort((a, b) =>
               new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
             );
+
+            // Persist to PostgreSQL database for persistent edge social scrapers & crawlers
+            try {
+              for (const a of body.articles) {
+                if (a && a.id) {
+                  const slug = a.slug || a.id;
+                  const title = a.title || 'Senza Titolo';
+                  const jsonStr = JSON.stringify(a);
+                  await queryDb(`
+                    INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+                    VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+                    ON CONFLICT (id) DO UPDATE SET
+                      slug = EXCLUDED.slug,
+                      title = EXCLUDED.title,
+                      data = EXCLUDED.data,
+                      updated_at = CURRENT_TIMESTAMP
+                  `, [a.id, slug, title, jsonStr]);
+                }
+              }
+            } catch (dbSyncErr) {
+              console.warn('[WORKER-NEWS-DB-SYNC-WARN]', dbSyncErr.message);
+            }
+
             return new Response(JSON.stringify({ success: true, count: memoryWorkerArticles.length }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
@@ -7289,7 +7344,28 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
 
         // 2. Iniezione dinamica dei meta tag per notizie / social previews / AI engines
         if (slugToFind || isNewsRoute || url.searchParams.get('tab') === 'news') {
-          const foundArticle = slugToFind ? findArticleBySlugOrIdWorker(slugToFind, memoryWorkerArticles) : null;
+          let foundArticle = slugToFind ? findArticleBySlugOrIdWorker(slugToFind, memoryWorkerArticles) : null;
+          
+          if ((!foundArticle || (foundArticle.id && foundArticle.id.startsWith('art-synth-'))) && slugToFind) {
+            try {
+              const rows = await queryDb('SELECT data FROM nws_news_articles WHERE slug = $1 OR id = $1 LIMIT 1', [slugToFind]);
+              if (rows && rows.length > 0 && rows[0].data) {
+                foundArticle = typeof rows[0].data === 'string' ? JSON.parse(rows[0].data) : rows[0].data;
+              } else {
+                const allRows = await queryDb('SELECT data FROM nws_news_articles LIMIT 200');
+                if (allRows && allRows.length > 0) {
+                  const dbArticles = allRows.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data).filter(Boolean);
+                  const matched = findArticleBySlugOrIdWorker(slugToFind, dbArticles);
+                  if (matched && !matched.id.startsWith('art-synth-')) {
+                    foundArticle = matched;
+                  }
+                }
+              }
+            } catch (dbLookupErr) {
+              console.warn('[WORKER-OG-DB-LOOKUP-WARN]', dbLookupErr.message);
+            }
+          }
+
           if (foundArticle) {
             htmlText = injectArticleMetaTagsWorker(htmlText, foundArticle, baseUrl);
           } else {

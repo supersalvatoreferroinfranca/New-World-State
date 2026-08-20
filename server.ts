@@ -6749,13 +6749,21 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       let imageUrl = getThematicImageForSlug(article.slug || '', rawTitle);
       if (article.images && Array.isArray(article.images) && article.images.length > 0) {
         const firstImg = article.images[0];
-        if (firstImg && firstImg.url && firstImg.url !== '/LOGO_NEW-WORLD-STATE.jpg') {
-          const u = firstImg.url.trim();
+        const rawImgUrl = firstImg ? (firstImg.url || firstImg.sourceUrl || firstImg.previewUrl || '') : '';
+        if (rawImgUrl && rawImgUrl !== '/LOGO_NEW-WORLD-STATE.jpg') {
+          const u = rawImgUrl.trim();
           if (u.startsWith('http://') || u.startsWith('https://')) {
             imageUrl = u;
           } else if (u.startsWith('/')) {
             imageUrl = `${baseUrl}${u}`;
           }
+        }
+      } else if (article.image && typeof article.image === 'string' && article.image.trim()) {
+        const u = article.image.trim();
+        if (u.startsWith('http://') || u.startsWith('https://')) {
+          imageUrl = u;
+        } else if (u.startsWith('/')) {
+          imageUrl = `${baseUrl}${u}`;
         }
       }
 
@@ -6927,7 +6935,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         const lastMod = (a.updatedAt || a.publishedAt || new Date().toISOString()).split('T')[0];
         return `
         <url>
-          <loc>${baseUrl}/?tab=news&amp;notizia=${encodeURIComponent(slug)}</loc>
+          <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
           <lastmod>${lastMod}</lastmod>
           <changefreq>daily</changefreq>
           <priority>0.9</priority>
@@ -6953,6 +6961,39 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
 
       res.setHeader('Content-Type', 'application/xml; charset=utf-8');
       return res.send(xml);
+    });
+
+    // News API Endpoints for Local Storage Sync & Persistence
+    app.get('/api/news/articles', (req, res) => {
+      try {
+        const articles = getServerArticles();
+        return res.json({ success: true, articles });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    app.post('/api/news/sync', (req, res) => {
+      try {
+        const { articles } = req.body;
+        if (!articles || !Array.isArray(articles)) {
+          return res.status(400).json({ success: false, message: 'Elenco articoli non fornito o formato non valido.' });
+        }
+
+        const current = getServerArticles();
+        const map = new Map<string, any>();
+        current.forEach(a => { if (a && a.id) map.set(a.id, a); });
+        articles.forEach(a => { if (a && a.id) map.set(a.id, a); });
+
+        const merged = Array.from(map.values()).sort((a, b) =>
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+
+        saveServerArticles(merged);
+        return res.json({ success: true, count: merged.length });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
     });
 
     // Middleware to dynamically intercept HTML GET requests for news articles & news section
