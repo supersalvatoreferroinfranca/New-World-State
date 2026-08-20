@@ -3,6 +3,7 @@ import { NewsArticle, NewsCategory } from '../../types/news';
 import { getCategories, getArticles, incrementArticleViews } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/textFormatter';
+import SocialShareKit from './SocialShareKit';
 import { 
   X, 
   Calendar, 
@@ -575,6 +576,9 @@ export default function ArticleDetailModal({
               ))}
             </div>
           )}
+
+          {/* Social Outreach & Sharing Kit Section */}
+          <SocialShareKit article={article} />
 
           {/* Related Articles Section */}
           {relatedArticles.length > 0 && (
