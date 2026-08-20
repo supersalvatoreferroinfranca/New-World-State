@@ -97,26 +97,24 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     }
   };
 
-  const loadData = () => {
+  const loadLocalData = () => {
     setCategories(getCategories());
     setPendingCount(getArticlesPendingModeration().length);
+    setArticles(getArticles());
+  };
 
-    const allArts = getArticles();
-    setArticles(allArts);
+  useEffect(() => {
+    loadCitizen();
+    loadLocalData();
 
-    // Sync with server asynchronously to load any new server-side news
+    // Perform an initial background sync once on mount
     syncArticlesWithServer().then(synced => {
       if (synced && synced.length > 0) {
         setArticles(synced);
       }
     }).catch(() => {});
-  };
 
-  useEffect(() => {
-    loadCitizen();
-    loadData();
-
-    const handleNewsUpdate = () => loadData();
+    const handleNewsUpdate = () => loadLocalData();
     window.addEventListener('nws_news_articles_updated', handleNewsUpdate);
     window.addEventListener('nws_news_categories_updated', handleNewsUpdate);
     window.addEventListener('storage', loadCitizen);
@@ -191,7 +189,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
   const handleDeleteArticle = (art: NewsArticle) => {
     if (window.confirm(tText(`Are you sure you want to permanently delete the article "${art.title}"?`, `Sei sicuro di voler eliminare definitivamente l'articolo "${art.title}"?`))) {
       deleteArticle(art.id);
-      loadData();
+      loadLocalData();
       if (selectedDetailArticle?.id === art.id) {
         setIsDetailModalOpen(false);
         setSelectedDetailArticle(null);
@@ -718,7 +716,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
           articleToEdit={articleToEdit}
           authorId={citizen?.id || 'demo-author'}
           authorName={currentAuthorName}
-          onSaved={loadData}
+          onSaved={loadLocalData}
         />
       )}
 
@@ -727,7 +725,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         <CategoryManagerModal
           isOpen={isCategoryModalOpen}
           onClose={() => setIsCategoryModalOpen(false)}
-          onCategoriesUpdated={loadData}
+          onCategoriesUpdated={loadLocalData}
         />
       )}
 
@@ -736,7 +734,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         <ModerationPanelModal
           isOpen={isModerationModalOpen}
           onClose={() => setIsModerationModalOpen(false)}
-          onArticlesUpdated={loadData}
+          onArticlesUpdated={loadLocalData}
           onEditArticle={(artToEdit) => {
             setIsModerationModalOpen(false);
             setArticleToEdit(artToEdit);

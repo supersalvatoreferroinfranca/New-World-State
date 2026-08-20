@@ -298,51 +298,74 @@ export function saveArticles(articles: NewsArticle[]): void {
   }
 }
 
-export async function syncArticlesWithServer(): Promise<NewsArticle[]> {
-  try {
-    const res = await safeFetch('/api/news/articles');
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && Array.isArray(data.articles) && data.articles.length > 0) {
-        const local = getArticles();
-        const map = new Map<string, NewsArticle>();
-        
-        // Add server articles first
-        data.articles.forEach((a: NewsArticle) => {
-          if (a && a.id) map.set(a.id, a);
-        });
-        
-        // Add or update with local articles if local exists and is newer
-        local.forEach((a: NewsArticle) => {
-          if (a && a.id) {
-            const existing = map.get(a.id);
-            if (!existing || new Date(a.updatedAt || 0).getTime() >= new Date(existing.updatedAt || 0).getTime()) {
-              map.set(a.id, a);
-            }
-          }
-        });
+let inFlightSync: Promise<NewsArticle[]> | null = null;
+let lastSyncTimestamp = 0;
 
-        const merged = Array.from(map.values()).sort((a, b) => 
-          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-        );
-
-        localStorage.setItem(ARTICLES_STORAGE_KEY, JSON.stringify(merged));
-        window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
-
-        // Push back merged state to server
-        safeFetch('/api/news/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ articles: merged })
-        }).catch(() => {});
-
-        return merged;
-      }
-    }
-  } catch (err) {
-    console.warn('[NEWS-SERVICE] Could not sync with server:', err);
+export async function syncArticlesWithServer(force = false): Promise<NewsArticle[]> {
+  const now = Date.now();
+  if (!force && now - lastSyncTimestamp < 30000) {
+    return getArticles();
   }
-  return getArticles();
+
+  if (inFlightSync) {
+    return inFlightSync;
+  }
+
+  inFlightSync = (async () => {
+    try {
+      lastSyncTimestamp = Date.now();
+      const res = await safeFetch('/api/news/articles');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.articles) && data.articles.length > 0) {
+          const local = getArticles();
+          const localJson = JSON.stringify(local);
+          const map = new Map<string, NewsArticle>();
+          
+          // Add server articles first
+          data.articles.forEach((a: NewsArticle) => {
+            if (a && a.id) map.set(a.id, a);
+          });
+          
+          // Add or update with local articles if local exists and is newer
+          local.forEach((a: NewsArticle) => {
+            if (a && a.id) {
+              const existing = map.get(a.id);
+              if (!existing || new Date(a.updatedAt || 0).getTime() >= new Date(existing.updatedAt || 0).getTime()) {
+                map.set(a.id, a);
+              }
+            }
+          });
+
+          const merged = Array.from(map.values()).sort((a, b) => 
+            new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+          );
+
+          const mergedJson = JSON.stringify(merged);
+          if (mergedJson !== localJson) {
+            localStorage.setItem(ARTICLES_STORAGE_KEY, mergedJson);
+            window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
+
+            // Push back merged state to server
+            safeFetch('/api/news/sync', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ articles: merged })
+            }).catch(() => {});
+          }
+
+          return merged;
+        }
+      }
+    } catch (err) {
+      // Quiet fail on network or offline
+    } finally {
+      inFlightSync = null;
+    }
+    return getArticles();
+  })();
+
+  return inFlightSync;
 }
 
 export function getPublishedArticles(): NewsArticle[] {
