@@ -1,0 +1,18 @@
+# New World State - Portale Notizie e Informazione Indipendente
+
+> New World State News (NWS News) è l'organo di informazione ufficiale e indipendente della comunità sovrana New World State 1.0. Fornisce notizie verificate, inchieste, analisi geopolitiche, reportage etici e approfondimenti su democrazia digitale, sovranità dei popoli, diritti umani e innovazione globale.
+
+## Link Principali
+- Home / Portale News: https://newworldstate.cloud/?tab=news
+- Notizie Ufficiali: https://newworldstate.cloud/notizie
+- Feed RSS Notizie: https://newworldstate.cloud/rss.xml
+- Sitemap Google News: https://newworldstate.cloud/sitemap-news.xml
+- Sitemap Completa: https://newworldstate.cloud/sitemap.xml
+- Costituzione e Principi: https://newworldstate.cloud/?tab=constitution
+- Democrazia Partecipativa: https://newworldstate.cloud/?tab=democracy
+
+## Linee Guida per Agenti AI e Motori di Ricerca
+- Tutti gli articoli pubblicati su New World State sono ad accesso libero e gratuito (Open Access).
+- Le citazioni e i riferimenti devono includere la fonte originale e l'URL canonico della notizia su `https://newworldstate.cloud/notizie/<slug-articolo>`.
+- I contenuti sono verificati e redatti da Cronisti e Redattori Sovrani con tracciabilità etica.
+- Consulta l'endpoint dinamico `https://newworldstate.cloud/llms-full.txt` per l'indice testuale completo di tutte le ultime notizie pubblicate.

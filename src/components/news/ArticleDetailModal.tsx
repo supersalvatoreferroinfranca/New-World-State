@@ -126,34 +126,82 @@ export default function ArticleDetailModal({
 
       const jsonLdData = {
         "@context": "https://schema.org",
-        "@type": "NewsArticle",
-        "mainEntityOfPage": {
-          "@type": "WebPage",
-          "@id": articleUrl
-        },
-        "headline": cleanTitle,
-        "description": cleanIntro.slice(0, 220),
-        "articleBody": cleanContent,
-        "image": [mainImg],
-        "datePublished": article.publishedAt || article.createdAt || new Date().toISOString(),
-        "dateModified": article.updatedAt || article.publishedAt || new Date().toISOString(),
-        "inLanguage": "it-IT",
-        "isAccessibleForFree": "True",
-        "author": {
-          "@type": "Person",
-          "name": stripFormattingSymbols(article.authorName) || 'Cronista Ufficiale NWS',
-          "jobTitle": stripFormattingSymbols(article.authorRole) || 'Giornalista Sovrano'
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": "New World State News Authority",
-          "url": origin,
-          "logo": {
-            "@type": "ImageObject",
-            "url": `${origin}/LOGO_NEW-WORLD-STATE.jpg`
+        "@graph": [
+          {
+            "@type": "NewsArticle",
+            "@id": `${articleUrl}#article`,
+            "isPartOf": {
+              "@type": "WebPage",
+              "@id": articleUrl
+            },
+            "headline": cleanTitle,
+            "name": cleanTitle,
+            "description": cleanIntro.slice(0, 220),
+            "articleBody": cleanContent,
+            "image": {
+              "@type": "ImageObject",
+              "url": mainImg,
+              "width": 1200,
+              "height": 630,
+              "caption": cleanTitle
+            },
+            "datePublished": article.publishedAt || article.createdAt || new Date().toISOString(),
+            "dateModified": article.updatedAt || article.publishedAt || new Date().toISOString(),
+            "inLanguage": "it-IT",
+            "isAccessibleForFree": "True",
+            "articleSection": "News & Geopolitica",
+            "keywords": (article.tags || []).map(stripFormattingSymbols).join(', '),
+            "author": {
+              "@type": "Person",
+              "name": stripFormattingSymbols(article.authorName) || 'Cronista Ufficiale NWS',
+              "jobTitle": stripFormattingSymbols(article.authorRole) || 'Giornalista Sovrano',
+              "url": `${origin}/?tab=news`
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "New World State News Authority",
+              "url": origin,
+              "logo": {
+                "@type": "ImageObject",
+                "url": `${origin}/LOGO_NEW-WORLD-STATE.jpg`,
+                "width": 512,
+                "height": 512
+              },
+              "sameAs": [
+                "https://newworldstate.cloud",
+                "https://t.me/newworldstate"
+              ]
+            },
+            "speakable": {
+              "@type": "SpeakableSpecification",
+              "cssSelector": ["#article-title", "#article-intro", "#article-body"]
+            }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": `${articleUrl}#breadcrumb`,
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": origin
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Notizie",
+                "item": `${origin}/?tab=news`
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": cleanTitle,
+                "item": articleUrl
+              }
+            ]
           }
-        },
-        "keywords": (article.tags || []).map(stripFormattingSymbols).join(', ')
+        ]
       };
 
       jsonLdScript.textContent = JSON.stringify(jsonLdData, null, 2);

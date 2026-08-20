@@ -6843,41 +6843,89 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         <meta name="thumbnail" content="${escapeHtml(imageUrl)}" />
         <link rel="image_src" href="${escapeHtml(imageUrl)}" />
 
-        <!-- Schema.org / Google News Search Engine Structured Data (NewsArticle) for Google News & AI Crawlers (ChatGPT, Claude, Perplexity, Gemini) -->
+        <!-- Schema.org / Google News Search Engine Structured Data (NewsArticle & Breadcrumbs) for Google News & AI Engines (ChatGPT, Claude, Perplexity, Gemini) -->
         <meta itemprop="name" content="${escapeHtml(rawTitle)}" />
         <meta itemprop="description" content="${escapeHtml(description)}" />
         <meta itemprop="image" content="${escapeHtml(imageUrl)}" />
         <script type="application/ld+json">
         ${JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "NewsArticle",
-          "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": cleanArticleUrl
-          },
-          "headline": rawTitle,
-          "description": description,
-          "articleBody": fullBodyText,
-          "image": [imageUrl],
-          "datePublished": publishedDate,
-          "dateModified": modifiedDate,
-          "inLanguage": "it-IT",
-          "isAccessibleForFree": "True",
-          "author": {
-            "@type": "Person",
-            "name": authorName,
-            "jobTitle": authorRole
-          },
-          "publisher": {
-            "@type": "Organization",
-            "name": "New World State News Authority",
-            "url": baseUrl,
-            "logo": {
-              "@type": "ImageObject",
-              "url": `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`
+          "@graph": [
+            {
+              "@type": "NewsArticle",
+              "@id": `${cleanArticleUrl}#article`,
+              "isPartOf": {
+                "@type": "WebPage",
+                "@id": cleanArticleUrl
+              },
+              "headline": rawTitle,
+              "name": rawTitle,
+              "description": description,
+              "articleBody": fullBodyText,
+              "image": {
+                "@type": "ImageObject",
+                "url": imageUrl,
+                "width": 1200,
+                "height": 630,
+                "caption": rawTitle
+              },
+              "datePublished": publishedDate,
+              "dateModified": modifiedDate,
+              "inLanguage": "it-IT",
+              "isAccessibleForFree": "True",
+              "articleSection": "News & Geopolitica",
+              "keywords": tagsString,
+              "author": {
+                "@type": "Person",
+                "name": authorName,
+                "jobTitle": authorRole,
+                "url": `${baseUrl}/?tab=news`
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "New World State News Authority",
+                "url": baseUrl,
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`,
+                  "width": 512,
+                  "height": 512
+                },
+                "sameAs": [
+                  "https://newworldstate.cloud",
+                  "https://t.me/newworldstate"
+                ]
+              },
+              "speakable": {
+                "@type": "SpeakableSpecification",
+                "cssSelector": ["#article-title", "#article-intro", "#article-body"]
+              }
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": `${cleanArticleUrl}#breadcrumb`,
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": baseUrl
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Notizie",
+                  "item": `${baseUrl}/?tab=news`
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": rawTitle,
+                  "item": cleanArticleUrl
+                }
+              ]
             }
-          },
-          "keywords": tagsString
+          ]
         }, null, 2)}
         </script>
       `;
@@ -6897,7 +6945,36 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         .replace(/<link\s+rel="image_src"[\s\S]*?>/gi, '')
         .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '');
 
-      return cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
+      let enrichedHtml = cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
+
+      // Semantic NOSCRIPT article body injection for AI scrapers, text crawlers and low-bandwidth bots
+      const semanticArticleBlock = `
+        <noscript>
+          <article id="nws-seo-article" style="max-width:800px;margin:20px auto;padding:20px;font-family:sans-serif;line-height:1.6;">
+            <header>
+              <h1 id="article-title" style="font-size:28px;color:#0a1c3e;">${escapeHtml(rawTitle)}</h1>
+              <p style="color:#666;font-size:14px;">Pubblicato il: <time datetime="${escapeHtml(publishedDate)}">${escapeHtml(publishedDate)}</time> da <strong>${escapeHtml(authorName)}</strong> (${escapeHtml(authorRole)})</p>
+              ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(rawTitle)}" style="max-width:100%;height:auto;border-radius:8px;margin:15px 0;" />` : ''}
+            </header>
+            ${rawIntro ? `<p id="article-intro" style="font-size:18px;font-weight:bold;color:#333;">${escapeHtml(rawIntro)}</p>` : ''}
+            <div id="article-body" style="font-size:16px;color:#222;white-space:pre-line;">
+              ${escapeHtml(fullBodyText)}
+            </div>
+            <footer style="margin-top:30px;padding-top:15px;border-top:1px solid #ccc;font-size:13px;color:#777;">
+              <p>Fonte ufficiale: <a href="${cleanArticleUrl}">${cleanArticleUrl}</a></p>
+              <p>Tag: ${escapeHtml(tagsString)}</p>
+            </footer>
+          </article>
+        </noscript>
+      `;
+
+      if (enrichedHtml.includes('<body>')) {
+        enrichedHtml = enrichedHtml.replace('<body>', `<body>\n${semanticArticleBlock}`);
+      } else if (enrichedHtml.includes('<div id="root"></div>')) {
+        enrichedHtml = enrichedHtml.replace('<div id="root"></div>', `<div id="root"></div>\n${semanticArticleBlock}`);
+      }
+
+      return enrichedHtml;
     }
 
     function injectNewsPortalMetaTags(html: string, req: express.Request): string {
@@ -6948,7 +7025,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
 
     let viteServer: any = null;
 
-    // Dynamic Sitemap XML Endpoint for Google Search & AI Crawlers
+    // Dynamic Sitemap XML Endpoint with Image Extensions for Google Search & AI Crawlers
     app.get('/sitemap.xml', (req, res) => {
       const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
       const host = req.get('host') || 'newworldstate.cloud';
@@ -6958,17 +7035,32 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       const articleUrls = articles.map(a => {
         const slug = a.slug || a.id;
         const lastMod = (a.updatedAt || a.publishedAt || new Date().toISOString()).split('T')[0];
+        const cleanTitle = cleanMetaText(a.title);
+        let imgUrl = getThematicImageForSlug(slug, cleanTitle);
+        if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
+          imgUrl = a.images[0].url;
+        } else if (a.image && typeof a.image === 'string') {
+          imgUrl = a.image;
+        }
+        imgUrl = formatOgImageUrl(imgUrl);
+
         return `
         <url>
           <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
           <lastmod>${lastMod}</lastmod>
           <changefreq>daily</changefreq>
           <priority>0.9</priority>
+          ${imgUrl ? `
+          <image:image>
+            <image:loc>${escapeHtml(imgUrl)}</image:loc>
+            <image:title>${escapeHtml(cleanTitle)}</image:title>
+            <image:caption>${escapeHtml(cleanTitle)}</image:caption>
+          </image:image>` : ''}
         </url>`;
       }).join('');
 
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
-      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
         <url>
           <loc>${baseUrl}/</loc>
           <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
@@ -6981,11 +7073,187 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
           <changefreq>hourly</changefreq>
           <priority>0.95</priority>
         </url>
+        <url>
+          <loc>${baseUrl}/?tab=democracy</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>weekly</changefreq>
+          <priority>0.85</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?tab=constitution</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.80</priority>
+        </url>
         ${articleUrls}
       </urlset>`.trim();
 
       res.setHeader('Content-Type', 'application/xml; charset=utf-8');
       return res.send(xml);
+    });
+
+    // Dedicated Google News Sitemap XML Endpoint
+    app.get('/sitemap-news.xml', (req, res) => {
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const host = req.get('host') || 'newworldstate.cloud';
+      const baseUrl = `${protocol}://${host}`;
+      const articles = getServerArticles().slice(0, 50); // Google News allows recent news items
+
+      const newsItems = articles.map(a => {
+        const slug = a.slug || a.id;
+        const pubDate = a.publishedAt || a.createdAt || new Date().toISOString();
+        const cleanTitle = cleanMetaText(a.title);
+        return `
+        <url>
+          <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>${pubDate}</news:publication_date>
+            <news:title>${escapeHtml(cleanTitle)}</news:title>
+          </news:news>
+        </url>`;
+      }).join('');
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+        ${newsItems}
+      </urlset>`.trim();
+
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      return res.send(xml);
+    });
+
+    // Official RSS 2.0 / Atom Feed for News Aggregators, Google News & AI Agents
+    app.get(['/rss.xml', '/feed.xml', '/notizie/rss'], (req, res) => {
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const host = req.get('host') || 'newworldstate.cloud';
+      const baseUrl = `${protocol}://${host}`;
+      const articles = getServerArticles();
+
+      const items = articles.map(a => {
+        const slug = a.slug || a.id;
+        const link = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
+        const pubDate = new Date(a.publishedAt || a.createdAt || Date.now()).toUTCString();
+        const cleanTitle = cleanMetaText(a.title);
+        const cleanIntro = cleanMetaText(a.intro || a.content);
+        const fullContent = cleanMetaText(a.content || a.intro);
+        const author = cleanMetaText(a.authorName) || 'New World State News';
+        let imgUrl = getThematicImageForSlug(slug, cleanTitle);
+        if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
+          imgUrl = a.images[0].url;
+        } else if (a.image && typeof a.image === 'string') {
+          imgUrl = a.image;
+        }
+        imgUrl = formatOgImageUrl(imgUrl);
+
+        return `
+        <item>
+          <title><![CDATA[${cleanTitle}]]></title>
+          <link>${link}</link>
+          <guid isPermaLink="true">${link}</guid>
+          <pubDate>${pubDate}</pubDate>
+          <dc:creator><![CDATA[${author}]]></dc:creator>
+          <description><![CDATA[${cleanIntro}]]></description>
+          <content:encoded><![CDATA[${fullContent}]]></content:encoded>
+          ${imgUrl ? `<enclosure url="${escapeHtml(imgUrl)}" length="0" type="image/jpeg" />` : ''}
+          <category><![CDATA[News & Geopolitica]]></category>
+        </item>`;
+      }).join('');
+
+      const rss = `<?xml version="1.0" encoding="UTF-8"?>
+      <rss version="2.0" 
+        xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+        xmlns:dc="http://purl.org/dc/elements/1.1/" 
+        xmlns:atom="http://www.w3.org/2005/Atom">
+        <channel>
+          <title>New World State News Authority</title>
+          <link>${baseUrl}/?tab=news</link>
+          <description>Notizie ufficiali, reportage indipendenti e inchieste etiche di New World State 1.0.</description>
+          <language>it-IT</language>
+          <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+          <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />
+          <image>
+            <url>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</url>
+            <title>New World State News</title>
+            <link>${baseUrl}/?tab=news</link>
+          </image>
+          ${items}
+        </channel>
+      </rss>`.trim();
+
+      res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
+      return res.send(rss);
+    });
+
+    // Emerging Standard /llms.txt and /llms-full.txt for LLM agents (ChatGPT, Perplexity, Gemini, Claude)
+    app.get('/llms.txt', (req, res) => {
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const host = req.get('host') || 'newworldstate.cloud';
+      const baseUrl = `${protocol}://${host}`;
+      const articles = getServerArticles().slice(0, 30);
+
+      const articleList = articles.map(a => {
+        const slug = a.slug || a.id;
+        const cleanTitle = cleanMetaText(a.title);
+        const cleanIntro = cleanMetaText(a.intro || a.content).slice(0, 120);
+        return `- [${cleanTitle}](${baseUrl}/notizie/${encodeURIComponent(slug)}): ${cleanIntro}...`;
+      }).join('\n');
+
+      const content = `# New World State News Authority
+
+> Organo di informazione indipendente, etico e sovrano di New World State 1.0.
+
+## Documentazione & Sezioni
+- [Portale Notizie](${baseUrl}/?tab=news): Archivio completo notizie ed esteri
+- [Costituzione Sovrana](${baseUrl}/?tab=constitution): Carta fondativa e principi
+- [Democrazia Partecipativa](${baseUrl}/?tab=democracy): Votazioni e proposte popolari
+- [Feed RSS Notizie](${baseUrl}/rss.xml): Flusso RSS strutturato
+- [Indice Completo per LLM](${baseUrl}/llms-full.txt): Testo integrale ultimi articoli
+
+## Ultime Notizie Pubblicate
+${articleList}
+`;
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send(content);
+    });
+
+    app.get('/llms-full.txt', (req, res) => {
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const host = req.get('host') || 'newworldstate.cloud';
+      const baseUrl = `${protocol}://${host}`;
+      const articles = getServerArticles();
+
+      const articleFull = articles.map((a, idx) => {
+        const slug = a.slug || a.id;
+        const cleanTitle = cleanMetaText(a.title);
+        const cleanIntro = cleanMetaText(a.intro || a.content);
+        const fullContent = cleanMetaText(a.content || a.intro);
+        const author = cleanMetaText(a.authorName) || 'New World State';
+        const pubDate = a.publishedAt || a.createdAt || '';
+
+        return `### ${idx + 1}. ${cleanTitle}
+- **URL Canonico**: ${baseUrl}/notizie/${encodeURIComponent(slug)}
+- **Autore**: ${author}
+- **Data Pubblicazione**: ${pubDate}
+- **Sintesi**: ${cleanIntro}
+
+**Testo Completo**:
+${fullContent}
+
+---
+`;
+      }).join('\n\n');
+
+      const content = `# Indice Testuale Completo Articoli | New World State News Authority
+*Generato per l'indicizzazione e l'analisi da parte di modelli di intelligenza artificiale (LLM), motori di ricerca e ricercatori.*
+
+${articleFull}
+`;
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send(content);
     });
 
     // News API Endpoints for Local Storage Sync & Persistence
