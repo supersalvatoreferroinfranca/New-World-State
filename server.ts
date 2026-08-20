@@ -6583,6 +6583,116 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       return INITIAL_SERVER_ARTICLES;
     }
 
+    function syncStaticSitemapFiles(articles: any[]): void {
+      try {
+        const baseUrl = 'https://newworldstate.cloud';
+        const articleUrls = articles.map(a => {
+          const slug = a.slug || a.id;
+          const lastMod = (a.updatedAt || a.publishedAt || new Date().toISOString()).split('T')[0];
+          const cleanTitle = cleanMetaText(a.title);
+          let imgUrl = getThematicImageForSlug(slug, cleanTitle);
+          if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
+            imgUrl = a.images[0].url;
+          } else if (a.image && typeof a.image === 'string') {
+            imgUrl = a.image;
+          }
+          imgUrl = formatOgImageUrl(imgUrl);
+
+          return `
+          <url>
+            <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
+            <lastmod>${lastMod}</lastmod>
+            <changefreq>daily</changefreq>
+            <priority>0.90</priority>
+            ${imgUrl ? `
+            <image:image>
+              <image:loc>${escapeHtml(imgUrl)}</image:loc>
+              <image:title>${escapeHtml(cleanTitle)}</image:title>
+              <image:caption>${escapeHtml(cleanTitle)}</image:caption>
+            </image:image>` : ''}
+          </url>`;
+        }).join('');
+
+        const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.00</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="${baseUrl}/" />
+    <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="${baseUrl}/" />
+    <image:image>
+      <image:loc>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</image:loc>
+      <image:title>New World State 1.0 - Stemma Ufficiale</image:title>
+      <image:caption>New World State 1.0 - Registro Mondiale e Sovranità Popolare</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=news</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
+      <image:title>New World State News Authority</image:title>
+      <image:caption>Giornale Sovrano di Informazione e Geopolitica Indipendente</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=register</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=democracy</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=constitution</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=identity</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=faq</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  ${articleUrls}
+</urlset>`.trim();
+
+        const targets = [
+          path.join(process.cwd(), 'public', 'sitemap.xml'),
+          path.join(process.cwd(), 'dist', 'sitemap.xml')
+        ];
+
+        targets.forEach(targetPath => {
+          try {
+            const dir = path.dirname(targetPath);
+            if (fs.existsSync(dir)) {
+              fs.writeFileSync(targetPath, sitemapXml, 'utf-8');
+            }
+          } catch (e) {}
+        });
+      } catch (err: any) {
+        console.error('[SERVER-NEWS] Error syncing sitemap files:', err.message);
+      }
+    }
+
     function saveServerArticles(articles: any[]): void {
       try {
         const parentDir = path.dirname(SERVER_NEWS_FILE);
@@ -6590,6 +6700,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
           fs.mkdirSync(parentDir, { recursive: true });
         }
         fs.writeFileSync(SERVER_NEWS_FILE, JSON.stringify(articles, null, 2), 'utf-8');
+        syncStaticSitemapFiles(articles);
       } catch (e: any) {
         console.error('[SERVER-NEWS] Save error:', e.message);
       }

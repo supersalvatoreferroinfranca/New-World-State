@@ -1,9 +1,118 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <!-- Pagine Istituzionali Principali -->
   <url>
     <loc>https://newworldstate.cloud/</loc>
-    <lastmod>2026-05-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.00</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/" />
+    <image:image>
+      <image:loc>https://newworldstate.cloud/LOGO_NEW-WORLD-STATE.jpg</image:loc>
+      <image:title>New World State 1.0 - Stemma Ufficiale</image:title>
+      <image:caption>New World State 1.0 - Registro Mondiale e Sovranità Popolare</image:caption>
+    </image:image>
   </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/?tab=news</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
+      <image:title>New World State News Authority</image:title>
+      <image:caption>Giornale Sovrano di Informazione e Geopolitica Indipendente</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/?tab=register</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/?tab=democracy</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/?tab=constitution</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/?tab=identity</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/?tab=faq</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+
+  <!-- Articoli del Giornale Sovrano New World State -->
+  <url>
+    <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
+      <image:title>L'Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</image:title>
+      <image:caption>Assemblea e Consiglio di Sicurezza delle Nazioni Unite</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
+      <image:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</image:title>
+      <image:caption>Rete di nodi e connettività globale dello Stato Sovrano</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
+      <image:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</image:title>
+      <image:caption>Crittografia e protezione della privacy nel sistema New World State</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10</loc>
+    <lastmod>2026-08-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
+      <image:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</image:title>
+      <image:caption>Sessione di apertura dell'Assemblea Fondativa e del Registro Globale</image:caption>
+    </image:image>
+  </url>
+
 </urlset>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" 
+  xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+  xmlns:dc="http://purl.org/dc/elements/1.1/" 
+  xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>New World State News Authority</title>
+    <link>https://newworldstate.cloud/?tab=news</link>
+    <description>Notizie ufficiali, reportage indipendenti e inchieste etiche di New World State 1.0.</description>
+    <language>it-IT</language>
+    <lastBuildDate>Thu, 20 Aug 2026 10:44:07 GMT</lastBuildDate>
+    <atom:link href="https://newworldstate.cloud/rss.xml" rel="self" type="application/rss+xml" />
+    <image>
+      <url>https://newworldstate.cloud/LOGO_NEW-WORLD-STATE.jpg</url>
+      <title>New World State News</title>
+      <link>https://newworldstate.cloud/?tab=news</link>
+    </image>
+    <item>
+      <title><![CDATA[L'Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali]]></title>
+      <link>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</link>
+      <guid isPermaLink="true">https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</guid>
+      <pubDate>Thu, 20 Aug 2026 10:44:07 GMT</pubDate>
+      <dc:creator><![CDATA[Elenor Vance (Cronista Capo)]]></dc:creator>
+      <description><![CDATA[Analisi di approfondimento geopolitico sulla paralisi del Consiglio di Sicurezza ONU nei conflitti contemporanei e sulla necessità di nuove strutture di governance globale decentralizzata.]]></description>
+      <content:encoded><![CDATA[Il sistema di sicurezza collettiva nato nel 1945 mostra crepe strutturali non più rinviabili. Di fronte all'escalation delle crisi internazionali e al ricorso sistematico al diritto di veto da parte dei membri permanenti del Consiglio di Sicurezza, le Nazioni Unite si trovano in uno stato di sostanziale paralisi operativa. Questo reportage speciale del Giornale Sovrano New World State analizza le ragioni storiche, giuridiche e diplomatiche del blocco istituzionale, proponendo la transizione verso un modello federale di democrazia diretta digitale e risoluzione pacifica delle controversie. "Senza una riforma radicale che superi i privilegi del dopoguerra," sottolinea il centro studi NWS, "la diplomazia tradizionale continuerà ad arrestarsi di fronte agli interessi particolari delle grandi potenze."]]></content:encoded>
+      <enclosure url="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" length="0" type="image/jpeg" />
+      <category><![CDATA[News & Geopolitica]]></category>
+    </item>
+    <item>
+      <title><![CDATA[Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server]]></title>
+      <link>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza</link>
+      <guid isPermaLink="true">https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza</guid>
+      <pubDate>Thu, 20 Aug 2026 10:44:07 GMT</pubDate>
+      <dc:creator><![CDATA[Sophia Chen]]></dc:creator>
+      <description><![CDATA[Test di resilienza completato con successo su 12 nodi distribuiti globalmente per garantire l'operatività ininterrotta del portale.]]></description>
+      <content:encoded><![CDATA[Nelle ultime 48 ore la squadra di tecnici e custodi della rete ha condotto uno stress test...]]></content:encoded>
+      <enclosure url="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" length="0" type="image/jpeg" />
+      <category><![CDATA[Tecnologia]]></category>
+    </item>
+    <item>
+      <title><![CDATA[Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini]]></title>
+      <link>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</link>
+      <guid isPermaLink="true">https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</guid>
+      <pubDate>Tue, 18 Aug 2026 10:44:07 GMT</pubDate>
+      <dc:creator><![CDATA[Marcus Thorne]]></dc:creator>
+      <description><![CDATA[Approvato a maggioranza qualificata il nuovo disciplinare a protezione dei dati biometrici e per la riservatezza delle transazioni comunitarie.]]></description>
+      <content:encoded><![CDATA[Il Corpo dei Custodi Digitali ha ratificato il nuovo Protocollo...]]></content:encoded>
+      <enclosure url="https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" length="0" type="image/jpeg" />
+      <category><![CDATA[Diritti & Privacy]]></category>
+    </item>
+    <item>
+      <title><![CDATA[Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0]]></title>
+      <link>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10</link>
+      <guid isPermaLink="true">https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10</guid>
+      <pubDate>Sun, 16 Aug 2026 10:44:07 GMT</pubDate>
+      <dc:creator><![CDATA[Elenor Vance (Cronista Capo)]]></dc:creator>
+      <description><![CDATA[L'Assemblea Fondativa annuncia l'apertura del portale sovrano decentralizzato. Tutti i cittadini hanno ora diritto di voto diretto sui referendum federali.]]></description>
+      <content:encoded><![CDATA[Oggi segna una tappa fondamentale nella storia della governance sovrana contemporanea...]]></content:encoded>
+      <enclosure url="https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" length="0" type="image/jpeg" />
+      <category><![CDATA[Democrazia & Istituzioni]]></category>
+    </item>
+  </channel>
+</rss>

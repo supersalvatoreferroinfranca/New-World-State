@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+
+  <url>
+    <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</loc>
+    <news:news>
+      <news:publication>
+        <news:name>New World State News Authority</news:name>
+        <news:language>it</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-20T10:44:07.668Z</news:publication_date>
+      <news:title>L'Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+    </news:news>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza</loc>
+    <news:news>
+      <news:publication>
+        <news:name>New World State News Authority</news:name>
+        <news:language>it</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-20T10:44:07.668Z</news:publication_date>
+      <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+    </news:news>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</loc>
+    <news:news>
+      <news:publication>
+        <news:name>New World State News Authority</news:name>
+        <news:language>it</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-18T10:44:07.668Z</news:publication_date>
+      <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+    </news:news>
+  </url>
+
+  <url>
+    <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10</loc>
+    <news:news>
+      <news:publication>
+        <news:name>New World State News Authority</news:name>
+        <news:language>it</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-16T10:44:07.668Z</news:publication_date>
+      <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+    </news:news>
+  </url>
+
+</urlset>
