@@ -6652,10 +6652,40 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
     <loc>${baseUrl}/?tab=democracy</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>${baseUrl}/?tab=constitution</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=governance</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=charter</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=privacy</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?tab=network</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/verify</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
@@ -6670,7 +6700,37 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
     <loc>${baseUrl}/?tab=faq</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?compliance=privacy</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?compliance=terms</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?compliance=cookies</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?compliance=accessibility</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/?compliance=ccpa</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
   </url>
   ${articleUrls}
 </urlset>`.trim();
@@ -7171,30 +7231,121 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       }).join('');
 
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
-      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">
         <url>
           <loc>${baseUrl}/</loc>
           <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
           <changefreq>daily</changefreq>
-          <priority>1.0</priority>
+          <priority>1.00</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="${baseUrl}/" />
+          <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/?lang=en" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="${baseUrl}/" />
+          <image:image>
+            <image:loc>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</image:loc>
+            <image:title>New World State 1.0 - Stemma Ufficiale</image:title>
+            <image:caption>New World State 1.0 - Registro Mondiale e Sovranità Popolare</image:caption>
+          </image:image>
         </url>
         <url>
           <loc>${baseUrl}/?tab=news</loc>
           <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
           <changefreq>hourly</changefreq>
           <priority>0.95</priority>
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
+            <image:title>New World State News Authority</image:title>
+            <image:caption>Giornale Sovrano di Informazione e Geopolitica Indipendente</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>${baseUrl}/?tab=register</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>weekly</changefreq>
+          <priority>0.90</priority>
         </url>
         <url>
           <loc>${baseUrl}/?tab=democracy</loc>
           <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
           <changefreq>weekly</changefreq>
-          <priority>0.85</priority>
+          <priority>0.90</priority>
         </url>
         <url>
           <loc>${baseUrl}/?tab=constitution</loc>
           <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
           <changefreq>monthly</changefreq>
+          <priority>0.85</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?tab=governance</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.85</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?tab=charter</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.85</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?tab=privacy</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
           <priority>0.80</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?tab=network</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>weekly</changefreq>
+          <priority>0.80</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/verify</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.80</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?tab=identity</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.75</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?tab=faq</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.75</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?compliance=privacy</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.70</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?compliance=terms</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.70</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?compliance=cookies</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.65</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?compliance=accessibility</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.65</priority>
+        </url>
+        <url>
+          <loc>${baseUrl}/?compliance=ccpa</loc>
+          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.65</priority>
         </url>
         ${articleUrls}
       </urlset>`.trim();

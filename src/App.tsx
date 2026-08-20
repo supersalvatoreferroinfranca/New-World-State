@@ -132,6 +132,20 @@ function AppContent() {
     setComplianceModalOpen(true);
   };
 
+  // Check URL query parameters for compliance documents on initial load
+  React.useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const complianceParam = searchParams.get('compliance') || searchParams.get('legal') || searchParams.get('doc');
+      const tabParam = searchParams.get('tab');
+      if (complianceParam && ['privacy', 'cookies', 'terms', 'accessibility', 'ccpa'].includes(complianceParam)) {
+        openCompliance(complianceParam as any);
+      } else if (tabParam && ['terms', 'cookies', 'accessibility', 'ccpa'].includes(tabParam)) {
+        openCompliance(tabParam as any);
+      }
+    } catch (e) {}
+  }, []);
+
   React.useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 300) {

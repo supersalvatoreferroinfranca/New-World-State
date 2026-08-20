@@ -3,7 +3,7 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
-  <!-- Pagine Istituzionali Principali -->
+  <!-- 1. Homepage Istituzionale & Presentazione Sovrana -->
   <url>
     <loc>https://newworldstate.cloud/</loc>
     <lastmod>2026-08-20</lastmod>
@@ -19,6 +19,7 @@
     </image:image>
   </url>
 
+  <!-- 2. Portale Notizie & Geopolitica Indipendente -->
   <url>
     <loc>https://newworldstate.cloud/?tab=news</loc>
     <lastmod>2026-08-20</lastmod>
@@ -31,6 +32,7 @@
     </image:image>
   </url>
 
+  <!-- 3. Registro Mondiale e Richiesta Cittadinanza -->
   <url>
     <loc>https://newworldstate.cloud/?tab=register</loc>
     <lastmod>2026-08-20</lastmod>
@@ -38,20 +40,63 @@
     <priority>0.90</priority>
   </url>
 
+  <!-- 4. Democrazia Diretta Partecipativa & Consultazioni -->
   <url>
     <loc>https://newworldstate.cloud/?tab=democracy</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- 5. Costituzione Sovrana di New World State 1.0 -->
+  <url>
+    <loc>https://newworldstate.cloud/?tab=constitution</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
 
+  <!-- 6. Struttura di Governance & Organi Istituzionali -->
   <url>
-    <loc>https://newworldstate.cloud/?tab=constitution</loc>
+    <loc>https://newworldstate.cloud/?tab=governance</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 7. Carta dei Diritti e dei Doveri Fondamentali -->
+  <url>
+    <loc>https://newworldstate.cloud/?tab=charter</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 8. Protocollo di Privacy Sovrana & Crittografia -->
+  <url>
+    <loc>https://newworldstate.cloud/?tab=privacy</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
 
+  <!-- 9. Stato della Rete Decentralizzata e Ridondanza Nodi -->
+  <url>
+    <loc>https://newworldstate.cloud/?tab=network</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- 10. Verifica Crittografica dell'Identità Sovrana -->
+  <url>
+    <loc>https://newworldstate.cloud/verify</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- 11. Documenti di Identità e Certificazione di Cittadinanza -->
   <url>
     <loc>https://newworldstate.cloud/?tab=identity</loc>
     <lastmod>2026-08-20</lastmod>
@@ -59,14 +104,55 @@
     <priority>0.75</priority>
   </url>
 
+  <!-- 12. Domande Frequenti (FAQ) & Istruzioni Istituzionali -->
   <url>
     <loc>https://newworldstate.cloud/?tab=faq</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <!-- 13. Informativa Privacy Ufficiale (GDPR / Sovrano) -->
+  <url>
+    <loc>https://newworldstate.cloud/?compliance=privacy</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
 
-  <!-- Articoli del Giornale Sovrano New World State -->
+  <!-- 14. Termini e Condizioni Istituzionali -->
+  <url>
+    <loc>https://newworldstate.cloud/?compliance=terms</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+
+  <!-- 15. Informativa Cookie e Tracciamento -->
+  <url>
+    <loc>https://newworldstate.cloud/?compliance=cookies</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+
+  <!-- 16. Dichiarazione di Accessibilità Universale (WCAG 2.1 AA) -->
+  <url>
+    <loc>https://newworldstate.cloud/?compliance=accessibility</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+
+  <!-- 17. Diritti Privacy Internazionali & CCPA -->
+  <url>
+    <loc>https://newworldstate.cloud/?compliance=ccpa</loc>
+    <lastmod>2026-08-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+
+  <!-- 18. Articoli del Giornale Sovrano New World State -->
   <url>
     <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</loc>
     <lastmod>2026-08-20</lastmod>
