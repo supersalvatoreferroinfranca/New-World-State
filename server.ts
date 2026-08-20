@@ -4162,14 +4162,17 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       title: string;
       author: string;
     }>> {
-      const list = Array.isArray(keywordsList) ? keywordsList : [keywordsList];
-      const searchTerms: string[] = [];
-      for (const kw of list) {
-        if (!kw || typeof kw !== 'string' || kw.trim().length < 2) continue;
-        const clean = kw.trim();
-        searchTerms.push(`${platform} ${clean}`);
-        searchTerms.push(`${clean} ${platform}`);
-      }
+      const list = Array.isArray(keywordsList) ? keywordsList.filter(Boolean) : [keywordsList];
+      const primaryTerm = list[0] || '';
+      const secondaryTerm = list[1] || list[0] || '';
+      
+      const searchTerms = [
+        `"${platform}.com" ${primaryTerm}`,
+        `"${platform} photo" ${primaryTerm}`,
+        `"${platform}.com" ${secondaryTerm}`,
+        `"${platform} photo" ${secondaryTerm}`,
+        `site:${platform}.com ${primaryTerm}`
+      ].filter(t => t.trim().length > 3);
 
       const items: Array<{
         id: string;
