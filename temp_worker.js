@@ -7560,12 +7560,9 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
         const SITE_PAGES = [
           { path: '', changefreq: 'daily', priority: '1.00', title: 'New World State 1.0 - Portale Ufficiale e Registro Mondiale', image: '/LOGO_NEW-WORLD-STATE.jpg', imageTitle: 'New World State 1.0 - Stemma Ufficiale', imageCaption: 'New World State 1.0 - Registro Mondiale e Sovranità Popolare' },
           { path: '?tab=news', changefreq: 'hourly', priority: '0.95', title: 'Portale Notizie & Giornalismo Sovrano | New World State 1.0', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80', imageTitle: 'New World State News Authority', imageCaption: 'Giornale Sovrano di Informazione e Geopolitica Indipendente' },
-          { path: 'notizie', changefreq: 'hourly', priority: '0.95', title: 'Archivio Notizie & Inchieste Giornalistiche Sovrane' },
           { path: '?tab=register', changefreq: 'weekly', priority: '0.90', title: 'Richiesta Cittadinanza Sovrana & Registro Mondiale' },
           { path: '?tab=democracy', changefreq: 'daily', priority: '0.90', title: 'Democrazia Diretta & Referendum Popolari Sovrani' },
-          { path: 'democracy', changefreq: 'daily', priority: '0.90', title: 'Portale di Democrazia Diretta e Sovranità Civica' },
           { path: '?tab=chat', changefreq: 'daily', priority: '0.85', title: 'Assemblea Federale e Comunicazioni Sovrane' },
-          { path: 'chat', changefreq: 'daily', priority: '0.85', title: 'Canale Assemblea Sovrana e Partecipazione Civica' },
           { path: '?tab=constitution', changefreq: 'monthly', priority: '0.90', title: 'Costituzione dello Stato Mondiale Sovrano' },
           { path: '?tab=charter', changefreq: 'monthly', priority: '0.85', title: 'Carta Fondamentale dei Diritti e Doveri Sovrani' },
           { path: '?tab=governance', changefreq: 'monthly', priority: '0.85', title: 'Governance & Organigramma Istituzionale Sovrano' },
@@ -7612,7 +7609,7 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
           </image:image>`;
           }
 
-          let block = `
+          return `
         <url>
           <loc>${escapeHtmlWorker(defUrl)}</loc>
           <lastmod>${today}</lastmod>
@@ -7620,22 +7617,6 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
           <priority>${page.priority}</priority>
 ${hreflangs}${imgXml}
         </url>`;
-
-          SITE_LANGS.forEach(lang => {
-            if (lang !== 'it') {
-              const langUrl = getUrl(lang);
-              block += `
-        <url>
-          <loc>${escapeHtmlWorker(langUrl)}</loc>
-          <lastmod>${today}</lastmod>
-          <changefreq>${page.changefreq}</changefreq>
-          <priority>${(parseFloat(page.priority) * 0.95).toFixed(2)}</priority>
-${hreflangs}${imgXml}
-        </url>`;
-            }
-          });
-
-          return block;
         }).join('');
 
         const pdfXml = CONSTITUTION_PDFS.map(pdf => `
@@ -7647,7 +7628,20 @@ ${hreflangs}${imgXml}
           <xhtml:link rel="alternate" hreflang="${pdf.lang}" href="${escapeHtmlWorker(pdf.url)}" />
         </url>`).join('');
 
-        const articleXml = memoryWorkerArticles.map(a => {
+        const seenWorkerArticles = new Set();
+        const uniqueWorkerArticles = [];
+        for (const a of (Array.isArray(memoryWorkerArticles) ? memoryWorkerArticles : [])) {
+          if (!a) continue;
+          const slug = a.slug || a.id;
+          if (!slug) continue;
+          const norm = normalizeSlugWorker(slug);
+          if (!seenWorkerArticles.has(norm)) {
+            seenWorkerArticles.add(norm);
+            uniqueWorkerArticles.push(a);
+          }
+        }
+
+        const articleXml = uniqueWorkerArticles.map(a => {
           const slug = a.slug || a.id;
           const lastMod = (a.updatedAt || a.publishedAt || a.createdAt || today).split('T')[0];
           const cleanTitle = cleanMetaTextWorker(a.title);
@@ -7673,7 +7667,7 @@ ${hreflangs}${imgXml}
             <image:caption>${escapeHtmlWorker(cleanTitle)}</image:caption>
           </image:image>` : '';
 
-          let block = `
+          return `
         <url>
           <loc>${escapeHtmlWorker(defUrl)}</loc>
           <lastmod>${lastMod}</lastmod>
@@ -7681,22 +7675,6 @@ ${hreflangs}${imgXml}
           <priority>0.95</priority>
 ${hreflangs}${imgXml}
         </url>`;
-
-          SITE_LANGS.forEach(lang => {
-            if (lang !== 'it') {
-              const langUrl = getArticleUrl(lang);
-              block += `
-        <url>
-          <loc>${escapeHtmlWorker(langUrl)}</loc>
-          <lastmod>${lastMod}</lastmod>
-          <changefreq>daily</changefreq>
-          <priority>0.90</priority>
-${hreflangs}${imgXml}
-        </url>`;
-            }
-          });
-
-          return block;
         }).join('');
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -7724,7 +7702,20 @@ ${articleXml}
           return tags.join('\n');
         };
 
-        const newsItems = memoryWorkerArticles.map(a => {
+        const seenWorkerArticles = new Set();
+        const uniqueWorkerArticles = [];
+        for (const a of (Array.isArray(memoryWorkerArticles) ? memoryWorkerArticles : [])) {
+          if (!a) continue;
+          const slug = a.slug || a.id;
+          if (!slug) continue;
+          const norm = normalizeSlugWorker(slug);
+          if (!seenWorkerArticles.has(norm)) {
+            seenWorkerArticles.add(norm);
+            uniqueWorkerArticles.push(a);
+          }
+        }
+
+        const newsItems = uniqueWorkerArticles.map(a => {
           const slug = a.slug || a.id;
           const pubDate = a.publishedAt || a.createdAt || today;
           const cleanTitle = cleanMetaTextWorker(a.title);
@@ -7737,7 +7728,7 @@ ${articleXml}
           const defUrl = getArticleUrl('it');
           const hreflangs = buildHreflangs(getArticleUrl, defUrl);
 
-          let entries = `
+          return `
         <url>
           <loc>${escapeHtmlWorker(defUrl)}</loc>
           <news:news>
@@ -7750,27 +7741,6 @@ ${articleXml}
           </news:news>
 ${hreflangs}
         </url>`;
-
-          SITE_LANGS.forEach(lang => {
-            if (lang !== 'it') {
-              const langUrl = getArticleUrl(lang);
-              entries += `
-        <url>
-          <loc>${escapeHtmlWorker(langUrl)}</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>${lang}</news:language>
-            </news:publication>
-            <news:publication_date>${pubDate}</news:publication_date>
-            <news:title>${escapeHtmlWorker(cleanTitle)}</news:title>
-          </news:news>
-${hreflangs}
-        </url>`;
-            }
-          });
-
-          return entries;
         }).join('');
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -7787,7 +7757,20 @@ ${newsItems}
 
       if ((url.pathname === '/rss.xml' || url.pathname === '/feed.xml' || url.pathname === '/notizie/rss') && request.method === 'GET') {
         const baseUrl = getCanonicalBaseUrlWorker(url, request);
-        const items = memoryWorkerArticles.map(a => {
+        const seenWorkerArticles = new Set();
+        const uniqueWorkerArticles = [];
+        for (const a of (Array.isArray(memoryWorkerArticles) ? memoryWorkerArticles : [])) {
+          if (!a) continue;
+          const slug = a.slug || a.id;
+          if (!slug) continue;
+          const norm = normalizeSlugWorker(slug);
+          if (!seenWorkerArticles.has(norm)) {
+            seenWorkerArticles.add(norm);
+            uniqueWorkerArticles.push(a);
+          }
+        }
+
+        const items = uniqueWorkerArticles.map(a => {
           const slug = a.slug || a.id;
           const link = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
           const pubDate = new Date(a.publishedAt || a.createdAt || Date.now()).toUTCString();

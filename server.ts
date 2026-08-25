@@ -6619,12 +6619,6 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         imageCaption: 'Giornale Sovrano di Informazione e Geopolitica Indipendente'
       },
       {
-        path: 'notizie',
-        changefreq: 'hourly',
-        priority: '0.95',
-        title: 'Archivio Notizie & Inchieste Giornalistiche Sovrane'
-      },
-      {
         path: '?tab=register',
         changefreq: 'weekly',
         priority: '0.90',
@@ -6637,22 +6631,10 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         title: 'Democrazia Diretta & Referendum Popolari Sovrani'
       },
       {
-        path: 'democracy',
-        changefreq: 'daily',
-        priority: '0.90',
-        title: 'Portale di Democrazia Diretta e Sovranità Civica'
-      },
-      {
         path: '?tab=chat',
         changefreq: 'daily',
         priority: '0.85',
         title: 'Assemblea Federale e Comunicazioni Sovrane'
-      },
-      {
-        path: 'chat',
-        changefreq: 'daily',
-        priority: '0.85',
-        title: 'Canale Assemblea Sovrana e Partecipazione Civica'
       },
       {
         path: '?tab=constitution',
@@ -6766,6 +6748,22 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       }
     ];
 
+    function getDeduplicatedArticles(articles: any[]): any[] {
+      const seen = new Set<string>();
+      const list: any[] = [];
+      for (const a of (Array.isArray(articles) ? articles : [])) {
+        if (!a) continue;
+        const slug = a.slug || a.id;
+        if (!slug) continue;
+        const norm = normalizeSlug(slug);
+        if (!seen.has(norm)) {
+          seen.add(norm);
+          list.push(a);
+        }
+      }
+      return list;
+    }
+
     function buildMultilingualHreflangs(getUrlForLang: (lang: string) => string, defaultUrl: string): string {
       const tags = SITE_SUPPORTED_LANGUAGES.map(lang => {
         const u = getUrlForLang(lang);
@@ -6775,10 +6773,11 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       return tags.join('\n');
     }
 
-    function generateComprehensiveSitemapXml(baseUrl: string, articles: any[]): string {
+    function generateComprehensiveSitemapXml(baseUrl: string, rawArticles: any[]): string {
       const today = new Date().toISOString().split('T')[0];
+      const articles = getDeduplicatedArticles(rawArticles);
 
-      // 1. Static and Tab pages in all languages
+      // 1. Static and Tab pages - Clean canonical URL with multilingual alternate hreflangs
       const staticEntries = CORE_SITE_PAGES.map(page => {
         const getUrl = (lang: string) => {
           if (!page.path) {
@@ -6804,8 +6803,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
           </image:image>`;
         }
 
-        // Generate primary canonical URL
-        let xmlBlock = `
+        return `
         <url>
           <loc>${escapeHtml(defaultUrl)}</loc>
           <lastmod>${today}</lastmod>
@@ -6813,26 +6811,9 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
           <priority>${page.priority}</priority>
 ${hreflangs}${imageXml}
         </url>`;
-
-        // Generate dedicated entries for all other languages so all localized versions are explicitly indexed
-        SITE_SUPPORTED_LANGUAGES.forEach(lang => {
-          if (lang !== 'it') {
-            const langUrl = getUrl(lang);
-            xmlBlock += `
-        <url>
-          <loc>${escapeHtml(langUrl)}</loc>
-          <lastmod>${today}</lastmod>
-          <changefreq>${page.changefreq}</changefreq>
-          <priority>${(parseFloat(page.priority) * 0.95).toFixed(2)}</priority>
-${hreflangs}${imageXml}
-        </url>`;
-          }
-        });
-
-        return xmlBlock;
       }).join('');
 
-      // 2. Official PDF Constitution documents
+      // 2. Official PDF Constitution documents in 11 official languages
       const pdfEntries = OFFICIAL_CONSTITUTION_PDFS.map(pdf => {
         return `
         <url>
@@ -6844,7 +6825,7 @@ ${hreflangs}${imageXml}
         </url>`;
       }).join('');
 
-      // 3. News Articles (all articles in the system across all languages)
+      // 3. News Articles (each unique article once, with its 11 multilingual alternate hreflangs and rich preview image)
       const articleEntries = articles.map(a => {
         const slug = a.slug || a.id;
         const lastMod = (a.updatedAt || a.publishedAt || a.createdAt || today).split('T')[0];
@@ -6871,7 +6852,7 @@ ${hreflangs}${imageXml}
             <image:caption>${escapeHtml(cleanTitle)}</image:caption>
           </image:image>` : '';
 
-        let xmlBlock = `
+        return `
         <url>
           <loc>${escapeHtml(defaultUrl)}</loc>
           <lastmod>${lastMod}</lastmod>
@@ -6879,23 +6860,6 @@ ${hreflangs}${imageXml}
           <priority>0.95</priority>
 ${hreflangs}${imageXml}
         </url>`;
-
-        // Dedicated entries for each supported language
-        SITE_SUPPORTED_LANGUAGES.forEach(lang => {
-          if (lang !== 'it') {
-            const langUrl = getArticleUrl(lang);
-            xmlBlock += `
-        <url>
-          <loc>${escapeHtml(langUrl)}</loc>
-          <lastmod>${lastMod}</lastmod>
-          <changefreq>daily</changefreq>
-          <priority>0.90</priority>
-${hreflangs}${imageXml}
-        </url>`;
-          }
-        });
-
-        return xmlBlock;
       }).join('');
 
       return `<?xml version="1.0" encoding="UTF-8"?>
@@ -6908,8 +6872,10 @@ ${articleEntries}
 </urlset>`.trim();
     }
 
-    function generateComprehensiveNewsSitemapXml(baseUrl: string, articles: any[]): string {
+    function generateComprehensiveNewsSitemapXml(baseUrl: string, rawArticles: any[]): string {
       const today = new Date().toISOString();
+      const articles = getDeduplicatedArticles(rawArticles);
+
       const newsItems = articles.map(a => {
         const slug = a.slug || a.id;
         const pubDate = a.publishedAt || a.createdAt || today;
@@ -6923,8 +6889,7 @@ ${articleEntries}
         const defaultUrl = getArticleUrl('it');
         const hreflangs = buildMultilingualHreflangs(getArticleUrl, defaultUrl);
 
-        // Google News entry for base and localized variants
-        let entries = `
+        return `
         <url>
           <loc>${escapeHtml(defaultUrl)}</loc>
           <news:news>
@@ -6937,27 +6902,6 @@ ${articleEntries}
           </news:news>
 ${hreflangs}
         </url>`;
-
-        SITE_SUPPORTED_LANGUAGES.forEach(lang => {
-          if (lang !== 'it') {
-            const langUrl = getArticleUrl(lang);
-            entries += `
-        <url>
-          <loc>${escapeHtml(langUrl)}</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>${lang}</news:language>
-            </news:publication>
-            <news:publication_date>${pubDate}</news:publication_date>
-            <news:title>${escapeHtml(cleanTitle)}</news:title>
-          </news:news>
-${hreflangs}
-        </url>`;
-          }
-        });
-
-        return entries;
       }).join('');
 
       return `<?xml version="1.0" encoding="UTF-8"?>
@@ -6968,7 +6912,8 @@ ${newsItems}
 </urlset>`.trim();
     }
 
-    function generateComprehensiveRssXml(baseUrl: string, articles: any[]): string {
+    function generateComprehensiveRssXml(baseUrl: string, rawArticles: any[]): string {
+      const articles = getDeduplicatedArticles(rawArticles);
       const items = articles.map(a => {
         const slug = a.slug || a.id;
         const link = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
