@@ -7540,9 +7540,116 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
 
       if (url.pathname === '/sitemap.xml' && request.method === 'GET') {
         const baseUrl = getCanonicalBaseUrlWorker(url, request);
-        const articleUrls = memoryWorkerArticles.map(a => {
+        const SITE_LANGS = ['it', 'en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+        const today = new Date().toISOString().split('T')[0];
+
+        const CONSTITUTION_PDFS = [
+          { lang: 'it', name: 'Costituzione e Atto Costitutivo dello Stato Mondiale (Italiano)', url: 'https://www.newworldstate.org/costitution/COSTITUZIONE-E-ATTO-COSTITUTIVO-STATO-MONDIALE.pdf' },
+          { lang: 'en', name: 'Constitution of the Sovereign World State (English)', url: 'https://www.newworldstate.org/costitution/CONSTITUTION-OF-THE-SOVEREIGN-WORLD-STATE.pdf' },
+          { lang: 'fr', name: "Constitution de l'État Mondial Souverain (Français)", url: 'https://www.newworldstate.org/costitution/CONSTITUTION-DE-LETAT-MONDIAL-SOUVERAIN-Francese.pdf' },
+          { lang: 'es', name: 'Constitución del Estado Mundial Soberano (Español)', url: 'https://www.newworldstate.org/costitution/CONSTITUCION-DEL-ESTADO-MUNDIAL-SOBERANO.pdf' },
+          { lang: 'pt', name: 'Constituição do Estado Soberano Mundial (Português)', url: 'https://www.newworldstate.org/costitution/CONSTITUICAO-DO-ESTADO-SOBERANO-MUNDIAL-Portoghese.pdf' },
+          { lang: 'ru', name: 'Конституция Суверенного Мирового Государства (Русский)', url: 'https://www.newworldstate.org/costitution/КОНСТИТУЦИЯ-СУВЕРЕННОГО-МИРОВОГО-ГОСУДАРСТВА-Russo.pdf' },
+          { lang: 'hi', name: 'संप्रभु विश्व राज्य का संविधान (हिन्दी)', url: 'https://www.newworldstate.org/costitution/संप्रभु-विश्व-राज्य-Hindi.pdf' },
+          { lang: 'bn', name: 'সার্বভৌম বিশ্ব রাষ্ট্রের সংবিধান (বাংলা)', url: 'https://www.newworldstate.org/costitution/সার্বভৌম-विश्व-রাষ্ট্র-Bengalese.pdf' },
+          { lang: 'zh', name: '主权世界国家宪法 (中文)', url: 'https://www.newworldstate.org/costitution/主权世界国家-Cinese.pdf' },
+          { lang: 'ja', name: '主権世界国家憲法 (日本語)', url: 'https://www.newworldstate.org/costitution/主権世界国家-Giapponese.pdf' },
+          { lang: 'ar', name: 'دستور الدولة العالمية ذات السيادة (العربية)', url: 'https://www.newworldstate.org/costitution/دستور-الدولة-العالمية-ذات-السيادة-Arabo.pdf' }
+        ];
+
+        const SITE_PAGES = [
+          { path: '', changefreq: 'daily', priority: '1.00', title: 'New World State 1.0 - Portale Ufficiale e Registro Mondiale', image: '/LOGO_NEW-WORLD-STATE.jpg', imageTitle: 'New World State 1.0 - Stemma Ufficiale', imageCaption: 'New World State 1.0 - Registro Mondiale e Sovranità Popolare' },
+          { path: '?tab=news', changefreq: 'hourly', priority: '0.95', title: 'Portale Notizie & Giornalismo Sovrano | New World State 1.0', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80', imageTitle: 'New World State News Authority', imageCaption: 'Giornale Sovrano di Informazione e Geopolitica Indipendente' },
+          { path: 'notizie', changefreq: 'hourly', priority: '0.95', title: 'Archivio Notizie & Inchieste Giornalistiche Sovrane' },
+          { path: '?tab=register', changefreq: 'weekly', priority: '0.90', title: 'Richiesta Cittadinanza Sovrana & Registro Mondiale' },
+          { path: '?tab=democracy', changefreq: 'daily', priority: '0.90', title: 'Democrazia Diretta & Referendum Popolari Sovrani' },
+          { path: 'democracy', changefreq: 'daily', priority: '0.90', title: 'Portale di Democrazia Diretta e Sovranità Civica' },
+          { path: '?tab=chat', changefreq: 'daily', priority: '0.85', title: 'Assemblea Federale e Comunicazioni Sovrane' },
+          { path: 'chat', changefreq: 'daily', priority: '0.85', title: 'Canale Assemblea Sovrana e Partecipazione Civica' },
+          { path: '?tab=constitution', changefreq: 'monthly', priority: '0.90', title: 'Costituzione dello Stato Mondiale Sovrano' },
+          { path: '?tab=charter', changefreq: 'monthly', priority: '0.85', title: 'Carta Fondamentale dei Diritti e Doveri Sovrani' },
+          { path: '?tab=governance', changefreq: 'monthly', priority: '0.85', title: 'Governance & Organigramma Istituzionale Sovrano' },
+          { path: '?tab=privacy', changefreq: 'monthly', priority: '0.80', title: 'Protocollo di Crittografia e Privacy dei Cittadini' },
+          { path: '?tab=network', changefreq: 'weekly', priority: '0.80', title: 'Stato dei Nodi di Rete e Server Decentralizzati' },
+          { path: 'verify', changefreq: 'monthly', priority: '0.85', title: 'Verifica Crittografica Cittadino e Documenti d\'Identità' },
+          { path: '?tab=identity', changefreq: 'monthly', priority: '0.80', title: 'Registro Mondiale dell\'Identità Digitale Sovrana' },
+          { path: '?tab=faq', changefreq: 'monthly', priority: '0.80', title: 'Domande Frequenti & Risposte Istituzionali (FAQ)' },
+          { path: '?tab=news&category=cat-politica', changefreq: 'daily', priority: '0.85', title: 'Notizie Politica & Sovranità - New World State' },
+          { path: '?tab=news&category=cat-economia', changefreq: 'daily', priority: '0.85', title: 'Notizie Economia & Finanza Sostenibile - New World State' },
+          { path: '?tab=news&category=cat-diritti', changefreq: 'daily', priority: '0.85', title: 'Notizie Diritti & Costituzione Sovrana - New World State' },
+          { path: '?tab=news&category=cat-tecnologia', changefreq: 'daily', priority: '0.85', title: 'Notizie Tecnologia & Innovazione Decentralizzata - New World State' },
+          { path: '?tab=news&category=cat-cultura', changefreq: 'daily', priority: '0.85', title: 'Notizie Cultura & Società Globale - New World State' },
+          { path: '?compliance=privacy', changefreq: 'monthly', priority: '0.70', title: 'Informativa sulla Privacy & Normativa GDPR' },
+          { path: '?compliance=terms', changefreq: 'monthly', priority: '0.70', title: 'Termini e Condizioni di Utilizzo della Piattaforma' },
+          { path: '?compliance=cookies', changefreq: 'monthly', priority: '0.65', title: 'Informativa Estesa sui Cookie e Tracciamento' },
+          { path: '?compliance=accessibility', changefreq: 'monthly', priority: '0.65', title: 'Dichiarazione di Accessibilità Universale' },
+          { path: '?compliance=ccpa', changefreq: 'monthly', priority: '0.65', title: 'California Consumer Privacy Act (CCPA) Disclosure' }
+        ];
+
+        const buildHreflangs = (getUrlFn, defUrl) => {
+          const tags = SITE_LANGS.map(lang => `          <xhtml:link rel="alternate" hreflang="${lang}" href="${escapeHtmlWorker(getUrlFn(lang))}" />`);
+          tags.push(`          <xhtml:link rel="alternate" hreflang="x-default" href="${escapeHtmlWorker(defUrl)}" />`);
+          return tags.join('\n');
+        };
+
+        const staticXml = SITE_PAGES.map(page => {
+          const getUrl = (lang) => {
+            if (!page.path) return lang === 'it' ? `${baseUrl}/` : `${baseUrl}/?lang=${lang}`;
+            const sep = page.path.includes('?') ? '&' : '?';
+            if (page.path.startsWith('?')) return lang === 'it' ? `${baseUrl}/${page.path}` : `${baseUrl}/${page.path}&lang=${lang}`;
+            return lang === 'it' ? `${baseUrl}/${page.path}` : `${baseUrl}/${page.path}${sep}lang=${lang}`;
+          };
+          const defUrl = getUrl('it');
+          const hreflangs = buildHreflangs(getUrl, defUrl);
+          let imgXml = '';
+          if (page.image) {
+            const imgLoc = page.image.startsWith('http') ? page.image : `${baseUrl}${page.image}`;
+            imgXml = `
+          <image:image>
+            <image:loc>${escapeHtmlWorker(imgLoc)}</image:loc>
+            <image:title>${escapeHtmlWorker(page.imageTitle || page.title)}</image:title>
+            <image:caption>${escapeHtmlWorker(page.imageCaption || page.title)}</image:caption>
+          </image:image>`;
+          }
+
+          let block = `
+        <url>
+          <loc>${escapeHtmlWorker(defUrl)}</loc>
+          <lastmod>${today}</lastmod>
+          <changefreq>${page.changefreq}</changefreq>
+          <priority>${page.priority}</priority>
+${hreflangs}${imgXml}
+        </url>`;
+
+          SITE_LANGS.forEach(lang => {
+            if (lang !== 'it') {
+              const langUrl = getUrl(lang);
+              block += `
+        <url>
+          <loc>${escapeHtmlWorker(langUrl)}</loc>
+          <lastmod>${today}</lastmod>
+          <changefreq>${page.changefreq}</changefreq>
+          <priority>${(parseFloat(page.priority) * 0.95).toFixed(2)}</priority>
+${hreflangs}${imgXml}
+        </url>`;
+            }
+          });
+
+          return block;
+        }).join('');
+
+        const pdfXml = CONSTITUTION_PDFS.map(pdf => `
+        <url>
+          <loc>${escapeHtmlWorker(pdf.url)}</loc>
+          <lastmod>${today}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.90</priority>
+          <xhtml:link rel="alternate" hreflang="${pdf.lang}" href="${escapeHtmlWorker(pdf.url)}" />
+        </url>`).join('');
+
+        const articleXml = memoryWorkerArticles.map(a => {
           const slug = a.slug || a.id;
-          const lastMod = (a.updatedAt || a.publishedAt || new Date().toISOString()).split('T')[0];
+          const lastMod = (a.updatedAt || a.publishedAt || a.createdAt || today).split('T')[0];
           const cleanTitle = cleanMetaTextWorker(a.title);
           let imgUrl = getThematicImageForSlugWorker(slug, cleanTitle);
           if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
@@ -7552,140 +7659,54 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
           }
           imgUrl = formatOgImageUrlWorker(imgUrl);
 
-          return `
-          <url>
-            <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
-            <lastmod>${lastMod}</lastmod>
-            <changefreq>daily</changefreq>
-            <priority>0.9</priority>
-            ${imgUrl ? `
-            <image:image>
-              <image:loc>${escapeHtmlWorker(imgUrl)}</image:loc>
-              <image:title>${escapeHtmlWorker(cleanTitle)}</image:title>
-              <image:caption>${escapeHtmlWorker(cleanTitle)}</image:caption>
-            </image:image>` : ''}
-          </url>`;
+          const getArticleUrl = (lang) => {
+            const encoded = encodeURIComponent(slug);
+            return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
+          };
+
+          const defUrl = getArticleUrl('it');
+          const hreflangs = buildHreflangs(getArticleUrl, defUrl);
+          const imgXml = imgUrl ? `
+          <image:image>
+            <image:loc>${escapeHtmlWorker(imgUrl)}</image:loc>
+            <image:title>${escapeHtmlWorker(cleanTitle)}</image:title>
+            <image:caption>${escapeHtmlWorker(cleanTitle)}</image:caption>
+          </image:image>` : '';
+
+          let block = `
+        <url>
+          <loc>${escapeHtmlWorker(defUrl)}</loc>
+          <lastmod>${lastMod}</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+${hreflangs}${imgXml}
+        </url>`;
+
+          SITE_LANGS.forEach(lang => {
+            if (lang !== 'it') {
+              const langUrl = getArticleUrl(lang);
+              block += `
+        <url>
+          <loc>${escapeHtmlWorker(langUrl)}</loc>
+          <lastmod>${lastMod}</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.90</priority>
+${hreflangs}${imgXml}
+        </url>`;
+            }
+          });
+
+          return block;
         }).join('');
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
-        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-          <url>
-            <loc>${baseUrl}/</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>daily</changefreq>
-            <priority>1.00</priority>
-            <xhtml:link rel="alternate" hreflang="it" href="${baseUrl}/" />
-            <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/?lang=en" />
-            <xhtml:link rel="alternate" hreflang="x-default" href="${baseUrl}/" />
-            <image:image>
-              <image:loc>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</image:loc>
-              <image:title>New World State 1.0 - Stemma Ufficiale</image:title>
-              <image:caption>New World State 1.0 - Registro Mondiale e Sovranità Popolare</image:caption>
-            </image:image>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=news</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>hourly</changefreq>
-            <priority>0.95</priority>
-            <image:image>
-              <image:loc>https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
-              <image:title>New World State News Authority</image:title>
-              <image:caption>Giornale Sovrano di Informazione e Geopolitica Indipendente</image:caption>
-            </image:image>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=register</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>weekly</changefreq>
-            <priority>0.90</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=democracy</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>weekly</changefreq>
-            <priority>0.90</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=constitution</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.85</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=governance</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.85</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=charter</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.85</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=privacy</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.80</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=network</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>weekly</changefreq>
-            <priority>0.80</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/verify</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.80</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=identity</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.75</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?tab=faq</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.75</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?compliance=privacy</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.70</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?compliance=terms</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.70</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?compliance=cookies</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.65</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?compliance=accessibility</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.65</priority>
-          </url>
-          <url>
-            <loc>${baseUrl}/?compliance=ccpa</loc>
-            <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-            <changefreq>monthly</changefreq>
-            <priority>0.65</priority>
-          </url>
-          ${articleUrls}
-        </urlset>`;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${staticXml}
+${pdfXml}
+${articleXml}
+</urlset>`;
 
         return new Response(xml.trim(), {
           headers: { ...corsHeaders, 'Content-Type': 'application/xml; charset=utf-8' }
@@ -7694,29 +7715,70 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
 
       if (url.pathname === '/sitemap-news.xml' && request.method === 'GET') {
         const baseUrl = getCanonicalBaseUrlWorker(url, request);
-        const articles = memoryWorkerArticles.slice(0, 50);
-        const newsItems = articles.map(a => {
+        const SITE_LANGS = ['it', 'en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+        const today = new Date().toISOString();
+
+        const buildHreflangs = (getUrlFn, defUrl) => {
+          const tags = SITE_LANGS.map(lang => `          <xhtml:link rel="alternate" hreflang="${lang}" href="${escapeHtmlWorker(getUrlFn(lang))}" />`);
+          tags.push(`          <xhtml:link rel="alternate" hreflang="x-default" href="${escapeHtmlWorker(defUrl)}" />`);
+          return tags.join('\n');
+        };
+
+        const newsItems = memoryWorkerArticles.map(a => {
           const slug = a.slug || a.id;
-          const pubDate = a.publishedAt || a.createdAt || new Date().toISOString();
+          const pubDate = a.publishedAt || a.createdAt || today;
           const cleanTitle = cleanMetaTextWorker(a.title);
-          return `
-          <url>
-            <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
-            <news:news>
-              <news:publication>
-                <news:name>New World State News Authority</news:name>
-                <news:language>it</news:language>
-              </news:publication>
-              <news:publication_date>${pubDate}</news:publication_date>
-              <news:title>${escapeHtmlWorker(cleanTitle)}</news:title>
-            </news:news>
-          </url>`;
+
+          const getArticleUrl = (lang) => {
+            const encoded = encodeURIComponent(slug);
+            return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
+          };
+
+          const defUrl = getArticleUrl('it');
+          const hreflangs = buildHreflangs(getArticleUrl, defUrl);
+
+          let entries = `
+        <url>
+          <loc>${escapeHtmlWorker(defUrl)}</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>${pubDate}</news:publication_date>
+            <news:title>${escapeHtmlWorker(cleanTitle)}</news:title>
+          </news:news>
+${hreflangs}
+        </url>`;
+
+          SITE_LANGS.forEach(lang => {
+            if (lang !== 'it') {
+              const langUrl = getArticleUrl(lang);
+              entries += `
+        <url>
+          <loc>${escapeHtmlWorker(langUrl)}</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>${lang}</news:language>
+            </news:publication>
+            <news:publication_date>${pubDate}</news:publication_date>
+            <news:title>${escapeHtmlWorker(cleanTitle)}</news:title>
+          </news:news>
+${hreflangs}
+        </url>`;
+            }
+          });
+
+          return entries;
         }).join('');
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
-        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
-          ${newsItems}
-        </urlset>`.trim();
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${newsItems}
+</urlset>`.trim();
 
         return new Response(xml, {
           headers: { ...corsHeaders, 'Content-Type': 'application/xml; charset=utf-8' }
@@ -7732,7 +7794,7 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
           const cleanTitle = cleanMetaTextWorker(a.title);
           const cleanIntro = cleanMetaTextWorker(a.intro || a.content);
           const fullContent = cleanMetaTextWorker(a.content || a.intro);
-          const author = cleanMetaTextWorker(a.authorName) || 'New World State News';
+          const author = cleanMetaTextWorker(a.authorName) || 'New World State News Authority';
           let imgUrl = getThematicImageForSlugWorker(slug, cleanTitle);
           if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
             imgUrl = a.images[0].url;
@@ -7751,30 +7813,30 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
             <description><![CDATA[${cleanIntro}]]></description>
             <content:encoded><![CDATA[${fullContent}]]></content:encoded>
             ${imgUrl ? `<enclosure url="${escapeHtmlWorker(imgUrl)}" length="0" type="image/jpeg" />` : ''}
-            <category><![CDATA[News & Geopolitica]]></category>
+            <category><![CDATA[Politica & Sovranità]]></category>
           </item>`;
         }).join('');
 
         const rss = `<?xml version="1.0" encoding="UTF-8"?>
-        <rss version="2.0" 
-          xmlns:content="http://purl.org/rss/1.0/modules/content/" 
-          xmlns:dc="http://purl.org/dc/elements/1.1/" 
-          xmlns:atom="http://www.w3.org/2005/Atom">
-          <channel>
-            <title>New World State News Authority</title>
-            <link>${baseUrl}/?tab=news</link>
-            <description>Notizie ufficiali, reportage indipendenti e inchieste etiche di New World State 1.0.</description>
-            <language>it-IT</language>
-            <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-            <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />
-            <image>
-              <url>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</url>
-              <title>New World State News</title>
-              <link>${baseUrl}/?tab=news</link>
-            </image>
-            ${items}
-          </channel>
-        </rss>`.trim();
+<rss version="2.0" 
+  xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+  xmlns:dc="http://purl.org/dc/elements/1.1/" 
+  xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>New World State News Authority</title>
+    <link>${baseUrl}/?tab=news</link>
+    <description>Notizie ufficiali, reportage indipendenti e inchieste etiche di New World State 1.0 in tutte le lingue supportate.</description>
+    <language>it-IT</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />
+    <image>
+      <url>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</url>
+      <title>New World State News</title>
+      <link>${baseUrl}/?tab=news</link>
+    </image>
+    ${items}
+  </channel>
+</rss>`.trim();
 
         return new Response(rss, {
           headers: { ...corsHeaders, 'Content-Type': 'application/rss+xml; charset=utf-8' }

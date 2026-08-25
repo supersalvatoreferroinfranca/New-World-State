@@ -6583,171 +6583,461 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       return INITIAL_SERVER_ARTICLES;
     }
 
-    function syncStaticSitemapFiles(articles: any[]): void {
-      try {
-        const baseUrl = 'https://newworldstate.cloud';
-        const articleUrls = articles.map(a => {
-          const slug = a.slug || a.id;
-          const lastMod = (a.updatedAt || a.publishedAt || new Date().toISOString()).split('T')[0];
-          const cleanTitle = cleanMetaText(a.title);
-          let imgUrl = getThematicImageForSlug(slug, cleanTitle);
-          if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
-            imgUrl = a.images[0].url;
-          } else if (a.image && typeof a.image === 'string') {
-            imgUrl = a.image;
+    const SITE_SUPPORTED_LANGUAGES = ['it', 'en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+
+    const OFFICIAL_CONSTITUTION_PDFS = [
+      { lang: 'it', name: 'Costituzione e Atto Costitutivo dello Stato Mondiale (Italiano)', url: 'https://www.newworldstate.org/costitution/COSTITUZIONE-E-ATTO-COSTITUTIVO-STATO-MONDIALE.pdf' },
+      { lang: 'en', name: 'Constitution of the Sovereign World State (English)', url: 'https://www.newworldstate.org/costitution/CONSTITUTION-OF-THE-SOVEREIGN-WORLD-STATE.pdf' },
+      { lang: 'fr', name: "Constitution de l'État Mondial Souverain (Français)", url: 'https://www.newworldstate.org/costitution/CONSTITUTION-DE-LETAT-MONDIAL-SOUVERAIN-Francese.pdf' },
+      { lang: 'es', name: 'Constitución del Estado Mundial Soberano (Español)', url: 'https://www.newworldstate.org/costitution/CONSTITUCION-DEL-ESTADO-MUNDIAL-SOBERANO.pdf' },
+      { lang: 'pt', name: 'Constituição do Estado Soberano Mundial (Português)', url: 'https://www.newworldstate.org/costitution/CONSTITUICAO-DO-ESTADO-SOBERANO-MUNDIAL-Portoghese.pdf' },
+      { lang: 'ru', name: 'Конституция Суверенного Мирового Государства (Русский)', url: 'https://www.newworldstate.org/costitution/КОНСТИТУЦИЯ-СУВЕРЕННОГО-МИРОВОГО-ГОСУДАРСТВА-Russo.pdf' },
+      { lang: 'hi', name: 'संप्रभु विश्व राज्य का संविधान (हिन्दी)', url: 'https://www.newworldstate.org/costitution/संप्रभु-विश्व-राज्य-Hindi.pdf' },
+      { lang: 'bn', name: 'সার্বভৌম বিশ্ব রাষ্ট্রের সংবিধান (বাংলা)', url: 'https://www.newworldstate.org/costitution/সার্বভৌম-विश्व-রাষ্ট্র-Bengalese.pdf' },
+      { lang: 'zh', name: '主权世界国家宪法 (中文)', url: 'https://www.newworldstate.org/costitution/主权世界国家-Cinese.pdf' },
+      { lang: 'ja', name: '主権世界国家憲法 (日本語)', url: 'https://www.newworldstate.org/costitution/主権世界国家-Giapponese.pdf' },
+      { lang: 'ar', name: 'دستور الدولة العالمية ذات السيادة (العربية)', url: 'https://www.newworldstate.org/costitution/دستور-الدولة-العالمية-ذات-السيادة-Arabo.pdf' }
+    ];
+
+    const CORE_SITE_PAGES = [
+      {
+        path: '',
+        changefreq: 'daily',
+        priority: '1.00',
+        title: 'New World State 1.0 - Portale Ufficiale e Registro Mondiale',
+        image: '/LOGO_NEW-WORLD-STATE.jpg',
+        imageTitle: 'New World State 1.0 - Stemma Ufficiale',
+        imageCaption: 'New World State 1.0 - Registro Mondiale e Sovranità Popolare'
+      },
+      {
+        path: '?tab=news',
+        changefreq: 'hourly',
+        priority: '0.95',
+        title: 'Portale Notizie & Giornalismo Sovrano | New World State 1.0',
+        image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+        imageTitle: 'New World State News Authority',
+        imageCaption: 'Giornale Sovrano di Informazione e Geopolitica Indipendente'
+      },
+      {
+        path: 'notizie',
+        changefreq: 'hourly',
+        priority: '0.95',
+        title: 'Archivio Notizie & Inchieste Giornalistiche Sovrane'
+      },
+      {
+        path: '?tab=register',
+        changefreq: 'weekly',
+        priority: '0.90',
+        title: 'Richiesta Cittadinanza Sovrana & Registro Mondiale'
+      },
+      {
+        path: '?tab=democracy',
+        changefreq: 'daily',
+        priority: '0.90',
+        title: 'Democrazia Diretta & Referendum Popolari Sovrani'
+      },
+      {
+        path: 'democracy',
+        changefreq: 'daily',
+        priority: '0.90',
+        title: 'Portale di Democrazia Diretta e Sovranità Civica'
+      },
+      {
+        path: '?tab=chat',
+        changefreq: 'daily',
+        priority: '0.85',
+        title: 'Assemblea Federale e Comunicazioni Sovrane'
+      },
+      {
+        path: 'chat',
+        changefreq: 'daily',
+        priority: '0.85',
+        title: 'Canale Assemblea Sovrana e Partecipazione Civica'
+      },
+      {
+        path: '?tab=constitution',
+        changefreq: 'monthly',
+        priority: '0.90',
+        title: 'Costituzione dello Stato Mondiale Sovrano'
+      },
+      {
+        path: '?tab=charter',
+        changefreq: 'monthly',
+        priority: '0.85',
+        title: 'Carta Fondamentale dei Diritti e Doveri Sovrani'
+      },
+      {
+        path: '?tab=governance',
+        changefreq: 'monthly',
+        priority: '0.85',
+        title: 'Governance & Organigramma Istituzionale Sovrano'
+      },
+      {
+        path: '?tab=privacy',
+        changefreq: 'monthly',
+        priority: '0.80',
+        title: 'Protocollo di Crittografia e Privacy dei Cittadini'
+      },
+      {
+        path: '?tab=network',
+        changefreq: 'weekly',
+        priority: '0.80',
+        title: 'Stato dei Nodi di Rete e Server Decentralizzati'
+      },
+      {
+        path: 'verify',
+        changefreq: 'monthly',
+        priority: '0.85',
+        title: 'Verifica Crittografica Cittadino e Documenti d\'Identità'
+      },
+      {
+        path: '?tab=identity',
+        changefreq: 'monthly',
+        priority: '0.80',
+        title: 'Registro Mondiale dell\'Identità Digitale Sovrana'
+      },
+      {
+        path: '?tab=faq',
+        changefreq: 'monthly',
+        priority: '0.80',
+        title: 'Domande Frequenti & Risposte Istituzionali (FAQ)'
+      },
+      // Categorie Notizie
+      {
+        path: '?tab=news&category=cat-politica',
+        changefreq: 'daily',
+        priority: '0.85',
+        title: 'Notizie Politica & Sovranità - New World State'
+      },
+      {
+        path: '?tab=news&category=cat-economia',
+        changefreq: 'daily',
+        priority: '0.85',
+        title: 'Notizie Economia & Finanza Sostenibile - New World State'
+      },
+      {
+        path: '?tab=news&category=cat-diritti',
+        changefreq: 'daily',
+        priority: '0.85',
+        title: 'Notizie Diritti & Costituzione Sovrana - New World State'
+      },
+      {
+        path: '?tab=news&category=cat-tecnologia',
+        changefreq: 'daily',
+        priority: '0.85',
+        title: 'Notizie Tecnologia & Innovazione Decentralizzata - New World State'
+      },
+      {
+        path: '?tab=news&category=cat-cultura',
+        changefreq: 'daily',
+        priority: '0.85',
+        title: 'Notizie Cultura & Società Globale - New World State'
+      },
+      // Documenti di Conformità e Legali
+      {
+        path: '?compliance=privacy',
+        changefreq: 'monthly',
+        priority: '0.70',
+        title: 'Informativa sulla Privacy & Normativa GDPR'
+      },
+      {
+        path: '?compliance=terms',
+        changefreq: 'monthly',
+        priority: '0.70',
+        title: 'Termini e Condizioni di Utilizzo della Piattaforma'
+      },
+      {
+        path: '?compliance=cookies',
+        changefreq: 'monthly',
+        priority: '0.65',
+        title: 'Informativa Estesa sui Cookie e Tracciamento'
+      },
+      {
+        path: '?compliance=accessibility',
+        changefreq: 'monthly',
+        priority: '0.65',
+        title: 'Dichiarazione di Accessibilità Universale'
+      },
+      {
+        path: '?compliance=ccpa',
+        changefreq: 'monthly',
+        priority: '0.65',
+        title: 'California Consumer Privacy Act (CCPA) Disclosure'
+      }
+    ];
+
+    function buildMultilingualHreflangs(getUrlForLang: (lang: string) => string, defaultUrl: string): string {
+      const tags = SITE_SUPPORTED_LANGUAGES.map(lang => {
+        const u = getUrlForLang(lang);
+        return `          <xhtml:link rel="alternate" hreflang="${lang}" href="${escapeHtml(u)}" />`;
+      });
+      tags.push(`          <xhtml:link rel="alternate" hreflang="x-default" href="${escapeHtml(defaultUrl)}" />`);
+      return tags.join('\n');
+    }
+
+    function generateComprehensiveSitemapXml(baseUrl: string, articles: any[]): string {
+      const today = new Date().toISOString().split('T')[0];
+
+      // 1. Static and Tab pages in all languages
+      const staticEntries = CORE_SITE_PAGES.map(page => {
+        const getUrl = (lang: string) => {
+          if (!page.path) {
+            return lang === 'it' ? `${baseUrl}/` : `${baseUrl}/?lang=${lang}`;
           }
-          imgUrl = formatOgImageUrl(imgUrl);
+          const separator = page.path.includes('?') ? '&' : '?';
+          if (page.path.startsWith('?')) {
+            return lang === 'it' ? `${baseUrl}/${page.path}` : `${baseUrl}/${page.path}&lang=${lang}`;
+          }
+          return lang === 'it' ? `${baseUrl}/${page.path}` : `${baseUrl}/${page.path}${separator}lang=${lang}`;
+        };
 
-          return `
-          <url>
-            <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
-            <lastmod>${lastMod}</lastmod>
-            <changefreq>daily</changefreq>
-            <priority>0.90</priority>
-            ${imgUrl ? `
-            <image:image>
-              <image:loc>${escapeHtml(imgUrl)}</image:loc>
-              <image:title>${escapeHtml(cleanTitle)}</image:title>
-              <image:caption>${escapeHtml(cleanTitle)}</image:caption>
-            </image:image>` : ''}
-          </url>`;
-        }).join('');
+        const defaultUrl = getUrl('it');
+        const hreflangs = buildMultilingualHreflangs(getUrl, defaultUrl);
+        let imageXml = '';
+        if (page.image) {
+          const imgLoc = page.image.startsWith('http') ? page.image : `${baseUrl}${page.image}`;
+          imageXml = `
+          <image:image>
+            <image:loc>${escapeHtml(imgLoc)}</image:loc>
+            <image:title>${escapeHtml(page.imageTitle || page.title)}</image:title>
+            <image:caption>${escapeHtml(page.imageCaption || page.title)}</image:caption>
+          </image:image>`;
+        }
 
-        const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+        // Generate primary canonical URL
+        let xmlBlock = `
+        <url>
+          <loc>${escapeHtml(defaultUrl)}</loc>
+          <lastmod>${today}</lastmod>
+          <changefreq>${page.changefreq}</changefreq>
+          <priority>${page.priority}</priority>
+${hreflangs}${imageXml}
+        </url>`;
+
+        // Generate dedicated entries for all other languages so all localized versions are explicitly indexed
+        SITE_SUPPORTED_LANGUAGES.forEach(lang => {
+          if (lang !== 'it') {
+            const langUrl = getUrl(lang);
+            xmlBlock += `
+        <url>
+          <loc>${escapeHtml(langUrl)}</loc>
+          <lastmod>${today}</lastmod>
+          <changefreq>${page.changefreq}</changefreq>
+          <priority>${(parseFloat(page.priority) * 0.95).toFixed(2)}</priority>
+${hreflangs}${imageXml}
+        </url>`;
+          }
+        });
+
+        return xmlBlock;
+      }).join('');
+
+      // 2. Official PDF Constitution documents
+      const pdfEntries = OFFICIAL_CONSTITUTION_PDFS.map(pdf => {
+        return `
+        <url>
+          <loc>${escapeHtml(pdf.url)}</loc>
+          <lastmod>${today}</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.90</priority>
+          <xhtml:link rel="alternate" hreflang="${pdf.lang}" href="${escapeHtml(pdf.url)}" />
+        </url>`;
+      }).join('');
+
+      // 3. News Articles (all articles in the system across all languages)
+      const articleEntries = articles.map(a => {
+        const slug = a.slug || a.id;
+        const lastMod = (a.updatedAt || a.publishedAt || a.createdAt || today).split('T')[0];
+        const cleanTitle = cleanMetaText(a.title);
+        let imgUrl = getThematicImageForSlug(slug, cleanTitle);
+        if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
+          imgUrl = a.images[0].url;
+        } else if (a.image && typeof a.image === 'string') {
+          imgUrl = a.image;
+        }
+        imgUrl = formatOgImageUrl(imgUrl);
+
+        const getArticleUrl = (lang: string) => {
+          const encoded = encodeURIComponent(slug);
+          return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
+        };
+
+        const defaultUrl = getArticleUrl('it');
+        const hreflangs = buildMultilingualHreflangs(getArticleUrl, defaultUrl);
+        const imageXml = imgUrl ? `
+          <image:image>
+            <image:loc>${escapeHtml(imgUrl)}</image:loc>
+            <image:title>${escapeHtml(cleanTitle)}</image:title>
+            <image:caption>${escapeHtml(cleanTitle)}</image:caption>
+          </image:image>` : '';
+
+        let xmlBlock = `
+        <url>
+          <loc>${escapeHtml(defaultUrl)}</loc>
+          <lastmod>${lastMod}</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+${hreflangs}${imageXml}
+        </url>`;
+
+        // Dedicated entries for each supported language
+        SITE_SUPPORTED_LANGUAGES.forEach(lang => {
+          if (lang !== 'it') {
+            const langUrl = getArticleUrl(lang);
+            xmlBlock += `
+        <url>
+          <loc>${escapeHtml(langUrl)}</loc>
+          <lastmod>${lastMod}</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.90</priority>
+${hreflangs}${imageXml}
+        </url>`;
+          }
+        });
+
+        return xmlBlock;
+      }).join('');
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url>
-    <loc>${baseUrl}/</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.00</priority>
-    <xhtml:link rel="alternate" hreflang="it" href="${baseUrl}/" />
-    <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/?lang=en" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="${baseUrl}/" />
-    <image:image>
-      <image:loc>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</image:loc>
-      <image:title>New World State 1.0 - Stemma Ufficiale</image:title>
-      <image:caption>New World State 1.0 - Registro Mondiale e Sovranità Popolare</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=news</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
-      <image:title>New World State News Authority</image:title>
-      <image:caption>Giornale Sovrano di Informazione e Geopolitica Indipendente</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=register</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=democracy</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=constitution</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=governance</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=charter</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=privacy</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.80</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=network</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.80</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/verify</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.80</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=identity</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?tab=faq</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?compliance=privacy</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.70</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?compliance=terms</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.70</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?compliance=cookies</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.65</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?compliance=accessibility</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.65</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/?compliance=ccpa</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.65</priority>
-  </url>
-  ${articleUrls}
+${staticEntries}
+${pdfEntries}
+${articleEntries}
 </urlset>`.trim();
+    }
 
-        const targets = [
-          path.join(process.cwd(), 'public', 'sitemap.xml'),
-          path.join(process.cwd(), 'dist', 'sitemap.xml')
-        ];
+    function generateComprehensiveNewsSitemapXml(baseUrl: string, articles: any[]): string {
+      const today = new Date().toISOString();
+      const newsItems = articles.map(a => {
+        const slug = a.slug || a.id;
+        const pubDate = a.publishedAt || a.createdAt || today;
+        const cleanTitle = cleanMetaText(a.title);
 
-        targets.forEach(targetPath => {
-          try {
-            const dir = path.dirname(targetPath);
-            if (fs.existsSync(dir)) {
-              fs.writeFileSync(targetPath, sitemapXml, 'utf-8');
-            }
-          } catch (e) {}
+        const getArticleUrl = (lang: string) => {
+          const encoded = encodeURIComponent(slug);
+          return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
+        };
+
+        const defaultUrl = getArticleUrl('it');
+        const hreflangs = buildMultilingualHreflangs(getArticleUrl, defaultUrl);
+
+        // Google News entry for base and localized variants
+        let entries = `
+        <url>
+          <loc>${escapeHtml(defaultUrl)}</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>${pubDate}</news:publication_date>
+            <news:title>${escapeHtml(cleanTitle)}</news:title>
+          </news:news>
+${hreflangs}
+        </url>`;
+
+        SITE_SUPPORTED_LANGUAGES.forEach(lang => {
+          if (lang !== 'it') {
+            const langUrl = getArticleUrl(lang);
+            entries += `
+        <url>
+          <loc>${escapeHtml(langUrl)}</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>${lang}</news:language>
+            </news:publication>
+            <news:publication_date>${pubDate}</news:publication_date>
+            <news:title>${escapeHtml(cleanTitle)}</news:title>
+          </news:news>
+${hreflangs}
+        </url>`;
+          }
         });
+
+        return entries;
+      }).join('');
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${newsItems}
+</urlset>`.trim();
+    }
+
+    function generateComprehensiveRssXml(baseUrl: string, articles: any[]): string {
+      const items = articles.map(a => {
+        const slug = a.slug || a.id;
+        const link = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
+        const pubDate = new Date(a.publishedAt || a.createdAt || Date.now()).toUTCString();
+        const cleanTitle = cleanMetaText(a.title);
+        const cleanIntro = cleanMetaText(a.intro || a.content);
+        const fullContent = cleanMetaText(a.content || a.intro);
+        const author = cleanMetaText(a.authorName) || 'New World State News Authority';
+        let imgUrl = getThematicImageForSlug(slug, cleanTitle);
+        if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
+          imgUrl = a.images[0].url;
+        } else if (a.image && typeof a.image === 'string') {
+          imgUrl = a.image;
+        }
+        imgUrl = formatOgImageUrl(imgUrl);
+
+        return `
+        <item>
+          <title><![CDATA[${cleanTitle}]]></title>
+          <link>${link}</link>
+          <guid isPermaLink="true">${link}</guid>
+          <pubDate>${pubDate}</pubDate>
+          <dc:creator><![CDATA[${author}]]></dc:creator>
+          <description><![CDATA[${cleanIntro}]]></description>
+          <content:encoded><![CDATA[${fullContent}]]></content:encoded>
+          ${imgUrl ? `<enclosure url="${escapeHtml(imgUrl)}" length="0" type="image/jpeg" />` : ''}
+          <category><![CDATA[Politica & Sovranità]]></category>
+        </item>`;
+      }).join('');
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" 
+  xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+  xmlns:dc="http://purl.org/dc/elements/1.1/" 
+  xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>New World State News Authority</title>
+    <link>${baseUrl}/?tab=news</link>
+    <description>Notizie ufficiali, reportage indipendenti e inchieste etiche di New World State 1.0 in tutte le lingue supportate.</description>
+    <language>it-IT</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />
+    <image>
+      <url>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</url>
+      <title>New World State News</title>
+      <link>${baseUrl}/?tab=news</link>
+    </image>
+    ${items}
+  </channel>
+</rss>`.trim();
+    }
+
+    function syncStaticSitemapFiles(articles: any[]): void {
+      try {
+        const baseUrl = 'https://newworldstate.cloud';
+        const sitemapXml = generateComprehensiveSitemapXml(baseUrl, articles);
+        const newsSitemapXml = generateComprehensiveNewsSitemapXml(baseUrl, articles);
+        const rssXml = generateComprehensiveRssXml(baseUrl, articles);
+
+        const writeFiles = (dir: string) => {
+          if (fs.existsSync(dir)) {
+            fs.writeFileSync(path.join(dir, 'sitemap.xml'), sitemapXml, 'utf-8');
+            fs.writeFileSync(path.join(dir, 'sitemap-news.xml'), newsSitemapXml, 'utf-8');
+            fs.writeFileSync(path.join(dir, 'rss.xml'), rssXml, 'utf-8');
+          }
+        };
+
+        writeFiles(path.join(process.cwd(), 'public'));
+        writeFiles(path.join(process.cwd(), 'dist'));
       } catch (err: any) {
         console.error('[SERVER-NEWS] Error syncing sitemap files:', err.message);
       }
@@ -6765,6 +7055,11 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         console.error('[SERVER-NEWS] Save error:', e.message);
       }
     }
+
+    // Immediately synchronize sitemaps on startup
+    try {
+      syncStaticSitemapFiles(getServerArticles());
+    } catch (e) {}
 
     function normalizeSlug(s?: string): string {
       if (!s) return '';
@@ -7352,190 +7647,20 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
 
     let viteServer: any = null;
 
-    // Dynamic Sitemap XML Endpoint with Image Extensions for Google Search & AI Crawlers
+    // Dynamic Sitemap XML Endpoint with Multilingual & Image Extensions for Google Search & AI Crawlers
     app.get('/sitemap.xml', (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
       const articles = getServerArticles();
-
-      const articleUrls = articles.map(a => {
-        const slug = a.slug || a.id;
-        const lastMod = (a.updatedAt || a.publishedAt || new Date().toISOString()).split('T')[0];
-        const cleanTitle = cleanMetaText(a.title);
-        let imgUrl = getThematicImageForSlug(slug, cleanTitle);
-        if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
-          imgUrl = a.images[0].url;
-        } else if (a.image && typeof a.image === 'string') {
-          imgUrl = a.image;
-        }
-        imgUrl = formatOgImageUrl(imgUrl);
-
-        return `
-        <url>
-          <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
-          <lastmod>${lastMod}</lastmod>
-          <changefreq>daily</changefreq>
-          <priority>0.9</priority>
-          ${imgUrl ? `
-          <image:image>
-            <image:loc>${escapeHtml(imgUrl)}</image:loc>
-            <image:title>${escapeHtml(cleanTitle)}</image:title>
-            <image:caption>${escapeHtml(cleanTitle)}</image:caption>
-          </image:image>` : ''}
-        </url>`;
-      }).join('');
-
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
-      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-        <url>
-          <loc>${baseUrl}/</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>daily</changefreq>
-          <priority>1.00</priority>
-          <xhtml:link rel="alternate" hreflang="it" href="${baseUrl}/" />
-          <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/?lang=en" />
-          <xhtml:link rel="alternate" hreflang="x-default" href="${baseUrl}/" />
-          <image:image>
-            <image:loc>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</image:loc>
-            <image:title>New World State 1.0 - Stemma Ufficiale</image:title>
-            <image:caption>New World State 1.0 - Registro Mondiale e Sovranità Popolare</image:caption>
-          </image:image>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=news</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>hourly</changefreq>
-          <priority>0.95</priority>
-          <image:image>
-            <image:loc>https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
-            <image:title>New World State News Authority</image:title>
-            <image:caption>Giornale Sovrano di Informazione e Geopolitica Indipendente</image:caption>
-          </image:image>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=register</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>weekly</changefreq>
-          <priority>0.90</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=democracy</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>weekly</changefreq>
-          <priority>0.90</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=constitution</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.85</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=governance</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.85</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=charter</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.85</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=privacy</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.80</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=network</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>weekly</changefreq>
-          <priority>0.80</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/verify</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.80</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=identity</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.75</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?tab=faq</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.75</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?compliance=privacy</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.70</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?compliance=terms</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.70</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?compliance=cookies</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.65</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?compliance=accessibility</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.65</priority>
-        </url>
-        <url>
-          <loc>${baseUrl}/?compliance=ccpa</loc>
-          <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-          <changefreq>monthly</changefreq>
-          <priority>0.65</priority>
-        </url>
-        ${articleUrls}
-      </urlset>`.trim();
-
+      const xml = generateComprehensiveSitemapXml(baseUrl, articles);
       res.setHeader('Content-Type', 'application/xml; charset=utf-8');
       return res.send(xml);
     });
 
-    // Dedicated Google News Sitemap XML Endpoint
+    // Dedicated Google News Sitemap XML Endpoint in all supported languages
     app.get('/sitemap-news.xml', (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
-      const articles = getServerArticles().slice(0, 50); // Google News allows recent news items
-
-      const newsItems = articles.map(a => {
-        const slug = a.slug || a.id;
-        const pubDate = a.publishedAt || a.createdAt || new Date().toISOString();
-        const cleanTitle = cleanMetaText(a.title);
-        return `
-        <url>
-          <loc>${baseUrl}/notizie/${encodeURIComponent(slug)}</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>it</news:language>
-            </news:publication>
-            <news:publication_date>${pubDate}</news:publication_date>
-            <news:title>${escapeHtml(cleanTitle)}</news:title>
-          </news:news>
-        </url>`;
-      }).join('');
-
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
-      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
-        ${newsItems}
-      </urlset>`.trim();
-
+      const articles = getServerArticles();
+      const xml = generateComprehensiveNewsSitemapXml(baseUrl, articles);
       res.setHeader('Content-Type', 'application/xml; charset=utf-8');
       return res.send(xml);
     });
@@ -7544,58 +7669,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
     app.get(['/rss.xml', '/feed.xml', '/notizie/rss'], (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
       const articles = getServerArticles();
-
-      const items = articles.map(a => {
-        const slug = a.slug || a.id;
-        const link = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
-        const pubDate = new Date(a.publishedAt || a.createdAt || Date.now()).toUTCString();
-        const cleanTitle = cleanMetaText(a.title);
-        const cleanIntro = cleanMetaText(a.intro || a.content);
-        const fullContent = cleanMetaText(a.content || a.intro);
-        const author = cleanMetaText(a.authorName) || 'New World State News';
-        let imgUrl = getThematicImageForSlug(slug, cleanTitle);
-        if (a.images && Array.isArray(a.images) && a.images.length > 0 && a.images[0]?.url) {
-          imgUrl = a.images[0].url;
-        } else if (a.image && typeof a.image === 'string') {
-          imgUrl = a.image;
-        }
-        imgUrl = formatOgImageUrl(imgUrl);
-
-        return `
-        <item>
-          <title><![CDATA[${cleanTitle}]]></title>
-          <link>${link}</link>
-          <guid isPermaLink="true">${link}</guid>
-          <pubDate>${pubDate}</pubDate>
-          <dc:creator><![CDATA[${author}]]></dc:creator>
-          <description><![CDATA[${cleanIntro}]]></description>
-          <content:encoded><![CDATA[${fullContent}]]></content:encoded>
-          ${imgUrl ? `<enclosure url="${escapeHtml(imgUrl)}" length="0" type="image/jpeg" />` : ''}
-          <category><![CDATA[News & Geopolitica]]></category>
-        </item>`;
-      }).join('');
-
-      const rss = `<?xml version="1.0" encoding="UTF-8"?>
-      <rss version="2.0" 
-        xmlns:content="http://purl.org/rss/1.0/modules/content/" 
-        xmlns:dc="http://purl.org/dc/elements/1.1/" 
-        xmlns:atom="http://www.w3.org/2005/Atom">
-        <channel>
-          <title>New World State News Authority</title>
-          <link>${baseUrl}/?tab=news</link>
-          <description>Notizie ufficiali, reportage indipendenti e inchieste etiche di New World State 1.0.</description>
-          <language>it-IT</language>
-          <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-          <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />
-          <image>
-            <url>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</url>
-            <title>New World State News</title>
-            <link>${baseUrl}/?tab=news</link>
-          </image>
-          ${items}
-        </channel>
-      </rss>`.trim();
-
+      const rss = generateComprehensiveRssXml(baseUrl, articles);
       res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
       return res.send(rss);
     });
