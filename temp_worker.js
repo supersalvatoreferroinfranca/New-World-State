@@ -303,7 +303,21 @@ function formatOgImageUrlWorker(url) {
   return url;
 }
 
-function injectArticleMetaTagsWorker(html, article, baseUrl) {
+function getCanonicalBaseUrlWorker(url, request) {
+  if (!url) return 'https://newworldstate.cloud';
+  const hostname = (url.hostname || '').toLowerCase();
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('.local')) {
+    return `${url.protocol}//${url.host}`;
+  }
+  // Qualsiasi richiesta pubblica su Cloudflare Worker, workers.dev, pages.dev o domini collegati deve SEMPRE puntare al sito ufficiale
+  return 'https://newworldstate.cloud';
+}
+
+function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
+  let baseUrl = rawBaseUrl || 'https://newworldstate.cloud';
+  if (baseUrl.includes('workers.dev') || baseUrl.includes('pages.dev') || !baseUrl.startsWith('http')) {
+    baseUrl = 'https://newworldstate.cloud';
+  }
   const rawTitle = cleanMetaTextWorker(article.title);
   const fullTitle = `${rawTitle} | New World State News`;
   const rawIntro = cleanMetaTextWorker(article.intro || article.content);
@@ -671,7 +685,11 @@ function injectArticleMetaTagsWorker(html, article, baseUrl) {
   return enrichedHtml;
 }
 
-function injectNewsPortalMetaTagsWorker(html, baseUrl) {
+function injectNewsPortalMetaTagsWorker(html, rawBaseUrl) {
+  let baseUrl = rawBaseUrl || 'https://newworldstate.cloud';
+  if (baseUrl.includes('workers.dev') || baseUrl.includes('pages.dev') || !baseUrl.startsWith('http')) {
+    baseUrl = 'https://newworldstate.cloud';
+  }
   const canonicalUrl = `${baseUrl}/?tab=news`;
   const title = "Portale Notizie & Giornalismo Sovrano | New World State 1.0";
   const description = "Leggi le notizie ufficiali, i reportage, le inchieste e gli approfondimenti della comunità globale New World State. Giornalismo verificato, etico e indipendente.";
@@ -7521,7 +7539,7 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
       }
 
       if (url.pathname === '/sitemap.xml' && request.method === 'GET') {
-        const baseUrl = `${url.protocol}//${url.host}`;
+        const baseUrl = getCanonicalBaseUrlWorker(url, request);
         const articleUrls = memoryWorkerArticles.map(a => {
           const slug = a.slug || a.id;
           const lastMod = (a.updatedAt || a.publishedAt || new Date().toISOString()).split('T')[0];
@@ -7675,7 +7693,7 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
       }
 
       if (url.pathname === '/sitemap-news.xml' && request.method === 'GET') {
-        const baseUrl = `${url.protocol}//${url.host}`;
+        const baseUrl = getCanonicalBaseUrlWorker(url, request);
         const articles = memoryWorkerArticles.slice(0, 50);
         const newsItems = articles.map(a => {
           const slug = a.slug || a.id;
@@ -7706,7 +7724,7 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
       }
 
       if ((url.pathname === '/rss.xml' || url.pathname === '/feed.xml' || url.pathname === '/notizie/rss') && request.method === 'GET') {
-        const baseUrl = `${url.protocol}//${url.host}`;
+        const baseUrl = getCanonicalBaseUrlWorker(url, request);
         const items = memoryWorkerArticles.map(a => {
           const slug = a.slug || a.id;
           const link = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
@@ -7764,7 +7782,7 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
       }
 
       if (url.pathname === '/llms.txt' && request.method === 'GET') {
-        const baseUrl = `${url.protocol}//${url.host}`;
+        const baseUrl = getCanonicalBaseUrlWorker(url, request);
         const articles = memoryWorkerArticles.slice(0, 30);
         const articleList = articles.map(a => {
           const slug = a.slug || a.id;
@@ -7793,7 +7811,7 @@ ${articleList}
       }
 
       if (url.pathname === '/llms-full.txt' && request.method === 'GET') {
-        const baseUrl = `${url.protocol}//${url.host}`;
+        const baseUrl = getCanonicalBaseUrlWorker(url, request);
         const articleFull = memoryWorkerArticles.map((a, idx) => {
           const slug = a.slug || a.id;
           const cleanTitle = cleanMetaTextWorker(a.title);
@@ -7827,7 +7845,7 @@ ${articleFull}
 
       // Fallback per la navigazione Single Page Application (SPA) (es. /chat, /democracy, /notizie/*)
       if (request.method === 'GET' && !url.pathname.startsWith('/api/')) {
-        const baseUrl = `${url.protocol}//${url.host}`;
+        const baseUrl = getCanonicalBaseUrlWorker(url, request);
         const targetSlug = url.searchParams.get('notizia') || url.searchParams.get('article') || url.searchParams.get('slug');
         const isNewsRoute = url.pathname.startsWith('/notizie') || url.pathname.startsWith('/news');
         let pathSlug = '';

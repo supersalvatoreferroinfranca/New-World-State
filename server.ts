@@ -6925,10 +6925,18 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
       return url;
     }
 
+    function getCanonicalBaseUrl(req?: express.Request): string {
+      if (!req) return 'https://newworldstate.cloud';
+      const host = (req.get('x-forwarded-host') || req.get('host') || '').toLowerCase();
+      if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
+        return `${protocol}://${host}`;
+      }
+      return 'https://newworldstate.cloud';
+    }
+
     function injectArticleMetaTags(html: string, article: any, req: express.Request): string {
-      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
-      const host = req.get('host') || 'newworldstate.cloud';
-      const baseUrl = `${protocol}://${host}`;
+      const baseUrl = getCanonicalBaseUrl(req);
 
       const rawTitle = cleanMetaText(article.title);
       const fullTitle = `${rawTitle} | New World State News`;
@@ -7299,9 +7307,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
     }
 
     function injectNewsPortalMetaTags(html: string, req: express.Request): string {
-      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
-      const host = req.get('host') || 'newworldstate.cloud';
-      const baseUrl = `${protocol}://${host}`;
+      const baseUrl = getCanonicalBaseUrl(req);
       const canonicalUrl = `${baseUrl}/?tab=news`;
       const title = "Portale Notizie & Giornalismo Sovrano | New World State 1.0";
       const description = "Leggi le notizie ufficiali, i reportage, le inchieste e gli approfondimenti della comunità globale New World State. Giornalismo verificato, etico e indipendente.";
@@ -7348,9 +7354,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
 
     // Dynamic Sitemap XML Endpoint with Image Extensions for Google Search & AI Crawlers
     app.get('/sitemap.xml', (req, res) => {
-      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
-      const host = req.get('host') || 'newworldstate.cloud';
-      const baseUrl = `${protocol}://${host}`;
+      const baseUrl = getCanonicalBaseUrl(req);
       const articles = getServerArticles();
 
       const articleUrls = articles.map(a => {
@@ -7506,9 +7510,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
 
     // Dedicated Google News Sitemap XML Endpoint
     app.get('/sitemap-news.xml', (req, res) => {
-      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
-      const host = req.get('host') || 'newworldstate.cloud';
-      const baseUrl = `${protocol}://${host}`;
+      const baseUrl = getCanonicalBaseUrl(req);
       const articles = getServerArticles().slice(0, 50); // Google News allows recent news items
 
       const newsItems = articles.map(a => {
@@ -7540,9 +7542,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
 
     // Official RSS 2.0 / Atom Feed for News Aggregators, Google News & AI Agents
     app.get(['/rss.xml', '/feed.xml', '/notizie/rss'], (req, res) => {
-      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
-      const host = req.get('host') || 'newworldstate.cloud';
-      const baseUrl = `${protocol}://${host}`;
+      const baseUrl = getCanonicalBaseUrl(req);
       const articles = getServerArticles();
 
       const items = articles.map(a => {
@@ -7602,9 +7602,7 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
 
     // Emerging Standard /llms.txt and /llms-full.txt for LLM agents (ChatGPT, Perplexity, Gemini, Claude)
     app.get('/llms.txt', (req, res) => {
-      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
-      const host = req.get('host') || 'newworldstate.cloud';
-      const baseUrl = `${protocol}://${host}`;
+      const baseUrl = getCanonicalBaseUrl(req);
       const articles = getServerArticles().slice(0, 30);
 
       const articleList = articles.map(a => {
@@ -7633,9 +7631,7 @@ ${articleList}
     });
 
     app.get('/llms-full.txt', (req, res) => {
-      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
-      const host = req.get('host') || 'newworldstate.cloud';
-      const baseUrl = `${protocol}://${host}`;
+      const baseUrl = getCanonicalBaseUrl(req);
       const articles = getServerArticles();
 
       const articleFull = articles.map((a, idx) => {

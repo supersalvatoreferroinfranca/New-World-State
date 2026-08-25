@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { NewsArticle } from '../../types/news';
 import { stripFormattingSymbols } from '../../utils/textFormatter';
+import { getPublicArticleUrl } from '../../utils/urlUtils';
 import { useI18n } from '../../contexts/I18nContext';
 import { 
   Share2, 
@@ -28,9 +29,8 @@ export default function SocialShareKit({ article }: SocialShareKitProps) {
   const [copiedType, setCopiedType] = useState<string | null>(null);
   const [activeTemplate, setActiveTemplate] = useState<'viral' | 'short' | 'debate'>('viral');
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://newworldstate.cloud';
   const slug = article.slug || article.id;
-  const articleUrl = `${origin}/notizie/${encodeURIComponent(slug)}`;
+  const articleUrl = getPublicArticleUrl(slug);
 
   const cleanTitle = stripFormattingSymbols(article.title) || 'Notizia';
   const cleanIntro = stripFormattingSymbols(article.intro) || '';

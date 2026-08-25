@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 import { Language } from '../../constants/translations';
+import { getPublicCanonicalOrigin } from '../../utils/urlUtils';
 
 const WIDGET_UI_TEXTS: Record<Language, {
   outreachBadge: string;
@@ -264,7 +265,7 @@ export function NWSShareWidget({ className = '', variant = 'standard' }: { class
   const [copied, setCopied] = useState(false);
   const [shareText, setShareText] = useState('');
 
-  const appUrl = typeof window !== 'undefined' ? window.location.origin : 'https://newworldstate.cloud';
+  const appUrl = getPublicCanonicalOrigin();
 
   // Preformatted messages for 11 supported languages
   const messages: Record<string, Record<'friendly' | 'inspiring' | 'informative', { title: string; subject: string; body: (name: string) => string }>> = {

@@ -3,6 +3,7 @@ import { NewsArticle, NewsCategory } from '../../types/news';
 import { getCategories, getArticles, incrementArticleViews } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/textFormatter';
+import { getPublicCanonicalOrigin, getPublicArticleUrl } from '../../utils/urlUtils';
 import SocialShareKit from './SocialShareKit';
 import { 
   X, 
@@ -105,9 +106,9 @@ export default function ArticleDetailModal({
       metaDesc.setAttribute('content', cleanIntro.slice(0, 200));
 
       // Inject or update Schema.org NewsArticle JSON-LD
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://newworldstate.cloud';
+      const origin = getPublicCanonicalOrigin();
       const slug = article.slug || article.id;
-      const articleUrl = `${origin}/notizie/${encodeURIComponent(slug)}`;
+      const articleUrl = getPublicArticleUrl(slug);
       
       let mainImg = `${origin}/LOGO_NEW-WORLD-STATE.jpg`;
       if (article.images && article.images.length > 0 && article.images[0]?.url) {
@@ -324,7 +325,7 @@ export default function ArticleDetailModal({
 
   const handleShare = () => {
     const slug = article.slug || article.id;
-    const url = `${window.location.origin}/notizie/${encodeURIComponent(slug)}`;
+    const url = getPublicArticleUrl(slug);
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
       setCopied(true);
