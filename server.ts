@@ -7098,6 +7098,9 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
             }
           ]
         }, null, 2)}
+        <script>
+          window.__NWS_INITIAL_ARTICLE__ = ${JSON.stringify(article)};
+          window.__NWS_ACTIVE_TAB__ = 'news';
         </script>
       `;
 
@@ -7117,6 +7120,153 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '');
 
       let enrichedHtml = cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
+
+      const categoryNameMap: Record<string, string> = {
+        'cat-politica': 'Politica & Sovranità',
+        'cat-economia': 'Economia & Finanza',
+        'cat-diritti': 'Diritti & Costituzione',
+        'cat-tecnologia': 'Tecnologia & Innovazione',
+        'cat-cultura': 'Cultura & Società'
+      };
+      const categoryName = categoryNameMap[article.categoryId] || article.categoryName || 'Geopolitica & Attualità';
+
+      let formattedDateStr = publishedDate;
+      try {
+        const d = new Date(publishedDate);
+        if (!isNaN(d.getTime())) {
+          const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+          formattedDateStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+        }
+      } catch (e) {}
+
+      // Format markdown body paragraphs
+      const bodyParagraphs = fullBodyText.split(/\n\n+/).map(para => {
+        let p = para.trim();
+        if (!p) return '';
+        if (p.startsWith('### ')) {
+          const heading = escapeHtml(p.replace(/^###\s+/, ''));
+          return `<h3 style="font-size:20px;color:#ffffff;margin:28px 0 12px 0;font-weight:700;letter-spacing:-0.3px;">${heading}</h3>`;
+        }
+        if (p.startsWith('## ')) {
+          const heading = escapeHtml(p.replace(/^##\s+/, ''));
+          return `<h2 style="font-size:22px;color:#ffffff;margin:32px 0 14px 0;font-weight:800;letter-spacing:-0.4px;">${heading}</h2>`;
+        }
+        if (p.startsWith('> ')) {
+          const quote = escapeHtml(p.replace(/^>\s+/, ''));
+          return `<blockquote style="border-left:3px solid #c5a880;margin:18px 0;padding:12px 18px;background:rgba(197,168,128,0.08);color:#dfc299;font-style:italic;border-radius:0 8px 8px 0;">${quote}</blockquote>`;
+        }
+        let formatted = escapeHtml(p)
+          .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;">$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em style="color:#dfc299;">$1</em>')
+          .replace(/\n/g, '<br />');
+        return `<p style="margin:0 0 18px 0;line-height:1.8;color:#cbd5e1;">${formatted}</p>`;
+      }).join('\n');
+
+      // Complete SSR Article View to ensure 0ms instant display without white screens
+      const visibleSsrArticleBlock = `
+        <div class="nws-ssr-article-wrapper" style="min-height:100vh;background-color:#0a101f;color:#e2e8f0;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding-bottom:60px;">
+          <!-- Top Institutional Header -->
+          <header style="border-bottom:1px solid rgba(255,255,255,0.1);background:rgba(10,16,31,0.95);position:sticky;top:0;z-index:50;backdrop-filter:blur(8px);padding:14px 20px;">
+            <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;">
+              <a href="${baseUrl}/" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;">
+                <img src="${baseUrl}/LOGO_NEW-WORLD-STATE.jpg" alt="New World State" style="width:40px;height:40px;border-radius:50%;border:2px solid #c5a880;object-fit:cover;" />
+                <div>
+                  <div style="font-weight:700;font-size:16px;color:#f8fafc;letter-spacing:0.5px;">NEW WORLD STATE 1.0</div>
+                  <div style="font-size:11px;color:#c5a880;text-transform:uppercase;letter-spacing:1px;">Giornale Sovrano • News Authority</div>
+                </div>
+              </a>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <a href="${baseUrl}/?tab=news" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);color:#f1f5f9;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,0.15);">
+                  ← Tutte le Notizie
+                </a>
+                <a href="${baseUrl}/?tab=register" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#c5a880,#dfc299);color:#0a1c3e;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">
+                  Cittadinanza Sovrana
+                </a>
+              </div>
+            </div>
+          </header>
+
+          <!-- Main Article Container -->
+          <main style="max-width:860px;margin:30px auto;padding:0 20px;">
+            <!-- Breadcrumbs -->
+            <nav style="font-size:13px;color:#94a3b8;margin-bottom:20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <a href="${baseUrl}/" style="color:#94a3b8;text-decoration:none;">Home</a>
+              <span>›</span>
+              <a href="${baseUrl}/?tab=news" style="color:#c5a880;text-decoration:none;">Notizie & Geopolitica</a>
+              <span>›</span>
+              <span style="color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px;">${escapeHtml(rawTitle)}</span>
+            </nav>
+
+            <article style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
+              <!-- Category & Date Bar -->
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+                <span style="background:rgba(197,168,128,0.15);color:#dfc299;border:1px solid rgba(197,168,128,0.3);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                  ${escapeHtml(categoryName)}
+                </span>
+                <span style="color:#94a3b8;font-size:13px;display:flex;align-items:center;gap:6px;">
+                  <span>📅</span> ${escapeHtml(formattedDateStr)}
+                </span>
+              </div>
+
+              <!-- Headline -->
+              <h1 id="article-title" style="font-size:30px;line-height:1.3;font-weight:800;color:#ffffff;margin:0 0 20px 0;letter-spacing:-0.5px;">
+                ${escapeHtml(rawTitle)}
+              </h1>
+
+              <!-- Author Byline -->
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:24px;">
+                <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#1e293b,#334155);display:flex;align-items:center;justify-content:center;color:#dfc299;font-weight:bold;font-size:16px;border:1px solid rgba(197,168,128,0.4);">
+                  ✍️
+                </div>
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:#f1f5f9;">${escapeHtml(authorName)}</div>
+                  <div style="font-size:12px;color:#94a3b8;">${escapeHtml(authorRole)} • New World State News</div>
+                </div>
+              </div>
+
+              <!-- Featured Image -->
+              ${imageUrl ? `
+              <div style="margin-bottom:28px;">
+                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(rawTitle)}" style="width:100%;max-height:480px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,0.1);" />
+                <p style="font-size:12px;color:#94a3b8;margin-top:8px;text-align:center;font-style:italic;">${escapeHtml(rawTitle)}</p>
+              </div>` : ''}
+
+              <!-- Lead Introduction -->
+              ${rawIntro ? `
+              <div id="article-intro" style="font-size:18px;line-height:1.6;color:#e2e8f0;font-weight:500;background:rgba(255,255,255,0.03);padding:18px 20px;border-left:4px solid #c5a880;border-radius:0 8px 8px 0;margin-bottom:28px;">
+                ${escapeHtml(rawIntro)}
+              </div>` : ''}
+
+              <!-- Full Formatted Content Body -->
+              <div id="article-body" style="font-size:16px;line-height:1.8;color:#cbd5e1;">
+                ${bodyParagraphs}
+              </div>
+
+              <!-- Tags Row -->
+              <div style="margin-top:36px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:13px;color:#94a3b8;font-weight:600;">Tag:</span>
+                ${rawTags.map((t: string) => `<span style="background:rgba(255,255,255,0.06);color:#cbd5e1;padding:4px 10px;border-radius:6px;font-size:12px;border:1px solid rgba(255,255,255,0.1);">${escapeHtml(t)}</span>`).join(' ')}
+              </div>
+
+              <!-- Institutional Call To Action -->
+              <div style="margin-top:30px;padding:24px;background:rgba(10,28,62,0.6);border:1px solid rgba(197,168,128,0.3);border-radius:12px;text-align:center;">
+                <h3 style="margin:0 0 10px 0;color:#dfc299;font-size:18px;font-weight:700;">Partecipa alla Democrazia Sovrana</h3>
+                <p style="font-size:14px;color:#94a3b8;margin:0 0 18px 0;max-width:550px;margin-left:auto;margin-right:auto;">
+                  Iscriviti al Registro Mondiale di New World State 1.0 per votare sui referendum, commentare le inchieste e proporre nuove leggi popolari.
+                </p>
+                <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+                  <a href="${baseUrl}/?tab=register" style="background:linear-gradient(135deg,#c5a880,#dfc299);color:#0a1c3e;padding:10px 20px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">
+                    Richiedi la Cittadinanza Digitale
+                  </a>
+                  <a href="${baseUrl}/?tab=news" style="background:rgba(255,255,255,0.1);color:#ffffff;padding:10px 20px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;border:1px solid rgba(255,255,255,0.2);">
+                    Leggi Altre Notizie
+                  </a>
+                </div>
+              </div>
+            </article>
+          </main>
+        </div>
+      `;
 
       // Semantic NOSCRIPT article body injection for AI scrapers, text crawlers and low-bandwidth bots
       const semanticArticleBlock = `
@@ -7139,10 +7289,10 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         </noscript>
       `;
 
-      if (enrichedHtml.includes('<body>')) {
-        enrichedHtml = enrichedHtml.replace('<body>', `<body>\n${semanticArticleBlock}`);
-      } else if (enrichedHtml.includes('<div id="root"></div>')) {
-        enrichedHtml = enrichedHtml.replace('<div id="root"></div>', `<div id="root"></div>\n${semanticArticleBlock}`);
+      if (enrichedHtml.includes('<div id="root"></div>')) {
+        enrichedHtml = enrichedHtml.replace('<div id="root"></div>', `<div id="root">${visibleSsrArticleBlock}</div>\n${semanticArticleBlock}`);
+      } else if (enrichedHtml.includes('<body>')) {
+        enrichedHtml = enrichedHtml.replace('<body>', `<body>\n<div id="root">${visibleSsrArticleBlock}</div>\n${semanticArticleBlock}`);
       }
 
       return enrichedHtml;

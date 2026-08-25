@@ -128,25 +128,45 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
   // Auto-open article if URL parameter or route specifies a noticia/article slug
   useEffect(() => {
-    if (articles.length > 0 && !selectedDetailArticle) {
-      const searchParams = new URLSearchParams(window.location.search);
-      const targetSlug = searchParams.get('notizia') || searchParams.get('article') || searchParams.get('slug');
-      let foundArticle: NewsArticle | undefined;
-
-      if (targetSlug) {
-        foundArticle = articles.find(a => a.slug === targetSlug || a.id === targetSlug);
-      } else if (window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
-        const pathParts = window.location.pathname.split('/');
-        const pathSlug = pathParts[pathParts.length - 1];
-        if (pathSlug && pathSlug !== 'notizie' && pathSlug !== 'news') {
-          foundArticle = articles.find(a => a.slug === pathSlug || a.id === pathSlug);
+    if (!selectedDetailArticle) {
+      // Check initial article from server-side hydration if available
+      if (typeof window !== 'undefined' && (window as any).__NWS_INITIAL_ARTICLE__) {
+        const initialArt = (window as any).__NWS_INITIAL_ARTICLE__ as NewsArticle;
+        if (initialArt && initialArt.id) {
+          setSelectedDetailArticle(initialArt);
+          setIsDetailModalOpen(true);
+          incrementArticleViews(initialArt.id);
+          return;
         }
       }
 
-      if (foundArticle) {
-        setSelectedDetailArticle(foundArticle);
-        setIsDetailModalOpen(true);
-        incrementArticleViews(foundArticle.id);
+      if (articles.length > 0) {
+        const searchParams = new URLSearchParams(window.location.search);
+        const targetSlug = searchParams.get('notizia') || searchParams.get('article') || searchParams.get('slug');
+        let foundArticle: NewsArticle | undefined;
+
+        if (targetSlug) {
+          const decodedTarget = decodeURIComponent(targetSlug).trim();
+          foundArticle = articles.find(a => a.slug === decodedTarget || a.id === decodedTarget || a.slug === targetSlug);
+        } else if (window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
+          const pathParts = window.location.pathname.split('/').filter(Boolean);
+          const rawSlug = pathParts[pathParts.length - 1];
+          if (rawSlug && rawSlug !== 'notizie' && rawSlug !== 'news') {
+            const decodedPathSlug = decodeURIComponent(rawSlug).trim();
+            foundArticle = articles.find(a => 
+              a.slug === decodedPathSlug || 
+              a.id === decodedPathSlug || 
+              a.slug === rawSlug ||
+              encodeURIComponent(a.slug || '') === rawSlug
+            );
+          }
+        }
+
+        if (foundArticle) {
+          setSelectedDetailArticle(foundArticle);
+          setIsDetailModalOpen(true);
+          incrementArticleViews(foundArticle.id);
+        }
       }
     }
   }, [articles]);
