@@ -6448,76 +6448,6 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
 
     const INITIAL_SERVER_ARTICLES = [
       {
-        id: 'art-101',
-        title: 'Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0',
-        slug: 'inaugurazione-registro-globale-democrazia-diretta-10',
-        categoryId: 'cat-politica',
-        intro: 'L\'Assemblea Fondativa annuncia l\'apertura del portale sovrano decentralizzato. Tutti i cittadini hanno ora diritto di voto diretto sui referendum federali.',
-        content: `Oggi segna una tappa fondamentale nella storia della governance sovrana contemporanea...`,
-        images: [
-          {
-            type: 'image',
-            source: 'url',
-            url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
-            caption: 'Sessione di apertura dell\'Assemblea Fondativa e del Registro Globale.'
-          }
-        ],
-        tags: ['Democrazia', 'Sovranità', 'Assemblea', 'Costituzione'],
-        authorName: 'Elenor Vance (Cronista Capo)',
-        authorRole: 'Cronista Ufficiale',
-        status: 'pubblicato',
-        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-        publishedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
-        updatedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
-        isFeatured: true
-      },
-      {
-        id: 'art-102',
-        title: 'Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini',
-        slug: 'protocollo-trasparenza-finanziaria-tutela-privacy',
-        categoryId: 'cat-diritti',
-        intro: 'Approvato a maggioranza qualificata il nuovo disciplinare a protezione dei dati biometrici e per la riservatezza delle transazioni comunitarie.',
-        content: `Il Corpo dei Custodi Digitali ha ratificato il nuovo Protocollo...`,
-        images: [
-          {
-            type: 'image',
-            source: 'url',
-            url: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
-            caption: 'Crittografia e protezione della privacy nel sistema New World State.'
-          }
-        ],
-        tags: ['Privacy', 'Crittografia', 'Sicurezza', 'CustodiDigitali'],
-        authorName: 'Marcus Thorne',
-        authorRole: 'Cronista di Stato',
-        status: 'pubblicato',
-        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-        publishedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
-      },
-      {
-        id: 'art-103',
-        title: 'Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server',
-        slug: 'infrastrutture-decentralizzate-test-nodo-rete-ridondanza',
-        categoryId: 'cat-tecnologia',
-        intro: 'Test di resilienza completato con successo su 12 nodi distribuiti globalmente per garantire l\'operatività ininterrotta del portale.',
-        content: `Nelle ultime 48 ore la squadra di tecnici e custodi della rete ha condotto uno stress test...`,
-        images: [
-          {
-            type: 'image',
-            source: 'url',
-            url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-            caption: 'Rete di nodi e connettività globale dello Stato Sovrano.'
-          }
-        ],
-        tags: ['Tecnologia', 'ReteDecentralizzata', 'Cloud', 'Resilienza'],
-        authorName: 'Sophia Chen',
-        authorRole: 'Cronista Tecnologico',
-        status: 'pubblicato',
-        createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-        publishedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
         id: 'art-104',
         title: 'L\'Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali',
         slug: 'limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali',
@@ -6540,9 +6470,248 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         authorName: 'Elenor Vance (Cronista Capo)',
         authorRole: 'Cronista Ufficiale',
         status: 'pubblicato',
-        createdAt: new Date().toISOString(),
-        publishedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: '2026-08-25T09:09:23.871Z',
+        publishedAt: '2026-08-25T09:09:23.871Z',
+        updatedAt: '2026-08-25T09:09:23.871Z',
+        isFeatured: true
+      },
+      {
+        id: 'art-103',
+        title: 'Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server',
+        slug: 'infrastrutture-decentralizzate-test-nodo-rete-ridondanza',
+        categoryId: 'cat-tecnologia',
+        intro: 'Test di resilienza completato con successo su 12 nodi distribuiti globalmente per garantire l\'operatività ininterrotta del portale.',
+        content: `Nelle ultime 48 ore la squadra di tecnici e custodi della rete ha condotto uno stress test sulle infrastrutture di calcolo e memoria distribuita. Il sistema ha dimostrato una tolleranza ai guasti del 99.98%, mantenendo attiva la sincronizzazione dei dati anche durante picchi di affluenza contemporanea.
+
+Il piano di espansione prevede l'integrazione di ulteriori 8 nodi comunitari gestiti direttamente dalle delegazioni regionali con protocolli crittografici a chiave asimmetrica.`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Rete di nodi e connettività globale dello Stato Sovrano.'
+          }
+        ],
+        tags: ['Tecnologia', 'ReteDecentralizzata', 'Cloud', 'Resilienza'],
+        authorName: 'Sophia Chen',
+        authorRole: 'Cronista Tecnologico',
+        status: 'pubblicato',
+        createdAt: '2026-08-24T09:09:23.871Z',
+        publishedAt: '2026-08-25T09:09:23.871Z',
+        updatedAt: '2026-08-25T09:09:23.871Z',
+        isFeatured: false
+      },
+      {
+        id: 'art-102',
+        title: 'Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini',
+        slug: 'protocollo-trasparenza-finanziaria-tutela-privacy',
+        categoryId: 'cat-diritti',
+        intro: 'Approvato a maggioranza qualificata il nuovo disciplinare a protezione dei dati biometrici e per la riservatezza delle transazioni comunitarie.',
+        content: `Il Corpo dei Custodi Digitali ha ratificato il nuovo Protocollo di Trasparenza Finanziaria e Protezione della Riservatezza. Questo regolamento garantisce che nessuna informazione personale sensibile venga ceduta o profilata da soggetti terzi.
+
+Tutti i registri di voto e le transazioni amministrative impiegano firme crittografiche asimmetriche, assicurando che l'identità del singolo cittadino rimanga tutelata e protetta da ingerenze esterne.
+
+I cronisti e i cittadini possono verificare autonomamente i registri di audit tramite il pannello di controllo della rete sovrana.`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Crittografia e protezione della privacy nel sistema New World State.'
+          }
+        ],
+        tags: ['Privacy', 'Crittografia', 'Sicurezza', 'CustodiDigitali'],
+        authorName: 'Marcus Thorne',
+        authorRole: 'Cronista di Stato',
+        status: 'pubblicato',
+        createdAt: '2026-08-22T09:09:23.871Z',
+        publishedAt: '2026-08-23T09:09:23.871Z',
+        updatedAt: '2026-08-23T09:09:23.871Z',
+        isFeatured: false
+      },
+      {
+        id: 'art-101',
+        title: 'Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0',
+        slug: 'inaugurazione-registro-globale-democrazia-diretta-10',
+        categoryId: 'cat-politica',
+        intro: 'L\'Assemblea Fondativa annuncia l\'apertura del portale sovrano decentralizzato. Tutti i cittadini hanno ora diritto di voto diretto sui referendum federali.',
+        content: `Oggi segna una tappa fondamentale nella storia della governance sovrana contemporanea. Con il lancio ufficiale del Registro Globale della Cittadinanza e del Portale di Democrazia Diretta, la nostra comunità digitale stabilisce un nuovo punto di riferimento per l'autodeterminazione, la trasparenza istituzionale e la partecipazione popolare diretta.
+
+I cittadini registrati hanno la facoltà di consultare la Costituzione Fondativa, votare sui referendum attivi e proporre nuove leggi d'iniziativa popolare con tracciabilità crittografica e verifica d'identità in tempo reale.
+
+"La sovranità appartiene alla comunità dei cittadini organizzati in rete," dichiara la nota congiunta del Consiglio di Presidenza e del Corpo dei Custodi Digitali. "Ogni decisione legislativa sarà da oggi discussa apertamente con audit pubblici trasparenti."`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Sessione di apertura dell\'Assemblea Fondativa e del Registro Globale.'
+          }
+        ],
+        tags: ['Democrazia', 'Sovranità', 'Assemblea', 'Costituzione'],
+        authorName: 'Elenor Vance (Cronista Capo)',
+        authorRole: 'Cronista Ufficiale',
+        status: 'pubblicato',
+        createdAt: '2026-08-20T09:09:23.871Z',
+        publishedAt: '2026-08-21T09:09:23.871Z',
+        updatedAt: '2026-08-21T09:09:23.871Z',
+        isFeatured: true
+      },
+      {
+        id: 'art-105',
+        title: 'Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita',
+        slug: 'fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita',
+        categoryId: 'cat-economia',
+        intro: 'Istituito il Fondo Sovrano d\'Investimento Solidale per finanziare progetti di autosufficienza energetica e sviluppo agroalimentare sostenibile.',
+        content: `L'Assemblea Federale ha approvato il primo stanziamento programmatico per il Fondo Sovrano di Sostegno Comunitario. Il fondo, gestito con trasparenza su registri crittografici aperti, destina risorse a tasso zero per lo sviluppo di comunità autosufficienti, cooperative di lavoro e infrastrutture ad energia rinnovabile.
+
+Ogni spesa e rendicontazione trimestrale è soggetta ad approvazione diretta da parte dei cittadini attraverso il Portale di Democrazia Diretta, eliminando intermediazioni bancarie speculative e garantendo un impatto sociale reale.`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Finanza etica e modelli economici comunitari sostenibili.'
+          }
+        ],
+        tags: ['Economia', 'FinanzaEtica', 'FondoSovrano', 'Sostenibilita'],
+        authorName: 'Marcus Thorne',
+        authorRole: 'Cronista di Stato',
+        status: 'pubblicato',
+        createdAt: '2026-08-23T11:00:00.000Z',
+        publishedAt: '2026-08-24T08:00:00.000Z',
+        updatedAt: '2026-08-24T08:00:00.000Z',
+        isFeatured: true
+      },
+      {
+        id: 'art-106',
+        title: 'Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale',
+        slug: 'accademia-dei-custodi-diritto-naturale-programma-educativo-universale',
+        categoryId: 'cat-cultura',
+        intro: 'Aperte le iscrizioni per i corsi internazionali liberi su sovranità personale, diritti inalienabili e autodeterminazione dei popoli.',
+        content: `La Sovrintendenza Culturale di New World State annuncia l'avvio dell'Accademia dei Custodi, un polo didattico aperto e gratuito dedicato alla divulgazione del diritto naturale, della filosofia politica della sovranità e delle pratiche di democrazia partecipativa.
+
+I moduli formativi sono tradotti in 11 lingue ufficiali e guidati da giuristi, filosofi e studiosi indipendenti per fornire ad ogni cittadino gli strumenti teorici e pratici per esercitare consapevolmente la propria sovranità civica.`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Insegnamento e cultura della sovranità condivisa.'
+          }
+        ],
+        tags: ['Cultura', 'Educazione', 'DirittoNaturale', 'Accademia'],
+        authorName: 'Elenor Vance (Cronista Capo)',
+        authorRole: 'Cronista Ufficiale',
+        status: 'pubblicato',
+        createdAt: '2026-08-22T14:30:00.000Z',
+        publishedAt: '2026-08-23T10:00:00.000Z',
+        updatedAt: '2026-08-23T10:00:00.000Z',
+        isFeatured: false
+      },
+      {
+        id: 'art-107',
+        title: 'Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale',
+        slug: 'carta-diritti-digitali-inviolabilita-sovranita-individuale',
+        categoryId: 'cat-diritti',
+        intro: 'Risoluzione fondamentale approvata dal Consiglio dei Garanti sulla tutela dell\'integrità biologica e dell\'identità digitale sovrana.',
+        content: `La Carta dei Diritti Digitali sancisce il principio di inviolabilità dell'essere umano di fronte all'ingerenza tecnologica incontrollata e al controllo biometrico centralizzato. Nessuna entità esterna ha il diritto di confiscare, profilare o monetizzare l'identità o i dati essenziali dei cittadini sovrani.
+
+Questo testo fondamentale costituisce il pilastro su cui si fonda ogni applicazione e servizio sviluppato all'interno della rete New World State.`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Tutela costituzionale e garanzie dei diritti fondamentali.'
+          }
+        ],
+        tags: ['Diritti', 'Costituzione', 'CartaDeiDiritti', 'Liberta'],
+        authorName: 'Marcus Thorne',
+        authorRole: 'Cronista di Stato',
+        status: 'pubblicato',
+        createdAt: '2026-08-21T09:00:00.000Z',
+        publishedAt: '2026-08-22T08:00:00.000Z',
+        updatedAt: '2026-08-22T08:00:00.000Z',
+        isFeatured: false
+      },
+      {
+        id: 'art-108',
+        title: 'Economia Circolare e Moneta di Comunità: Superare l\'Usura Bancaria Tradizionale',
+        slug: 'economia-circolare-moneta-comunita-superare-usura-bancaria',
+        categoryId: 'cat-economia',
+        intro: 'Reportage economico sui circuiti di credito reciproco e sull\'adozione di unità di scambio ancorate al valore del lavoro reale.',
+        content: `In un panorama globale dominato da bolle debitorie e svalutazione monetaria, New World State promuove l'adozione di modelli di credito reciproco privi di interesse usuraio. Basati sulla reale capacità produttiva dei membri e su accordi di mutuo soccorso, i circuiti di scambio sovrani proteggono le piccole economie locali dalle oscillazioni speculative internazionali.
+
+L'esperienza pilota ha dimostrato una crescita della fiducia commerciale e una riduzione dell'indebitamento tra le comunità aderenti.`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Circuiti di credito reciproco ed economia sovrana.'
+          }
+        ],
+        tags: ['Economia', 'CreditoReciproco', 'MonetaSovrana', 'Lavoro'],
+        authorName: 'Sophia Chen',
+        authorRole: 'Cronista Tecnologico',
+        status: 'pubblicato',
+        createdAt: '2026-08-20T16:00:00.000Z',
+        publishedAt: '2026-08-21T12:00:00.000Z',
+        updatedAt: '2026-08-21T12:00:00.000Z',
+        isFeatured: false
+      },
+      {
+        id: 'art-109',
+        title: 'Intelligenza Artificiale Etica e Sovranità dei Dati nell\'Assemblea Digitale',
+        slug: 'intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale',
+        categoryId: 'cat-tecnologia',
+        intro: 'Linee guida per l\'impiego di modelli linguistici aperti al servizio della sintesi legislativa e della trasparenza amministrativa.',
+        content: `L'innovazione tecnologica deve rimanere uno strumento al servizio dell'essere umano e mai un organo di governo non eletto. Nel portale New World State, l'intelligenza artificiale viene impiegata unicamente per la traduzione istantanea, la generazione di bozze di proposte popolari e la trascrizione accessibile degli atti legislativi.
+
+Tutti gli algoritmi impiegati sono aperti a verifica pubblica per garantire l'assenza di filtri ideologici e pregiudizi informativi.`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Trasparenza algoritmica e intelligenza artificiale etica.'
+          }
+        ],
+        tags: ['Tecnologia', 'IntelligenzaArtificiale', 'Etica', 'Trasparenza'],
+        authorName: 'Sophia Chen',
+        authorRole: 'Cronista Tecnologico',
+        status: 'pubblicato',
+        createdAt: '2026-08-19T10:00:00.000Z',
+        publishedAt: '2026-08-20T09:00:00.000Z',
+        updatedAt: '2026-08-20T09:00:00.000Z',
+        isFeatured: true
+      },
+      {
+        id: 'art-110',
+        title: 'Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte',
+        slug: 'patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte',
+        categoryId: 'cat-cultura',
+        intro: 'Iniziativa per la conservazione digitale permanente dei testi storici, filosofici e scientifici liberi da copyright restrittivo.',
+        content: `La salvaguardia del sapere universale richiede infrastrutture decentralizzate immuni a censura e revisionismo storico. La Rete delle Biblioteche Sovrane Aperte mette a disposizione della comunità globale decine di migliaia di trattati, manoscritti costituzionali e documenti storici liberamente consultabili e scaricabili in formato aperto.
+
+La cultura è un bene comune inalienabile della famiglia umana e come tale viene protetta e tramandata alle future generazioni.`,
+        images: [
+          {
+            type: 'image',
+            source: 'url',
+            url: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Conservazione della memoria storica e del patrimonio universale.'
+          }
+        ],
+        tags: ['Cultura', 'PatrimonioMondiale', 'Biblioteche', 'ConoscenzaLibera'],
+        authorName: 'Elenor Vance (Cronista Capo)',
+        authorRole: 'Cronista Ufficiale',
+        status: 'pubblicato',
+        createdAt: '2026-08-18T12:00:00.000Z',
+        publishedAt: '2026-08-19T08:00:00.000Z',
+        updatedAt: '2026-08-19T08:00:00.000Z',
+        isFeatured: false
       }
     ];
 
