@@ -69,6 +69,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [viewTab, setViewTab] = useState<'published' | 'my_drafts' | 'pending_mod'>('published');
+  const [custodianDraftsFilter, setCustodianDraftsFilter] = useState<'all_reporters' | 'mine'>('all_reporters');
 
   // Modals
   const [isArticleFormOpen, setIsArticleFormOpen] = useState(false);
@@ -179,17 +180,17 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     if (isSimulatedCronista) return true;
     if (citizen?.isAdmin || citizen?.isCronista) return true;
     
-    const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || '').toLowerCase();
+    const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || citizen?.roles || citizen?.qualification || '').toLowerCase();
     return roleStr.includes('cronista') || roleStr.includes('journalist') || roleStr.includes('reporter') || roleStr.includes('stampa');
   };
 
   const checkIsCustode = () => {
     if (!isLoggedIn) return false;
     if (isSimulatedCustode) return true;
-    if (citizen?.isAdmin) return true;
+    if (citizen?.isAdmin || citizen?.isCustodian || citizen?.isCustode) return true;
     
-    const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || '').toLowerCase();
-    return roleStr.includes('custode') || roleStr.includes('custodian') || roleStr.includes('moderator');
+    const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || citizen?.roles || citizen?.qualification || '').toLowerCase();
+    return roleStr.includes('custode') || roleStr.includes('custodian') || roleStr.includes('moderator') || roleStr.includes('admin');
   };
 
   const isCronista = checkIsCronista();
@@ -197,11 +198,20 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
   const canEditArticle = (art: NewsArticle) => {
     if (!isLoggedIn) return false;
+    // Admins and Digital Custodians can edit and delete ANY article written by any reporter
     if (isCustode || citizen?.isAdmin) return true;
+    // Reporters can only edit their own articles or drafts
     if (isCronista) {
       const currentAuthorId = citizen?.id;
       const currentAuthorName = `${citizen?.firstName || ''} ${citizen?.surname || ''}`.trim() || citizen?.username;
-      return String(art.authorId) === String(currentAuthorId) || art.authorName === currentAuthorName || art.status === 'bozza';
+      const currentEmail = citizen?.email;
+      const matchesId = currentAuthorId && String(art.authorId) === String(currentAuthorId);
+      const matchesName = currentAuthorName && (
+        art.authorName?.toLowerCase() === currentAuthorName.toLowerCase() ||
+        art.authorName?.toLowerCase().includes(currentAuthorName.toLowerCase())
+      );
+      const matchesEmail = currentEmail && art.authorEmail?.toLowerCase() === currentEmail.toLowerCase();
+      return Boolean(matchesId || matchesName || matchesEmail);
     }
     return false;
   };
@@ -252,8 +262,24 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     if (viewTab === 'published') {
       return art.status === 'pubblicato';
     } else if (viewTab === 'my_drafts') {
-      const currentAuthorId = citizen?.id || 'demo-user';
-      return String(art.authorId) === String(currentAuthorId) || isCronista;
+      // If Digital Custodian / Admin chose to view all reporters' articles & drafts:
+      if (isCustode && custodianDraftsFilter === 'all_reporters') {
+        return true;
+      }
+
+      // Otherwise strictly filter to ONLY the logged-in user's own articles and drafts
+      const currentAuthorId = citizen?.id;
+      const currentAuthorName = `${citizen?.firstName || ''} ${citizen?.surname || ''}`.trim() || citizen?.username;
+      const currentEmail = citizen?.email;
+
+      const matchesId = currentAuthorId && String(art.authorId) === String(currentAuthorId);
+      const matchesName = currentAuthorName && (
+        art.authorName?.toLowerCase() === currentAuthorName.toLowerCase() ||
+        art.authorName?.toLowerCase().includes(currentAuthorName.toLowerCase())
+      );
+      const matchesEmail = currentEmail && art.authorEmail?.toLowerCase() === currentEmail.toLowerCase();
+
+      return Boolean(matchesId || matchesName || matchesEmail);
     } else if (viewTab === 'pending_mod') {
       return art.status === 'in_moderazione';
     }
@@ -587,6 +613,69 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
       {/* MAIN ARTICLES GRID */}
       <div className="space-y-4">
+        {/* Custode Digitale Management Banner */}
+        {viewTab === 'my_drafts' && isCustode && (
+          <div className="bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300 rounded-3xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-serif font-bold text-sm text-[#0a1c3e]">
+                  {tText('Digital Custodian Editorial Management', 'Pannello di Gestione Editoriale del Custode Digitale')}
+                </h4>
+                <p className="text-xs text-slate-600">
+                  {tText('As an Administrator / Digital Custodian, you have full authority to inspect, edit, modify and delete articles submitted by all local reporters.', 'Come Amministratore / Custode Digitale, hai pieni poteri per ispezionare, modificare, aggiornare ed eliminare gli articoli redatti da tutti i cronisti.')}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white/90 p-1.5 rounded-2xl border border-amber-300 shrink-0">
+              <button
+                type="button"
+                onClick={() => setCustodianDraftsFilter('all_reporters')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                  custodianDraftsFilter === 'all_reporters'
+                    ? 'bg-[#0a1c3e] text-white shadow'
+                    : 'text-slate-600 hover:text-[#0a1c3e]'
+                }`}
+              >
+                <PenTool className="w-3.5 h-3.5" />
+                <span>{tText('All Reporters\' Articles', 'Tutti gli Articoli dei Cronisti')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCustodianDraftsFilter('mine')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  custodianDraftsFilter === 'mine'
+                    ? 'bg-amber-600 text-white shadow'
+                    : 'text-slate-600 hover:text-amber-800'
+                }`}
+              >
+                <span>{tText('Only My Articles', 'Solo i Miei Articoli')}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Reporter Personal Space Banner (for non-custodian reporters) */}
+        {viewTab === 'my_drafts' && !isCustode && (
+          <div className="bg-sky-50 border border-sky-200 rounded-3xl p-4 shadow-sm flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0">
+              <PenTool className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="font-bold text-xs text-sky-950">
+                {tText('Personal Reporter Archive', 'Archivio Personale del Cronista')}
+              </h4>
+              <p className="text-[11px] text-sky-800">
+                {tText(`Displaying strictly your own articles and personal drafts authored by ${currentAuthorName}.`, `Stai visualizzando esclusivamente i tuoi articoli e le tue bozze personali redatte da te (${currentAuthorName}).`)}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between text-xs font-bold text-[#0a1c3e] uppercase tracking-wider font-tech">
           <span>{filteredArticles.length} {tText('News Found', 'Notizie Trovate')}</span>
           <span className="text-slate-400 font-normal">
@@ -598,10 +687,14 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
           <div className="text-center py-16 bg-white border border-dashed border-slate-300 rounded-3xl p-8 shadow-sm">
             <Newspaper className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <h3 className="font-serif text-base font-bold text-[#0a1c3e]">
-              {tText('No Articles Found', 'Nessun Articolo Trovato')}
+              {viewTab === 'my_drafts'
+                ? tText('No Personal Articles or Drafts', 'Nessuna Notizia o Bozza Personale')
+                : tText('No Articles Found', 'Nessun Articolo Trovato')}
             </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-              {tText('No articles available for the selected filters. Try changing your search or selecting another category.', 'Non sono presenti articoli per i filtri selezionati. Prova a modificare la ricerca o seleziona un\'altra categoria.')}
+              {viewTab === 'my_drafts'
+                ? tText('You have not created any personal articles or drafts yet. Click "+ Write Article" or "✨ Create with AI" to start writing.', 'Non hai ancora creato nessun articolo o bozza personale. Clicca su "+ Scrivi Notizia" o "✨ Crea con IA" per redigere la tua prima notizia.')
+                : tText('No articles available for the selected filters. Try changing your search or selecting another category.', 'Non sono presenti articoli per i filtri selezionati. Prova a modificare la ricerca o seleziona un\'altra categoria.')}
             </p>
           </div>
         ) : (

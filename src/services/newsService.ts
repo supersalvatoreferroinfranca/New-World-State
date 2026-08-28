@@ -587,12 +587,19 @@ export function createArticle(articleData: {
   relatedArticleIds: string[];
   authorId: number | string;
   authorName: string;
+  authorEmail?: string;
   authorRole?: string;
   submitForModeration?: boolean;
+  status?: ArticleStatus;
+  publishedAt?: string;
 }): NewsArticle {
   const articles = getArticles();
   const slug = articleData.slug || generateSlug(articleData.title);
   
+  const initialStatus: ArticleStatus = articleData.status 
+    ? articleData.status 
+    : (articleData.submitForModeration ? 'in_moderazione' : 'bozza');
+
   const newArticle: NewsArticle = {
     id: `art-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     title: articleData.title,
@@ -606,9 +613,11 @@ export function createArticle(articleData: {
     relatedArticleIds: articleData.relatedArticleIds || [],
     authorId: articleData.authorId,
     authorName: articleData.authorName,
+    authorEmail: articleData.authorEmail,
     authorRole: articleData.authorRole || 'Cronista',
-    status: articleData.submitForModeration ? 'in_moderazione' : 'bozza',
+    status: initialStatus,
     createdAt: new Date().toISOString(),
+    publishedAt: articleData.publishedAt || (initialStatus === 'pubblicato' ? new Date().toISOString() : undefined),
     updatedAt: new Date().toISOString(),
     viewsCount: 0
   };

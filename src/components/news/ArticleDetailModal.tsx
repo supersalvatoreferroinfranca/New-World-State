@@ -823,8 +823,8 @@ export default function ArticleDetailModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="bg-slate-100 border-t border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 gap-3">
-          <div>
+        <div className="bg-slate-100 border-t border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
             {onEditArticle && (
               <button
                 onClick={() => {
@@ -835,6 +835,18 @@ export default function ArticleDetailModal({
               >
                 <PenTool className="w-4 h-4" />
                 <span>{tText('Edit Article', 'Modifica Articolo')}</span>
+              </button>
+            )}
+
+            {onDeleteArticle && (
+              <button
+                onClick={() => {
+                  onDeleteArticle(article);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-red-100 text-red-700 hover:bg-red-600 hover:text-white font-extrabold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border border-red-200 shadow-sm"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{tText('Delete Article', 'Elimina Articolo')}</span>
               </button>
             )}
           </div>

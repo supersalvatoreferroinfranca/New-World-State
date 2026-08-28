@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NewsArticle, NewsCategory, NewsMedia } from '../../types/news';
+import { NewsArticle, NewsCategory, NewsMedia, ArticleStatus } from '../../types/news';
 import WysiwygEditor from './WysiwygEditor';
 import { 
   getCategories, 
@@ -553,7 +553,7 @@ export default function ArticleFormModal({
   };
 
   // Submit Handler
-  const handleSubmit = (submitForModeration: boolean) => {
+  const handleSubmit = (action: 'draft' | 'moderation' | 'publish' | 'save' | boolean) => {
     if (!title.trim()) {
       setError(tText('Article title is required.', 'Il titolo dell\'articolo è obbligatorio.'));
       return;
@@ -571,6 +571,17 @@ export default function ArticleFormModal({
       return;
     }
 
+    let targetStatus: ArticleStatus = 'bozza';
+    if (action === true || action === 'moderation') {
+      targetStatus = 'in_moderazione';
+    } else if (action === 'publish') {
+      targetStatus = 'pubblicato';
+    } else if (action === 'save' && articleToEdit) {
+      targetStatus = articleToEdit.status;
+    } else if (action === 'draft' || action === false) {
+      targetStatus = 'bozza';
+    }
+
     if (articleToEdit) {
       updateArticle(articleToEdit.id, {
         title: title.trim(),
@@ -582,9 +593,11 @@ export default function ArticleFormModal({
         videos,
         tags,
         relatedArticleIds: relatedIds,
-        status: submitForModeration ? 'in_moderazione' : articleToEdit.status,
-        authorName,
-        authorRole
+        status: targetStatus,
+        publishedAt: targetStatus === 'pubblicato' ? (articleToEdit.publishedAt || new Date().toISOString()) : articleToEdit.publishedAt,
+        authorId: articleToEdit.authorId || authorId,
+        authorName: articleToEdit.authorName || authorName,
+        authorRole: articleToEdit.authorRole || authorRole
       });
     } else {
       createArticle({
@@ -600,7 +613,9 @@ export default function ArticleFormModal({
         authorId,
         authorName,
         authorRole,
-        submitForModeration
+        submitForModeration: targetStatus === 'in_moderazione',
+        status: targetStatus,
+        publishedAt: targetStatus === 'pubblicato' ? new Date().toISOString() : undefined
       });
     }
 
@@ -1780,25 +1795,49 @@ export default function ArticleFormModal({
             {tText('Cancel', 'Annulla')}
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {/* Save Draft */}
             <button
               type="button"
-              onClick={() => handleSubmit(false)}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-200 text-slate-700 hover:bg-slate-300 transition cursor-pointer flex items-center gap-2"
+              onClick={() => handleSubmit('draft')}
+              className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-200 text-slate-700 hover:bg-slate-300 transition cursor-pointer flex items-center gap-1.5"
             >
               <Save className="w-4 h-4" />
               <span>{tText('Save Draft', 'Salva Bozza')}</span>
             </button>
 
+            {/* If editing existing article */}
+            {articleToEdit && (
+              <button
+                type="button"
+                onClick={() => handleSubmit('save')}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-amber-500 text-[#0a1c3e] hover:bg-amber-400 transition cursor-pointer flex items-center gap-1.5 shadow"
+              >
+                <Check className="w-4 h-4" />
+                <span>{tText('Save Changes', 'Salva Modifiche')}</span>
+              </button>
+            )}
+
+            {/* Direct Publish for Custodians / Admins or Published articles */}
+            {(authorRole?.toLowerCase().includes('custode') || authorRole?.toLowerCase().includes('admin') || articleToEdit?.status === 'pubblicato') && (
+              <button
+                type="button"
+                onClick={() => handleSubmit('publish')}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700 transition cursor-pointer flex items-center gap-1.5 shadow"
+              >
+                <CheckSquare className="w-4 h-4" />
+                <span>{tText('Publish Article', 'Pubblica Articolo')}</span>
+              </button>
+            )}
+
             {/* Submit to Moderation (Custodi Digitali) */}
             <button
               type="button"
-              onClick={() => handleSubmit(true)}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#0a1c3e] text-white hover:bg-brand-gold hover:text-[#0a1c3e] transition cursor-pointer flex items-center gap-2 shadow-lg"
+              onClick={() => handleSubmit('moderation')}
+              className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#0a1c3e] text-white hover:bg-brand-gold hover:text-[#0a1c3e] transition cursor-pointer flex items-center gap-1.5 shadow-lg"
             >
               <Send className="w-4 h-4" />
-              <span>{tText('Submit for Moderation (Custodians)', 'Invia a Moderazione (Custodi)')}</span>
+              <span>{tText('Submit for Moderation', 'Invia a Moderazione')}</span>
             </button>
           </div>
         </div>

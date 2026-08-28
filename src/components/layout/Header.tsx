@@ -49,7 +49,7 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
             className="flex items-center gap-5 cursor-pointer"
           >
             <div className="relative group">
-              <div className="absolute -inset-1 bg-brand-gold/20 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+              <div className="absolute -inset-1 bg-brand-gold/15 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
               <img 
                 src={branding.logo || "https://www.newworldstate.org/documents/branding_logo/fronte.jpg"} 
                 onError={(e) => {

@@ -20,7 +20,8 @@ import {
   RefreshCw, 
   CheckCircle, 
   XCircle, 
-  Send 
+  Send,
+  PenTool 
 } from 'lucide-react';
 import ArticleDetailModal from './ArticleDetailModal';
 
@@ -287,6 +288,20 @@ export default function ModerationPanelModal({
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {onEditArticle && (
+                          <button
+                            onClick={() => {
+                              onEditArticle(art);
+                              onClose();
+                            }}
+                            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 transition cursor-pointer flex items-center gap-1 border border-amber-300 shadow-sm"
+                            title={tText('Edit Article as Custodian', 'Modifica Articolo come Custode')}
+                          >
+                            <PenTool className="w-3.5 h-3.5 text-amber-700" />
+                            <span>{tText('Edit', 'Modifica')}</span>
+                          </button>
+                        )}
+
                         <button
                           onClick={() => handleOpenNotes(art, 'request_changes')}
                           className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-200 text-slate-700 hover:bg-amber-100 hover:text-amber-800 transition cursor-pointer"

@@ -31,6 +31,7 @@ export interface NewsArticle {
   relatedArticleIds: string[]; // Collegamento ad altri articoli
   authorId: number | string;
   authorName: string;
+  authorEmail?: string;
   authorRole: string; // 'Cronista Ufficiale' ecc.
   status: ArticleStatus;
   moderatorNotes?: string;
