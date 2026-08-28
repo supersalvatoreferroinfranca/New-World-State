@@ -7707,27 +7707,354 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
         }
       }
 
+      if (url.pathname.startsWith('/costitution/') && request.method === 'GET') {
+        const filename = url.pathname.replace('/costitution/', '');
+        const targetUrl = `https://www.newworldstate.org/costitution/${filename}`;
+        return Response.redirect(targetUrl, 302);
+      }
+
+      if (url.pathname === '/sitemap.html' && request.method === 'GET') {
+        const baseUrl = getCanonicalBaseUrlWorker(url, request);
+        const SITE_LANGS = ['it', 'en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+        const updateDate = new Date().toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        const CONSTITUTION_PDFS = [
+          { lang: 'it', name: 'Costituzione e Atto Costitutivo dello Stato Mondiale (Italiano)', path: '/costitution/COSTITUZIONE-E-ATTO-COSTITUTIVO-STATO-MONDIALE.pdf', flag: '🇮🇹' },
+          { lang: 'en', name: 'Constitution of the Sovereign World State (English)', path: '/costitution/CONSTITUTION-OF-THE-SOVEREIGN-WORLD-STATE.pdf', flag: '🇬🇧' },
+          { lang: 'fr', name: "Constitution de l'État Mondial Souverain (Français)", path: '/costitution/CONSTITUTION-DE-LETAT-MONDIAL-SOUVERAIN-Francese.pdf', flag: '🇫🇷' },
+          { lang: 'es', name: 'Constitución del Estado Mundial Soberano (Español)', path: '/costitution/CONSTITUCION-DEL-ESTADO-MUNDIAL-SOBERANO.pdf', flag: '🇪🇸' },
+          { lang: 'pt', name: 'Constituição do Estado Soberano Mundial (Português)', path: '/costitution/CONSTITUICAO-DO-ESTADO-SOBERANO-MUNDIAL-Portoghese.pdf', flag: '🇵🇹' },
+          { lang: 'ru', name: 'Конституция Суверенного Мирового Государства (Русский)', path: '/costitution/КОНСТИТУЦИЯ-СУВЕРЕННОГО-МИРОВОГО-ГОСУДАРСТВА-Russo.pdf', flag: '🇷🇺' },
+          { lang: 'hi', name: 'संप्रभु विश्व राज्य का संविधान (हिन्दी)', path: '/costitution/संप्रभु-विश्व-राज्य-Hindi.pdf', flag: '🇮🇳' },
+          { lang: 'bn', name: 'সার্বভৌম विश्व রাষ্ট্রের সংবিধান (বাংলা)', path: '/costitution/সার্বভৌম-विश्व-রাষ্ট্র-Bengalese.pdf', flag: '🇧🇩' },
+          { lang: 'zh', name: '主权世界国家宪法 (中文)', path: '/costitution/主权世界国家-Cinese.pdf', flag: '🇨🇳' },
+          { lang: 'ja', name: '主権世界国家憲法 (日本語)', path: '/costitution/主権世界国家-Giapponese.pdf', flag: '🇯🇵' },
+          { lang: 'ar', name: 'دستور الدولة العالمية ذات السيادة (العربية)', path: '/costitution/دستور-الدولة-العالمية-ذات-السيادة-Arabo.pdf', flag: '🇸🇦' }
+        ];
+
+        const SITE_PAGES = [
+          { path: '', title: 'New World State 1.0 - Portale Ufficiale e Registro Mondiale' },
+          { path: 'sitemap.html', title: 'Mappa del Sito Ufficiale (HTML Sitemap) - New World State 1.0' },
+          { path: '?tab=news', title: 'Portale Notizie & Giornalismo Sovrano | New World State 1.0' },
+          { path: '?tab=register', title: 'Richiesta Cittadinanza Sovrana & Registro Mondiale' },
+          { path: '?tab=democracy', title: 'Democrazia Diretta & Referendum Popolari Sovrani' },
+          { path: '?tab=chat', title: 'Assemblea Federale e Comunicazioni Sovrane' },
+          { path: '?tab=constitution', title: 'Costituzione dello Stato Mondiale Sovrano' },
+          { path: '?tab=charter', title: 'Carta Fondamentale dei Diritti e Doveri Sovrani' },
+          { path: '?tab=governance', title: 'Governance & Organigramma Istituzionale Sovrano' },
+          { path: '?tab=privacy', title: 'Protocollo di Crittografia e Privacy dei Cittadini' },
+          { path: '?tab=network', title: 'Stato dei Nodi di Rete e Server Decentralizzati' },
+          { path: 'verify', title: 'Verifica Crittografica Cittadino e Documenti d\'Identità' },
+          { path: '?tab=identity', title: 'Registro Mondiale dell\'Identità Digitale Sovrana' },
+          { path: '?tab=faq', title: 'Domande Frequenti & Risposte Istituzionali (FAQ)' },
+          { path: '?tab=news&category=cat-politica', title: 'Notizie Politica & Sovranità - New World State' },
+          { path: '?tab=news&category=cat-economia', title: 'Notizie Economia & Finanza Sostenibile - New World State' },
+          { path: '?tab=news&category=cat-diritti', title: 'Notizie Diritti & Costituzione Sovrana - New World State' },
+          { path: '?tab=news&category=cat-tecnologia', title: 'Notizie Tecnologia & Innovazione Decentralizzata - New World State' },
+          { path: '?tab=news&category=cat-cultura', title: 'Notizie Cultura & Società Globale - New World State' },
+          { path: '?compliance=privacy', title: 'Informativa sulla Privacy & Normativa GDPR' },
+          { path: '?compliance=terms', title: 'Termini e Condizioni di Utilizzo della Piattaforma' },
+          { path: '?compliance=cookies', title: 'Informativa Estesa sui Cookie e Tracciamento' },
+          { path: '?compliance=accessibility', title: 'Dichiarazione di Accessibilità Universale' },
+          { path: '?compliance=ccpa', title: 'California Consumer Privacy Act (CCPA) Disclosure' }
+        ];
+
+        const seenWorkerArticles = new Set();
+        const uniqueWorkerArticles = [];
+        for (const a of (Array.isArray(memoryWorkerArticles) ? memoryWorkerArticles : [])) {
+          if (!a) continue;
+          const slug = a.slug || a.id;
+          if (!slug) continue;
+          const norm = normalizeSlugWorker(slug);
+          if (!seenWorkerArticles.has(norm)) {
+            seenWorkerArticles.add(norm);
+            uniqueWorkerArticles.push(a);
+          }
+        }
+
+        const categoryMap = {
+          'cat-politica': 'Politica & Sovranità',
+          'cat-economia': 'Economia & Finanza',
+          'cat-diritti': 'Diritti & Costituzione',
+          'cat-tecnologia': 'Tecnologia & Rete',
+          'cat-cultura': 'Cultura & Società'
+        };
+
+        const articleCards = uniqueWorkerArticles.map(a => {
+          const slug = a.slug || a.id;
+          const cleanTitle = cleanMetaTextWorker(a.title);
+          const cleanIntro = cleanMetaTextWorker(a.intro || a.content).slice(0, 140) + '...';
+          const author = cleanMetaTextWorker(a.authorName) || 'Cronista Ufficiale';
+          const dateStr = (a.publishedAt || a.createdAt || '').split('T')[0] || '2026-08-25';
+          const catName = categoryMap[a.categoryId] || 'Notizie Generali';
+          const articleUrl = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
+
+          return `
+            <div class="sitemap-card article-card" data-search="${escapeHtmlWorker(cleanTitle + ' ' + catName + ' ' + author)}">
+              <div class="card-badge">${escapeHtmlWorker(catName)}</div>
+              <h3 class="card-title">
+                <a href="${escapeHtmlWorker(articleUrl)}">${escapeHtmlWorker(cleanTitle)}</a>
+              </h3>
+              <p class="card-desc">${escapeHtmlWorker(cleanIntro)}</p>
+              <div class="card-meta">
+                <span>✍️ ${escapeHtmlWorker(author)}</span>
+                <span>📅 ${escapeHtmlWorker(dateStr)}</span>
+              </div>
+              <div class="lang-links">
+                <span class="lang-label">Traduzioni:</span>
+                ${SITE_LANGS.map(lang => 
+                  `<a href="${escapeHtmlWorker(articleUrl + (lang === 'it' ? '' : '?lang=' + lang))}" class="lang-pill" title="Lingua ${lang.toUpperCase()}">${lang.toUpperCase()}</a>`
+                ).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        const institutionalCards = SITE_PAGES.filter(p => !p.path.includes('category=') && !p.path.includes('compliance=')).map(p => {
+          const url = p.path === 'sitemap.html' ? `${baseUrl}/sitemap.html` : (p.path ? `${baseUrl}/${p.path}` : `${baseUrl}/`);
+          return `
+            <li class="sitemap-item" data-search="${escapeHtmlWorker(p.title)}">
+              <a href="${escapeHtmlWorker(url)}" class="item-link">
+                <span class="item-icon">🏛️</span>
+                <span class="item-name">${escapeHtmlWorker(p.title)}</span>
+              </a>
+              <span class="item-url">${escapeHtmlWorker(url.replace(baseUrl, '')) || '/'}</span>
+            </li>
+          `;
+        }).join('');
+
+        const categoryCards = SITE_PAGES.filter(p => p.path.includes('category=')).map(p => {
+          const url = `${baseUrl}/${p.path}`;
+          return `
+            <li class="sitemap-item" data-search="${escapeHtmlWorker(p.title)}">
+              <a href="${escapeHtmlWorker(url)}" class="item-link">
+                <span class="item-icon">📂</span>
+                <span class="item-name">${escapeHtmlWorker(p.title)}</span>
+              </a>
+              <span class="item-url">${escapeHtmlWorker(url.replace(baseUrl, ''))}</span>
+            </li>
+          `;
+        }).join('');
+
+        const complianceCards = SITE_PAGES.filter(p => p.path.includes('compliance=')).map(p => {
+          const url = `${baseUrl}/${p.path}`;
+          return `
+            <li class="sitemap-item" data-search="${escapeHtmlWorker(p.title)}">
+              <a href="${escapeHtmlWorker(url)}" class="item-link">
+                <span class="item-icon">⚖️</span>
+                <span class="item-name">${escapeHtmlWorker(p.title)}</span>
+              </a>
+              <span class="item-url">${escapeHtmlWorker(url.replace(baseUrl, ''))}</span>
+            </li>
+          `;
+        }).join('');
+
+        const constitutionCards = CONSTITUTION_PDFS.map(pdf => {
+          const fullPdfUrl = `${baseUrl}${pdf.path}`;
+          return `
+            <li class="sitemap-item" data-search="${escapeHtmlWorker(pdf.name + ' ' + pdf.lang)}">
+              <a href="${escapeHtmlWorker(fullPdfUrl)}" target="_blank" rel="noopener noreferrer" class="item-link">
+                <span class="item-icon">${pdf.flag}</span>
+                <span class="item-name">${escapeHtmlWorker(pdf.name)}</span>
+              </a>
+              <span class="item-badge">PDF Ufficiale (${pdf.lang.toUpperCase()})</span>
+            </li>
+          `;
+        }).join('');
+
+        const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mappa del Sito (Sitemap HTML) | New World State 1.0</title>
+  <meta name="description" content="Mappa del sito e indice gerarchico completo del portale New World State 1.0: sezioni istituzionali, democrazia diretta, archivio notizie, testi costituzionali in 11 lingue e conformità GDPR.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="${baseUrl}/sitemap.html">
+  <meta property="og:title" content="Mappa del Sito (Sitemap HTML) | New World State 1.0">
+  <meta property="og:description" content="Indice completo e navigabile di tutte le sezioni, notizie e documenti ufficiali dello Stato Mondiale Sovrano.">
+  <meta property="og:url" content="${baseUrl}/sitemap.html">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="${baseUrl}/LOGO_NEW-WORLD-STATE.jpg">
+  <link rel="icon" type="image/x-icon" href="${baseUrl}/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="${baseUrl}/rss.xml">
+  <link rel="sitemap" type="application/xml" title="Sitemap XML" href="${baseUrl}/sitemap.xml">
+  <link rel="sitemap" type="application/xml" title="News Sitemap XML" href="${baseUrl}/sitemap-news.xml">
+  <style>
+    :root { --bg-primary: #f8fafc; --bg-card: #ffffff; --navy: #0a1c3e; --navy-light: #162b55; --gold: #c5a880; --gold-light: #dfc8a8; --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0; --border-accent: rgba(197, 168, 128, 0.3); --shadow-sm: 0 1px 3px rgba(0,0,0,0.06); --shadow-md: 0 4px 12px rgba(10,28,62,0.07); --radius: 12px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-primary); color: var(--text-main); line-height: 1.6; }
+    .header-banner { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); color: #ffffff; padding: 48px 24px 40px; border-bottom: 4px solid var(--gold); box-shadow: var(--shadow-md); }
+    .header-container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .brand-group { display: flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; }
+    .brand-logo { width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; background: #000; }
+    .brand-title { font-size: 22px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+    .brand-subtitle { font-size: 12px; color: var(--gold-light); letter-spacing: 0.15em; text-transform: uppercase; }
+    .quick-links { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-quick { background: rgba(255,255,255,0.08); border: 1px solid rgba(197, 168, 128, 0.4); color: #ffffff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-quick:hover { background: var(--gold); color: var(--navy); border-color: var(--gold); transform: translateY(-1px); }
+    .hero-title { font-size: 32px; font-weight: 800; margin-top: 10px; color: #ffffff; }
+    .hero-desc { font-size: 16px; color: #cbd5e1; max-width: 800px; line-height: 1.5; }
+    .search-bar-wrap { margin-top: 12px; position: relative; max-width: 600px; }
+    .search-input { width: 100%; padding: 14px 20px 14px 44px; border-radius: 10px; border: 1px solid var(--border-accent); background: #ffffff; font-size: 15px; color: var(--text-main); box-shadow: 0 4px 12px rgba(0,0,0,0.15); outline: none; }
+    .search-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.35); }
+    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #94a3b8; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; max-width: 1200px; margin: -24px auto 32px; padding: 0 24px; position: relative; z-index: 10; }
+    .stat-box { background: var(--bg-card); border-radius: var(--radius); padding: 16px 20px; border: 1px solid var(--border); box-shadow: var(--shadow-md); text-align: center; }
+    .stat-number { font-size: 24px; font-weight: 800; color: var(--navy); }
+    .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-top: 4px; }
+    .main-container { max-width: 1200px; margin: 0 auto; padding: 0 24px 60px; }
+    .section-title-wrap { display: flex; align-items: center; gap: 12px; margin: 40px 0 20px; border-bottom: 2px solid var(--border); padding-bottom: 12px; }
+    .section-title { font-size: 22px; font-weight: 800; color: var(--navy); letter-spacing: -0.02em; }
+    .section-count { background: #e2e8f0; color: var(--navy); font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .sitemap-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+    .sitemap-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; transition: all 0.2s ease; box-shadow: var(--shadow-sm); }
+    .sitemap-item:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .item-link { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); font-weight: 600; font-size: 14px; flex: 1; }
+    .item-link:hover { color: #936829; }
+    .item-icon { font-size: 18px; }
+    .item-url { font-size: 11px; color: var(--text-muted); font-family: monospace; background: #f1f5f9; padding: 3px 6px; border-radius: 4px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-badge { font-size: 11px; font-weight: 700; color: #936829; background: #fef3c7; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+    .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+    .article-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow-sm); transition: all 0.2s ease; }
+    .article-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .card-badge { align-self: flex-start; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--navy); background: #e0e7ff; padding: 4px 10px; border-radius: 6px; }
+    .card-title { font-size: 16px; font-weight: 700; line-height: 1.4; }
+    .card-title a { text-decoration: none; color: var(--navy); }
+    .card-title a:hover { color: #936829; }
+    .card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; flex: 1; }
+    .card-meta { display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 4px; }
+    .lang-links { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border); }
+    .lang-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-right: 4px; }
+    .lang-pill { font-size: 10px; font-weight: 700; text-decoration: none; color: var(--navy); background: #f1f5f9; border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; }
+    .lang-pill:hover { background: var(--navy); color: #ffffff; }
+    .feed-links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .feed-card { background: #ffffff; border: 1px solid var(--border); border-left: 4px solid var(--navy); border-radius: 8px; padding: 16px 20px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 6px; transition: all 0.2s; }
+    .feed-card:hover { border-left-color: var(--gold); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .feed-name { font-size: 15px; font-weight: 700; color: var(--navy); }
+    .feed-desc { font-size: 12px; color: var(--text-muted); }
+    .feed-target { font-size: 11px; font-family: monospace; color: #936829; margin-top: 4px; }
+    .site-footer { background: var(--navy); color: #94a3b8; padding: 40px 24px; text-align: center; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .footer-links { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
+    .footer-links a { color: #cbd5e1; text-decoration: none; font-weight: 500; }
+    .footer-links a:hover { color: var(--gold); }
+    .hidden { display: none !important; }
+    @media (max-width: 768px) { .header-banner { padding: 32px 16px 30px; } .hero-title { font-size: 24px; } .sitemap-list { grid-template-columns: 1fr; } .articles-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="header-banner">
+    <div class="header-container">
+      <div class="top-nav">
+        <a href="${baseUrl}/" class="brand-group">
+          <img src="${baseUrl}/LOGO_NEW-WORLD-STATE.jpg" alt="Logo New World State" class="brand-logo" onerror="this.style.display='none'">
+          <div>
+            <div class="brand-title">New World State 1.0</div>
+            <div class="brand-subtitle">Mappa del Sito Ufficiale &amp; Indice Risorse</div>
+          </div>
+        </a>
+        <div class="quick-links">
+          <a href="${baseUrl}/" class="btn-quick">🏛️ Portale Home</a>
+          <a href="${baseUrl}/?tab=news" class="btn-quick">📰 Notizie</a>
+          <a href="${baseUrl}/?tab=constitution" class="btn-quick">📜 Costituzione</a>
+          <a href="${baseUrl}/sitemap.xml" target="_blank" class="btn-quick">⚙️ Sitemap XML</a>
+        </div>
+      </div>
+      <div>
+        <h1 class="hero-title">Mappa del Sito (HTML Sitemap)</h1>
+        <p class="hero-desc">Indice gerarchico completo e navigabile di tutte le sezioni di governo, archivio notizie indipendenti, testi costituzionali in 11 lingue ufficiali e informative di conformità legale.</p>
+        <div class="search-bar-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="sitemapFilter" class="search-input" placeholder="Cerca tra tutte le pagine, articoli, costituzioni e sezioni..." aria-label="Filtra sitemap">
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="stats-grid">
+    <div class="stat-box"><div class="stat-number">${SITE_PAGES.length}</div><div class="stat-label">Pagine &amp; Sezioni</div></div>
+    <div class="stat-box"><div class="stat-number">${uniqueWorkerArticles.length}</div><div class="stat-label">Notizie Pubblicate</div></div>
+    <div class="stat-box"><div class="stat-number">${CONSTITUTION_PDFS.length}</div><div class="stat-label">Traduzioni Costituzione</div></div>
+    <div class="stat-box"><div class="stat-number">11</div><div class="stat-label">Lingue Supportate</div></div>
+  </div>
+  <main class="main-container">
+    <div class="section-title-wrap"><h2 class="section-title">🏛️ Piattaforma &amp; Servizi Sovrani</h2><span class="section-count">Principali</span></div>
+    <ul class="sitemap-list" id="institutionalList">${institutionalCards}</ul>
+    <div class="section-title-wrap"><h2 class="section-title">📰 Archivio Notizie &amp; Giornalismo Sovrano</h2><span class="section-count">${uniqueWorkerArticles.length} Articoli</span></div>
+    <div class="articles-grid" id="newsGrid">${articleCards}</div>
+    <div class="section-title-wrap"><h2 class="section-title">📂 Categorie &amp; Canali Tematici</h2><span class="section-count">5 Categorie</span></div>
+    <ul class="sitemap-list" id="categoryList">${categoryCards}</ul>
+    <div class="section-title-wrap"><h2 class="section-title">📜 Costituzione e Testi Fondamentali nelle 11 Lingue Ufficiali</h2><span class="section-count">11 Documenti PDF</span></div>
+    <ul class="sitemap-list" id="constitutionList">${constitutionCards}</ul>
+    <div class="section-title-wrap"><h2 class="section-title">⚖️ Conformità Legale, Trasparenza &amp; GDPR</h2><span class="section-count">5 Documenti</span></div>
+    <ul class="sitemap-list" id="complianceList">${complianceCards}</ul>
+    <div class="section-title-wrap"><h2 class="section-title">🤖 Feed, Mappe XML &amp; Risorse per Motori di Ricerca / IA</h2><span class="section-count">Crawler &amp; LLM</span></div>
+    <div class="feed-links-grid">
+      <a href="${baseUrl}/sitemap.xml" target="_blank" class="feed-card"><div class="feed-name">Sitemap XML Globale</div><div class="feed-desc">Indice completo in formato standard Sitemaps.org con estensioni immagini e hreflang multilingua.</div><div class="feed-target">/sitemap.xml</div></a>
+      <a href="${baseUrl}/sitemap-news.xml" target="_blank" class="feed-card"><div class="feed-name">Google News Sitemap</div><div class="feed-desc">Indice tempestivo ottimizzato per Googlebot-News in tutte le 11 lingue mondiali.</div><div class="feed-target">/sitemap-news.xml</div></a>
+      <a href="${baseUrl}/sitemap.html" class="feed-card"><div class="feed-name">Sitemap HTML Navigabile</div><div class="feed-desc">Mappa del sito interattiva accessibile a tutti gli utenti e ai crawler di ricerca.</div><div class="feed-target">/sitemap.html</div></a>
+      <a href="${baseUrl}/rss.xml" target="_blank" class="feed-card"><div class="feed-name">Feed RSS 2.0 / Atom</div><div class="feed-desc">Flusso di syndication per aggregatori di notizie, lettori RSS e canali informativi.</div><div class="feed-target">/rss.xml</div></a>
+      <a href="${baseUrl}/llms.txt" target="_blank" class="feed-card"><div class="feed-name">File di Contesto LLM (llms.txt)</div><div class="feed-desc">Documento strutturato per ingestion da parte di ChatGPT, Perplexity, Claude e Gemini.</div><div class="feed-target">/llms.txt</div></a>
+      <a href="${baseUrl}/robots.txt" target="_blank" class="feed-card"><div class="feed-name">Direttive Robots (robots.txt)</div><div class="feed-desc">Istruzioni di scansione e permessi per tutti i web crawler e bot di intelligenza artificiale.</div><div class="feed-target">/robots.txt</div></a>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-links">
+      <a href="${baseUrl}/">Portale Principale</a>
+      <a href="${baseUrl}/?tab=news">Notizie</a>
+      <a href="${baseUrl}/?tab=democracy">Democrazia Diretta</a>
+      <a href="${baseUrl}/?tab=constitution">Costituzione</a>
+      <a href="${baseUrl}/?compliance=privacy">Privacy GDPR</a>
+      <a href="${baseUrl}/?compliance=terms">Termini</a>
+      <a href="${baseUrl}/sitemap.xml">Sitemap XML</a>
+      <a href="${baseUrl}/sitemap.html">Sitemap HTML</a>
+    </div>
+    <p>© 2026 New World State Authority. Tutti i diritti riservati. Mappa del sito aggiornata al ${updateDate}.</p>
+  </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var s = document.getElementById('sitemapFilter');
+      if (!s) return;
+      s.addEventListener('input', function(e) {
+        var q = (e.target.value || '').toLowerCase().trim();
+        var items = document.querySelectorAll('[data-search]');
+        items.forEach(function(item) {
+          var t = (item.getAttribute('data-search') || '').toLowerCase();
+          if (!q || t.indexOf(q) !== -1) { item.classList.remove('hidden'); } else { item.classList.add('hidden'); }
+        });
+      });
+    });
+  </script>
+</body>
+</html>`;
+
+        return new Response(html.trim(), {
+          headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+        });
+      }
+
       if (url.pathname === '/sitemap.xml' && request.method === 'GET') {
         const baseUrl = getCanonicalBaseUrlWorker(url, request);
         const SITE_LANGS = ['it', 'en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
         const today = new Date().toISOString().split('T')[0];
 
         const CONSTITUTION_PDFS = [
-          { lang: 'it', name: 'Costituzione e Atto Costitutivo dello Stato Mondiale (Italiano)', url: 'https://www.newworldstate.org/costitution/COSTITUZIONE-E-ATTO-COSTITUTIVO-STATO-MONDIALE.pdf' },
-          { lang: 'en', name: 'Constitution of the Sovereign World State (English)', url: 'https://www.newworldstate.org/costitution/CONSTITUTION-OF-THE-SOVEREIGN-WORLD-STATE.pdf' },
-          { lang: 'fr', name: "Constitution de l'État Mondial Souverain (Français)", url: 'https://www.newworldstate.org/costitution/CONSTITUTION-DE-LETAT-MONDIAL-SOUVERAIN-Francese.pdf' },
-          { lang: 'es', name: 'Constitución del Estado Mundial Soberano (Español)', url: 'https://www.newworldstate.org/costitution/CONSTITUCION-DEL-ESTADO-MUNDIAL-SOBERANO.pdf' },
-          { lang: 'pt', name: 'Constituição do Estado Soberano Mundial (Português)', url: 'https://www.newworldstate.org/costitution/CONSTITUICAO-DO-ESTADO-SOBERANO-MUNDIAL-Portoghese.pdf' },
-          { lang: 'ru', name: 'Конституция Суверенного Мирового Государства (Русский)', url: 'https://www.newworldstate.org/costitution/КОНСТИТУЦИЯ-СУВЕРЕННОГО-МИРОВОГО-ГОСУДАРСТВА-Russo.pdf' },
-          { lang: 'hi', name: 'संप्रभु विश्व राज्य का संविधान (हिन्दी)', url: 'https://www.newworldstate.org/costitution/संप्रभु-विश्व-राज्य-Hindi.pdf' },
-          { lang: 'bn', name: 'সার্বভৌম বিশ্ব রাষ্ট্রের সংবিধান (বাংলা)', url: 'https://www.newworldstate.org/costitution/সার্বভৌম-विश्व-রাষ্ট্র-Bengalese.pdf' },
-          { lang: 'zh', name: '主权世界国家宪法 (中文)', url: 'https://www.newworldstate.org/costitution/主权世界国家-Cinese.pdf' },
-          { lang: 'ja', name: '主権世界国家憲法 (日本語)', url: 'https://www.newworldstate.org/costitution/主権世界国家-Giapponese.pdf' },
-          { lang: 'ar', name: 'دستور الدولة العالمية ذات السيادة (العربية)', url: 'https://www.newworldstate.org/costitution/دستور-الدولة-العالمية-ذات-السيادة-Arabo.pdf' }
+          { lang: 'it', name: 'Costituzione e Atto Costitutivo dello Stato Mondiale (Italiano)', path: '/costitution/COSTITUZIONE-E-ATTO-COSTITUTIVO-STATO-MONDIALE.pdf' },
+          { lang: 'en', name: 'Constitution of the Sovereign World State (English)', path: '/costitution/CONSTITUTION-OF-THE-SOVEREIGN-WORLD-STATE.pdf' },
+          { lang: 'fr', name: "Constitution de l'État Mondial Souverain (Français)", path: '/costitution/CONSTITUTION-DE-LETAT-MONDIAL-SOUVERAIN-Francese.pdf' },
+          { lang: 'es', name: 'Constitución del Estado Mundial Soberano (Español)', path: '/costitution/CONSTITUCION-DEL-ESTADO-MUNDIAL-SOBERANO.pdf' },
+          { lang: 'pt', name: 'Constituição do Estado Soberano Mundial (Português)', path: '/costitution/CONSTITUICAO-DO-ESTADO-SOBERANO-MUNDIAL-Portoghese.pdf' },
+          { lang: 'ru', name: 'Конституция Суверенного Мирового Государства (Русский)', path: '/costitution/КОНСТИТУЦИЯ-СУВЕРЕННОГО-МИРОВОГО-ГОСУДАРСТВА-Russo.pdf' },
+          { lang: 'hi', name: 'संप्रभु विश्व राज्य का संविधान (हिन्दी)', path: '/costitution/संप्रभु-विश्व-राज्य-Hindi.pdf' },
+          { lang: 'bn', name: 'সার্বভৌম विश्व রাষ্ট্রের সংবিধান (বাংলা)', path: '/costitution/সার্বভৌম-विश्व-রাষ্ট্র-Bengalese.pdf' },
+          { lang: 'zh', name: '主权世界国家宪法 (中文)', path: '/costitution/主权世界国家-Cinese.pdf' },
+          { lang: 'ja', name: '主権世界国家憲法 (日本語)', path: '/costitution/主権世界国家-Giapponese.pdf' },
+          { lang: 'ar', name: 'دستور الدولة العالمية ذات السيادة (العربية)', path: '/costitution/دستور-الدولة-العالمية-ذات-السيادة-Arabo.pdf' }
         ];
 
         const SITE_PAGES = [
           { path: '', changefreq: 'daily', priority: '1.00', title: 'New World State 1.0 - Portale Ufficiale e Registro Mondiale', image: '/LOGO_NEW-WORLD-STATE.jpg', imageTitle: 'New World State 1.0 - Stemma Ufficiale', imageCaption: 'New World State 1.0 - Registro Mondiale e Sovranità Popolare' },
+          { path: 'sitemap.html', changefreq: 'daily', priority: '0.90', title: 'Mappa del Sito Ufficiale (HTML Sitemap) - New World State 1.0' },
           { path: '?tab=news', changefreq: 'hourly', priority: '0.95', title: 'Portale Notizie & Giornalismo Sovrano | New World State 1.0', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80', imageTitle: 'New World State News Authority', imageCaption: 'Giornale Sovrano di Informazione e Geopolitica Indipendente' },
           { path: '?tab=register', changefreq: 'weekly', priority: '0.90', title: 'Richiesta Cittadinanza Sovrana & Registro Mondiale' },
           { path: '?tab=democracy', changefreq: 'daily', priority: '0.90', title: 'Democrazia Diretta & Referendum Popolari Sovrani' },
@@ -7761,12 +8088,13 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
         const staticXml = SITE_PAGES.map(page => {
           const getUrl = (lang) => {
             if (!page.path) return lang === 'it' ? `${baseUrl}/` : `${baseUrl}/?lang=${lang}`;
+            if (page.path === 'sitemap.html') return `${baseUrl}/sitemap.html`;
             const sep = page.path.includes('?') ? '&' : '?';
             if (page.path.startsWith('?')) return lang === 'it' ? `${baseUrl}/${page.path}` : `${baseUrl}/${page.path}&lang=${lang}`;
             return lang === 'it' ? `${baseUrl}/${page.path}` : `${baseUrl}/${page.path}${sep}lang=${lang}`;
           };
           const defUrl = getUrl('it');
-          const hreflangs = buildHreflangs(getUrl, defUrl);
+          const hreflangs = page.path === 'sitemap.html' ? '' : buildHreflangs(getUrl, defUrl);
           let imgXml = '';
           if (page.image) {
             const imgLoc = page.image.startsWith('http') ? page.image : `${baseUrl}${page.image}`;
@@ -7784,18 +8112,21 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
           <lastmod>${today}</lastmod>
           <changefreq>${page.changefreq}</changefreq>
           <priority>${page.priority}</priority>
-${hreflangs}${imgXml}
+${hreflangs ? hreflangs + '\n' : ''}${imgXml}
         </url>`;
         }).join('');
 
-        const pdfXml = CONSTITUTION_PDFS.map(pdf => `
+        const pdfXml = CONSTITUTION_PDFS.map(pdf => {
+          const fullPdfUrl = `${baseUrl}${pdf.path}`;
+          return `
         <url>
-          <loc>${escapeHtmlWorker(pdf.url)}</loc>
+          <loc>${escapeHtmlWorker(fullPdfUrl)}</loc>
           <lastmod>${today}</lastmod>
           <changefreq>monthly</changefreq>
           <priority>0.90</priority>
-          <xhtml:link rel="alternate" hreflang="${pdf.lang}" href="${escapeHtmlWorker(pdf.url)}" />
-        </url>`).join('');
+          <xhtml:link rel="alternate" hreflang="${pdf.lang}" href="${escapeHtmlWorker(fullPdfUrl)}" />
+        </url>`;
+        }).join('');
 
         const seenWorkerArticles = new Set();
         const uniqueWorkerArticles = [];
