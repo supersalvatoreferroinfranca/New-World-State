@@ -7763,6 +7763,9 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
         const uniqueWorkerArticles = [];
         for (const a of (Array.isArray(memoryWorkerArticles) ? memoryWorkerArticles : [])) {
           if (!a) continue;
+          const isPub = a.status === 'pubblicato' || a.isPublished === true || (!a.status && a.publishedAt);
+          const isDraftOrMod = a.status === 'bozza' || a.status === 'in_moderazione' || a.status === 'rifiutato' || a.status === 'in_revisione';
+          if (!isPub || isDraftOrMod) continue;
           const slug = a.slug || a.id;
           if (!slug) continue;
           const norm = normalizeSlugWorker(slug);
@@ -8132,6 +8135,9 @@ ${hreflangs ? hreflangs + '\n' : ''}${imgXml}
         const uniqueWorkerArticles = [];
         for (const a of (Array.isArray(memoryWorkerArticles) ? memoryWorkerArticles : [])) {
           if (!a) continue;
+          const isPub = a.status === 'pubblicato' || a.isPublished === true || (!a.status && a.publishedAt);
+          const isDraftOrMod = a.status === 'bozza' || a.status === 'in_moderazione' || a.status === 'rifiutato' || a.status === 'in_revisione';
+          if (!isPub || isDraftOrMod) continue;
           const slug = a.slug || a.id;
           if (!slug) continue;
           const norm = normalizeSlugWorker(slug);
@@ -8206,6 +8212,9 @@ ${articleXml}
         const uniqueWorkerArticles = [];
         for (const a of (Array.isArray(memoryWorkerArticles) ? memoryWorkerArticles : [])) {
           if (!a) continue;
+          const isPub = a.status === 'pubblicato' || a.isPublished === true || (!a.status && a.publishedAt);
+          const isDraftOrMod = a.status === 'bozza' || a.status === 'in_moderazione' || a.status === 'rifiutato' || a.status === 'in_revisione';
+          if (!isPub || isDraftOrMod) continue;
           const slug = a.slug || a.id;
           if (!slug) continue;
           const norm = normalizeSlugWorker(slug);
@@ -8261,6 +8270,9 @@ ${newsItems}
         const uniqueWorkerArticles = [];
         for (const a of (Array.isArray(memoryWorkerArticles) ? memoryWorkerArticles : [])) {
           if (!a) continue;
+          const isPub = a.status === 'pubblicato' || a.isPublished === true || (!a.status && a.publishedAt);
+          const isDraftOrMod = a.status === 'bozza' || a.status === 'in_moderazione' || a.status === 'rifiutato' || a.status === 'in_revisione';
+          if (!isPub || isDraftOrMod) continue;
           const slug = a.slug || a.id;
           if (!slug) continue;
           const norm = normalizeSlugWorker(slug);

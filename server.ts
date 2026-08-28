@@ -6937,6 +6937,11 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
       const list: any[] = [];
       for (const a of (Array.isArray(articles) ? articles : [])) {
         if (!a) continue;
+        // Strictly filter to ONLY approved and published articles in all sitemaps
+        const isPublished = a.status === 'pubblicato' || a.isPublished === true || (!a.status && a.publishedAt);
+        const isDraftOrMod = a.status === 'bozza' || a.status === 'in_moderazione' || a.status === 'rifiutato' || a.status === 'in_revisione';
+        if (!isPublished || isDraftOrMod) continue;
+
         const slug = a.slug || a.id;
         if (!slug) continue;
         const norm = normalizeSlug(slug);
@@ -8496,6 +8501,9 @@ ${newsItems}
       const articles = getServerArticles();
       const xml = generateComprehensiveSitemapXml(baseUrl, articles);
       res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       return res.send(xml);
     });
 
@@ -8505,6 +8513,9 @@ ${newsItems}
       const articles = getServerArticles();
       const xml = generateComprehensiveNewsSitemapXml(baseUrl, articles);
       res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       return res.send(xml);
     });
 
@@ -8514,6 +8525,9 @@ ${newsItems}
       const articles = getServerArticles();
       const html = generateComprehensiveSitemapHtml(baseUrl, articles);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       return res.send(html);
     });
 
@@ -8530,15 +8544,18 @@ ${newsItems}
       const articles = getServerArticles();
       const rss = generateComprehensiveRssXml(baseUrl, articles);
       res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       return res.send(rss);
     });
 
     // Emerging Standard /llms.txt and /llms-full.txt for LLM agents (ChatGPT, Perplexity, Gemini, Claude)
     app.get('/llms.txt', (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
-      const articles = getServerArticles().slice(0, 30);
+      const publishedArticles = getDeduplicatedArticles(getServerArticles()).slice(0, 30);
 
-      const articleList = articles.map(a => {
+      const articleList = publishedArticles.map(a => {
         const slug = a.slug || a.id;
         const cleanTitle = cleanMetaText(a.title);
         const cleanIntro = cleanMetaText(a.intro || a.content).slice(0, 120);
@@ -8560,14 +8577,15 @@ ${newsItems}
 ${articleList}
 `;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
       return res.send(content);
     });
 
     app.get('/llms-full.txt', (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
-      const articles = getServerArticles();
+      const publishedArticles = getDeduplicatedArticles(getServerArticles());
 
-      const articleFull = articles.map((a, idx) => {
+      const articleFull = publishedArticles.map((a, idx) => {
         const slug = a.slug || a.id;
         const cleanTitle = cleanMetaText(a.title);
         const cleanIntro = cleanMetaText(a.intro || a.content);
@@ -8594,10 +8612,11 @@ ${fullContent}
 ${articleFull}
 `;
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
       return res.send(content);
     });
 
-    // News API Endpoints for Local Storage Sync & Persistence
+    // News API Endpoints for Local Storage Sync & Dynamic Real-time Management
     app.get('/api/news/articles', (req, res) => {
       try {
         const articles = getServerArticles();
@@ -8607,24 +8626,136 @@ ${articleFull}
       }
     });
 
+    // Authoritative Sync Endpoint - immediately updates sitemaps
     app.post('/api/news/sync', (req, res) => {
       try {
-        const { articles } = req.body;
+        const { articles, replaceAll } = req.body;
         if (!articles || !Array.isArray(articles)) {
           return res.status(400).json({ success: false, message: 'Elenco articoli non fornito o formato non valido.' });
         }
 
-        const current = getServerArticles();
-        const map = new Map<string, any>();
-        current.forEach(a => { if (a && a.id) map.set(a.id, a); });
-        articles.forEach(a => { if (a && a.id) map.set(a.id, a); });
+        let finalList: any[] = [];
+        if (replaceAll) {
+          // Authoritative save from client state (respects deletions, edits, status changes)
+          const seen = new Set<string>();
+          for (const a of articles) {
+            if (a && a.id && !seen.has(String(a.id))) {
+              seen.add(String(a.id));
+              finalList.push(a);
+            }
+          }
+        } else {
+          const current = getServerArticles();
+          const map = new Map<string, any>();
+          current.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
+          articles.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
+          finalList = Array.from(map.values());
+        }
 
-        const merged = Array.from(map.values()).sort((a, b) =>
+        finalList.sort((a, b) =>
           new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
         );
 
-        saveServerArticles(merged);
-        return res.json({ success: true, count: merged.length });
+        saveServerArticles(finalList);
+        return res.json({ success: true, count: finalList.length });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // Direct Delete Endpoint - immediately removes article from server and all sitemaps
+    app.delete(['/api/news/articles/:id', '/api/news/delete/:id'], (req, res) => {
+      try {
+        const articleId = req.params.id;
+        if (!articleId) {
+          return res.status(400).json({ success: false, message: 'ID articolo obbligatorio.' });
+        }
+
+        const current = getServerArticles();
+        const updated = current.filter(a => a && String(a.id) !== String(articleId) && String(a.slug) !== String(articleId));
+        saveServerArticles(updated);
+
+        return res.json({ 
+          success: true, 
+          message: 'Articolo rimosso con successo da database e sitemap.',
+          remainingCount: updated.length 
+        });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    app.post('/api/news/delete', (req, res) => {
+      try {
+        const { id } = req.body;
+        if (!id) {
+          return res.status(400).json({ success: false, message: 'ID articolo obbligatorio.' });
+        }
+
+        const current = getServerArticles();
+        const updated = current.filter(a => a && String(a.id) !== String(id) && String(a.slug) !== String(id));
+        saveServerArticles(updated);
+
+        return res.json({ 
+          success: true, 
+          message: 'Articolo eliminato e rimosso istantaneamente da tutte le sitemap.',
+          remainingCount: updated.length 
+        });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // Direct Moderation Endpoint - immediately approves/rejects and updates sitemaps
+    app.post('/api/news/moderate', (req, res) => {
+      try {
+        const { id, action, moderatorNotes } = req.body;
+        if (!id || !action) {
+          return res.status(400).json({ success: false, message: 'ID e azione richiesti.' });
+        }
+
+        const current = getServerArticles();
+        let target: any = null;
+        const updated = current.map(art => {
+          if (art && (String(art.id) === String(id) || String(art.slug) === String(id))) {
+            let status = art.status;
+            let publishedAt = art.publishedAt;
+            let isFeatured = art.isFeatured;
+
+            if (action === 'approve') {
+              status = 'pubblicato';
+              publishedAt = publishedAt || new Date().toISOString();
+            } else if (action === 'reject') {
+              status = 'rifiutato';
+            } else if (action === 'request_changes') {
+              status = 'in_revisione';
+            } else if (action === 'toggle_featured') {
+              isFeatured = !isFeatured;
+            }
+
+            target = {
+              ...art,
+              status,
+              publishedAt,
+              isFeatured,
+              moderatorNotes: moderatorNotes !== undefined ? moderatorNotes : art.moderatorNotes,
+              updatedAt: new Date().toISOString()
+            };
+            return target;
+          }
+          return art;
+        });
+
+        if (!target) {
+          return res.status(404).json({ success: false, message: 'Articolo non trovato.' });
+        }
+
+        saveServerArticles(updated);
+        return res.json({ 
+          success: true, 
+          message: `Articolo aggiornato con successo (${action}) e sitemap sincronizzate.`,
+          article: target 
+        });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message });
       }

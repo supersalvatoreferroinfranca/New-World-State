@@ -467,11 +467,11 @@ export function saveArticles(articles: NewsArticle[]): void {
     localStorage.setItem(ARTICLES_STORAGE_KEY, JSON.stringify(articles));
     window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
 
-    // Asynchronously sync articles with server for social preview generation & SEO
+    // Asynchronously sync authoritative articles with server for social preview generation & real-time SEO sitemaps
     safeFetch('/api/news/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articles })
+      body: JSON.stringify({ articles, replaceAll: true })
     }).catch(err => console.warn('[NEWS-SERVICE] Server sync error:', err));
   } catch (e) {
     console.error('[NEWS-SERVICE] Error saving articles:', e);
@@ -669,6 +669,13 @@ export function deleteArticle(id: string): void {
   const articles = getArticles();
   const filtered = articles.filter(a => a.id !== id);
   saveArticles(filtered);
+
+  // Directly call server delete endpoint for immediate elimination from all sitemaps and cache
+  safeFetch('/api/news/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  }).catch(() => {});
 }
 
 // Moderation Actions by Custodi Digitali
@@ -708,6 +715,13 @@ export function moderateArticle(
 
   const updatedList = articles.map(a => a.id === id ? updatedArticle : a);
   saveArticles(updatedList);
+
+  // Directly send moderation event to server to ensure instant approval & sitemap registration
+  safeFetch('/api/news/moderate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, action, moderatorNotes })
+  }).catch(() => {});
 
   if (action === 'approve') {
     triggerNotification(
