@@ -312,7 +312,12 @@ self.addEventListener('fetch', (event) => {
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
           }
           return response;
+        }).catch((fetchErr) => {
+          console.warn('[SW] Asset fetch failed:', event.request.url, fetchErr);
+          return new Response('Asset not found or offline', { status: 404, statusText: 'Not Found' });
         });
+      }).catch(() => {
+        return fetch(event.request).catch(() => new Response('Asset not found or offline', { status: 404, statusText: 'Not Found' }));
       })
     );
     return;
@@ -331,7 +336,9 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        return caches.match(event.request);
+        return caches.match(event.request).then((cached) => {
+          return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+        });
       })
   );
 });

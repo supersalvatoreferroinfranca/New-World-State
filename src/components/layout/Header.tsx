@@ -52,6 +52,12 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               <div className="absolute -inset-1 bg-brand-gold/20 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
               <img 
                 src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.endsWith('/logo.svg')) {
+                    target.src = '/logo.svg';
+                  }
+                }}
                 alt="New World State Logo" 
                 className="h-14 w-auto object-contain relative"
               />
@@ -149,6 +155,12 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
                 <div className="flex items-center gap-3">
                   <img 
                     src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.endsWith('/logo.svg')) {
+                        target.src = '/logo.svg';
+                      }
+                    }}
                     alt="Logo" 
                     className="h-10 w-auto object-contain"
                   />

@@ -8308,7 +8308,7 @@ ${newsItems}
           <header style="border-bottom:1px solid rgba(255,255,255,0.1);background:rgba(10,16,31,0.95);position:sticky;top:0;z-index:50;backdrop-filter:blur(8px);padding:14px 20px;">
             <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;">
               <a href="${baseUrl}/" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;">
-                <img src="${baseUrl}/LOGO_NEW-WORLD-STATE.jpg" alt="New World State" style="width:40px;height:40px;border-radius:50%;border:2px solid #c5a880;object-fit:cover;" />
+                <img src="${baseUrl}/LOGO_NEW-WORLD-STATE.jpg" alt="New World State" onerror="this.onerror=null;this.src='${baseUrl}/logo.svg';" style="width:40px;height:40px;border-radius:50%;border:2px solid #c5a880;object-fit:cover;" />
                 <div>
                   <div style="font-weight:700;font-size:16px;color:#f8fafc;letter-spacing:0.5px;">NEW WORLD STATE 1.0</div>
                   <div style="font-size:11px;color:#c5a880;text-transform:uppercase;letter-spacing:1px;">Giornale Sovrano • News Authority</div>
