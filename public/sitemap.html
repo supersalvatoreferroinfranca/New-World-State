@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mappa del Sito (Sitemap HTML) | New World State 1.0</title>
+  <meta name="description" content="Mappa del sito e indice gerarchico completo del portale New World State 1.0: sezioni istituzionali, democrazia diretta, archivio notizie, testi costituzionali in 11 lingue e conformità GDPR.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://newworldstate.cloud/sitemap.html">
+  <meta property="og:title" content="Mappa del Sito (Sitemap HTML) | New World State 1.0">
+  <meta property="og:description" content="Indice completo e navigabile di tutte le sezioni, notizie e documenti ufficiali dello Stato Mondiale Sovrano.">
+  <meta property="og:url" content="https://newworldstate.cloud/sitemap.html">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://newworldstate.cloud/LOGO_NEW-WORLD-STATE.jpg">
+  <link rel="icon" type="image/x-icon" href="https://newworldstate.cloud/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://newworldstate.cloud/rss.xml">
+  <link rel="sitemap" type="application/xml" title="Sitemap XML" href="https://newworldstate.cloud/sitemap.xml">
+  <link rel="sitemap" type="application/xml" title="News Sitemap XML" href="https://newworldstate.cloud/sitemap-news.xml">
+  
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-card: #ffffff;
+      --navy: #0a1c3e;
+      --navy-light: #162b55;
+      --gold: #c5a880;
+      --gold-light: #dfc8a8;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-accent: rgba(197, 168, 128, 0.3);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(10,28,62,0.07);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 0;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      color: #ffffff;
+      padding: 48px 24px 40px;
+      border-bottom: 4px solid var(--gold);
+      box-shadow: var(--shadow-md);
+    }
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-logo {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 2px solid var(--gold);
+      object-fit: cover;
+      background: #000;
+    }
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--gold-light);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .quick-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-quick {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(197, 168, 128, 0.4);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-quick:hover {
+      background: var(--gold);
+      color: var(--navy);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+    .hero-title {
+      font-size: 32px;
+      font-weight: 800;
+      margin-top: 10px;
+      color: #ffffff;
+    }
+    .hero-desc {
+      font-size: 16px;
+      color: #cbd5e1;
+      max-width: 800px;
+      line-height: 1.5;
+    }
+    .search-bar-wrap {
+      margin-top: 12px;
+      position: relative;
+      max-width: 600px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 14px 20px 14px 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border-accent);
+      background: #ffffff;
+      font-size: 15px;
+      color: var(--text-main);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .search-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.35);
+    }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: #94a3b8;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      max-width: 1200px;
+      margin: -24px auto 32px;
+      padding: 0 24px;
+      position: relative;
+      z-index: 10;
+    }
+    .stat-box {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--navy);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 40px 0 20px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.02em;
+    }
+    .section-count {
+      background: #e2e8f0;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .sitemap-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 14px;
+    }
+    .sitemap-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    .sitemap-item:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .item-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--navy);
+      font-weight: 600;
+      font-size: 14px;
+      flex: 1;
+    }
+    .item-link:hover {
+      color: #936829;
+    }
+    .item-icon {
+      font-size: 18px;
+    }
+    .item-url {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: #f1f5f9;
+      padding: 3px 6px;
+      border-radius: 4px;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .item-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #936829;
+      background: #fef3c7;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 20px;
+    }
+    .article-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .article-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .card-badge {
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--navy);
+      background: #e0e7ff;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+    .card-title a {
+      text-decoration: none;
+      color: var(--navy);
+      transition: color 0.2s;
+    }
+    .card-title a:hover {
+      color: #936829;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      flex: 1;
+    }
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #94a3b8;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+    .lang-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed var(--border);
+    }
+    .lang-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+    .lang-pill {
+      font-size: 10px;
+      font-weight: 700;
+      text-decoration: none;
+      color: var(--navy);
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+    .lang-pill:hover {
+      background: var(--navy);
+      color: #ffffff;
+      border-color: var(--navy);
+    }
+    .feed-links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .feed-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--navy);
+      border-radius: 8px;
+      padding: 16px 20px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .feed-card:hover {
+      border-left-color: var(--gold);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .feed-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .feed-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .feed-target {
+      font-size: 11px;
+      font-family: monospace;
+      color: #936829;
+      margin-top: 4px;
+    }
+    .site-footer {
+      background: var(--navy);
+      color: #94a3b8;
+      padding: 40px 24px;
+      text-align: center;
+      font-size: 13px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .footer-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .footer-links a:hover {
+      color: var(--gold);
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 768px) {
+      .header-banner { padding: 32px 16px 30px; }
+      .hero-title { font-size: 24px; }
+      .sitemap-list { grid-template-columns: 1fr; }
+      .articles-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header-banner">
+    <div class="header-container">
+      <div class="top-nav">
+        <a href="https://newworldstate.cloud/" class="brand-group">
+          <img src="https://newworldstate.cloud/LOGO_NEW-WORLD-STATE.jpg" alt="Logo New World State" class="brand-logo" onerror="this.style.display='none'">
+          <div>
+            <div class="brand-title">New World State 1.0</div>
+            <div class="brand-subtitle">Mappa del Sito Ufficiale &amp; Indice Risorse</div>
+          </div>
+        </a>
+        <div class="quick-links">
+          <a href="https://newworldstate.cloud/" class="btn-quick">🏛️ Portale Home</a>
+          <a href="https://newworldstate.cloud/?tab=news" class="btn-quick">📰 Notizie</a>
+          <a href="https://newworldstate.cloud/?tab=constitution" class="btn-quick">📜 Costituzione</a>
+          <a href="https://newworldstate.cloud/sitemap.xml" target="_blank" class="btn-quick">⚙️ Sitemap XML</a>
+        </div>
+      </div>
+
+      <div>
+        <h1 class="hero-title">Mappa del Sito (HTML Sitemap)</h1>
+        <p class="hero-desc">Indice gerarchico completo e navigabile di tutte le sezioni di governo, archivio notizie indipendenti, testi costituzionali in 11 lingue ufficiali e informative di conformità legale.</p>
+        
+        <div class="search-bar-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="sitemapFilter" class="search-input" placeholder="Cerca tra tutte le pagine, articoli, costituzioni e sezioni..." aria-label="Filtra sitemap">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-number">24</div>
+      <div class="stat-label">Pagine &amp; Sezioni</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">11</div>
+      <div class="stat-label">Notizie Pubblicate</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">11</div>
+      <div class="stat-label">Traduzioni Costituzione</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">11</div>
+      <div class="stat-label">Lingue Supportate</div>
+    </div>
+  </div>
+
+  <main class="main-container">
+
+    <!-- SEZIONE 1: PIATTAFORMA ISTITUZIONALE -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">🏛️ Piattaforma &amp; Servizi Sovrani</h2>
+      <span class="section-count">Principali</span>
+    </div>
+    <ul class="sitemap-list" id="institutionalList">
+      
+          <li class="sitemap-item" data-search="New World State 1.0 - Portale Ufficiale e Registro Mondiale">
+            <a href="https://newworldstate.cloud/" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">New World State 1.0 - Portale Ufficiale e Registro Mondiale</span>
+            </a>
+            <span class="item-url">/</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Mappa del Sito Ufficiale (HTML Sitemap) - New World State 1.0">
+            <a href="https://newworldstate.cloud/sitemap.html" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Mappa del Sito Ufficiale (HTML Sitemap) - New World State 1.0</span>
+            </a>
+            <span class="item-url">/sitemap.html</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Portale Notizie &amp; Giornalismo Sovrano | New World State 1.0">
+            <a href="https://newworldstate.cloud/?tab=news" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Portale Notizie &amp; Giornalismo Sovrano | New World State 1.0</span>
+            </a>
+            <span class="item-url">/?tab=news</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Richiesta Cittadinanza Sovrana &amp; Registro Mondiale">
+            <a href="https://newworldstate.cloud/?tab=register" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Richiesta Cittadinanza Sovrana &amp; Registro Mondiale</span>
+            </a>
+            <span class="item-url">/?tab=register</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Democrazia Diretta &amp; Referendum Popolari Sovrani">
+            <a href="https://newworldstate.cloud/?tab=democracy" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Democrazia Diretta &amp; Referendum Popolari Sovrani</span>
+            </a>
+            <span class="item-url">/?tab=democracy</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Assemblea Federale e Comunicazioni Sovrane">
+            <a href="https://newworldstate.cloud/?tab=chat" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Assemblea Federale e Comunicazioni Sovrane</span>
+            </a>
+            <span class="item-url">/?tab=chat</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Costituzione dello Stato Mondiale Sovrano">
+            <a href="https://newworldstate.cloud/?tab=constitution" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Costituzione dello Stato Mondiale Sovrano</span>
+            </a>
+            <span class="item-url">/?tab=constitution</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Carta Fondamentale dei Diritti e Doveri Sovrani">
+            <a href="https://newworldstate.cloud/?tab=charter" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Carta Fondamentale dei Diritti e Doveri Sovrani</span>
+            </a>
+            <span class="item-url">/?tab=charter</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Governance &amp; Organigramma Istituzionale Sovrano">
+            <a href="https://newworldstate.cloud/?tab=governance" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Governance &amp; Organigramma Istituzionale Sovrano</span>
+            </a>
+            <span class="item-url">/?tab=governance</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Protocollo di Crittografia e Privacy dei Cittadini">
+            <a href="https://newworldstate.cloud/?tab=privacy" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Protocollo di Crittografia e Privacy dei Cittadini</span>
+            </a>
+            <span class="item-url">/?tab=privacy</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Stato dei Nodi di Rete e Server Decentralizzati">
+            <a href="https://newworldstate.cloud/?tab=network" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Stato dei Nodi di Rete e Server Decentralizzati</span>
+            </a>
+            <span class="item-url">/?tab=network</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Verifica Crittografica Cittadino e Documenti d&#039;Identità">
+            <a href="https://newworldstate.cloud/verify" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Verifica Crittografica Cittadino e Documenti d&#039;Identità</span>
+            </a>
+            <span class="item-url">/verify</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Registro Mondiale dell&#039;Identità Digitale Sovrana">
+            <a href="https://newworldstate.cloud/?tab=identity" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Registro Mondiale dell&#039;Identità Digitale Sovrana</span>
+            </a>
+            <span class="item-url">/?tab=identity</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Domande Frequenti &amp; Risposte Istituzionali (FAQ)">
+            <a href="https://newworldstate.cloud/?tab=faq" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Domande Frequenti &amp; Risposte Istituzionali (FAQ)</span>
+            </a>
+            <span class="item-url">/?tab=faq</span>
+          </li>
+        
+    </ul>
+
+    <!-- SEZIONE 2: ARCHIVIO NOTIZIE -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">📰 Archivio Notizie &amp; Giornalismo Sovrano</h2>
+      <span class="section-count">11 Articoli</span>
+    </div>
+    <div class="articles-grid" id="newsGrid">
+      
+          <div class="sitemap-card article-card" data-search="Articolo di Test Inserimento Automatico Sitemap Politica &amp; Sovranità Cronista Ufficiale">
+            <div class="card-badge">Politica &amp; Sovranità</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap">Articolo di Test Inserimento Automatico Sitemap</a>
+            </h3>
+            <p class="card-desc">Test automatico per verificare che la sitemap contenga immediatamente i nuovi articoli....</p>
+            <div class="card-meta">
+              <span>✍️ Cronista Ufficiale</span>
+              <span>📅 2026-08-28</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali Politica &amp; Sovranità Elenor Vance (Cronista Capo)">
+            <div class="card-badge">Politica &amp; Sovranità</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</a>
+            </h3>
+            <p class="card-desc">Analisi di approfondimento geopolitico sulla paralisi del Consiglio di Sicurezza ONU nei conflitti contemporanei e sulla necessità di nuove ...</p>
+            <div class="card-meta">
+              <span>✍️ Elenor Vance (Cronista Capo)</span>
+              <span>📅 2026-08-25</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server Tecnologia &amp; Rete Sophia Chen">
+            <div class="card-badge">Tecnologia &amp; Rete</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza">Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</a>
+            </h3>
+            <p class="card-desc">Test di resilienza completato con successo su 12 nodi distribuiti globalmente per garantire l&#039;operatività ininterrotta del portale....</p>
+            <div class="card-meta">
+              <span>✍️ Sophia Chen</span>
+              <span>📅 2026-08-25</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita Economia &amp; Finanza Marcus Thorne">
+            <div class="card-badge">Economia &amp; Finanza</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita">Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</a>
+            </h3>
+            <p class="card-desc">Istituito il Fondo Sovrano d&#039;Investimento Solidale per finanziare progetti di autosufficienza energetica e sviluppo agroalimentare sostenibi...</p>
+            <div class="card-meta">
+              <span>✍️ Marcus Thorne</span>
+              <span>📅 2026-08-24</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale Cultura &amp; Società Elenor Vance (Cronista Capo)">
+            <div class="card-badge">Cultura &amp; Società</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale">Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</a>
+            </h3>
+            <p class="card-desc">Aperte le iscrizioni per i corsi internazionali liberi su sovranità personale, diritti inalienabili e autodeterminazione dei popoli....</p>
+            <div class="card-meta">
+              <span>✍️ Elenor Vance (Cronista Capo)</span>
+              <span>📅 2026-08-23</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini Diritti &amp; Costituzione Marcus Thorne">
+            <div class="card-badge">Diritti &amp; Costituzione</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy">Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</a>
+            </h3>
+            <p class="card-desc">Approvato a maggioranza qualificata il nuovo disciplinare a protezione dei dati biometrici e per la riservatezza delle transazioni comunitar...</p>
+            <div class="card-meta">
+              <span>✍️ Marcus Thorne</span>
+              <span>📅 2026-08-23</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale Diritti &amp; Costituzione Marcus Thorne">
+            <div class="card-badge">Diritti &amp; Costituzione</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale">Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</a>
+            </h3>
+            <p class="card-desc">Risoluzione fondamentale approvata dal Consiglio dei Garanti sulla tutela dell&#039;integrità biologica e dell&#039;identità digitale sovrana....</p>
+            <div class="card-meta">
+              <span>✍️ Marcus Thorne</span>
+              <span>📅 2026-08-22</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale Economia &amp; Finanza Sophia Chen">
+            <div class="card-badge">Economia &amp; Finanza</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria">Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</a>
+            </h3>
+            <p class="card-desc">Reportage economico sui circuiti di credito reciproco e sull&#039;adozione di unità di scambio ancorate al valore del lavoro reale....</p>
+            <div class="card-meta">
+              <span>✍️ Sophia Chen</span>
+              <span>📅 2026-08-21</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0 Politica &amp; Sovranità Elenor Vance (Cronista Capo)">
+            <div class="card-badge">Politica &amp; Sovranità</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10">Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</a>
+            </h3>
+            <p class="card-desc">L&#039;Assemblea Fondativa annuncia l&#039;apertura del portale sovrano decentralizzato. Tutti i cittadini hanno ora diritto di voto diretto sui refer...</p>
+            <div class="card-meta">
+              <span>✍️ Elenor Vance (Cronista Capo)</span>
+              <span>📅 2026-08-21</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale Tecnologia &amp; Rete Sophia Chen">
+            <div class="card-badge">Tecnologia &amp; Rete</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale">Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</a>
+            </h3>
+            <p class="card-desc">Linee guida per l&#039;impiego di modelli linguistici aperti al servizio della sintesi legislativa e della trasparenza amministrativa....</p>
+            <div class="card-meta">
+              <span>✍️ Sophia Chen</span>
+              <span>📅 2026-08-20</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte Cultura &amp; Società Elenor Vance (Cronista Capo)">
+            <div class="card-badge">Cultura &amp; Società</div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte">Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</a>
+            </h3>
+            <p class="card-desc">Iniziativa per la conservazione digitale permanente dei testi storici, filosofici e scientifici liberi da copyright restrittivo....</p>
+            <div class="card-meta">
+              <span>✍️ Elenor Vance (Cronista Capo)</span>
+              <span>📅 2026-08-19</span>
+            </div>
+            <div class="lang-links">
+              <span class="lang-label">Traduzioni:</span>
+              <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte" class="lang-pill" title="Lingua IT">IT</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=en" class="lang-pill" title="Lingua EN">EN</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=fr" class="lang-pill" title="Lingua FR">FR</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=es" class="lang-pill" title="Lingua ES">ES</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=pt" class="lang-pill" title="Lingua PT">PT</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ru" class="lang-pill" title="Lingua RU">RU</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=hi" class="lang-pill" title="Lingua HI">HI</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=bn" class="lang-pill" title="Lingua BN">BN</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=zh" class="lang-pill" title="Lingua ZH">ZH</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ja" class="lang-pill" title="Lingua JA">JA</a><a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ar" class="lang-pill" title="Lingua AR">AR</a>
+            </div>
+          </div>
+        
+    </div>
+
+    <!-- SEZIONE 3: CATEGORIE NOTIZIE -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">📂 Categorie &amp; Canali Tematici</h2>
+      <span class="section-count">5 Categorie</span>
+    </div>
+    <ul class="sitemap-list" id="categoryList">
+      
+          <li class="sitemap-item" data-search="Notizie Politica &amp; Sovranità - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-politica" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Politica &amp; Sovranità - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-politica</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Notizie Economia &amp; Finanza Sostenibile - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-economia" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Economia &amp; Finanza Sostenibile - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-economia</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Notizie Diritti &amp; Costituzione Sovrana - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-diritti" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Diritti &amp; Costituzione Sovrana - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-diritti</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Notizie Tecnologia &amp; Innovazione Decentralizzata - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-tecnologia" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Tecnologia &amp; Innovazione Decentralizzata - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-tecnologia</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Notizie Cultura &amp; Società Globale - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-cultura" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Cultura &amp; Società Globale - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-cultura</span>
+          </li>
+        
+    </ul>
+
+    <!-- SEZIONE 4: COSTITUZIONE NELLE 11 LINGUE -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">📜 Costituzione e Testi Fondamentali nelle 11 Lingue Ufficiali</h2>
+      <span class="section-count">11 Documenti PDF</span>
+    </div>
+    <ul class="sitemap-list" id="constitutionList">
+      
+          <li class="sitemap-item" data-search="Costituzione e Atto Costitutivo dello Stato Mondiale (Italiano) it">
+            <a href="https://newworldstate.cloud/costitution/COSTITUZIONE-E-ATTO-COSTITUTIVO-STATO-MONDIALE.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇮🇹</span>
+              <span class="item-name">Costituzione e Atto Costitutivo dello Stato Mondiale (Italiano)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (IT)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Constitution of the Sovereign World State (English) en">
+            <a href="https://newworldstate.cloud/costitution/CONSTITUTION-OF-THE-SOVEREIGN-WORLD-STATE.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇬🇧</span>
+              <span class="item-name">Constitution of the Sovereign World State (English)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (EN)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Constitution de l&#039;État Mondial Souverain (Français) fr">
+            <a href="https://newworldstate.cloud/costitution/CONSTITUTION-DE-LETAT-MONDIAL-SOUVERAIN-Francese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇫🇷</span>
+              <span class="item-name">Constitution de l&#039;État Mondial Souverain (Français)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (FR)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Constitución del Estado Mundial Soberano (Español) es">
+            <a href="https://newworldstate.cloud/costitution/CONSTITUCION-DEL-ESTADO-MUNDIAL-SOBERANO.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇪🇸</span>
+              <span class="item-name">Constitución del Estado Mundial Soberano (Español)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (ES)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Constituição do Estado Soberano Mundial (Português) pt">
+            <a href="https://newworldstate.cloud/costitution/CONSTITUICAO-DO-ESTADO-SOBERANO-MUNDIAL-Portoghese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇵🇹</span>
+              <span class="item-name">Constituição do Estado Soberano Mundial (Português)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (PT)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Конституция Суверенного Мирового Государства (Русский) ru">
+            <a href="https://newworldstate.cloud/costitution/КОНСТИТУЦИЯ-СУВЕРЕННОГО-МИРОВОГО-ГОСУДАРСТВА-Russo.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇷🇺</span>
+              <span class="item-name">Конституция Суверенного Мирового Государства (Русский)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (RU)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="संप्रभु विश्व राज्य का संविधान (हिन्दी) hi">
+            <a href="https://newworldstate.cloud/costitution/संप्रभु-विश्व-राज्य-Hindi.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇮🇳</span>
+              <span class="item-name">संप्रभु विश्व राज्य का संविधान (हिन्दी)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (HI)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="সার্বভৌম বিশ্ব রাষ্ট্রের সংবিধান (বাংলা) bn">
+            <a href="https://newworldstate.cloud/costitution/সার্বভৌম-विश्व-রাষ্ট্র-Bengalese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇧🇩</span>
+              <span class="item-name">সার্বভৌম বিশ্ব রাষ্ট্রের সংবিধান (বাংলা)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (BN)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="主权世界国家宪法 (中文) zh">
+            <a href="https://newworldstate.cloud/costitution/主权世界国家-Cinese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇨🇳</span>
+              <span class="item-name">主权世界国家宪法 (中文)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (ZH)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="主権世界国家憲法 (日本語) ja">
+            <a href="https://newworldstate.cloud/costitution/主権世界国家-Giapponese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇯🇵</span>
+              <span class="item-name">主権世界国家憲法 (日本語)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (JA)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="دستور الدولة العالمية ذات السيادة (العربية) ar">
+            <a href="https://newworldstate.cloud/costitution/دستور-الدولة-العالمية-ذات-السيادة-Arabo.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇸🇦</span>
+              <span class="item-name">دستور الدولة العالمية ذات السيادة (العربية)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (AR)</span>
+          </li>
+        
+    </ul>
+
+    <!-- SEZIONE 5: CONFORMITÀ E LEGALI -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">⚖️ Conformità Legale, Trasparenza &amp; GDPR</h2>
+      <span class="section-count">5 Documenti</span>
+    </div>
+    <ul class="sitemap-list" id="complianceList">
+      
+          <li class="sitemap-item" data-search="Informativa sulla Privacy &amp; Normativa GDPR">
+            <a href="https://newworldstate.cloud/?compliance=privacy" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">Informativa sulla Privacy &amp; Normativa GDPR</span>
+            </a>
+            <span class="item-url">/?compliance=privacy</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Termini e Condizioni di Utilizzo della Piattaforma">
+            <a href="https://newworldstate.cloud/?compliance=terms" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">Termini e Condizioni di Utilizzo della Piattaforma</span>
+            </a>
+            <span class="item-url">/?compliance=terms</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Informativa Estesa sui Cookie e Tracciamento">
+            <a href="https://newworldstate.cloud/?compliance=cookies" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">Informativa Estesa sui Cookie e Tracciamento</span>
+            </a>
+            <span class="item-url">/?compliance=cookies</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Dichiarazione di Accessibilità Universale">
+            <a href="https://newworldstate.cloud/?compliance=accessibility" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">Dichiarazione di Accessibilità Universale</span>
+            </a>
+            <span class="item-url">/?compliance=accessibility</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="California Consumer Privacy Act (CCPA) Disclosure">
+            <a href="https://newworldstate.cloud/?compliance=ccpa" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">California Consumer Privacy Act (CCPA) Disclosure</span>
+            </a>
+            <span class="item-url">/?compliance=ccpa</span>
+          </li>
+        
+    </ul>
+
+    <!-- SEZIONE 6: FEEDS E CRAWLER -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">🤖 Feed, Mappe XML &amp; Risorse per Motori di Ricerca / IA</h2>
+      <span class="section-count">Crawler &amp; LLM</span>
+    </div>
+    <div class="feed-links-grid">
+      <a href="https://newworldstate.cloud/sitemap.xml" target="_blank" class="feed-card">
+        <div class="feed-name">Sitemap XML Globale</div>
+        <div class="feed-desc">Indice completo in formato standard Sitemaps.org con estensioni immagini e hreflang multilingua.</div>
+        <div class="feed-target">/sitemap.xml</div>
+      </a>
+      <a href="https://newworldstate.cloud/sitemap-news.xml" target="_blank" class="feed-card">
+        <div class="feed-name">Google News Sitemap</div>
+        <div class="feed-desc">Indice tempestivo ottimizzato per Googlebot-News in tutte le 11 lingue mondiali.</div>
+        <div class="feed-target">/sitemap-news.xml</div>
+      </a>
+      <a href="https://newworldstate.cloud/sitemap.html" class="feed-card">
+        <div class="feed-name">Sitemap HTML Navigabile</div>
+        <div class="feed-desc">Mappa del sito interattiva accessibile a tutti gli utenti e ai crawler di ricerca.</div>
+        <div class="feed-target">/sitemap.html</div>
+      </a>
+      <a href="https://newworldstate.cloud/rss.xml" target="_blank" class="feed-card">
+        <div class="feed-name">Feed RSS 2.0 / Atom</div>
+        <div class="feed-desc">Flusso di syndication per aggregatori di notizie, lettori RSS e canali informativi.</div>
+        <div class="feed-target">/rss.xml</div>
+      </a>
+      <a href="https://newworldstate.cloud/llms.txt" target="_blank" class="feed-card">
+        <div class="feed-name">File di Contesto LLM (llms.txt)</div>
+        <div class="feed-desc">Documento strutturato per ingestion da parte di ChatGPT, Perplexity, Claude e Gemini.</div>
+        <div class="feed-target">/llms.txt</div>
+      </a>
+      <a href="https://newworldstate.cloud/robots.txt" target="_blank" class="feed-card">
+        <div class="feed-name">Direttive Robots (robots.txt)</div>
+        <div class="feed-desc">Istruzioni di scansione e permessi per tutti i web crawler e bot di intelligenza artificiale.</div>
+        <div class="feed-target">/robots.txt</div>
+      </a>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-links">
+      <a href="https://newworldstate.cloud/">Portale Principale</a>
+      <a href="https://newworldstate.cloud/?tab=news">Notizie</a>
+      <a href="https://newworldstate.cloud/?tab=democracy">Democrazia Diretta</a>
+      <a href="https://newworldstate.cloud/?tab=constitution">Costituzione</a>
+      <a href="https://newworldstate.cloud/?compliance=privacy">Privacy GDPR</a>
+      <a href="https://newworldstate.cloud/?compliance=terms">Termini</a>
+      <a href="https://newworldstate.cloud/sitemap.xml">Sitemap XML</a>
+      <a href="https://newworldstate.cloud/sitemap.html">Sitemap HTML</a>
+    </div>
+    <p>© 2026 New World State Authority. Tutti i diritti riservati. Mappa del sito aggiornata al 28 agosto 2026.</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('sitemapFilter');
+      if (!searchInput) return;
+
+      searchInput.addEventListener('input', function(e) {
+        const query = (e.target.value || '').toLowerCase().trim();
+        const items = document.querySelectorAll('[data-search]');
+        
+        items.forEach(function(item) {
+          const text = (item.getAttribute('data-search') || '').toLowerCase();
+          if (!query || text.includes(query)) {
+            item.classList.remove('hidden');
+          } else {
+            item.classList.add('hidden');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

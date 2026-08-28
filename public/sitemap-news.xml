@@ -4,6 +4,29 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
         <url>
+          <loc>https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:44:14.492Z</news:publication_date>
+            <news:title>Articolo di Test Inserimento Automatico Sitemap</news:title>
+          </news:news>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/articolo-di-test-inserimento-automatico-sitemap" />
+        </url>
+        <url>
           <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</loc>
           <news:news>
             <news:publication>
@@ -50,6 +73,52 @@
           <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza" />
         </url>
         <url>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
+            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+          </news:news>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita" />
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+          </news:news>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale" />
+        </url>
+        <url>
           <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</loc>
           <news:news>
             <news:publication>
@@ -73,6 +142,52 @@
           <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy" />
         </url>
         <url>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
+            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+          </news:news>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale" />
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
+            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+          </news:news>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria" />
+        </url>
+        <url>
           <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10</loc>
           <news:news>
             <news:publication>
@@ -94,5 +209,51 @@
           <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ja" />
           <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ar" />
           <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10" />
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
+            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+          </news:news>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale" />
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
+            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+          </news:news>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte" />
         </url>
 </urlset>

@@ -51,10 +51,12 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
             <div className="relative group">
               <div className="absolute -inset-1 bg-brand-gold/20 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
               <img 
-                src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
+                src={branding.logo || "https://www.newworldstate.org/documents/branding_logo/fronte.jpg"} 
                 onError={(e) => {
                   const target = e.currentTarget;
-                  if (!target.src.endsWith('/logo.svg')) {
+                  if (!target.src.includes('LOGO_NEW-WORLD-STATE.jpg') && !target.src.endsWith('/logo.svg')) {
+                    target.src = '/LOGO_NEW-WORLD-STATE.jpg';
+                  } else if (!target.src.endsWith('/logo.svg')) {
                     target.src = '/logo.svg';
                   }
                 }}
@@ -154,10 +156,12 @@ export default function Header({ activeTab, setActiveTab }: HeaderProps) {
               <div className="h-20 px-6 border-b border-white/10 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3">
                   <img 
-                    src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
+                    src={branding.logo || "https://www.newworldstate.org/documents/branding_logo/fronte.jpg"} 
                     onError={(e) => {
                       const target = e.currentTarget;
-                      if (!target.src.endsWith('/logo.svg')) {
+                      if (!target.src.includes('LOGO_NEW-WORLD-STATE.jpg') && !target.src.endsWith('/logo.svg')) {
+                        target.src = '/LOGO_NEW-WORLD-STATE.jpg';
+                      } else if (!target.src.endsWith('/logo.svg')) {
                         target.src = '/logo.svg';
                       }
                     }}

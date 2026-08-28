@@ -497,7 +497,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
   if (article.images && Array.isArray(article.images) && article.images.length > 0) {
     const firstImg = article.images[0];
     const rawImgUrl = firstImg ? (firstImg.url || firstImg.sourceUrl || firstImg.previewUrl || '') : '';
-    if (rawImgUrl && rawImgUrl !== '/LOGO_NEW-WORLD-STATE.jpg') {
+    if (rawImgUrl && rawImgUrl !== '/LOGO_NEW-WORLD-STATE.jpg' && rawImgUrl !== 'https://www.newworldstate.org/documents/branding_logo/fronte.jpg') {
       const u = rawImgUrl.trim();
       if (u.startsWith('http://') || u.startsWith('https://')) {
         imageUrl = u;
@@ -614,7 +614,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
             "url": baseUrl,
             "logo": {
               "@type": "ImageObject",
-              "url": `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`,
+              "url": "https://www.newworldstate.org/documents/branding_logo/fronte.jpg",
               "width": 512,
               "height": 512
             },
@@ -726,7 +726,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
       <header style="border-bottom:1px solid rgba(255,255,255,0.1);background:rgba(10,16,31,0.95);position:sticky;top:0;z-index:50;backdrop-filter:blur(8px);padding:14px 20px;">
         <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;">
           <a href="${baseUrl}/" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;">
-            <img src="${baseUrl}/LOGO_NEW-WORLD-STATE.jpg" alt="New World State" onerror="this.onerror=null;this.src='${baseUrl}/logo.svg';" style="width:40px;height:40px;border-radius:50%;border:2px solid #c5a880;object-fit:cover;" />
+            <img src="https://www.newworldstate.org/documents/branding_logo/fronte.jpg" alt="New World State" onerror="this.onerror=null;this.src='${baseUrl}/logo.svg';" style="width:40px;height:40px;border-radius:50%;border:2px solid #c5a880;object-fit:cover;" />
             <div>
               <div style="font-weight:700;font-size:16px;color:#f8fafc;letter-spacing:0.5px;">NEW WORLD STATE 1.0</div>
               <div style="font-size:11px;color:#c5a880;text-transform:uppercase;letter-spacing:1px;">Giornale Sovrano • News Authority</div>
@@ -862,7 +862,7 @@ function injectNewsPortalMetaTagsWorker(html, rawBaseUrl) {
   const canonicalUrl = `${baseUrl}/?tab=news`;
   const title = "Portale Notizie & Giornalismo Sovrano | New World State 1.0";
   const description = "Leggi le notizie ufficiali, i reportage, le inchieste e gli approfondimenti della comunità globale New World State. Giornalismo verificato, etico e indipendente.";
-  const imageUrl = `${baseUrl}/LOGO_NEW-WORLD-STATE.jpg`;
+  const imageUrl = "https://www.newworldstate.org/documents/branding_logo/fronte.jpg";
 
   const metaBlock = `
     <!-- Dynamic News Portal Meta Tags -->
@@ -911,7 +911,7 @@ const DEFAULT_INDEX_HTML = `<!doctype html>
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="New World State" />
     <meta property="og:title" content="New World State 1.0 | Registro Mondiale" />
-    <meta property="og:image" content="/LOGO_NEW-WORLD-STATE.jpg" />
+    <meta property="og:image" content="https://www.newworldstate.org/documents/branding_logo/fronte.jpg" />
     <link rel="shortcut icon" href="/favicon.ico?v=6" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=6" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=6" />
@@ -7875,7 +7875,7 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
   <meta property="og:description" content="Indice completo e navigabile di tutte le sezioni, notizie e documenti ufficiali dello Stato Mondiale Sovrano.">
   <meta property="og:url" content="${baseUrl}/sitemap.html">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="${baseUrl}/LOGO_NEW-WORLD-STATE.jpg">
+  <meta property="og:image" content="https://www.newworldstate.org/documents/branding_logo/fronte.jpg">
   <link rel="icon" type="image/x-icon" href="${baseUrl}/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="${baseUrl}/rss.xml">
   <link rel="sitemap" type="application/xml" title="Sitemap XML" href="${baseUrl}/sitemap.xml">
@@ -7948,7 +7948,7 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
     <div class="header-container">
       <div class="top-nav">
         <a href="${baseUrl}/" class="brand-group">
-          <img src="${baseUrl}/LOGO_NEW-WORLD-STATE.jpg" alt="Logo New World State" class="brand-logo" onerror="this.style.display='none'">
+          <img src="https://www.newworldstate.org/documents/branding_logo/fronte.jpg" alt="Logo New World State" class="brand-logo" onerror="this.style.display='none'">
           <div>
             <div class="brand-title">New World State 1.0</div>
             <div class="brand-subtitle">Mappa del Sito Ufficiale &amp; Indice Risorse</div>
@@ -8053,7 +8053,7 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
         ];
 
         const SITE_PAGES = [
-          { path: '', changefreq: 'daily', priority: '1.00', title: 'New World State 1.0 - Portale Ufficiale e Registro Mondiale', image: '/LOGO_NEW-WORLD-STATE.jpg', imageTitle: 'New World State 1.0 - Stemma Ufficiale', imageCaption: 'New World State 1.0 - Registro Mondiale e Sovranità Popolare' },
+          { path: '', changefreq: 'daily', priority: '1.00', title: 'New World State 1.0 - Portale Ufficiale e Registro Mondiale', image: 'https://www.newworldstate.org/documents/branding_logo/fronte.jpg', imageTitle: 'New World State 1.0 - Stemma Ufficiale', imageCaption: 'New World State 1.0 - Registro Mondiale e Sovranità Popolare' },
           { path: 'sitemap.html', changefreq: 'daily', priority: '0.90', title: 'Mappa del Sito Ufficiale (HTML Sitemap) - New World State 1.0' },
           { path: '?tab=news', changefreq: 'hourly', priority: '0.95', title: 'Portale Notizie & Giornalismo Sovrano | New World State 1.0', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80', imageTitle: 'New World State News Authority', imageCaption: 'Giornale Sovrano di Informazione e Geopolitica Indipendente' },
           { path: '?tab=register', changefreq: 'weekly', priority: '0.90', title: 'Richiesta Cittadinanza Sovrana & Registro Mondiale' },
@@ -8313,7 +8313,7 @@ ${newsItems}
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />
     <image>
-      <url>${baseUrl}/LOGO_NEW-WORLD-STATE.jpg</url>
+      <url>https://www.newworldstate.org/documents/branding_logo/fronte.jpg</url>
       <title>New World State News</title>
       <link>${baseUrl}/?tab=news</link>
     </image>

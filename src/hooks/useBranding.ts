@@ -14,7 +14,7 @@ let listeners: Array<(config: BrandingConfig) => void> = [];
 
 export function useBranding() {
   const [branding, setBranding] = useState<BrandingConfig>(cachedBranding || {
-    logo: '/LOGO_NEW-WORLD-STATE.jpg',
+    logo: 'https://www.newworldstate.org/documents/branding_logo/fronte.jpg',
     favicon: '/favicon.ico',
     'favicon-32x32': '/favicon-32x32.png',
     'favicon-16x16': '/favicon-16x16.png',
@@ -37,7 +37,7 @@ export function useBranding() {
         .then(res => res.json())
         .then(data => {
           if (data.success && data.branding) {
-            const logoVal = data.branding.logo || '/LOGO_NEW-WORLD-STATE.jpg';
+            const logoVal = data.branding.logo || 'https://www.newworldstate.org/documents/branding_logo/fronte.jpg';
             const faviconVal = data.branding.favicon || '/favicon.ico';
             const fav32Val = data.branding['favicon-32x32'] || '/favicon-32x32.png';
             const fav16Val = data.branding['favicon-16x16'] || '/favicon-16x16.png';
@@ -81,7 +81,7 @@ export function useBranding() {
       const res = await safeFetch(`/api/branding?t=${Date.now()}`);
       const data = await res.json();
       if (data.success && data.branding) {
-        const logoVal = data.branding.logo || '/LOGO_NEW-WORLD-STATE.jpg';
+        const logoVal = data.branding.logo || 'https://www.newworldstate.org/documents/branding_logo/fronte.jpg';
         const faviconVal = data.branding.favicon || '/favicon.ico';
         const fav32Val = data.branding['favicon-32x32'] || '/favicon-32x32.png';
         const fav16Val = data.branding['favicon-16x16'] || '/favicon-16x16.png';

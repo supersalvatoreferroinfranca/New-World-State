@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { NewsArticle, NewsCategory } from '../../types/news';
 import { getCategories, getArticles, incrementArticleViews } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/textFormatter';
 import { getPublicCanonicalOrigin, getPublicArticleUrl } from '../../utils/urlUtils';
+import { splitTextIntoSentenceChunks } from '../../utils/ttsChunker';
+import { globalFallbackTtsPlayer } from '../../utils/fallbackAudioTts';
 import SocialShareKit from './SocialShareKit';
 import { 
   X, 
@@ -24,7 +26,9 @@ import {
   Volume2,
   Play,
   Pause,
-  Square
+  Square,
+  Mic,
+  RotateCcw
 } from 'lucide-react';
 
 interface ArticleDetailModalProps {
@@ -52,18 +56,38 @@ export default function ArticleDetailModal({
   const [isPaused, setIsPaused] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoiceIndex, setSelectedVoiceIndex] = useState<number>(0);
+  const [selectedVoiceName, setSelectedVoiceName] = useState<string>('default');
+  const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
 
-  // Load available voices
+  const isPlayingRef = useRef(false);
+  const currentChunkIndexRef = useRef(0);
+  const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Split article into sentence chunks for smooth reading without browser lockups
+  const articleChunks = useMemo(() => {
+    if (!article) return [];
+    const cleanTitle = stripFormattingSymbols(article.title);
+    const cleanIntro = stripFormattingSymbols(article.intro || '');
+    const cleanContent = stripFormattingSymbols(article.content || '');
+    const fullText = `${cleanTitle}. ${cleanIntro ? cleanIntro + '.' : ''} ${cleanContent}`;
+    return splitTextIntoSentenceChunks(fullText, 140);
+  }, [article?.id, article?.title, article?.intro, article?.content]);
+
+  // Load available voices & auto-select best Italian voice
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       const updateVoices = () => {
         try {
           const available = window.speechSynthesis.getVoices() || [];
-          setVoices(available);
-          const itIndex = available.findIndex(v => v.lang && v.lang.startsWith('it'));
-          if (itIndex >= 0) {
-            setSelectedVoiceIndex(itIndex);
+          if (available.length > 0) {
+            setVoices(available);
+            setSelectedVoiceName(prev => {
+              if (prev && prev !== 'default' && available.some(v => v.name === prev)) {
+                return prev;
+              }
+              const itVoice = available.find(v => v.lang && v.lang.toLowerCase().startsWith('it'));
+              return itVoice ? itVoice.name : (available[0]?.name || 'default');
+            });
           }
         } catch (e) {
           // Ignore browser speech engine warnings
@@ -84,6 +108,172 @@ export default function ArticleDetailModal({
       };
     }
   }, []);
+
+  // Sorted list of voices: Italian voices at the top, then other languages
+  const sortedVoices = useMemo(() => {
+    if (voices.length === 0) return [];
+    const itVoices: SpeechSynthesisVoice[] = [];
+    const otherVoices: SpeechSynthesisVoice[] = [];
+    
+    voices.forEach(v => {
+      if (v.lang && v.lang.toLowerCase().startsWith('it')) {
+        itVoices.push(v);
+      } else {
+        otherVoices.push(v);
+      }
+    });
+
+    return [...itVoices, ...otherVoices];
+  }, [voices]);
+
+  // Completely terminates all audio and speech synthesis playback
+  const handleStopTTS = () => {
+    isPlayingRef.current = false;
+    setIsPlaying(false);
+    setIsPaused(false);
+    currentChunkIndexRef.current = 0;
+    setCurrentChunkIndex(0);
+    activeUtteranceRef.current = null;
+
+    try {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        // Additional cancel call ensures Chromium/Safari flush internal audio queue
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+          window.speechSynthesis.cancel();
+        }
+      }
+    } catch (e) {}
+
+    try {
+      globalFallbackTtsPlayer.stop();
+    } catch (e) {}
+
+    try {
+      const allAudios = document.querySelectorAll('audio');
+      allAudios.forEach(audio => {
+        try {
+          audio.pause();
+          audio.currentTime = 0;
+        } catch (e) {}
+      });
+    } catch (e) {}
+
+    try {
+      window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: false, isPaused: false } }));
+    } catch (e) {}
+  };
+
+  // Speak a specific sentence chunk with active voice and speed
+  const speakChunk = (chunkIdx: number, rate: number, voiceName: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (!isPlayingRef.current) return;
+
+    if (chunkIdx >= articleChunks.length) {
+      handleStopTTS();
+      return;
+    }
+
+    currentChunkIndexRef.current = chunkIdx;
+    setCurrentChunkIndex(chunkIdx);
+
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
+
+    const textToSpeak = articleChunks[chunkIdx];
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    activeUtteranceRef.current = utterance;
+    utterance.rate = rate;
+
+    const availableVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
+    const targetVoice = availableVoices.find(v => v.name === voiceName) || 
+                        availableVoices.find(v => v.lang && v.lang.toLowerCase().startsWith('it')) || 
+                        null;
+
+    if (targetVoice) {
+      utterance.voice = targetVoice;
+      utterance.lang = targetVoice.lang;
+    } else {
+      utterance.lang = 'it-IT';
+    }
+
+    utterance.onend = () => {
+      activeUtteranceRef.current = null;
+      if (!isPlayingRef.current) return;
+      const nextIdx = chunkIdx + 1;
+      if (nextIdx < articleChunks.length && isPlayingRef.current) {
+        speakChunk(nextIdx, rate, voiceName);
+      } else {
+        handleStopTTS();
+      }
+    };
+
+    utterance.onerror = (e) => {
+      if (e.error === 'interrupted' || e.error === 'canceled') return;
+      console.warn('[Article TTS] Utterance error on chunk', chunkIdx, e);
+      activeUtteranceRef.current = null;
+      if (!isPlayingRef.current) return;
+      const nextIdx = chunkIdx + 1;
+      if (nextIdx < articleChunks.length && isPlayingRef.current) {
+        speakChunk(nextIdx, rate, voiceName);
+      } else {
+        handleStopTTS();
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Play / Resume
+  const handlePlayTTS = () => {
+    if (!article || articleChunks.length === 0) return;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      alert(tText('Speech synthesis is not supported in this browser.', 'La sintesi vocale non è supportata da questo browser.'));
+      return;
+    }
+
+    isPlayingRef.current = true;
+    setIsPlaying(true);
+    setIsPaused(false);
+
+    try {
+      window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: true, isPaused: false } }));
+    } catch (e) {}
+
+    const startIdx = isPaused ? currentChunkIndexRef.current : (currentChunkIndexRef.current >= articleChunks.length ? 0 : currentChunkIndexRef.current);
+    speakChunk(startIdx, playbackRate, selectedVoiceName);
+  };
+
+  // Pause
+  const handlePauseTTS = () => {
+    isPlayingRef.current = false;
+    setIsPlaying(false);
+    setIsPaused(true);
+    try {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      globalFallbackTtsPlayer.pause();
+      window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: false, isPaused: true } }));
+    } catch (e) {}
+  };
+
+  // Change Voice in real time during article reading
+  const handleVoiceChange = (newVoiceName: string) => {
+    setSelectedVoiceName(newVoiceName);
+    if (isPlayingRef.current) {
+      speakChunk(currentChunkIndexRef.current, playbackRate, newVoiceName);
+    }
+  };
+
+  // Change Playback Speed in real time
+  const handleChangeRate = (newRate: number) => {
+    setPlaybackRate(newRate);
+    if (isPlayingRef.current) {
+      speakChunk(currentChunkIndexRef.current, newRate, selectedVoiceName);
+    }
+  };
 
   // Stop synthesis when modal closes or article changes & update document head meta tags + Schema.org NewsArticle JSON-LD for Google News & AI
   useEffect(() => {
@@ -110,7 +300,7 @@ export default function ArticleDetailModal({
       const slug = article.slug || article.id;
       const articleUrl = getPublicArticleUrl(slug);
       
-      let mainImg = `${origin}/LOGO_NEW-WORLD-STATE.jpg`;
+      let mainImg = 'https://www.newworldstate.org/documents/branding_logo/fronte.jpg';
       if (article.images && article.images.length > 0 && article.images[0]?.url) {
         const u = article.images[0].url.trim();
         if (u.startsWith('http://') || u.startsWith('https://')) mainImg = u;
@@ -164,7 +354,7 @@ export default function ArticleDetailModal({
               "url": origin,
               "logo": {
                 "@type": "ImageObject",
-                "url": `${origin}/LOGO_NEW-WORLD-STATE.jpg`,
+                "url": "https://www.newworldstate.org/documents/branding_logo/fronte.jpg",
                 "width": 512,
                 "height": 512
               },
@@ -220,98 +410,10 @@ export default function ArticleDetailModal({
         if (existingScript) {
           existingScript.remove();
         }
-        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-        }
-        setIsPlaying(false);
-        setIsPaused(false);
+        handleStopTTS();
       };
     }
   }, [article?.id, isOpen]);
-
-  const handlePlayTTS = () => {
-    if (!article) return;
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert(tText('Speech synthesis is not supported in this browser.', 'La sintesi vocale non è supportata da questo browser.'));
-      return;
-    }
-
-    if (isPaused) {
-      window.speechSynthesis.resume();
-      setIsPlaying(true);
-      setIsPaused(false);
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const cleanTitle = stripFormattingSymbols(article.title);
-    const cleanIntro = stripFormattingSymbols(article.intro);
-    const cleanContent = stripFormattingSymbols(article.content);
-    const textToRead = `${cleanTitle}. ${cleanIntro}. ${cleanContent}`;
-    const utterance = new SpeechSynthesisUtterance(textToRead);
-    utterance.rate = playbackRate;
-
-    if (voices.length > 0 && voices[selectedVoiceIndex]) {
-      utterance.voice = voices[selectedVoiceIndex];
-    } else {
-      utterance.lang = 'it-IT';
-    }
-
-    utterance.onend = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
-
-    utterance.onerror = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
-
-    window.speechSynthesis.speak(utterance);
-    setIsPlaying(true);
-    setIsPaused(false);
-  };
-
-  const handlePauseTTS = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.pause();
-      setIsPlaying(false);
-      setIsPaused(true);
-    }
-  };
-
-  const handleStopTTS = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setIsPaused(false);
-    }
-  };
-
-  const handleChangeRate = (rate: number) => {
-    setPlaybackRate(rate);
-    if (isPlaying && article) {
-      window.speechSynthesis.cancel();
-      const textToRead = `${article.title}. ${article.intro || ''}. ${article.content || ''}`;
-      const utterance = new SpeechSynthesisUtterance(textToRead);
-      utterance.rate = rate;
-      if (voices.length > 0 && voices[selectedVoiceIndex]) {
-        utterance.voice = voices[selectedVoiceIndex];
-      } else {
-        utterance.lang = 'it-IT';
-      }
-      utterance.onend = () => {
-        setIsPlaying(false);
-        setIsPaused(false);
-      };
-      utterance.onerror = () => {
-        setIsPlaying(false);
-        setIsPaused(false);
-      };
-      window.speechSynthesis.speak(utterance);
-    }
-  };
 
   if (!isOpen || !article) return null;
 
@@ -453,82 +555,140 @@ export default function ArticleDetailModal({
           </div>
 
           {/* Audio Reader TTS Player Widget */}
-          <div className="bg-gradient-to-r from-[#0a1c3e] via-[#122b5c] to-[#0a1c3e] rounded-2xl p-4 text-white shadow-lg border border-brand-gold/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-xl bg-brand-gold/20 text-brand-gold ${isPlaying ? 'animate-pulse' : ''}`}>
-                <Volume2 className="w-5 h-5" />
+          <div className="bg-gradient-to-br from-[#0a1c3e] via-[#122b5c] to-[#0a1c3e] rounded-2xl p-4 text-white shadow-xl border border-brand-gold/30 flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl bg-brand-gold/20 text-brand-gold ${isPlaying ? 'animate-pulse' : ''} shrink-0`}>
+                  <Volume2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-bold text-sm text-brand-gold tracking-wide">
+                      {tText('TTS Audio Reader', 'Lettore Vocale TTS')}
+                    </h4>
+                    {isPlaying && (
+                      <span className="flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-tech">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        {tText('Reading...', 'In riproduzione...')}
+                      </span>
+                    )}
+                    {isPaused && (
+                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30 font-tech">
+                        {tText('Paused', 'In Pausa')}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    {tText('Listen to the article read aloud with live voice selection and speed control', 'Ascolta l\'articolo letto a voce alta con cambio voce in tempo reale')}
+                  </p>
+                </div>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-sm text-brand-gold tracking-wide">
-                    {tText('TTS Audio Reader', 'Lettore Vocale TTS')}
-                  </h4>
-                  {isPlaying && (
-                    <span className="flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-tech">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                      {tText('Reading...', 'In riproduzione...')}
+
+              {/* Progress counter */}
+              {articleChunks.length > 0 && (
+                <div className="text-[11px] font-mono text-slate-300 self-start sm:self-auto bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 shrink-0">
+                  {isPlaying || isPaused ? (
+                    <span className="text-brand-gold font-bold">
+                      {tText('Sentence', 'Frase')} {currentChunkIndex + 1}/{articleChunks.length}
                     </span>
-                  )}
-                  {isPaused && (
-                    <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30 font-tech">
-                      {tText('Paused', 'In Pausa')}
+                  ) : (
+                    <span className="text-slate-400">
+                      {articleChunks.length} {tText('sentences', 'frasi')}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-300">
-                  {tText('Listen to the article read aloud by synthesized voice', 'Ascolta l\'articolo letto a voce alta dalla sintesi vocale')}
-                </p>
-              </div>
+              )}
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              {isPlaying ? (
-                <button
-                  type="button"
-                  onClick={handlePauseTTS}
-                  className="px-3.5 py-2 rounded-xl bg-amber-500 text-slate-900 font-bold text-xs hover:bg-amber-400 transition cursor-pointer flex items-center gap-1.5 shadow"
+            {/* Controls Bar: Voice Selector, Speed, Play/Pause/Stop */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2.5 border-t border-white/10">
+              {/* Voice Selector */}
+              <div className="flex items-center gap-2 bg-[#06122a] px-3 py-2 rounded-xl border border-white/10 flex-1 min-w-0">
+                <Mic className="w-4 h-4 text-brand-gold shrink-0" />
+                <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0 tracking-wider">
+                  {tText('Voice:', 'Voce:')}
+                </span>
+                <select
+                  value={selectedVoiceName}
+                  onChange={(e) => handleVoiceChange(e.target.value)}
+                  className="bg-transparent text-xs text-amber-100 font-medium w-full focus:outline-none cursor-pointer truncate"
+                  title={tText('Select or switch reading voice in real time', 'Seleziona o cambia voce di lettura in tempo reale')}
                 >
-                  <Pause className="w-4 h-4 fill-current" />
-                  <span>{tText('Pause', 'Pausa')}</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handlePlayTTS}
-                  className="px-4 py-2 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold text-xs hover:bg-white transition cursor-pointer flex items-center gap-1.5 shadow-md border border-brand-gold"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>{isPaused ? tText('Resume', 'Riprendi') : tText('Listen', 'Ascolta')}</span>
-                </button>
-              )}
+                  <option value="default" className="text-slate-900 bg-white">
+                    {tText('Default Voice (Italian Auto)', 'Voce Predefinita (Italiano Auto)')}
+                  </option>
+                  {sortedVoices.map((v) => {
+                    const isIt = v.lang && v.lang.toLowerCase().startsWith('it');
+                    const cleanName = v.name
+                      .replace(/Google/i, '')
+                      .replace(/Microsoft/i, '')
+                      .replace(/Desktop/i, '')
+                      .trim();
+                    const flag = isIt ? '🇮🇹 ' : (v.lang.startsWith('en') ? '🇬🇧 ' : (v.lang.startsWith('fr') ? '🇫🇷 ' : (v.lang.startsWith('es') ? '🇪🇸 ' : (v.lang.startsWith('de') ? '🇩🇪 ' : '🌐 '))));
+                    return (
+                      <option key={v.name} value={v.name} className="text-slate-900 bg-white">
+                        {flag}{cleanName} ({v.lang}) {v.localService ? '• HD' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
 
-              {(isPlaying || isPaused) && (
+              <div className="flex items-center justify-between lg:justify-end gap-2 shrink-0">
+                {/* Speed selector */}
+                <div className="flex items-center gap-1 bg-[#06122a] p-1 rounded-xl border border-white/10">
+                  {[0.8, 1.0, 1.25, 1.5].map((rate) => (
+                    <button
+                      key={rate}
+                      type="button"
+                      onClick={() => handleChangeRate(rate)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${
+                        playbackRate === rate
+                          ? 'bg-brand-gold text-[#0a1c3e] shadow-sm'
+                          : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      {rate}x
+                    </button>
+                  ))}
+                </div>
+
+                {/* Play / Pause Button */}
+                {isPlaying ? (
+                  <button
+                    type="button"
+                    onClick={handlePauseTTS}
+                    className="px-3.5 py-2 rounded-xl bg-amber-500 text-slate-900 font-bold text-xs hover:bg-amber-400 transition cursor-pointer flex items-center gap-1.5 shadow"
+                  >
+                    <Pause className="w-4 h-4 fill-current" />
+                    <span>{tText('Pause', 'Pausa')}</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handlePlayTTS}
+                    className="px-4 py-2 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold text-xs hover:bg-amber-300 transition cursor-pointer flex items-center gap-1.5 shadow-md border border-brand-gold"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                    <span>{isPaused ? tText('Resume', 'Riprendi') : tText('Listen', 'Ascolta')}</span>
+                  </button>
+                )}
+
+                {/* Stop Button (Terminates audio completely) */}
                 <button
                   type="button"
                   onClick={handleStopTTS}
-                  className="p-2 rounded-xl bg-white/10 text-slate-300 hover:text-white hover:bg-white/20 transition cursor-pointer"
-                  title={tText('Stop', 'Interrompi')}
+                  disabled={!isPlaying && !isPaused && currentChunkIndex === 0}
+                  className={`px-3 py-2 rounded-xl border font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm ${
+                    isPlaying || isPaused || currentChunkIndex > 0
+                      ? 'bg-red-500/20 border-red-400/40 text-red-300 hover:bg-red-500 hover:text-white'
+                      : 'bg-white/5 border-white/10 text-slate-500 cursor-not-allowed opacity-50'
+                  }`}
+                  title={tText('Stop and completely terminate audio playback', 'Interrompi e termina del tutto la riproduzione audio')}
                 >
-                  <Square className="w-4 h-4 fill-current" />
+                  <Square className="w-3.5 h-3.5 fill-current" />
+                  <span>{tText('Stop', 'Stop')}</span>
                 </button>
-              )}
-
-              {/* Speed selector */}
-              <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/10 ml-1">
-                {[0.8, 1.0, 1.25, 1.5].map((rate) => (
-                  <button
-                    key={rate}
-                    type="button"
-                    onClick={() => handleChangeRate(rate)}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${
-                      playbackRate === rate
-                        ? 'bg-brand-gold text-[#0a1c3e]'
-                        : 'text-slate-300 hover:text-white'
-                    }`}
-                  >
-                    {rate}x
-                  </button>
-                ))}
               </div>
             </div>
           </div>

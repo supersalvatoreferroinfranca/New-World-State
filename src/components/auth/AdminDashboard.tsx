@@ -1753,7 +1753,7 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <h4 className="font-serif font-bold text-slate-800 text-sm">Logo Ufficiale dello Stato</h4>
-                      <p className="text-[10px] text-slate-400">Risoluzione ideale: JPG (es. 512x512px o 1024x1024px)</p>
+                      <p className="text-[10px] text-slate-400">Risoluzione ideale: JPG (es. 512x512px o 1024x1024px) • Destinazione: <code className="text-brand-blue font-mono bg-slate-100 px-1 py-0.5 rounded">documents/branding_logo/fronte.jpg</code></p>
                     </div>
                   </div>
 
@@ -2820,7 +2820,8 @@ export default function AdminDashboard() {
                   <h4 className="font-bold text-slate-700 text-[10px] uppercase tracking-wider">2. Barra di Navigazione (Header)</h4>
                   <div className="bg-brand-blue rounded-lg p-3 text-white border border-brand-gold/30 flex items-center gap-3">
                     <img 
-                      src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
+                      src={branding.logo || "https://www.newworldstate.org/documents/branding_logo/fronte.jpg"} 
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/LOGO_NEW-WORLD-STATE.jpg'; }}
                       alt="Logo preview" 
                       className="h-7 w-auto object-contain rounded bg-white/10 p-0.5" 
                     />
@@ -2837,7 +2838,8 @@ export default function AdminDashboard() {
                   <div className="bg-slate-50 rounded-lg overflow-hidden border border-slate-200 text-[9px]">
                     <div className="h-24 bg-white flex items-center justify-center border-b border-slate-150 p-2 overflow-hidden">
                       <img 
-                        src={branding.logo || "/LOGO_NEW-WORLD-STATE.jpg"} 
+                        src={branding.logo || "https://www.newworldstate.org/documents/branding_logo/fronte.jpg"} 
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/LOGO_NEW-WORLD-STATE.jpg'; }}
                         alt="Logo preview" 
                         className="max-h-full max-w-full object-contain rounded" 
                       />
