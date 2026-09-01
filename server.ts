@@ -88,6 +88,28 @@ async function generateGeminiContentWithFallback(
             continue;
           }
           console.warn(`[GEMINI-FALLBACK] Max retries reached for "${model}". Falling back to next available model in queue...`);
+          
+          if (errStatus === 429 || errMsg.includes('429')) {
+             let delayStr = '';
+             try {
+                if (err.details && Array.isArray(err.details)) {
+                   const retryInfo = err.details.find((d: any) => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
+                   if (retryInfo && retryInfo.retryDelay) {
+                       delayStr = ' Attendi ' + retryInfo.retryDelay.replace('s', ' secondi') + ' prima di riprovare.';
+                   }
+                } else if (errMsg.includes('retry in')) {
+                   const match = errMsg.match(/retry in ([\d\.]+s)/);
+                   if (match) delayStr = ' Attendi ' + match[1].replace('s', ' secondi') + ' prima di riprovare.';
+                }
+             } catch(e) {}
+             
+             // Check if it's the free tier rate limit
+             if (errMsg.includes('free_tier_requests') || errMsg.includes('quota')) {
+                 lastError = new Error(`Limite quota API superato per l'AI gratuita.${delayStr}`);
+             } else {
+                 lastError = new Error(`Troppe richieste all'API AI (Rate Limit).${delayStr}`);
+             }
+          }
           break;
         } else {
           // If error is not transient (e.g. invalid auth or prompt validation), stop retrying same model
