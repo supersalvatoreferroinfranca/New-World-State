@@ -7242,14 +7242,28 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
           </image:image>`;
         }
 
-        return `
+        if (page.path === 'sitemap.html') {
+          return `
         <url>
           <loc>${escapeHtml(defaultUrl)}</loc>
           <lastmod>${today}</lastmod>
           <changefreq>${page.changefreq}</changefreq>
           <priority>${page.priority}</priority>
+${imageXml}
+        </url>`;
+        }
+
+        return SITE_SUPPORTED_LANGUAGES.map(lang => {
+          const url = getUrl(lang);
+          return `
+        <url>
+          <loc>${escapeHtml(url)}</loc>
+          <lastmod>${today}</lastmod>
+          <changefreq>${page.changefreq}</changefreq>
+          <priority>${page.priority}</priority>
 ${hreflangs ? hreflangs + '\n' : ''}${imageXml}
         </url>`;
+        }).join('');
       }).join('');
 
       // 2. Official PDF Constitution documents in 11 official languages (strictly on baseUrl origin to prevent Search Console cross-domain errors)
@@ -7292,14 +7306,17 @@ ${hreflangs ? hreflangs + '\n' : ''}${imageXml}
             <image:caption>${escapeHtml(cleanTitle)}</image:caption>
           </image:image>` : '';
 
-        return `
+        return SITE_SUPPORTED_LANGUAGES.map(lang => {
+          const url = getArticleUrl(lang);
+          return `
         <url>
-          <loc>${escapeHtml(defaultUrl)}</loc>
+          <loc>${escapeHtml(url)}</loc>
           <lastmod>${lastMod}</lastmod>
           <changefreq>daily</changefreq>
           <priority>0.95</priority>
 ${hreflangs}${imageXml}
         </url>`;
+        }).join('');
       }).join('');
 
       return `<?xml version="1.0" encoding="UTF-8"?>
@@ -7319,29 +7336,33 @@ ${articleEntries}
       const newsItems = articles.map(a => {
         const slug = a.slug || a.id;
         const pubDate = a.publishedAt || a.createdAt || today;
-        const cleanTitle = cleanMetaText(a.title);
+        const baseTitle = cleanMetaText(a.title);
 
         const getArticleUrl = (lang: string) => {
           const encoded = encodeURIComponent(slug);
           return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
         };
 
-        const defaultUrl = getArticleUrl('it');
-        const hreflangs = buildMultilingualHreflangs(getArticleUrl, defaultUrl);
+        return SITE_SUPPORTED_LANGUAGES.map(lang => {
+          const url = getArticleUrl(lang);
+          let langTitle = baseTitle;
+          if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
+            langTitle = cleanMetaText(a.translations[lang].title);
+          }
 
-        return `
+          return `
         <url>
-          <loc>${escapeHtml(defaultUrl)}</loc>
+          <loc>${escapeHtml(url)}</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
-              <news:language>it</news:language>
+              <news:language>${lang}</news:language>
             </news:publication>
             <news:publication_date>${pubDate}</news:publication_date>
-            <news:title>${escapeHtml(cleanTitle)}</news:title>
+            <news:title>${escapeHtml(langTitle)}</news:title>
           </news:news>
-${hreflangs}
         </url>`;
+        }).join('');
       }).join('');
 
       return `<?xml version="1.0" encoding="UTF-8"?>

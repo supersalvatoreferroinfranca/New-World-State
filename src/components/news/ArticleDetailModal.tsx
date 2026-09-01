@@ -213,7 +213,7 @@ export default function ArticleDetailModal({
               // Try to find a voice matching the active language code
               const matchingVoice = available.find(v => v.lang && v.lang.toLowerCase().startsWith(activeLang.toLowerCase()));
               if (matchingVoice) return matchingVoice.name;
-              return available[0]?.name || 'default';
+              return 'default';
             });
           }
         } catch (e) {
@@ -264,6 +264,7 @@ export default function ArticleDetailModal({
 
     try {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.resume();
         window.speechSynthesis.cancel();
         // Additional cancel call ensures Chromium/Safari flush internal audio queue
         if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
@@ -306,7 +307,10 @@ export default function ArticleDetailModal({
 
     activeUtteranceRef.current = null;
     try {
-      window.speechSynthesis.cancel();
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.resume();
+        window.speechSynthesis.cancel();
+      }
     } catch (e) {}
 
     const textToSpeak = articleChunks[chunkIdx];
@@ -394,6 +398,7 @@ export default function ArticleDetailModal({
     setIsPaused(true);
     try {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.resume();
         window.speechSynthesis.cancel();
       }
       globalFallbackTtsPlayer.pause();
@@ -854,16 +859,28 @@ export default function ArticleDetailModal({
                   title={tText('Select or switch reading voice in real time', 'Seleziona o cambia voce di lettura in tempo reale')}
                 >
                   <option value="default" className="text-slate-900 bg-white">
-                    {tText('Default Voice (Italian Auto)', 'Voce Predefinita (Italiano Auto)')}
+                    {tText(`Default Auto (${activeLang.toUpperCase()})`, `Auto Predefinita (${activeLang.toUpperCase()})`)}
                   </option>
                   {sortedVoices.map((v) => {
-                    const isIt = v.lang && v.lang.toLowerCase().startsWith('it');
                     const cleanName = v.name
                       .replace(/Google/i, '')
                       .replace(/Microsoft/i, '')
                       .replace(/Desktop/i, '')
                       .trim();
-                    const flag = isIt ? '🇮🇹 ' : (v.lang.startsWith('en') ? '🇬🇧 ' : (v.lang.startsWith('fr') ? '🇫🇷 ' : (v.lang.startsWith('es') ? '🇪🇸 ' : (v.lang.startsWith('de') ? '🇩🇪 ' : '🌐 '))));
+                    const langLower = (v.lang || '').toLowerCase();
+                    let flag = '🌐 ';
+                    if (langLower.startsWith('it')) flag = '🇮🇹 ';
+                    else if (langLower.startsWith('en')) flag = '🇬🇧 ';
+                    else if (langLower.startsWith('fr')) flag = '🇫🇷 ';
+                    else if (langLower.startsWith('es')) flag = '🇪🇸 ';
+                    else if (langLower.startsWith('pt')) flag = '🇵🇹 ';
+                    else if (langLower.startsWith('ru')) flag = '🇷🇺 ';
+                    else if (langLower.startsWith('zh')) flag = '🇨🇳 ';
+                    else if (langLower.startsWith('ja')) flag = '🇯🇵 ';
+                    else if (langLower.startsWith('hi') || langLower.startsWith('bn')) flag = '🇮🇳 ';
+                    else if (langLower.startsWith('ar')) flag = '🇸🇦 ';
+                    else if (langLower.startsWith('de')) flag = '🇩🇪 ';
+
                     return (
                       <option key={v.name} value={v.name} className="text-slate-900 bg-white">
                         {flag}{cleanName} ({v.lang}) {v.localService ? '• HD' : ''}
