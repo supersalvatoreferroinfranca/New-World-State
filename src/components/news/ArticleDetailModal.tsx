@@ -304,6 +304,7 @@ export default function ArticleDetailModal({
     currentChunkIndexRef.current = chunkIdx;
     setCurrentChunkIndex(chunkIdx);
 
+    activeUtteranceRef.current = null;
     try {
       window.speechSynthesis.cancel();
     } catch (e) {}
@@ -315,35 +316,49 @@ export default function ArticleDetailModal({
 
     const availableVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
     const targetVoice = availableVoices.find(v => v.name === voiceName) || 
-                        availableVoices.find(v => v.lang && v.lang.toLowerCase().startsWith('it')) || 
+                        availableVoices.find(v => v.lang && v.lang.toLowerCase().startsWith(activeLang.toLowerCase())) || 
                         null;
 
     if (targetVoice) {
       utterance.voice = targetVoice;
       utterance.lang = targetVoice.lang;
     } else {
-      utterance.lang = 'it-IT';
+      const langMap: Record<string, string> = {
+        'en': 'en-US',
+        'es': 'es-ES',
+        'fr': 'fr-FR',
+        'pt': 'pt-BR',
+        'ru': 'ru-RU',
+        'zh': 'zh-CN',
+        'ja': 'ja-JP',
+        'hi': 'hi-IN',
+        'ar': 'ar-SA'
+      };
+      utterance.lang = langMap[activeLang] || 'it-IT';
     }
 
     utterance.onend = () => {
+      if (activeUtteranceRef.current !== utterance) return;
       activeUtteranceRef.current = null;
       if (!isPlayingRef.current) return;
       const nextIdx = chunkIdx + 1;
       if (nextIdx < articleChunks.length && isPlayingRef.current) {
-        speakChunk(nextIdx, rate, voiceName);
+        // Use a tiny timeout to break the synchronous call chain to avoid nested speaks triggering rapid cancellation
+        setTimeout(() => speakChunk(nextIdx, rate, voiceName), 10);
       } else {
         handleStopTTS();
       }
     };
 
     utterance.onerror = (e) => {
+      if (activeUtteranceRef.current !== utterance) return;
       if (e.error === 'interrupted' || e.error === 'canceled') return;
       console.warn('[Article TTS] Utterance error on chunk', chunkIdx, e);
       activeUtteranceRef.current = null;
       if (!isPlayingRef.current) return;
       const nextIdx = chunkIdx + 1;
       if (nextIdx < articleChunks.length && isPlayingRef.current) {
-        speakChunk(nextIdx, rate, voiceName);
+        setTimeout(() => speakChunk(nextIdx, rate, voiceName), 10);
       } else {
         handleStopTTS();
       }
