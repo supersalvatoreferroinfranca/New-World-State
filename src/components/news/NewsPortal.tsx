@@ -8,7 +8,8 @@ import {
   getArticlesPendingModeration,
   incrementArticleViews,
   syncArticlesWithServer,
-  deleteArticle
+  deleteArticle,
+  getLocalizedArticle
 } from '../../services/newsService';
 import ArticleFormModal from './ArticleFormModal';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -47,7 +48,7 @@ interface NewsPortalProps {
 }
 
 export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
-  const { tText } = useI18n();
+  const { currentLanguage, tText } = useI18n();
 
   // Citizen & Role State
   const [citizen, setCitizen] = useState<any>(null);
@@ -561,6 +562,10 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {featuredArticles.slice(0, 2).map((art) => {
               const cat = categories.find(c => c.id === art.categoryId);
+              const loc = getLocalizedArticle(art, currentLanguage);
+              const displayTitle = loc.title || art.title;
+              const displayIntro = loc.intro || art.intro;
+
               return (
                 <div
                   key={art.id}
@@ -571,7 +576,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                     <div className="aspect-video w-full overflow-hidden bg-black/40 relative">
                       <img
                         src={art.images[0].url}
-                        alt={art.title}
+                        alt={displayTitle}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
                       <div className="absolute top-4 left-4 bg-brand-gold text-[#0a1c3e] text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow">
@@ -589,11 +594,11 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                       </div>
 
                       <h2 className="font-serif text-xl font-bold group-hover:text-brand-gold transition leading-snug">
-                        {art.title}
+                        {stripFormattingSymbols(displayTitle)}
                       </h2>
 
                       <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed font-light">
-                        {art.intro}
+                        {stripFormattingSymbols(displayIntro)}
                       </p>
                     </div>
 
@@ -701,6 +706,11 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredArticles.map((art) => {
               const cat = categories.find(c => c.id === art.categoryId);
+              const loc = getLocalizedArticle(art, currentLanguage);
+              const displayTitle = loc.title || art.title;
+              const displayIntro = loc.intro || art.intro;
+              const displayTags = loc.tags && loc.tags.length > 0 ? loc.tags : art.tags;
+
               return (
                 <div
                   key={art.id}
@@ -717,7 +727,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                         <div className="aspect-video w-full overflow-hidden bg-slate-900 relative">
                           <img
                             src={coverImageUrl}
-                            alt={stripFormattingSymbols(art.title)}
+                            alt={stripFormattingSymbols(displayTitle)}
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=800&q=80';
@@ -751,23 +761,23 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                        <span>{art.publishedAt ? new Date(art.publishedAt).toLocaleDateString('it-IT') : tText('Draft', 'Bozza')}</span>
+                        <span>{art.publishedAt ? new Date(art.publishedAt).toLocaleDateString(currentLanguage === 'it' ? 'it-IT' : 'en-US') : tText('Draft', 'Bozza')}</span>
                         <span className="font-bold text-slate-600">{tText('By', 'Di')} {art.authorName}</span>
                       </div>
 
                       <h3 className="font-serif text-base font-bold text-[#0a1c3e] group-hover:text-brand-gold transition leading-snug line-clamp-2">
-                        {stripFormattingSymbols(art.title)}
+                        {stripFormattingSymbols(displayTitle)}
                       </h3>
 
                       <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
-                        {stripFormattingSymbols(art.intro)}
+                        {stripFormattingSymbols(displayIntro)}
                       </p>
                     </div>
 
                     {/* Tags */}
-                    {art.tags && art.tags.length > 0 && (
+                    {displayTags && displayTags.length > 0 && (
                       <div className="flex flex-wrap gap-1 pt-2">
-                        {art.tags.slice(0, 3).map(t => (
+                        {displayTags.slice(0, 3).map(t => (
                           <span key={t} className="text-[9px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-mono">
                             {t}
                           </span>

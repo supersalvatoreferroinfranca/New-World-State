@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NewsArticle, NewsCategory } from '../../types/news';
-import { getLatest3Articles, getCategories, incrementArticleViews } from '../../services/newsService';
+import { getLatest3Articles, getCategories, incrementArticleViews, getLocalizedArticle } from '../../services/newsService';
 import ArticleDetailModal from './ArticleDetailModal';
-import { Newspaper, ArrowRight, Calendar, User, Eye, Video, Star, Sparkles } from 'lucide-react';
+import { Newspaper, ArrowRight, Calendar, User, Eye, Video, Star, Sparkles, Globe } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 import { stripFormattingSymbols } from '../../utils/textFormatter';
 
@@ -11,7 +11,7 @@ interface HomepageNewsSectionProps {
 }
 
 export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionProps) {
-  const { tText } = useI18n();
+  const { currentLanguage, tText } = useI18n();
   const [latestArticles, setLatestArticles] = useState<NewsArticle[]>([]);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
@@ -81,6 +81,11 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {latestArticles.map((art) => {
           const cat = categories.find(c => c.id === art.categoryId);
+          const loc = getLocalizedArticle(art, currentLanguage);
+          const displayTitle = loc.title || art.title;
+          const displayIntro = loc.intro || art.intro;
+          const displayTags = loc.tags && loc.tags.length > 0 ? loc.tags : art.tags;
+
           return (
             <div
               key={art.id}
@@ -98,7 +103,7 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
                     <div className="aspect-video w-full overflow-hidden bg-slate-900 relative">
                       <img
                         src={coverImageUrl}
-                        alt={stripFormattingSymbols(art.title)}
+                        alt={stripFormattingSymbols(displayTitle)}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=800&q=80';
@@ -123,22 +128,22 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
                 {/* Content */}
                 <div className="p-5 space-y-3">
                   <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                    <span>{art.publishedAt ? new Date(art.publishedAt).toLocaleDateString('it-IT') : ''}</span>
+                    <span>{art.publishedAt ? new Date(art.publishedAt).toLocaleDateString(currentLanguage === 'it' ? 'it-IT' : 'en-US') : ''}</span>
                     <span className="font-bold text-slate-600">{tText('By', 'Di')} {art.authorName}</span>
                   </div>
 
                   <h3 className="font-serif text-base font-bold text-[#0a1c3e] group-hover:text-brand-gold transition leading-snug line-clamp-2">
-                    {stripFormattingSymbols(art.title)}
+                    {stripFormattingSymbols(displayTitle)}
                   </h3>
 
                   <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
-                    {stripFormattingSymbols(art.intro)}
+                    {stripFormattingSymbols(displayIntro)}
                   </p>
 
                   {/* Tags */}
-                  {art.tags && art.tags.length > 0 && (
+                  {displayTags && displayTags.length > 0 && (
                     <div className="flex flex-wrap gap-1 pt-1">
-                      {art.tags.slice(0, 3).map(t => (
+                      {displayTags.slice(0, 3).map(t => (
                         <span key={t} className="text-[9px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-mono">
                           {t}
                         </span>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { NewsArticle, NewsCategory } from '../../types/news';
-import { getCategories, getArticles, incrementArticleViews } from '../../services/newsService';
+import { NewsArticle, NewsCategory, NewsLanguage } from '../../types/news';
+import { getCategories, getArticles, incrementArticleViews, getLocalizedArticle, translateArticleWithAI, autoTranslateArticleOnDemand } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
+import { Language } from '../../constants/translations';
 import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/textFormatter';
 import { getPublicCanonicalOrigin, getPublicArticleUrl } from '../../utils/urlUtils';
 import { splitTextIntoSentenceChunks } from '../../utils/ttsChunker';
@@ -28,7 +29,10 @@ import {
   Pause,
   Square,
   Mic,
-  RotateCcw
+  RotateCcw,
+  Sparkles,
+  Loader2,
+  Languages
 } from 'lucide-react';
 
 interface ArticleDetailModalProps {
@@ -40,6 +44,20 @@ interface ArticleDetailModalProps {
   onDeleteArticle?: (article: NewsArticle) => void;
 }
 
+const SUPPORTED_LANG_OPTIONS: { code: NewsLanguage; label: string; flag: string; nativeName: string }[] = [
+  { code: 'it', label: 'Italiano', flag: '🇮🇹', nativeName: 'Italiano' },
+  { code: 'en', label: 'English', flag: '🇬🇧', nativeName: 'English' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷', nativeName: 'Français' },
+  { code: 'es', label: 'Español', flag: '🇪🇸', nativeName: 'Español' },
+  { code: 'pt', label: 'Português', flag: '🇵🇹', nativeName: 'Português' },
+  { code: 'ru', label: 'Русский', flag: '🇷🇺', nativeName: 'Русский' },
+  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳', nativeName: 'हिन्दी' },
+  { code: 'bn', label: 'বাংলা', flag: '🇧🇩', nativeName: 'বাংলা' },
+  { code: 'zh', label: '中文', flag: '🇨🇳', nativeName: '中文' },
+  { code: 'ja', label: '日本語', flag: '🇯🇵', nativeName: '日本語' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦', nativeName: 'العربية' }
+];
+
 export default function ArticleDetailModal({
   article,
   isOpen,
@@ -48,8 +66,110 @@ export default function ArticleDetailModal({
   onEditArticle,
   onDeleteArticle
 }: ArticleDetailModalProps) {
-  const { tText } = useI18n();
+  const { currentLanguage, tText } = useI18n();
+  const [currentArticle, setCurrentArticle] = useState<NewsArticle | null>(article);
+  const [activeLang, setActiveLang] = useState<NewsLanguage>((currentLanguage as NewsLanguage) || 'it');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationNotice, setTranslationNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Sync internal article state when prop changes or language changes
+  useEffect(() => {
+    setCurrentArticle(article);
+    if (article && currentLanguage) {
+      setActiveLang((currentLanguage as NewsLanguage) || 'it');
+    }
+  }, [article?.id, currentLanguage]);
+
+  // Listen for background article updates
+  useEffect(() => {
+    const handleArticleUpdate = () => {
+      if (!article?.id) return;
+      const all = getArticles();
+      const found = all.find(a => a.id === article.id || a.slug === article.slug);
+      if (found) {
+        setCurrentArticle(found);
+      }
+    };
+    window.addEventListener('nws_news_articles_updated', handleArticleUpdate);
+    return () => window.removeEventListener('nws_news_articles_updated', handleArticleUpdate);
+  }, [article?.id, article?.slug]);
+
+  // Compute localized article data
+  const localizedData = useMemo(() => {
+    if (!currentArticle) {
+      return { title: '', intro: '', content: '', tags: [], isTranslated: false, hasTranslation: false };
+    }
+    return getLocalizedArticle(currentArticle, activeLang as Language);
+  }, [currentArticle, activeLang]);
+
+  // Auto-translate on demand when user switches to a language not yet translated
+  useEffect(() => {
+    if (!currentArticle || activeLang === 'it' || !isOpen) return;
+
+    const hasTrans = currentArticle.translations?.[activeLang]?.title && currentArticle.translations?.[activeLang]?.content;
+    if (hasTrans) return;
+
+    // Trigger AI translation
+    let isCancelled = false;
+    setIsTranslating(true);
+    setTranslationNotice(tText('Translating article with Gemini AI...', 'Traduzione automatica con Gemini AI in corso...'));
+
+    autoTranslateArticleOnDemand(currentArticle.id, activeLang as Language)
+      .then((updated) => {
+        if (!isCancelled && updated) {
+          setCurrentArticle(updated);
+          setTranslationNotice(tText('Article translated successfully', 'Articolo tradotto con successo'));
+          setTimeout(() => setTranslationNotice(null), 3000);
+        }
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          console.warn('[ArticleDetailModal] Errore traduzione:', err);
+          setTranslationNotice(tText('Automatic translation temporarily unavailable', 'Traduzione automatica temporaneamente non disponibile'));
+          setTimeout(() => setTranslationNotice(null), 4000);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) setIsTranslating(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentArticle?.id, activeLang, isOpen]);
+
+  // Manual re-translate handler
+  const handleForceTranslate = async () => {
+    if (!currentArticle || isTranslating) return;
+    setIsTranslating(true);
+    setTranslationNotice(tText('Regenerating AI translation...', 'Rigenerazione traduzione AI in corso...'));
+    try {
+      const transMap = await translateArticleWithAI({
+        id: currentArticle.id,
+        title: currentArticle.title,
+        intro: currentArticle.intro,
+        content: currentArticle.content,
+        tags: currentArticle.tags,
+        targetLangs: [activeLang]
+      });
+      const updatedArticle = {
+        ...currentArticle,
+        translations: {
+          ...(currentArticle.translations || {}),
+          ...transMap
+        }
+      };
+      setCurrentArticle(updatedArticle);
+      setTranslationNotice(tText('Translation updated', 'Traduzione aggiornata'));
+      setTimeout(() => setTranslationNotice(null), 3000);
+    } catch (err: any) {
+      setTranslationNotice(tText('Translation error: ', 'Errore traduzione: ') + (err.message || ''));
+      setTimeout(() => setTranslationNotice(null), 4000);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   // TTS State
   const [isPlaying, setIsPlaying] = useState(false);
@@ -63,17 +183,22 @@ export default function ArticleDetailModal({
   const currentChunkIndexRef = useRef(0);
   const activeUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Split article into sentence chunks for smooth reading without browser lockups
+  // Split localized article into sentence chunks for smooth reading without browser lockups
   const articleChunks = useMemo(() => {
-    if (!article) return [];
-    const cleanTitle = stripFormattingSymbols(article.title);
-    const cleanIntro = stripFormattingSymbols(article.intro || '');
-    const cleanContent = stripFormattingSymbols(article.content || '');
+    if (!currentArticle) return [];
+    const cleanTitle = stripFormattingSymbols(localizedData.title || currentArticle.title);
+    const cleanIntro = stripFormattingSymbols(localizedData.intro || currentArticle.intro || '');
+    const cleanContent = stripFormattingSymbols(localizedData.content || currentArticle.content || '');
     const fullText = `${cleanTitle}. ${cleanIntro ? cleanIntro + '.' : ''} ${cleanContent}`;
     return splitTextIntoSentenceChunks(fullText, 140);
-  }, [article?.id, article?.title, article?.intro, article?.content]);
+  }, [currentArticle?.id, localizedData.title, localizedData.intro, localizedData.content]);
 
-  // Load available voices & auto-select best Italian voice
+  // Stop TTS when language changes to avoid speech engine confusion
+  useEffect(() => {
+    handleStopTTS();
+  }, [activeLang]);
+
+  // Load available voices & auto-select best voice for the active language
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       const updateVoices = () => {
@@ -82,11 +207,10 @@ export default function ArticleDetailModal({
           if (available.length > 0) {
             setVoices(available);
             setSelectedVoiceName(prev => {
-              if (prev && prev !== 'default' && available.some(v => v.name === prev)) {
-                return prev;
-              }
-              const itVoice = available.find(v => v.lang && v.lang.toLowerCase().startsWith('it'));
-              return itVoice ? itVoice.name : (available[0]?.name || 'default');
+              // Try to find a voice matching the active language code
+              const matchingVoice = available.find(v => v.lang && v.lang.toLowerCase().startsWith(activeLang.toLowerCase()));
+              if (matchingVoice) return matchingVoice.name;
+              return available[0]?.name || 'default';
             });
           }
         } catch (e) {
@@ -107,24 +231,24 @@ export default function ArticleDetailModal({
         } catch (e) {}
       };
     }
-  }, []);
+  }, [activeLang]);
 
-  // Sorted list of voices: Italian voices at the top, then other languages
+  // Sorted list of voices: matching language voices at the top
   const sortedVoices = useMemo(() => {
     if (voices.length === 0) return [];
-    const itVoices: SpeechSynthesisVoice[] = [];
+    const langVoices: SpeechSynthesisVoice[] = [];
     const otherVoices: SpeechSynthesisVoice[] = [];
     
     voices.forEach(v => {
-      if (v.lang && v.lang.toLowerCase().startsWith('it')) {
-        itVoices.push(v);
+      if (v.lang && v.lang.toLowerCase().startsWith(activeLang.toLowerCase())) {
+        langVoices.push(v);
       } else {
         otherVoices.push(v);
       }
     });
 
-    return [...itVoices, ...otherVoices];
-  }, [voices]);
+    return [...langVoices, ...otherVoices];
+  }, [voices, activeLang]);
 
   // Completely terminates all audio and speech synthesis playback
   const handleStopTTS = () => {
@@ -517,21 +641,118 @@ export default function ArticleDetailModal({
 
         {/* Scrollable Article Body */}
         <div className="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 text-slate-800">
+          {/* Multilingual Switcher Bar - 11 Official Languages */}
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-sm space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#0a1c3e] text-brand-gold flex items-center justify-center">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-[#0a1c3e] flex items-center gap-1.5 uppercase tracking-wider">
+                    <span>{tText('Multilingual Article Edition', 'Edizione Notizia Multilingue')}</span>
+                    <span className="text-[10px] bg-brand-gold/20 text-[#0a1c3e] px-1.5 py-0.5 rounded font-tech font-bold">11 {tText('Langs', 'Lingue')}</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    {tText('Read in your preferred official language translated with Gemini AI', 'Leggi nella lingua ufficiale desiderata tradotta con Gemini AI')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Status and Action */}
+              <div className="flex items-center gap-2">
+                {isTranslating ? (
+                  <span className="flex items-center gap-1.5 text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded-xl border border-amber-300 font-medium animate-pulse">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-700" />
+                    <span>{tText('AI Translating...', 'Traduzione AI in corso...')}</span>
+                  </span>
+                ) : activeLang !== 'it' && (
+                  <button
+                    onClick={handleForceTranslate}
+                    className="flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-[#0a1c3e] bg-white hover:bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-200 transition cursor-pointer shadow-2xs"
+                    title={tText('Regenerate translation with Gemini AI', 'Rigenera traduzione con Gemini AI')}
+                  >
+                    <Sparkles className="w-3 h-3 text-brand-gold" />
+                    <span>{tText('Re-translate AI', 'Rigenera AI')}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Language Pills Bar */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+              {SUPPORTED_LANG_OPTIONS.map((lang) => {
+                const isActive = activeLang === lang.code;
+                const hasTranslation = lang.code === 'it' || (currentArticle?.translations?.[lang.code]?.title && currentArticle?.translations?.[lang.code]?.content);
+
+                return (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => setActiveLang(lang.code)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 border ${
+                      isActive
+                        ? 'bg-[#0a1c3e] text-brand-gold border-[#0a1c3e] shadow-sm ring-2 ring-brand-gold/30'
+                        : hasTranslation
+                        ? 'bg-white text-slate-700 hover:bg-slate-100 border-slate-200'
+                        : 'bg-white/60 text-slate-500 hover:bg-white border-dashed border-slate-300'
+                    }`}
+                  >
+                    <span className="text-sm leading-none">{lang.flag}</span>
+                    <span>{lang.nativeName}</span>
+                    {lang.code === 'it' ? (
+                      <span className="text-[9px] px-1 rounded bg-slate-200/80 text-slate-600 font-mono uppercase">Orig</span>
+                    ) : hasTranslation ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title={tText('Translated', 'Tradotto')} />
+                    ) : (
+                      <span className="text-[9px] text-amber-600 font-mono">AI</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Translation Notice Banner */}
+            {translationNotice && (
+              <div className="text-xs bg-amber-50 border border-amber-200 text-amber-900 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-brand-gold shrink-0" />
+                <span className="font-medium">{translationNotice}</span>
+              </div>
+            )}
+
+            {activeLang !== 'it' && localizedData.isTranslated && !isTranslating && (
+              <div className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-3 py-1 rounded-xl flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>
+                    {tText('Translated into', 'Tradotto in')} <strong>{SUPPORTED_LANG_OPTIONS.find(l => l.code === activeLang)?.nativeName}</strong> {tText('via Gemini AI Official Press Office', 'tramite Ufficio Stampa AI Gemini')}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setActiveLang('it')}
+                  className="underline hover:text-emerald-950 font-semibold cursor-pointer shrink-0"
+                >
+                  {tText('Show Italian original', 'Mostra originale italiano')}
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Article Title */}
           <div className="space-y-3">
             <h1 className="font-serif text-2xl md:text-4xl font-bold text-[#0a1c3e] leading-tight">
-              {article.title}
+              {localizedData.title || currentArticle.title}
             </h1>
 
             {/* Author Meta Bar */}
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1 border-b border-slate-200 pb-4">
               <div className="flex items-center gap-2 font-medium">
                 <div className="w-7 h-7 rounded-full bg-[#0a1c3e] text-brand-gold flex items-center justify-center font-bold text-xs">
-                  {article.authorName.charAt(0)}
+                  {currentArticle.authorName.charAt(0)}
                 </div>
                 <div>
-                  <span className="text-[#0a1c3e] font-bold">{article.authorName}</span>
-                  <span className="text-[10px] text-slate-400 block font-tech">{article.authorRole || tText('Official Reporter', 'Cronista')}</span>
+                  <span className="text-[#0a1c3e] font-bold">{currentArticle.authorName}</span>
+                  <span className="text-[10px] text-slate-400 block font-tech">{currentArticle.authorRole || tText('Official Reporter', 'Cronista')}</span>
                 </div>
               </div>
 
@@ -542,12 +763,12 @@ export default function ArticleDetailModal({
                 <span className="font-medium text-emerald-700">{tText('Verified by Digital Custodians', 'Verificato dai Custodi Digitali')}</span>
               </div>
 
-              {article.viewsCount !== undefined && (
+              {currentArticle.viewsCount !== undefined && (
                 <>
                   <div className="h-4 w-px bg-slate-200" />
                   <div className="flex items-center gap-1.5">
                     <Eye className="w-4 h-4 text-slate-400" />
-                    <span>{article.viewsCount} {tText('reads', 'letture')}</span>
+                    <span>{currentArticle.viewsCount} {tText('reads', 'letture')}</span>
                   </div>
                 </>
               )}
@@ -694,20 +915,20 @@ export default function ArticleDetailModal({
           </div>
 
           {/* Testo Introduttivo (Abstract / Meta Description) */}
-          {article.intro && (
+          {(localizedData.intro || currentArticle.intro) && (
             <div className="bg-amber-50/70 border-l-4 border-brand-gold p-4 md:p-5 rounded-r-2xl text-slate-800 font-medium text-sm md:text-base leading-relaxed italic shadow-sm">
-              "{stripFormattingSymbols(article.intro)}"
+              "{stripFormattingSymbols(localizedData.intro || currentArticle.intro)}"
             </div>
           )}
 
           {/* Featured Images */}
-          {article.images && article.images.length > 0 && (
+          {currentArticle.images && currentArticle.images.length > 0 && (
             <div className="space-y-3 my-4">
-              {article.images.map((img, idx) => (
+              {currentArticle.images.map((img, idx) => (
                 <div key={idx} className="rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-slate-900">
                   <img
                     src={img.url}
-                    alt={img.caption || article.title}
+                    alt={img.caption || localizedData.title || currentArticle.title}
                     className="w-full max-h-[450px] object-cover"
                   />
                   {img.caption && (
@@ -723,17 +944,17 @@ export default function ArticleDetailModal({
           {/* Extended Text (Body) - Formatted Clean HTML */}
           <div 
             className="article-body-content prose max-w-none text-slate-800 leading-relaxed text-sm md:text-base space-y-4 font-sans border-t border-slate-100 pt-4"
-            dangerouslySetInnerHTML={{ __html: formatArticleContentToHtml(article.content) }}
+            dangerouslySetInnerHTML={{ __html: formatArticleContentToHtml(localizedData.content || currentArticle.content) }}
           />
 
           {/* Featured Videos */}
-          {article.videos && article.videos.length > 0 && (
+          {currentArticle.videos && currentArticle.videos.length > 0 && (
             <div className="space-y-4 my-6">
               <h3 className="font-serif text-base font-bold text-[#0a1c3e] flex items-center gap-2">
                 <Video className="w-5 h-5 text-brand-gold" />
                 <span>{tText('Attached Videos', 'Video Allegati')}</span>
               </h3>
-              {article.videos.map((vid, idx) => {
+              {currentArticle.videos.map((vid, idx) => {
                 const embedUrl = getEmbedVideoUrl(vid.url);
                 const isEmbed = embedUrl.includes('embed') || embedUrl.includes('player.vimeo');
                 return (
@@ -769,13 +990,13 @@ export default function ArticleDetailModal({
           )}
 
           {/* Tags */}
-          {article.tags && article.tags.length > 0 && (
+          {((localizedData.tags && localizedData.tags.length > 0) || (currentArticle.tags && currentArticle.tags.length > 0)) && (
             <div className="pt-4 border-t border-slate-200 flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                 <Tag className="w-3.5 h-3.5 text-slate-400" />
                 <span>Tags:</span>
               </span>
-              {article.tags.map(t => (
+              {(localizedData.tags && localizedData.tags.length > 0 ? localizedData.tags : currentArticle.tags).map(t => (
                 <span
                   key={t}
                   className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-mono px-3 py-1 rounded-full border border-slate-200 transition"
@@ -787,7 +1008,7 @@ export default function ArticleDetailModal({
           )}
 
           {/* Social Outreach & Sharing Kit Section */}
-          <SocialShareKit article={article} />
+          <SocialShareKit article={currentArticle} />
 
           {/* Related Articles Section */}
           {relatedArticles.length > 0 && (
@@ -828,7 +1049,7 @@ export default function ArticleDetailModal({
             {onEditArticle && (
               <button
                 onClick={() => {
-                  onEditArticle(article);
+                  onEditArticle(currentArticle);
                   onClose();
                 }}
                 className="px-5 py-2.5 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold text-xs uppercase tracking-wider hover:bg-[#0a1c3e] hover:text-white transition cursor-pointer flex items-center gap-2 shadow-md border border-brand-gold"
@@ -841,7 +1062,7 @@ export default function ArticleDetailModal({
             {onDeleteArticle && (
               <button
                 onClick={() => {
-                  onDeleteArticle(article);
+                  onDeleteArticle(currentArticle);
                 }}
                 className="px-4 py-2.5 rounded-xl bg-red-100 text-red-700 hover:bg-red-600 hover:text-white font-extrabold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border border-red-200 shadow-sm"
               >

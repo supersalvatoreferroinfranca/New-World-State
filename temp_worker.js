@@ -5945,6 +5945,95 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         }
       }
 
+      // 1d-bis. AI News Article Translation into all 11 languages (Gemini REST API)
+      if (url.pathname === '/api/news/translate-article' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          const { title, intro, content, tags, targetLangs } = body || {};
+
+          if (!title || !content) {
+            return new Response(JSON.stringify({ success: false, message: 'Titolo e contenuto esteso sono obbligatori per la traduzione.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const apiKey = env.GEMINI_API_KEY;
+          if (!apiKey) {
+            return new Response(JSON.stringify({
+              success: false,
+              message: 'La chiave API di Gemini ("GEMINI_API_KEY") non è configurata nell\'ambiente del Cloudflare Worker.'
+            }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          const requestedLangs = Array.isArray(targetLangs) && targetLangs.length > 0
+            ? targetLangs
+            : ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+
+          const langMap = {
+            en: 'English (Inglese)',
+            fr: 'Français (Francese)',
+            es: 'Español (Spagnolo)',
+            pt: 'Português (Portoghese)',
+            ru: 'Русский (Russo)',
+            hi: 'हिन्दी (Hindi)',
+            bn: 'বাংলা (Bengalese)',
+            zh: '中文 (Cinese Semplificato)',
+            ja: '日本語 (Giapponese)',
+            ar: 'العربية (Arabo)'
+          };
+
+          const langListStr = requestedLangs.map(l => `- "${l}": ${langMap[l] || l}`).join('\n');
+
+          const prompt = `Sei l'Ufficio Traduzioni e Relazioni Internazionali dell'Organo di Stampa Ufficiale di "New World State".
+Traduci con la massima fedeltà giornalistica, eleganza e precisione il seguente articolo nelle seguenti lingue:
+${langListStr}
+
+ARTICOLO ORIGINALE:
+TITOLO:
+${title}
+
+INTRODUZIONE:
+${intro || ''}
+
+TESTO COMPLETO IN MARKDOWN:
+${content}
+
+TAG ORIGINALI:
+${JSON.stringify(tags || [])}
+
+REGOLE:
+1. Mantieni intatte tutte le intestazioni Markdown ('###', '##'), grassetto '**', corsivo '*', elenchi puntati.
+2. Non tradurre o alterare il nome proprio "New World State".
+3. Adatta i tag nella lingua pertinente.
+
+Restituisci un oggetto JSON con chiave "translations", contenente per ciascuna lingua un oggetto con "title", "intro", "content", "tags".`;
+
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: 'application/json'
+              }
+            })
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Gemini API error (HTTP ${response.status}): ${errText}`);
+          }
+
+          const resData = await response.json();
+          const jsonText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!jsonText) throw new Error('Nessuna risposta valida da Gemini.');
+
+          const parsed = JSON.parse(jsonText.trim());
+          return new Response(JSON.stringify({ success: true, translations: parsed.translations || {} }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        } catch (e) {
+          console.error('[WORKER-NEWS-TRANSLATE-ERR]', e);
+          return new Response(JSON.stringify({ success: false, message: 'Impossibile tradurre l\'articolo con l\'AI sul Worker: ' + e.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
       // 1e. Ricerca multimediale ad alta precisione su Unsplash, Pexels, Pixabay, Wikimedia, Flickr e YouTube
       if (url.pathname === '/api/news/search-media' && request.method === 'POST') {
         try {

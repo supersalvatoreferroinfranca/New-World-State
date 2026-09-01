@@ -1,4 +1,5 @@
-import { NewsArticle, NewsCategory, NewsMedia, ArticleStatus } from '../types/news';
+import { NewsArticle, NewsCategory, NewsMedia, ArticleStatus, ArticleTranslation, NewsLanguage } from '../types/news';
+import { Language } from '../constants/translations';
 import { triggerNotification } from './notifications';
 import { safeFetch } from './api';
 
@@ -581,6 +582,7 @@ export function createArticle(articleData: {
   categoryId: string;
   intro: string;
   content: string;
+  translations?: Partial<Record<NewsLanguage, ArticleTranslation>>;
   images: NewsMedia[];
   videos: NewsMedia[];
   tags: string[];
@@ -607,6 +609,7 @@ export function createArticle(articleData: {
     categoryId: articleData.categoryId,
     intro: articleData.intro,
     content: articleData.content,
+    translations: articleData.translations || {},
     images: articleData.images || [],
     videos: articleData.videos || [],
     tags: articleData.tags || [],
@@ -632,6 +635,11 @@ export function createArticle(articleData: {
       'news',
       '/news'
     );
+  }
+
+  // Se l'articolo è pubblicato direttamente e non ha ancora traduzioni, avvia la traduzione automatica in background
+  if (newArticle.status === 'pubblicato' && (!newArticle.translations || Object.keys(newArticle.translations).length === 0)) {
+    triggerBackgroundTranslation(newArticle.id);
   }
 
   return newArticle;
@@ -730,6 +738,11 @@ export function moderateArticle(
       'news',
       `/news?slug=${updatedArticle.slug}`
     );
+
+    // All'approvazione dell'articolo, avvia la traduzione automatica in tutte le 11 lingue se non già presente
+    if (!updatedArticle.translations || Object.keys(updatedArticle.translations).length < 5) {
+      triggerBackgroundTranslation(updatedArticle.id);
+    }
   } else if (action === 'reject' || action === 'request_changes') {
     triggerNotification(
       'Aggiornamento Moderazione Articolo',
@@ -963,4 +976,193 @@ export async function searchArticleMedia(
     results,
     debug: resData.debug
   };
+}
+
+/**
+ * Traduce un articolo di giornale in tutte le 11 lingue ufficiali dello Stato (o nelle lingue richieste)
+ * utilizzando l'API di intelligenza artificiale Gemini.
+ */
+export async function translateArticleWithAI(articleData: {
+  id?: string;
+  title: string;
+  intro?: string;
+  content: string;
+  tags?: string[];
+  targetLangs?: string[];
+}): Promise<Record<NewsLanguage, ArticleTranslation>> {
+  const response = await safeFetch('/api/news/translate-article', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      articleId: articleData.id,
+      title: articleData.title,
+      intro: articleData.intro || '',
+      content: articleData.content,
+      tags: articleData.tags || [],
+      targetLangs: articleData.targetLangs
+    })
+  });
+
+  const resData = await response.json();
+  if (!response.ok || !resData.success) {
+    throw new Error(resData.message || 'Impossibile completare la traduzione automatica AI.');
+  }
+
+  const translations = resData.translations || {};
+
+  // Se è stato specificato l'ID articolo, aggiorna anche la copia nel localStorage del client
+  if (articleData.id) {
+    const articles = getArticles();
+    const updated = articles.map(art => {
+      if (art.id === articleData.id || art.slug === articleData.id) {
+        return {
+          ...art,
+          translations: {
+            ...(art.translations || {}),
+            ...translations
+          },
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return art;
+    });
+    saveArticles(updated);
+  }
+
+  return translations;
+}
+
+/**
+ * Restituisce i campi localizzati dell'articolo (titolo, intro, contenuto e tag)
+ * in base alla lingua attiva dell'utente. Se la lingua è 'it' o la traduzione
+ * non è ancora disponibile, restituisce i campi originali con isTranslated = false.
+ */
+export function getLocalizedArticle(
+  article: NewsArticle | null | undefined,
+  lang: Language
+): {
+  title: string;
+  intro: string;
+  content: string;
+  tags: string[];
+  isTranslated: boolean;
+  hasTranslation: boolean;
+} {
+  if (!article) {
+    return {
+      title: '',
+      intro: '',
+      content: '',
+      tags: [],
+      isTranslated: false,
+      hasTranslation: false
+    };
+  }
+
+  if (lang === 'it') {
+    return {
+      title: article.title,
+      intro: article.intro,
+      content: article.content,
+      tags: article.tags || [],
+      isTranslated: false,
+      hasTranslation: true
+    };
+  }
+
+  const translation = article.translations?.[lang as NewsLanguage];
+  if (translation && translation.title && translation.content) {
+    return {
+      title: translation.title,
+      intro: translation.intro || article.intro,
+      content: translation.content,
+      tags: translation.tags && translation.tags.length > 0 ? translation.tags : (article.tags || []),
+      isTranslated: true,
+      hasTranslation: true
+    };
+  }
+
+  // Fallback all'originale italiano
+  return {
+    title: article.title,
+    intro: article.intro,
+    content: article.content,
+    tags: article.tags || [],
+    isTranslated: false,
+    hasTranslation: false
+  };
+}
+
+/**
+ * Traccia le richieste di traduzione già in corso per evitare chiamate duplicate
+ */
+const pendingTranslations = new Set<string>();
+
+/**
+ * Traduce automaticamente un articolo on-demand in background se non è ancora disponibile nella lingua richiesta.
+ */
+export async function autoTranslateArticleOnDemand(
+  articleId: string,
+  lang: Language
+): Promise<NewsArticle | null> {
+  if (lang === 'it') return null;
+
+  const key = `${articleId}:${lang}`;
+  if (pendingTranslations.has(key)) return null;
+
+  const articles = getArticles();
+  const target = articles.find(a => a.id === articleId || a.slug === articleId);
+  if (!target) return null;
+
+  if (target.translations?.[lang as NewsLanguage]?.title) {
+    return target; // Già tradotto
+  }
+
+  pendingTranslations.add(key);
+
+  try {
+    const translations = await translateArticleWithAI({
+      id: target.id,
+      title: target.title,
+      intro: target.intro,
+      content: target.content,
+      tags: target.tags,
+      targetLangs: [lang]
+    });
+
+    const updatedArticles = getArticles();
+    const updatedTarget = updatedArticles.find(a => a.id === target.id);
+    return updatedTarget || null;
+  } catch (err) {
+    console.warn(`[AutoTranslate] Traduzione on-demand per ${articleId} in ${lang} fallita:`, err);
+    return null;
+  } finally {
+    pendingTranslations.delete(key);
+  }
+}
+
+/**
+ * Avvia la traduzione completa di un articolo in background in tutte le lingue ufficiali
+ */
+export function triggerBackgroundTranslation(articleId: string): void {
+  setTimeout(async () => {
+    try {
+      const articles = getArticles();
+      const target = articles.find(a => a.id === articleId || a.slug === articleId);
+      if (!target) return;
+
+      await translateArticleWithAI({
+        id: target.id,
+        title: target.title,
+        intro: target.intro,
+        content: target.content,
+        tags: target.tags
+      });
+      console.log(`[NEWS-I18N] Traduzione automatica completata per articolo: ${target.title}`);
+    } catch (err) {
+      console.warn(`[NEWS-I18N] Errore traduzione automatica background per ${articleId}:`, err);
+    }
+  }, 500);
 }

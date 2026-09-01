@@ -4104,6 +4104,192 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       }
     });
 
+    // Endpoint per la traduzione automatica AI degli articoli in tutte le 11 lingue ufficiali
+    apiRouter.post('/news/translate-article', async (req, res) => {
+      const { title, intro, content, tags, articleId, targetLangs } = req.body || {};
+
+      let targetTitle = title;
+      let targetIntro = intro;
+      let targetContent = content;
+      let targetTags = tags || [];
+
+      if (articleId && (!targetTitle || !targetContent)) {
+        const currentList = getServerArticles();
+        const found = currentList.find(a => a && (String(a.id) === String(articleId) || String(a.slug) === String(articleId)));
+        if (found) {
+          targetTitle = found.title;
+          targetIntro = found.intro;
+          targetContent = found.content;
+          targetTags = found.tags || [];
+        }
+      }
+
+      if (!targetTitle || !targetContent) {
+        return res.status(400).json({
+          success: false,
+          message: 'Titolo e contenuto esteso dell\'articolo sono obbligatori per procedere con la traduzione automatica.'
+        });
+      }
+
+      const requestedLangs: string[] = Array.isArray(targetLangs) && targetLangs.length > 0
+        ? targetLangs
+        : ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+
+      const langMap: Record<string, string> = {
+        en: 'English (Inglese)',
+        fr: 'Français (Francese)',
+        es: 'Español (Spagnolo)',
+        pt: 'Português (Portoghese)',
+        ru: 'Русский (Russo)',
+        hi: 'हिन्दी (Hindi)',
+        bn: 'বাংলা (Bengalese)',
+        zh: '中文 (Cinese Semplificato)',
+        ja: '日本語 (Giapponese)',
+        ar: 'العربية (Arabo)',
+        it: 'Italiano (Italian)'
+      };
+
+      const langListStr = requestedLangs
+        .map(l => `- "${l}": ${langMap[l] || l}`)
+        .join('\n');
+
+      try {
+        const ai = getGenAIClient();
+        const prompt = `Sei l'Ufficio Traduzioni e Relazioni Internazionali dell'Organo di Stampa Ufficiale di "New World State" (comunità globale fondata sulla sovranità individuale e democrazia diretta).
+Traduci con la massima fedeltà giornalistica, solennità, eleganza e precisione l'articolo fornito nelle seguenti lingue:
+${langListStr}
+
+ARTICOLO DA TRADURRE:
+TITOLO:
+${targetTitle}
+
+ABSTRACT / INTRODUZIONE:
+${targetIntro || ''}
+
+TESTO COMPLETO IN FORMATO MARKDOWN:
+${targetContent}
+
+TAG ORIGINALI:
+${JSON.stringify(targetTags)}
+
+REGOLE DI TRADUZIONE:
+1. Mantieni rigorosamente tutte le intestazioni Markdown ('###', '##'), la formattazione grassetto '**', corsivo '*', elenchi puntati e virgolettati.
+2. Non alterare né tradurre termini propri identificativi come "New World State" o "NWS".
+3. Adatta gli hashtag/tag traducendoli nella lingua di destinazione pertinente.
+4. Genera traduzioni autorevoli, accurate ed eleganti adatte a una pubblicazione di livello internazionale.
+
+Genera una risposta in formato JSON contenente la chiave "translations". Ciascuna proprietà di "translations" corrisponde al codice lingua richiesto (es. "en", "fr", "es", "pt", "ru", "hi", "bn", "zh", "ja", "ar") e contiene:
+- "title": titolo tradotto
+- "intro": introduzione / abstract tradotta
+- "content": corpo dell'articolo tradotto in Markdown
+- "tags": array di stringhe con i tag tradotti`;
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.7-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                translations: {
+                  type: Type.OBJECT,
+                  properties: {
+                    en: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    },
+                    fr: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    },
+                    es: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    },
+                    pt: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    },
+                    ru: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    },
+                    hi: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    },
+                    bn: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    },
+                    zh: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    },
+                    ja: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    },
+                    ar: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    }
+                  }
+                }
+              },
+              required: ['translations']
+            }
+          }
+        });
+
+        const jsonText = response.text;
+        if (!jsonText) throw new Error('Nessuna risposta ricevuta dal motore di traduzione AI.');
+        const parsed = JSON.parse(jsonText.trim());
+        const translations = parsed.translations || {};
+
+        // If articleId is given, automatically update the article on server
+        if (articleId) {
+          const currentArticles = getServerArticles();
+          const updated = currentArticles.map(a => {
+            if (a && (String(a.id) === String(articleId) || String(a.slug) === String(articleId))) {
+              return {
+                ...a,
+                translations: {
+                  ...(a.translations || {}),
+                  ...translations
+                },
+                updatedAt: new Date().toISOString()
+              };
+            }
+            return a;
+          });
+          saveServerArticles(updated);
+        }
+
+        return res.json({ success: true, translations });
+      } catch (err: any) {
+        console.error('[NEWS-AI-TRANSLATE-ERR]', err);
+        const isKeyError = err.message && (err.message.includes('GEMINI_API_KEY') || err.message.includes('API key'));
+        return res.status(500).json({
+          success: false,
+          message: isKeyError
+            ? 'La chiave API di Gemini ("GEMINI_API_KEY") non è configurata nei segreti del portale.'
+            : 'Impossibile tradurre l\'articolo con l\'AI: ' + err.message
+        });
+      }
+    });
+
     // Helper per pulire i nomi autore (estrae nomi tra parentesi da Flickr, rimuove HTML, emails 'nobody@flickr.com', URL)
     function cleanAuthorName(str: string | undefined | null, fallback: string = 'Autore non specificato'): string {
       if (!str) return fallback;

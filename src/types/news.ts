@@ -18,6 +18,17 @@ export interface NewsMedia {
   caption?: string;
 }
 
+export type NewsLanguage = 'it' | 'en' | 'fr' | 'es' | 'pt' | 'ru' | 'hi' | 'bn' | 'zh' | 'ja' | 'ar';
+
+export interface ArticleTranslation {
+  title: string;
+  intro: string;
+  content: string;
+  tags?: string[];
+  translatedAt?: string;
+  model?: string;
+}
+
 export interface NewsArticle {
   id: string;
   title: string;
@@ -25,6 +36,7 @@ export interface NewsArticle {
   categoryId: string;
   intro: string; // Testo introduttivo
   content: string; // Testo esteso
+  translations?: Partial<Record<NewsLanguage, ArticleTranslation>>;
   images: NewsMedia[]; // Multi o singola immagine
   videos: NewsMedia[]; // Multi o singolo video
   tags: string[]; // Lista di tag
