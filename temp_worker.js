@@ -7668,10 +7668,24 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
         try {
           const body = await request.json();
           if (body && Array.isArray(body.articles)) {
-            const map = new Map();
-            memoryWorkerArticles.forEach(a => { if (a && a.id) map.set(a.id, a); });
-            body.articles.forEach(a => { if (a && a.id) map.set(a.id, a); });
-            memoryWorkerArticles = Array.from(map.values()).sort((a, b) =>
+            if (body.replaceAll) {
+              const seen = new Set();
+              const unique = [];
+              for (const a of body.articles) {
+                if (a && a.id && !seen.has(String(a.id))) {
+                  seen.add(String(a.id));
+                  unique.push(a);
+                }
+              }
+              memoryWorkerArticles = unique;
+            } else {
+              const map = new Map();
+              memoryWorkerArticles.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
+              body.articles.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
+              memoryWorkerArticles = Array.from(map.values());
+            }
+
+            memoryWorkerArticles.sort((a, b) =>
               new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
             );
 
@@ -7704,6 +7718,115 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
           return new Response(JSON.stringify({ success: false, message: 'Elenco articoli non fornito.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         } catch (err) {
           return new Response(JSON.stringify({ success: false, message: 'Errore sync articoli: ' + err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      }
+
+      if ((url.pathname === '/api/news/delete' || url.pathname.startsWith('/api/news/delete/')) && (request.method === 'POST' || request.method === 'DELETE')) {
+        try {
+          let articleId = '';
+          if (url.pathname.startsWith('/api/news/delete/')) {
+            articleId = url.pathname.replace('/api/news/delete/', '').trim();
+          } else {
+            const body = await request.json().catch(() => ({}));
+            articleId = body.id || body.slug || '';
+          }
+
+          if (!articleId) {
+            return new Response(JSON.stringify({ success: false, message: 'ID o slug articolo obbligatorio.' }), { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            });
+          }
+
+          memoryWorkerArticles = memoryWorkerArticles.filter(a => a && String(a.id) !== String(articleId) && String(a.slug) !== String(articleId));
+
+          try {
+            await queryDb(`DELETE FROM nws_news_articles WHERE id = $1 OR slug = $1`, [String(articleId)]);
+          } catch (dbDelErr) {
+            console.warn('[WORKER-DELETE-DB-WARN]', dbDelErr.message);
+          }
+
+          return new Response(JSON.stringify({ 
+            success: true, 
+            message: 'Articolo rimosso con successo.', 
+            remainingCount: memoryWorkerArticles.length 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore eliminazione: ' + err.message }), { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          });
+        }
+      }
+
+      if (url.pathname === '/api/news/moderate' && request.method === 'POST') {
+        try {
+          const body = await request.json().catch(() => ({}));
+          const { id, action, moderatorNotes } = body;
+          if (!id || !action) {
+            return new Response(JSON.stringify({ success: false, message: 'ID e azione richiesti.' }), { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            });
+          }
+
+          let target = null;
+          memoryWorkerArticles = memoryWorkerArticles.map(art => {
+            if (art && (String(art.id) === String(id) || String(art.slug) === String(id))) {
+              let status = art.status;
+              let publishedAt = art.publishedAt;
+              let isFeatured = art.isFeatured;
+
+              if (action === 'approve') {
+                status = 'pubblicato';
+                publishedAt = publishedAt || new Date().toISOString();
+              } else if (action === 'reject') {
+                status = 'rifiutato';
+              } else if (action === 'request_changes') {
+                status = 'in_revisione';
+              } else if (action === 'toggle_featured') {
+                isFeatured = !isFeatured;
+              }
+
+              target = {
+                ...art,
+                status,
+                publishedAt,
+                isFeatured,
+                moderatorNotes: moderatorNotes !== undefined ? moderatorNotes : art.moderatorNotes,
+                updatedAt: new Date().toISOString()
+              };
+              return target;
+            }
+            return art;
+          });
+
+          if (target) {
+            try {
+              await queryDb(`
+                UPDATE nws_news_articles 
+                SET data = $1, updated_at = CURRENT_TIMESTAMP
+                WHERE id = $2 OR slug = $2
+              `, [JSON.stringify(target), String(id)]);
+            } catch (dbModErr) {
+              console.warn('[WORKER-MOD-DB-WARN]', dbModErr.message);
+            }
+          }
+
+          return new Response(JSON.stringify({ 
+            success: true, 
+            message: `Articolo aggiornato (${action})`, 
+            article: target 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore moderazione: ' + err.message }), { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          });
         }
       }
 
