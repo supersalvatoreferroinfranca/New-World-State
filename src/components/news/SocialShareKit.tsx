@@ -29,12 +29,14 @@ export default function SocialShareKit({ article }: SocialShareKitProps) {
   const [copiedType, setCopiedType] = useState<string | null>(null);
   const [activeTemplate, setActiveTemplate] = useState<'viral' | 'short' | 'debate'>('viral');
 
+  if (!article) return null;
+
   const slug = article.slug || article.id;
   const articleUrl = getPublicArticleUrl(slug);
 
-  const cleanTitle = stripFormattingSymbols(article.title) || 'Notizia';
-  const cleanIntro = stripFormattingSymbols(article.intro) || '';
-  const author = stripFormattingSymbols(article.authorName) || 'New World State';
+  const cleanTitle = stripFormattingSymbols(article.title || '') || 'Notizia';
+  const cleanIntro = stripFormattingSymbols(article.intro || '') || '';
+  const author = stripFormattingSymbols(article.authorName || '') || 'New World State';
 
   // Smart thematic hashtag generator
   const generatedHashtags = useMemo(() => {
@@ -46,7 +48,7 @@ export default function SocialShareKit({ article }: SocialShareKitProps) {
     set.add('#GiornalismoEtico');
 
     // Article tags
-    if (article.tags && Array.isArray(article.tags)) {
+    if (article?.tags && Array.isArray(article.tags)) {
       article.tags.forEach(tag => {
         const clean = stripFormattingSymbols(tag).replace(/[^a-zA-Z0-9àèéìòùÀÈÉÌÒÙ]/g, '');
         if (clean.length > 2) {
@@ -84,7 +86,7 @@ export default function SocialShareKit({ article }: SocialShareKitProps) {
     set.add('#Notizie');
 
     return Array.from(set);
-  }, [cleanTitle, cleanIntro, article.tags]);
+  }, [cleanTitle, cleanIntro, article?.tags]);
 
   const hashtagsString = generatedHashtags.join(' ');
 

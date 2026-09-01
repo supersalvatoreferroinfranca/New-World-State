@@ -81,6 +81,9 @@ export default function ArticleDetailModal({
     }
   }, [article?.id, currentLanguage]);
 
+  // Derive active article safely: use currentArticle if same ID as prop, else fallback to article prop
+  const activeArticle: NewsArticle | null = (article && currentArticle?.id === article.id ? currentArticle : article) || currentArticle || null;
+
   // Listen for background article updates
   useEffect(() => {
     const handleArticleUpdate = () => {
@@ -95,19 +98,19 @@ export default function ArticleDetailModal({
     return () => window.removeEventListener('nws_news_articles_updated', handleArticleUpdate);
   }, [article?.id, article?.slug]);
 
-  // Compute localized article data
+  // Compute localized article data safely
   const localizedData = useMemo(() => {
-    if (!currentArticle) {
+    if (!activeArticle) {
       return { title: '', intro: '', content: '', tags: [], isTranslated: false, hasTranslation: false };
     }
-    return getLocalizedArticle(currentArticle, activeLang as Language);
-  }, [currentArticle, activeLang]);
+    return getLocalizedArticle(activeArticle, activeLang as Language);
+  }, [activeArticle, activeLang]);
 
   // Auto-translate on demand when user switches to a language not yet translated
   useEffect(() => {
-    if (!currentArticle || activeLang === 'it' || !isOpen) return;
+    if (!activeArticle || activeLang === 'it' || !isOpen) return;
 
-    const hasTrans = currentArticle.translations?.[activeLang]?.title && currentArticle.translations?.[activeLang]?.content;
+    const hasTrans = activeArticle.translations?.[activeLang]?.title && activeArticle.translations?.[activeLang]?.content;
     if (hasTrans) return;
 
     // Trigger AI translation
@@ -115,7 +118,7 @@ export default function ArticleDetailModal({
     setIsTranslating(true);
     setTranslationNotice(tText('Translating article with Gemini AI...', 'Traduzione automatica con Gemini AI in corso...'));
 
-    autoTranslateArticleOnDemand(currentArticle.id, activeLang as Language)
+    autoTranslateArticleOnDemand(activeArticle.id, activeLang as Language)
       .then((updated) => {
         if (!isCancelled && updated) {
           setCurrentArticle(updated);
@@ -137,26 +140,26 @@ export default function ArticleDetailModal({
     return () => {
       isCancelled = true;
     };
-  }, [currentArticle?.id, activeLang, isOpen]);
+  }, [activeArticle?.id, activeLang, isOpen]);
 
   // Manual re-translate handler
   const handleForceTranslate = async () => {
-    if (!currentArticle || isTranslating) return;
+    if (!activeArticle || isTranslating) return;
     setIsTranslating(true);
     setTranslationNotice(tText('Regenerating AI translation...', 'Rigenerazione traduzione AI in corso...'));
     try {
       const transMap = await translateArticleWithAI({
-        id: currentArticle.id,
-        title: currentArticle.title,
-        intro: currentArticle.intro,
-        content: currentArticle.content,
-        tags: currentArticle.tags,
+        id: activeArticle.id,
+        title: activeArticle.title,
+        intro: activeArticle.intro,
+        content: activeArticle.content,
+        tags: activeArticle.tags,
         targetLangs: [activeLang]
       });
       const updatedArticle = {
-        ...currentArticle,
+        ...activeArticle,
         translations: {
-          ...(currentArticle.translations || {}),
+          ...(activeArticle.translations || {}),
           ...transMap
         }
       };
@@ -185,13 +188,13 @@ export default function ArticleDetailModal({
 
   // Split localized article into sentence chunks for smooth reading without browser lockups
   const articleChunks = useMemo(() => {
-    if (!currentArticle) return [];
-    const cleanTitle = stripFormattingSymbols(localizedData.title || currentArticle.title);
-    const cleanIntro = stripFormattingSymbols(localizedData.intro || currentArticle.intro || '');
-    const cleanContent = stripFormattingSymbols(localizedData.content || currentArticle.content || '');
+    if (!activeArticle) return [];
+    const cleanTitle = stripFormattingSymbols(localizedData.title || activeArticle.title || '');
+    const cleanIntro = stripFormattingSymbols(localizedData.intro || activeArticle.intro || '');
+    const cleanContent = stripFormattingSymbols(localizedData.content || activeArticle.content || '');
     const fullText = `${cleanTitle}. ${cleanIntro ? cleanIntro + '.' : ''} ${cleanContent}`;
     return splitTextIntoSentenceChunks(fullText, 140);
-  }, [currentArticle?.id, localizedData.title, localizedData.intro, localizedData.content]);
+  }, [activeArticle?.id, localizedData.title, localizedData.intro, localizedData.content]);
 
   // Stop TTS when language changes to avoid speech engine confusion
   useEffect(() => {
@@ -539,18 +542,18 @@ export default function ArticleDetailModal({
     }
   }, [article?.id, isOpen]);
 
-  if (!isOpen || !article) return null;
+  if (!isOpen || !activeArticle) return null;
 
   const categories = getCategories();
-  const category = categories.find(c => c.id === article.categoryId);
+  const category = categories.find(c => c.id === activeArticle.categoryId);
   const allArticles = getArticles();
 
-  const relatedArticles = (article.relatedArticleIds || [])
+  const relatedArticles = (activeArticle.relatedArticleIds || [])
     .map(id => allArticles.find(a => a.id === id))
     .filter((a): a is NewsArticle => !!a);
 
   const handleShare = () => {
-    const slug = article.slug || article.id;
+    const slug = activeArticle.slug || activeArticle.id;
     const url = getPublicArticleUrl(slug);
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
@@ -589,7 +592,7 @@ export default function ArticleDetailModal({
               {category?.name || tText('Sovereign News', 'Notizia Sovrana')}
             </span>
             <span className="text-xs text-slate-300 font-tech">
-              {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }) : tText('Draft', 'Bozza')}
+              {activeArticle.publishedAt ? new Date(activeArticle.publishedAt).toLocaleDateString(currentLanguage === 'it' ? 'it-IT' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : tText('Draft', 'Bozza')}
             </span>
           </div>
 
@@ -597,7 +600,7 @@ export default function ArticleDetailModal({
             {onEditArticle && (
               <button
                 onClick={() => {
-                  onEditArticle(article);
+                  onEditArticle(activeArticle);
                   onClose();
                 }}
                 className="px-3 py-2 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold hover:bg-white transition cursor-pointer flex items-center gap-1.5 text-xs shadow-md border border-brand-gold"
@@ -611,7 +614,7 @@ export default function ArticleDetailModal({
             {onDeleteArticle && (
               <button
                 onClick={() => {
-                  onDeleteArticle(article);
+                  onDeleteArticle(activeArticle);
                 }}
                 className="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold transition cursor-pointer flex items-center gap-1.5 text-xs shadow-md border border-red-500"
                 title={tText('Delete Article', 'Elimina Articolo')}
@@ -683,7 +686,7 @@ export default function ArticleDetailModal({
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
               {SUPPORTED_LANG_OPTIONS.map((lang) => {
                 const isActive = activeLang === lang.code;
-                const hasTranslation = lang.code === 'it' || (currentArticle?.translations?.[lang.code]?.title && currentArticle?.translations?.[lang.code]?.content);
+                const hasTranslation = lang.code === 'it' || (activeArticle?.translations?.[lang.code]?.title && activeArticle?.translations?.[lang.code]?.content);
 
                 return (
                   <button
@@ -741,18 +744,18 @@ export default function ArticleDetailModal({
           {/* Article Title */}
           <div className="space-y-3">
             <h1 className="font-serif text-2xl md:text-4xl font-bold text-[#0a1c3e] leading-tight">
-              {localizedData.title || currentArticle.title}
+              {localizedData.title || activeArticle.title}
             </h1>
 
             {/* Author Meta Bar */}
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1 border-b border-slate-200 pb-4">
               <div className="flex items-center gap-2 font-medium">
                 <div className="w-7 h-7 rounded-full bg-[#0a1c3e] text-brand-gold flex items-center justify-center font-bold text-xs">
-                  {currentArticle.authorName.charAt(0)}
+                  {(activeArticle.authorName || 'N').charAt(0)}
                 </div>
                 <div>
-                  <span className="text-[#0a1c3e] font-bold">{currentArticle.authorName}</span>
-                  <span className="text-[10px] text-slate-400 block font-tech">{currentArticle.authorRole || tText('Official Reporter', 'Cronista')}</span>
+                  <span className="text-[#0a1c3e] font-bold">{activeArticle.authorName || 'Cronista NWS'}</span>
+                  <span className="text-[10px] text-slate-400 block font-tech">{activeArticle.authorRole || tText('Official Reporter', 'Cronista')}</span>
                 </div>
               </div>
 
@@ -763,12 +766,12 @@ export default function ArticleDetailModal({
                 <span className="font-medium text-emerald-700">{tText('Verified by Digital Custodians', 'Verificato dai Custodi Digitali')}</span>
               </div>
 
-              {currentArticle.viewsCount !== undefined && (
+              {activeArticle.viewsCount !== undefined && (
                 <>
                   <div className="h-4 w-px bg-slate-200" />
                   <div className="flex items-center gap-1.5">
                     <Eye className="w-4 h-4 text-slate-400" />
-                    <span>{currentArticle.viewsCount} {tText('reads', 'letture')}</span>
+                    <span>{activeArticle.viewsCount} {tText('reads', 'letture')}</span>
                   </div>
                 </>
               )}
@@ -915,20 +918,20 @@ export default function ArticleDetailModal({
           </div>
 
           {/* Testo Introduttivo (Abstract / Meta Description) */}
-          {(localizedData.intro || currentArticle.intro) && (
+          {(localizedData.intro || activeArticle.intro) && (
             <div className="bg-amber-50/70 border-l-4 border-brand-gold p-4 md:p-5 rounded-r-2xl text-slate-800 font-medium text-sm md:text-base leading-relaxed italic shadow-sm">
-              "{stripFormattingSymbols(localizedData.intro || currentArticle.intro)}"
+              "{stripFormattingSymbols(localizedData.intro || activeArticle.intro)}"
             </div>
           )}
 
           {/* Featured Images */}
-          {currentArticle.images && currentArticle.images.length > 0 && (
+          {activeArticle.images && activeArticle.images.length > 0 && (
             <div className="space-y-3 my-4">
-              {currentArticle.images.map((img, idx) => (
+              {activeArticle.images.map((img, idx) => (
                 <div key={idx} className="rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-slate-900">
                   <img
                     src={img.url}
-                    alt={img.caption || localizedData.title || currentArticle.title}
+                    alt={img.caption || localizedData.title || activeArticle.title}
                     className="w-full max-h-[450px] object-cover"
                   />
                   {img.caption && (
@@ -944,17 +947,17 @@ export default function ArticleDetailModal({
           {/* Extended Text (Body) - Formatted Clean HTML */}
           <div 
             className="article-body-content prose max-w-none text-slate-800 leading-relaxed text-sm md:text-base space-y-4 font-sans border-t border-slate-100 pt-4"
-            dangerouslySetInnerHTML={{ __html: formatArticleContentToHtml(localizedData.content || currentArticle.content) }}
+            dangerouslySetInnerHTML={{ __html: formatArticleContentToHtml(localizedData.content || activeArticle.content) }}
           />
 
           {/* Featured Videos */}
-          {currentArticle.videos && currentArticle.videos.length > 0 && (
+          {activeArticle.videos && activeArticle.videos.length > 0 && (
             <div className="space-y-4 my-6">
               <h3 className="font-serif text-base font-bold text-[#0a1c3e] flex items-center gap-2">
                 <Video className="w-5 h-5 text-brand-gold" />
                 <span>{tText('Attached Videos', 'Video Allegati')}</span>
               </h3>
-              {currentArticle.videos.map((vid, idx) => {
+              {activeArticle.videos.map((vid, idx) => {
                 const embedUrl = getEmbedVideoUrl(vid.url);
                 const isEmbed = embedUrl.includes('embed') || embedUrl.includes('player.vimeo');
                 return (
@@ -990,13 +993,13 @@ export default function ArticleDetailModal({
           )}
 
           {/* Tags */}
-          {((localizedData.tags && localizedData.tags.length > 0) || (currentArticle.tags && currentArticle.tags.length > 0)) && (
+          {((localizedData.tags && localizedData.tags.length > 0) || (activeArticle.tags && activeArticle.tags.length > 0)) && (
             <div className="pt-4 border-t border-slate-200 flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                 <Tag className="w-3.5 h-3.5 text-slate-400" />
                 <span>Tags:</span>
               </span>
-              {(localizedData.tags && localizedData.tags.length > 0 ? localizedData.tags : currentArticle.tags).map(t => (
+              {(localizedData.tags && localizedData.tags.length > 0 ? localizedData.tags : activeArticle.tags).map(t => (
                 <span
                   key={t}
                   className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-mono px-3 py-1 rounded-full border border-slate-200 transition"
@@ -1008,7 +1011,7 @@ export default function ArticleDetailModal({
           )}
 
           {/* Social Outreach & Sharing Kit Section */}
-          <SocialShareKit article={currentArticle} />
+          <SocialShareKit article={activeArticle} />
 
           {/* Related Articles Section */}
           {relatedArticles.length > 0 && (
@@ -1049,7 +1052,7 @@ export default function ArticleDetailModal({
             {onEditArticle && (
               <button
                 onClick={() => {
-                  onEditArticle(currentArticle);
+                  onEditArticle(activeArticle);
                   onClose();
                 }}
                 className="px-5 py-2.5 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold text-xs uppercase tracking-wider hover:bg-[#0a1c3e] hover:text-white transition cursor-pointer flex items-center gap-2 shadow-md border border-brand-gold"
@@ -1062,7 +1065,7 @@ export default function ArticleDetailModal({
             {onDeleteArticle && (
               <button
                 onClick={() => {
-                  onDeleteArticle(currentArticle);
+                  onDeleteArticle(activeArticle);
                 }}
                 className="px-4 py-2.5 rounded-xl bg-red-100 text-red-700 hover:bg-red-600 hover:text-white font-extrabold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border border-red-200 shadow-sm"
               >
