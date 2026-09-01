@@ -33,6 +33,73 @@ function getGenAIClient() {
   return aiClient;
 }
 
+/**
+ * Executes Gemini content generation with multi-model fallback and exponential backoff retry.
+ * Handles 503 (High Demand / Spikes in demand / Service Unavailable), 429 (Rate Limit), and transient errors.
+ */
+async function generateGeminiContentWithFallback(
+  contents: any,
+  config?: any,
+  preferredModel: string = 'gemini-2.5-flash'
+): Promise<any> {
+  const ai = getGenAIClient();
+  const candidateModels = [
+    preferredModel,
+    'gemini-2.5-flash',
+    'gemini-2.5-pro',
+    'gemini-2.0-flash',
+    'gemini-3.7-flash'
+  ];
+  // Deduplicate list preserving order
+  const modelsToTry = Array.from(new Set(candidateModels));
+
+  let lastError: any = null;
+
+  for (const model of modelsToTry) {
+    const maxRetries = 2;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents,
+          config
+        });
+        return response;
+      } catch (err: any) {
+        lastError = err;
+        const errMsg = (err?.message || '').toLowerCase();
+        const errStatus = err?.status || err?.code || '';
+        const isUnavailableOrRateLimited =
+          errMsg.includes('503') ||
+          errMsg.includes('high demand') ||
+          errMsg.includes('unavailable') ||
+          errMsg.includes('429') ||
+          errMsg.includes('resource_exhausted') ||
+          errMsg.includes('rate') ||
+          errStatus === 'UNAVAILABLE' ||
+          errStatus === 503 ||
+          errStatus === 429;
+
+        if (isUnavailableOrRateLimited) {
+          console.warn(`[GEMINI-RETRY] Model "${model}" temporarily unavailable/high demand (attempt ${attempt + 1}/${maxRetries + 1}): ${err?.message}`);
+          if (attempt < maxRetries) {
+            // Exponential backoff: 1s, 2s
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+            continue;
+          }
+          console.warn(`[GEMINI-FALLBACK] Max retries reached for "${model}". Falling back to next available model in queue...`);
+          break;
+        } else {
+          // If error is not transient (e.g. invalid auth or prompt validation), stop retrying same model
+          break;
+        }
+      }
+    }
+  }
+
+  throw lastError || new Error('Tutti i tentativi di generazione con i modelli AI sono falliti.');
+}
+
 const isProd = process.env.NODE_ENV === 'production';
 
 // Initialize PostgreSQL Connection Pool if DATABASE_URL is available
@@ -3996,10 +4063,9 @@ Segui SCRUPOLOSAMENTE le seguenti linee guida di formattazione, chiarezza ed ele
 
 Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
-          contents: prompt,
-          config: {
+        const response = await generateGeminiContentWithFallback(
+          prompt,
+          {
             responseMimeType: 'application/json',
             responseSchema: {
               type: Type.OBJECT,
@@ -4010,8 +4076,9 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
               },
               required: ['title', 'description', 'content']
             }
-          }
-        });
+          },
+          'gemini-2.5-flash'
+        );
 
         const jsonText = response.text;
         if (!jsonText) {
@@ -4040,7 +4107,6 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       }
 
       try {
-        const ai = getGenAIClient();
         const prompt = `Sei l'Assistente AI di Redazione Giornalistica dell'Organo di Stampa Ufficiale dello "New World State" (una nazione digitale sovrana e globale fondata sulla democrazia diretta, diritti digitali e stato di diritto).
 Il tuo compito è elaborare un articolo di giornale completo, professionale, solenne ed elegante basato sull'argomento fornito dall'amministratore/cronista.
 
@@ -4063,10 +4129,9 @@ Regole tassative per il testo:
 
 Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.6-flash',
-          contents: prompt,
-          config: {
+        const response = await generateGeminiContentWithFallback(
+          prompt,
+          {
             responseMimeType: 'application/json',
             responseSchema: {
               type: Type.OBJECT,
@@ -4082,8 +4147,9 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
               },
               required: ['title', 'intro', 'content', 'tags']
             }
-          }
-        });
+          },
+          'gemini-2.5-flash'
+        );
 
         const jsonText = response.text;
         if (!jsonText) {
@@ -4154,7 +4220,6 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
         .join('\n');
 
       try {
-        const ai = getGenAIClient();
         const prompt = `Sei l'Ufficio Traduzioni e Relazioni Internazionali dell'Organo di Stampa Ufficiale di "New World State" (comunità globale fondata sulla sovranità individuale e democrazia diretta).
 Traduci con la massima fedeltà giornalistica, solennità, eleganza e precisione l'articolo fornito nelle seguenti lingue:
 ${langListStr}
@@ -4184,10 +4249,9 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
 - "content": corpo dell'articolo tradotto in Markdown
 - "tags": array di stringhe con i tag tradotti`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.7-flash',
-          contents: prompt,
-          config: {
+        const response = await generateGeminiContentWithFallback(
+          prompt,
+          {
             responseMimeType: 'application/json',
             responseSchema: {
               type: Type.OBJECT,
@@ -4250,8 +4314,9 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
               },
               required: ['translations']
             }
-          }
-        });
+          },
+          'gemini-2.5-flash'
+        );
 
         const jsonText = response.text;
         if (!jsonText) throw new Error('Nessuna risposta ricevuta dal motore di traduzione AI.');
@@ -4477,18 +4542,17 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
         let enKeywords = cleanQuery;
         let itKeywords = cleanQuery;
         try {
-          const ai = getGenAIClient();
           const expandPrompt = `Dato l'argomento di ricerca giornalistica: "${cleanQuery}"
 Restituisci un oggetto JSON con:
 - "enQuery": 2-3 parole chiave in lingua inglese per banche dati fotografiche internazionali (es. Unsplash, Pexels).
 - "itQuery": 2-3 parole chiave in italiano ottimizzate per reportage fotogiornalistico.
 Formato: {"enQuery": "...", "itQuery": "..."}`;
 
-          const expRes = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: expandPrompt,
-            config: { responseMimeType: 'application/json' }
-          });
+          const expRes = await generateGeminiContentWithFallback(
+            expandPrompt,
+            { responseMimeType: 'application/json' },
+            'gemini-2.5-flash'
+          );
           if (expRes.text) {
             const parsedExp = JSON.parse(expRes.text.trim());
             if (parsedExp.enQuery) enKeywords = parsedExp.enQuery;
@@ -4826,7 +4890,6 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
         try {
           const aiStart = Date.now();
           execLogs.push(`[${nowStr()}] 🤖 [Gemini AI] Avvio traduzione ed ottimizzazione titoli per ${itemsToReturn.length} elementi (Ancoraggio per ID)...`);
-          const ai = getGenAIClient();
           const itemsPayload = itemsToReturn.map(i => ({ id: i.id, originalTitle: i.title, sourcePlatform: i.sourcePlatform }));
           const prompt = `Sei il caporedattore del quotidiano 'New World State'.
 Ho recuperato dal web i seguenti elementi multimediali pertinenti per l'argomento: '${cleanQuery}'.
@@ -4839,13 +4902,11 @@ REGOLE TASSATIVE:
 - Mantieni rigorosamente intatti gli 'id' ricevuti in input.
 - NON restituire altri campi o modificare la struttura.`;
 
-          const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-              responseMimeType: 'application/json'
-            }
-          });
+          const response = await generateGeminiContentWithFallback(
+            prompt,
+            { responseMimeType: 'application/json' },
+            'gemini-2.5-flash'
+          );
 
           if (response.text) {
             const parsed = JSON.parse(response.text.trim());
@@ -5853,14 +5914,14 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
 - Fonti da citare e consultare: ${selectedSourcesList.join(', ')}
 `;
 
-        const response = await genAI.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: systemPrompt + '\n' + userPrompt,
-          config: {
+        const response = await generateGeminiContentWithFallback(
+          systemPrompt + '\n' + userPrompt,
+          {
             responseMimeType: 'application/json',
             temperature: 0.7,
-          }
-        });
+          },
+          'gemini-2.5-flash'
+        );
 
         const textResponse = response.text || '';
         let parsedData: any = null;
@@ -8892,6 +8953,109 @@ ${articleFull}
       }
     });
 
+    // Funzione asincrona per traduzione in background e indicizzazione
+    async function runBackgroundAutoTranslationAndIndexing(article: any, baseUrl: string) {
+      if (!article || !article.title || !article.content) return;
+      
+      console.log(`[NEWS-I18N] Avvio traduzione automatica background e indicizzazione per: ${article.title}`);
+      
+      try {
+        // 1. Traduzione automatica con Gemini AI
+        const requestedLangs = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+        const langMap: Record<string, string> = {
+          en: 'English (Inglese)', fr: 'Français (Francese)', es: 'Español (Spagnolo)',
+          pt: 'Português (Portoghese)', ru: 'Русский (Russo)', hi: 'हिन्दी (Hindi)',
+          bn: 'বাংলা (Bengalese)', zh: '中文 (Cinese Semplificato)', ja: '日本語 (Giapponese)', ar: 'العربية (Arabo)'
+        };
+        const langListStr = requestedLangs.map(l => `- "${l}": ${langMap[l]}`).join('\n');
+        
+        const prompt = `Sei l'Ufficio Traduzioni e Relazioni Internazionali dell'Organo di Stampa Ufficiale di "New World State".
+Traduci con la massima fedeltà giornalistica, solennità, eleganza e precisione l'articolo fornito nelle seguenti lingue:
+${langListStr}
+
+ARTICOLO DA TRADURRE:
+TITOLO:
+${article.title}
+
+ABSTRACT / INTRODUZIONE:
+${article.intro || ''}
+
+TESTO COMPLETO IN FORMATO MARKDOWN:
+${article.content}
+
+TAG ORIGINALI:
+${JSON.stringify(article.tags || [])}
+
+REGOLE DI TRADUZIONE:
+1. Mantieni rigorosamente tutte le intestazioni Markdown, formattazione, ecc.
+2. Non alterare nomi come "New World State" o "NWS".
+3. Adatta gli hashtag/tag.
+4. Genera traduzioni eleganti.
+
+Genera un JSON con chiave "translations" contenente le lingue.`;
+
+        const response = await generateGeminiContentWithFallback(
+          prompt,
+          {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                translations: {
+                  type: Type.OBJECT,
+                  properties: requestedLangs.reduce((acc, lang) => ({
+                    ...acc,
+                    [lang]: {
+                      type: Type.OBJECT,
+                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
+                      required: ['title', 'intro', 'content']
+                    }
+                  }), {})
+                }
+              },
+              required: ['translations']
+            }
+          },
+          'gemini-2.5-flash'
+        );
+
+        if (response.text) {
+          const parsed = JSON.parse(response.text.trim());
+          const translations = parsed.translations || {};
+          
+          // Salva le traduzioni
+          const currentArticles = getServerArticles();
+          const updated = currentArticles.map(a => {
+            if (a && String(a.id) === String(article.id)) {
+              return {
+                ...a,
+                translations: { ...(a.translations || {}), ...translations },
+                updatedAt: new Date().toISOString()
+              };
+            }
+            return a;
+          });
+          saveServerArticles(updated);
+          console.log(`[NEWS-I18N] Traduzione background completata per: ${article.title}`);
+        }
+        
+        // 2. Proposta per l'indicizzazione (Ping ai motori di ricerca)
+        const sitemapUrl = `${baseUrl}/sitemap.xml`;
+        const newsSitemapUrl = `${baseUrl}/sitemap-news.xml`;
+        console.log(`[SEO] Invio ping ai motori di ricerca per le sitemap: ${sitemapUrl}`);
+        
+        // Ping Google
+        fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`).catch(() => {});
+        fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(newsSitemapUrl)}`).catch(() => {});
+        // Ping Bing
+        fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`).catch(() => {});
+        fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(newsSitemapUrl)}`).catch(() => {});
+        
+      } catch (err: any) {
+        console.error(`[NEWS-I18N] Errore in background task: ${err.message}`);
+      }
+    }
+
     // Direct Moderation Endpoint - immediately approves/rejects and updates sitemaps
     app.post('/api/news/moderate', (req, res) => {
       try {
@@ -8937,6 +9101,13 @@ ${articleFull}
         }
 
         saveServerArticles(updated);
+        
+        if (action === 'approve') {
+          const baseUrl = getCanonicalBaseUrl(req);
+          // Avvia la traduzione e l'indicizzazione in background per l'articolo appena pubblicato
+          runBackgroundAutoTranslationAndIndexing(target, baseUrl).catch(console.error);
+        }
+
         return res.json({ 
           success: true, 
           message: `Articolo aggiornato con successo (${action}) e sitemap sincronizzate.`,
