@@ -8347,15 +8347,27 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
             <image:caption>${escapeHtmlWorker(page.imageCaption || page.title)}</image:caption>
           </image:image>`;
           }
-
-          return `
+          if (page.path === 'sitemap.html') {
+             return `
         <url>
           <loc>${escapeHtmlWorker(defUrl)}</loc>
           <lastmod>${today}</lastmod>
           <changefreq>${page.changefreq}</changefreq>
           <priority>${page.priority}</priority>
-${hreflangs ? hreflangs + '\n' : ''}${imgXml}
+${imgXml}
         </url>`;
+          }
+          return SITE_LANGS.map(lang => {
+            const langUrl = getUrl(lang);
+            return `
+        <url>
+          <loc>${escapeHtmlWorker(langUrl)}</loc>
+          <lastmod>${today}</lastmod>
+          <changefreq>${page.changefreq}</changefreq>
+          <priority>${page.priority}</priority>
+${hreflangs}${imgXml}
+        </url>`;
+          }).join('');
         }).join('');
 
         const pdfXml = CONSTITUTION_PDFS.map(pdf => {
@@ -8412,14 +8424,17 @@ ${hreflangs ? hreflangs + '\n' : ''}${imgXml}
             <image:caption>${escapeHtmlWorker(cleanTitle)}</image:caption>
           </image:image>` : '';
 
-          return `
+          return SITE_LANGS.map(lang => {
+            const langUrl = getArticleUrl(lang);
+            return `
         <url>
-          <loc>${escapeHtmlWorker(defUrl)}</loc>
+          <loc>${escapeHtmlWorker(langUrl)}</loc>
           <lastmod>${lastMod}</lastmod>
           <changefreq>daily</changefreq>
           <priority>0.95</priority>
 ${hreflangs}${imgXml}
         </url>`;
+          }).join('');
         }).join('');
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -8476,19 +8491,25 @@ ${articleXml}
           const defUrl = getArticleUrl('it');
           const hreflangs = buildHreflangs(getArticleUrl, defUrl);
 
-          return `
+          return SITE_LANGS.map(lang => {
+            const langUrl = getArticleUrl(lang);
+            let langTitle = cleanTitle;
+            if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
+              langTitle = cleanMetaTextWorker(a.translations[lang].title);
+            }
+            return `
         <url>
-          <loc>${escapeHtmlWorker(defUrl)}</loc>
+          <loc>${escapeHtmlWorker(langUrl)}</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
-              <news:language>it</news:language>
+              <news:language>${lang}</news:language>
             </news:publication>
             <news:publication_date>${pubDate}</news:publication_date>
-            <news:title>${escapeHtmlWorker(cleanTitle)}</news:title>
+            <news:title>${escapeHtmlWorker(langTitle)}</news:title>
           </news:news>
-${hreflangs}
         </url>`;
+          }).join('');
         }).join('');
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
