@@ -400,9 +400,12 @@ export default function ArticleDetailModal({
   // Play / Resume
   const handlePlayTTS = () => {
     if (!article || articleChunks.length === 0) return;
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert(tText('Speech synthesis is not supported in this browser.', 'La sintesi vocale non è supportata da questo browser.'));
-      return;
+
+    // Check for native voice matching language
+    const availableVoices = voices.length > 0 ? voices : (typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis.getVoices() : []);
+    let targetVoice = availableVoices.find(v => v.name === selectedVoiceName);
+    if (!targetVoice && selectedVoiceName === 'default') {
+      targetVoice = availableVoices.find(v => v.lang && v.lang.toLowerCase().startsWith(activeLang.toLowerCase()));
     }
 
     isPlayingRef.current = true;
@@ -412,6 +415,36 @@ export default function ArticleDetailModal({
     try {
       window.dispatchEvent(new CustomEvent('nws-tts-state-change', { detail: { isPlaying: true, isPaused: false } }));
     } catch (e) {}
+
+    // Use Cloud Fallback if no native voice supports this language natively and we are on "default" voice
+    if (!targetVoice && selectedVoiceName === 'default') {
+      if (isPaused) {
+        globalFallbackTtsPlayer.resume();
+      } else {
+        const cleanTitle = stripFormattingSymbols(localizedData.title || activeArticle.title || '');
+        const cleanIntro = stripFormattingSymbols(localizedData.intro || activeArticle.intro || '');
+        const cleanContent = stripFormattingSymbols(localizedData.content || activeArticle.content || '');
+        const fullText = `${cleanTitle}. ${cleanIntro ? cleanIntro + '.' : ''} ${cleanContent}`;
+        
+        globalFallbackTtsPlayer.play(
+          fullText, 
+          activeLang, 
+          playbackRate, 
+          () => handleStopTTS(), 
+          (err) => {
+            console.warn('[Fallback TTS] Error or manual stop', err);
+            handleStopTTS();
+          }
+        );
+      }
+      return;
+    }
+
+    // Otherwise use native speech synthesis
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      alert(tText('Speech synthesis is not supported in this browser.', 'La sintesi vocale non è supportata da questo browser.'));
+      return;
+    }
 
     const startIdx = isPaused ? currentChunkIndexRef.current : (currentChunkIndexRef.current >= articleChunks.length ? 0 : currentChunkIndexRef.current);
     speakChunk(startIdx, playbackRate, selectedVoiceName);
@@ -436,14 +469,21 @@ export default function ArticleDetailModal({
   const handleVoiceChange = (newVoiceName: string) => {
     setSelectedVoiceName(newVoiceName);
     if (isPlayingRef.current) {
-      speakChunk(currentChunkIndexRef.current, playbackRate, newVoiceName);
+      if (globalFallbackTtsPlayer.getIsPlaying()) {
+        handleStopTTS();
+      } else if (newVoiceName === 'default') {
+        handleStopTTS();
+      } else {
+        speakChunk(currentChunkIndexRef.current, playbackRate, newVoiceName);
+      }
     }
   };
 
   // Change Playback Speed in real time
   const handleChangeRate = (newRate: number) => {
     setPlaybackRate(newRate);
-    if (isPlayingRef.current) {
+    globalFallbackTtsPlayer.setRate(newRate);
+    if (isPlayingRef.current && !globalFallbackTtsPlayer.getIsPlaying()) {
       speakChunk(currentChunkIndexRef.current, newRate, selectedVoiceName);
     }
   };
