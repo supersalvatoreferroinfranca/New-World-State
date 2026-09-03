@@ -9,7 +9,8 @@ import {
   incrementArticleViews,
   syncArticlesWithServer,
   deleteArticle,
-  getLocalizedArticle
+  getLocalizedArticle,
+  generateSlug
 } from '../../services/newsService';
 import ArticleFormModal from './ArticleFormModal';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -149,7 +150,12 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
         if (targetSlug) {
           const decodedTarget = decodeURIComponent(targetSlug).trim();
-          foundArticle = articles.find(a => a.slug === decodedTarget || a.id === decodedTarget || a.slug === targetSlug);
+          foundArticle = articles.find(a => 
+            a.slug === decodedTarget || 
+            a.id === decodedTarget || 
+            a.slug === targetSlug ||
+            (a.translations && Object.values(a.translations).some(t => t.title && generateSlug(t.title) === decodedTarget))
+          );
         } else if (window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
           const pathParts = window.location.pathname.split('/').filter(Boolean);
           const rawSlug = pathParts[pathParts.length - 1];
@@ -159,7 +165,9 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
               a.slug === decodedPathSlug || 
               a.id === decodedPathSlug || 
               a.slug === rawSlug ||
-              encodeURIComponent(a.slug || '') === rawSlug
+              encodeURIComponent(a.slug || '') === rawSlug ||
+              (a.translations && Object.values(a.translations).some(t => t.title && generateSlug(t.title) === decodedPathSlug)) ||
+              (a.translations && Object.values(a.translations).some(t => t.title && encodeURIComponent(generateSlug(t.title)) === rawSlug))
             );
           }
         }

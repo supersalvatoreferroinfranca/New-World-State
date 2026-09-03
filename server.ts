@@ -7231,6 +7231,19 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
       return tags.join('\n');
     }
 
+    function generateSlugServer(title: string): string {
+      if (!title) return '';
+      return String(title)
+        .toLowerCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
     function generateComprehensiveSitemapXml(baseUrl: string, rawArticles: any[]): string {
       const today = new Date().toISOString().split('T')[0];
       const articles = getDeduplicatedArticles(rawArticles);
@@ -7315,7 +7328,12 @@ ${hreflangs ? hreflangs + '\n' : ''}${imageXml}
         imgUrl = formatOgImageUrl(imgUrl);
 
         const getArticleUrl = (lang: string) => {
-          const encoded = encodeURIComponent(slug);
+          let langTitle = cleanTitle;
+          if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
+            langTitle = cleanMetaText(a.translations[lang].title);
+          }
+          const translatedSlug = lang === 'it' ? slug : (generateSlugServer(langTitle) || slug);
+          const encoded = encodeURIComponent(translatedSlug);
           return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
         };
 
@@ -7361,7 +7379,12 @@ ${articleEntries}
         const baseTitle = cleanMetaText(a.title);
 
         const getArticleUrl = (lang: string) => {
-          const encoded = encodeURIComponent(slug);
+          let langTitle = baseTitle;
+          if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
+            langTitle = cleanMetaText(a.translations[lang].title);
+          }
+          const translatedSlug = lang === 'it' ? slug : (generateSlugServer(langTitle) || slug);
+          const encoded = encodeURIComponent(translatedSlug);
           return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
         };
 

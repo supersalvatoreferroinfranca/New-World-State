@@ -342,6 +342,19 @@ function normalizeSlugWorker(s) {
     .replace(/[^a-z0-9]/g, '');
 }
 
+function generateSlugWorker(title) {
+  if (!title) return '';
+  return String(title)
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function formatSlugToTitleWorker(slug) {
   if (!slug) return 'Notizia New World State';
   let clean = slug;
@@ -8411,7 +8424,12 @@ ${hreflangs}${imgXml}
           imgUrl = formatOgImageUrlWorker(imgUrl);
 
           const getArticleUrl = (lang) => {
-            const encoded = encodeURIComponent(slug);
+            let langTitle = cleanTitle;
+            if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
+              langTitle = cleanMetaTextWorker(a.translations[lang].title);
+            }
+            const translatedSlug = lang === 'it' ? slug : (generateSlugWorker(langTitle) || slug);
+            const encoded = encodeURIComponent(translatedSlug);
             return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
           };
 
@@ -8484,7 +8502,12 @@ ${articleXml}
           const cleanTitle = cleanMetaTextWorker(a.title);
 
           const getArticleUrl = (lang) => {
-            const encoded = encodeURIComponent(slug);
+            let langTitle = cleanTitle;
+            if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
+              langTitle = cleanMetaTextWorker(a.translations[lang].title);
+            }
+            const translatedSlug = lang === 'it' ? slug : (generateSlugWorker(langTitle) || slug);
+            const encoded = encodeURIComponent(translatedSlug);
             return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
           };
 
