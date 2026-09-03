@@ -1536,9 +1536,20 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
-  // Try to load initial language preference
+  // Try to load initial language preference from URL or localStorage
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem('nws_preferred_language') as Language;
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      let langParam = searchParams.get('lang') || searchParams.get('hl');
+      if (langParam) {
+        langParam = langParam.toLowerCase();
+        if (TRANSLATIONS[langParam as Language]) {
+           localStorage.setItem('nws_preferred_language', langParam);
+           return langParam as Language;
+        }
+      }
+    }
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('nws_preferred_language') as Language : null;
     return (saved && TRANSLATIONS[saved]) ? saved : 'it';
   });
 

@@ -68,12 +68,32 @@ export default function ArticleDetailModal({
 }: ArticleDetailModalProps) {
   const { currentLanguage, tText } = useI18n();
   const [currentArticle, setCurrentArticle] = useState<NewsArticle | null>(article);
-  const [activeLang, setActiveLang] = useState<NewsLanguage>((currentLanguage as NewsLanguage) || 'it');
+  const [activeLang, setActiveLang] = useState<NewsLanguage>(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const langParam = (searchParams.get('lang') || searchParams.get('hl'))?.toLowerCase();
+      if (langParam && SUPPORTED_LANG_OPTIONS.some(l => l.code === langParam)) {
+        return langParam as NewsLanguage;
+      }
+    }
+    return (currentLanguage as NewsLanguage) || 'it';
+  });
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationNotice, setTranslationNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Sync internal article state when prop changes or language changes
+  const handleLanguageSelect = (langCode: NewsLanguage) => {
+    setActiveLang(langCode);
+    if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+      const url = new URL(window.location.href);
+      if (langCode === 'it') {
+        url.searchParams.delete('lang');
+      } else {
+        url.searchParams.set('lang', langCode);
+      }
+      window.history.pushState({}, '', url.toString());
+    }
+  };
   useEffect(() => {
     setCurrentArticle(article);
     if (article && currentLanguage) {
@@ -210,9 +230,14 @@ export default function ArticleDetailModal({
           if (available.length > 0) {
             setVoices(available);
             setSelectedVoiceName(prev => {
-              // Try to find a voice matching the active language code
+              // 1. Try to find a Google voice for the active language
+              const googleVoice = available.find(v => v.lang && v.lang.toLowerCase().startsWith(activeLang.toLowerCase()) && v.name.includes('Google'));
+              if (googleVoice) return googleVoice.name;
+              
+              // 2. Try to find any voice matching the active language code
               const matchingVoice = available.find(v => v.lang && v.lang.toLowerCase().startsWith(activeLang.toLowerCase()));
               if (matchingVoice) return matchingVoice.name;
+              
               return 'default';
             });
           }
@@ -339,6 +364,7 @@ export default function ArticleDetailModal({
         'ar': 'ar-SA'
       };
       utterance.lang = langMap[activeLang] || 'it-IT';
+      utterance.voice = null; // Explicitly set to null to force system fallback
     }
 
     utterance.onend = () => {
@@ -574,7 +600,10 @@ export default function ArticleDetailModal({
 
   const handleShare = () => {
     const slug = activeArticle.slug || activeArticle.id;
-    const url = getPublicArticleUrl(slug);
+    let url = getPublicArticleUrl(slug);
+    if (activeLang !== 'it') {
+      url += `?lang=${activeLang}`;
+    }
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
       setCopied(true);
@@ -712,7 +741,7 @@ export default function ArticleDetailModal({
                   <button
                     key={lang.code}
                     type="button"
-                    onClick={() => setActiveLang(lang.code)}
+                    onClick={() => handleLanguageSelect(lang.code)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 border ${
                       isActive
                         ? 'bg-[#0a1c3e] text-brand-gold border-[#0a1c3e] shadow-sm ring-2 ring-brand-gold/30'
@@ -752,7 +781,7 @@ export default function ArticleDetailModal({
                   </span>
                 </div>
                 <button
-                  onClick={() => setActiveLang('it')}
+                  onClick={() => handleLanguageSelect('it')}
                   className="underline hover:text-emerald-950 font-semibold cursor-pointer shrink-0"
                 >
                   {tText('Show Italian original', 'Mostra originale italiano')}
