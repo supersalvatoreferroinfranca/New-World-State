@@ -1173,11 +1173,11 @@ export function getLocalizedArticle(
   }
 
   const translation = article.translations?.[lang as NewsLanguage];
-  if (translation && translation.title && translation.content) {
+  if (translation && (translation.title || translation.content)) {
     return {
-      title: translation.title,
+      title: translation.title || article.title,
       intro: translation.intro || article.intro,
-      content: translation.content,
+      content: translation.content || article.content,
       tags: translation.tags && translation.tags.length > 0 ? translation.tags : (article.tags || []),
       isTranslated: true,
       hasTranslation: true
@@ -1213,11 +1213,12 @@ export async function autoTranslateArticleOnDemand(
   if (pendingTranslations.has(key)) return null;
 
   const articles = getArticles();
-  const target = articles.find(a => a.id === articleId || a.slug === articleId);
+  const target = articles.find(a => String(a.id) === String(articleId) || a.slug === articleId);
   if (!target) return null;
 
-  if (target.translations?.[lang as NewsLanguage]?.title) {
-    return target; // Già tradotto
+  // Già tradotto completamente sia titolo che contenuto esteso
+  if (target.translations?.[lang as NewsLanguage]?.title && target.translations?.[lang as NewsLanguage]?.content) {
+    return target;
   }
 
   pendingTranslations.add(key);
@@ -1233,8 +1234,16 @@ export async function autoTranslateArticleOnDemand(
     });
 
     const updatedArticles = getArticles();
-    const updatedTarget = updatedArticles.find(a => a.id === target.id);
-    return updatedTarget || null;
+    const updatedTarget = updatedArticles.find(a => String(a.id) === String(target.id) || a.slug === target.slug);
+    const result: NewsArticle = updatedTarget || {
+      ...target,
+      translations: {
+        ...(target.translations || {}),
+        ...translations
+      },
+      updatedAt: new Date().toISOString()
+    };
+    return result;
   } catch (err) {
     console.warn(`[AutoTranslate] Traduzione on-demand per ${articleId} in ${lang} fallita:`, err);
     return null;
