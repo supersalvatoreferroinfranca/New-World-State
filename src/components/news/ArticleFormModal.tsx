@@ -8,6 +8,7 @@ import {
   updateArticle, 
   generateSlug,
   generateArticleWithAI,
+  translateArticleWithAI,
   searchArticleMedia,
   MediaSearchResult,
   MediaSearchDebugInfo,
@@ -582,16 +583,23 @@ export default function ArticleFormModal({
       targetStatus = 'bozza';
     }
 
+    let finalArticleId = '';
+    let finalTitle = title.trim();
+    let finalIntro = intro.trim();
+    let finalContent = content.trim();
+    let finalTags = tags;
+
     if (articleToEdit) {
+      finalArticleId = articleToEdit.id;
       updateArticle(articleToEdit.id, {
-        title: title.trim(),
+        title: finalTitle,
         slug: slug.trim() || generateSlug(title),
         categoryId,
-        intro: intro.trim(),
-        content: content.trim(),
+        intro: finalIntro,
+        content: finalContent,
         images,
         videos,
-        tags,
+        tags: finalTags,
         relatedArticleIds: relatedIds,
         status: targetStatus,
         publishedAt: targetStatus === 'pubblicato' ? (articleToEdit.publishedAt || new Date().toISOString()) : articleToEdit.publishedAt,
@@ -600,15 +608,15 @@ export default function ArticleFormModal({
         authorRole: articleToEdit.authorRole || authorRole
       });
     } else {
-      createArticle({
-        title: title.trim(),
+      const created = createArticle({
+        title: finalTitle,
         slug: slug.trim() || generateSlug(title),
         categoryId,
-        intro: intro.trim(),
-        content: content.trim(),
+        intro: finalIntro,
+        content: finalContent,
         images,
         videos,
-        tags,
+        tags: finalTags,
         relatedArticleIds: relatedIds,
         authorId,
         authorName,
@@ -617,6 +625,24 @@ export default function ArticleFormModal({
         status: targetStatus,
         publishedAt: targetStatus === 'pubblicato' ? new Date().toISOString() : undefined
       });
+      finalArticleId = created.id;
+    }
+
+    if (targetStatus === 'pubblicato') {
+      setTimeout(async () => {
+        try {
+          const translations = await translateArticleWithAI({
+            id: finalArticleId,
+            title: finalTitle,
+            intro: finalIntro,
+            content: finalContent,
+            tags: finalTags
+          });
+          updateArticle(finalArticleId, { translations });
+        } catch (e) {
+          console.warn('[Auto-Translate] failed', e);
+        }
+      }, 500);
     }
 
     onSaved?.();
