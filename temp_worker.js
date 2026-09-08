@@ -1088,6 +1088,8 @@ const worker = {
 
     // Servizio Risorse Statiche da env.ASSETS (es. favicon, immagini, fogli di stile, js, manifest)
     const isStaticAsset = (pathname) => {
+      // Bypass static asset check for dynamically generated XMLs/feeds
+      if (pathname === '/sitemap.xml' || pathname === '/sitemap-news.xml' || pathname === '/rss.xml' || pathname === '/feed.xml' || pathname === '/llms.txt') return false;
       const staticExtensions = [
         '.ico', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', 
         '.js', '.css', '.json', '.webmanifest', '.woff', '.woff2', 
