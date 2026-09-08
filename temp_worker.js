@@ -28,6 +28,102 @@ let memoryBroadcasts = [];
 
 let memoryWorkerArticles = [
   {
+    id: 'art-111',
+    title: "Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l'Impegno Globale del New World State",
+    slug: 'il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state',
+    categoryId: 'cat-diritti',
+    intro: "Un'inchiesta approfondita sulle drammatiche dinamiche del lavoro forzato e dello sfruttamento minorile nel mondo, con il manifesto d'azione e le tutele universali promosse dal New World State per restituire futuro e dignità all'infanzia.",
+    content: `Oltre 160 milioni di bambini nel mondo sono oggi intrappolati nelle maglie del lavoro minorile, costretti a sacrificare istruzione, salute e dignità in contesti di estrema vulnerabilità economica e geopolitica. Dalle miniere di cobalto e coltan dell'Africa subsahariana alle filiere tessili del Sud-Est asiatico, fino alle piantagioni agricole dell'America Latina e alle periferie invisibili delle metropoli occidentali, lo sfruttamento dell'infanzia rappresenta una delle ferite più profonde e intollerabili dell'ordine economico contemporaneo.
+
+## La dimensione invisibile dell'emergenza globale
+
+I dati delle organizzazioni internazionali certificano una battuta d'arresto senza precedenti nella lotta globale allo sfruttamento dei minori. Quasi la metà dei bambini impiegati nel lavoro forzato si trova in condizioni di lavoro pericoloso, esposta a sostanze tossiche, macchinari pesanti e orari disumani. Non si tratta di una fatalità geografica o culturale, ma della conseguenza diretta di catene di fornitura globalizzate strutturate sulla compressione spietata dei costi di produzione e sulla deregolamentazione selvaggia.
+
+> "Un modello economico che fonda il proprio profitto o la propria competitività industriale sul lavoro forzato di un solo bambino è un modello intrinsecamente fallimentare e moralmente illegittimo. La sovranità dei popoli inizia dalla tutela incondizionata dell'infanzia."
+> — Manifesto per la Dignità Umana, Assemblea Generale New World State
+
+## Catene di fornitura opache e la responsabilità delle multinazionali
+
+Mentre le grandi multinazionali tecnologiche, energetiche e dell'alta moda presentano bilanci di sostenibilità patinati, le materie prime essenziali per batterie, smartphone e abbigliamento low-cost continuano a essere estratte e lavorate da mani infantili lungo catene di subappalto intenzionalmente frammentate per eludere responsabilità penali e civili.
+
+I meccanismi di certificazione volontaria e di audit aziendale si sono dimostrati inadeguati:
+* Mancanza di ispezioni indipendenti senza preavviso nei siti estrattivi e manifatturieri remoti.
+* Complice connivenza dei governi locali in cerca di investimenti esteri a qualsiasi costo sociale.
+* Assenza di tracciabilità inviolabile dal punto di estrazione della materia prima al prodotto finito al consumo.
+* Impunità giuridica transnazionale favorita dalla frammentazione giurisdizionale degli stati tradizionali.
+
+## La Carta dei Diritti dell'Infanzia e l'Azione Diretta del New World State
+
+Di fronte all'inerzia delle diplomazie convenzionali, il New World State 1.0 dichiara lo sfruttamento minorile un crimine contro la famiglia umana universale e attiva una serie di misure vincolanti per la propria comunità sovrana:
+
+1. **Tracciabilità Crittografica Sovrana delle Filiere**: Ogni bene scambiato o certificato all'interno della rete economica del New World State deve disporre di un passaporto digitale con attestazione notarile decentralizzata che certifichi l'assoluta assenza di manodopera minorile lungo tutti i livelli della filiera.
+2. **Fondo Sovrano di Riscatto e Istruzione Libera**: Stanziamento immediato di risorse a sostegno di borse di studio, centri educativi comunitari e reddito di dignità per le famiglie a basso reddito, per consentire ai minori di abbandonare il lavoro e rientrare stabilmente nei percorsi formativi.
+3. **Blacklist Internazionale Pubblica delle Corporation Complici**: Istituzione di un registro pubblico immutabile accessibile ai cittadini globali in cui vengono segnalate e boicottate le aziende che beneficiano direttamente o indirettamente del lavoro forzato minorile.
+4. **Accademia dei Custodi dell'Infanzia**: Una rete permanente di volontari, cronisti investigativi e giuristi sovrani impegnata sul campo nella documentazione e nel soccorso tempestivo di minori in condizioni di schiavitù o tratta.
+
+## Un Patto Fondativo per il Futuro delle Nuove Generazioni
+
+Proteggere i bambini non è un atto di carità, ma il pilastro irrinunciabile su cui costruire un nuovo ordine sociale basato sulla giustizia, sull'armonia universale e sulla pace duratura. La Costituzione Fondativa del New World State sancisce il diritto di ogni fanciullo a giocare, studiare, sognare e crescere libero da ogni forma di violenza e ricatto economico. Invitiamo tutti i cittadini, le comunità indipendenti e le organizzazioni etiche a unire le forze in questa battaglia di civiltà.`,
+    images: [
+      {
+        type: 'image',
+        source: 'url',
+        url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80',
+        caption: "Tutela dell'infanzia, diritto all'istruzione e dignità inviolabile nel New World State."
+      }
+    ],
+    tags: ['DirittiUmani', 'Infanzia', 'GiustiziaSociale', 'NewWorldState', 'Solidarietà'],
+    authorName: 'Elenor Vance (Cronista Capo)',
+    authorRole: 'Cronista Diritti Umani',
+    status: 'pubblicato',
+    createdAt: '2026-08-26T09:00:00.000Z',
+    publishedAt: '2026-08-26T10:00:00.000Z',
+    updatedAt: '2026-08-26T10:00:00.000Z',
+    isFeatured: true,
+    translations: {
+      en: {
+        title: "The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State",
+        intro: "An in-depth investigation into the tragic dynamics of forced child labour around the world, presenting the manifesto of action and universal safeguards promoted by the New World State to restore dignity and a future to children."
+      },
+      fr: {
+        title: "Le Fléau Silencieux : Le Ravage du Travail des Enfants et l'Engagement Mondial du New World State",
+        intro: "Une enquête approfondie sur les dynamiques dramatiques du travail forcé des enfants dans le monde, avec le manifeste d'action et les protections universelles du New World State."
+      },
+      es: {
+        title: "El Flagelo Silente: La Plaga del Trabajo Infantil y el Compromiso Global del New World State",
+        intro: "Una investigación profunda sobre la dramática realidad del trabajo infantil forzado en el mundo, con el manifiesto de acción y garantías universales del New World State."
+      },
+      pt: {
+        title: "O Flagelo Silencioso: A Chaga do Trabalho Infantil e o Compromisso Global do New World State",
+        intro: "Uma investigação aprofundada sobre a exploração infantil no mundo, com o manifesto de ação e salvaguardas universais do New World State para devolver dignidade às crianças."
+      },
+      ru: {
+        title: "Безмолвное бедствие: бремя детского труда и глобальные обязательства New World State",
+        intro: "Глубокое расследование проблемы детского труда и эксплуатации в мире, с манифестом действий и универсальными гарантиями New World State."
+      },
+      hi: {
+        title: "मूक विपत्ति: बाल श्रम का अभिशाप और New World State की वैश्विक प्रतिबद्धता",
+        intro: "दुनिया भर में बाल श्रम के शोषण पर गहन जांच और बच्चों के भविष्य व सम्मान की रक्षा के लिए New World State का वैश्विक घोषणापत्र।"
+      },
+      bn: {
+        title: "নীরব সংকট: শিশুশ্রমের অভিশাপ এবং New World State-এর বৈশ্বিক অঙ্গীকার",
+        intro: "বিশ্বজুড়ে শিশুশ্রমের করুণ পরিস্থিতির ওপর বিশেষ প্রতিবেদন এবং শিশুদের ভবিষ্যৎ রক্ষায় New World State-এর অঙ্গীকার।"
+      },
+      zh: {
+        title: "无声的祸患：童工剥削问题与新世界国家的全球承诺",
+        intro: "关于全球童工与强迫劳动现状的深入调查报告，以及新世界国家为捍卫儿童权益所采取的全球行动宣言。"
+      },
+      ja: {
+        title: "静かなる災禍：児童労働の惨禍と新世界国家のグローバルな誓約",
+        intro: "世界的な児童労働の過酷な現実に迫る徹底調査と、子どもの尊厳と未来を守るための新世界国家の行動指針。"
+      },
+      ar: {
+        title: "الكارثة الصامتة: آفة عمالة الأطفال والالتزام العالمي لـ New World State",
+        intro: "تحقيق معمق حول الاستغلال والعمل القسري للأطفال حول العالم، مع ميثاق العمل والضمانات الشاملة التي ترعاها New World State."
+      }
+    }
+  },
+  {
     id: 'art-104',
     title: "L'Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali",
     slug: 'limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali',
@@ -538,16 +634,311 @@ function getCanonicalBaseUrlWorker(url, request) {
   return 'https://newworldstate.cloud';
 }
 
-function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
+const SITE_SUPPORTED_LANGUAGES_WORKER = ['it', 'en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+
+const LANGUAGE_DETAILS_WORKER = {
+  it: { code: 'IT', name: 'Italiano', nativeName: 'Italiano', flag: '🇮🇹', locale: 'it_IT' },
+  en: { code: 'EN', name: 'English', nativeName: 'English', flag: '🇬🇧', locale: 'en_US' },
+  fr: { code: 'FR', name: 'Français', nativeName: 'Français', flag: '🇫🇷', locale: 'fr_FR' },
+  es: { code: 'ES', name: 'Español', nativeName: 'Español', flag: '🇪🇸', locale: 'es_ES' },
+  pt: { code: 'PT', name: 'Português', nativeName: 'Português', flag: '🇵🇹', locale: 'pt_BR' },
+  ru: { code: 'RU', name: 'Русский', nativeName: 'Русский', flag: '🇷🇺', locale: 'ru_RU' },
+  hi: { code: 'HI', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', locale: 'hi_IN' },
+  bn: { code: 'BN', name: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩', locale: 'bn_BD' },
+  zh: { code: 'ZH', name: 'Chinese', nativeName: '中文', flag: '🇨🇳', locale: 'zh_CN' },
+  ja: { code: 'JA', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵', locale: 'ja_JP' },
+  ar: { code: 'AR', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', locale: 'ar_SA' }
+};
+
+const MULTILINGUAL_ARTICLE_TITLES_WORKER = {
+  "il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state": {
+    it: "Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l'Impegno Globale del New World State",
+    en: "The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State",
+    fr: "Le Fléau Silencieux : Le Ravage du Travail des Enfants et l'Engagement Mondial du New World State",
+    es: "El Flagelo Silente: La Plaga del Trabajo Infantil y el Compromiso Global del New World State",
+    pt: "O Flagelo Silencioso: A Chaga do Trabalho Infantil e o Compromisso Global do New World State",
+    ru: "Безмолвное бедствие: бремя детского труда и глобальные обязательства New World State",
+    hi: "मूक विपत्ति: बाल श्रम का अभिशाप और New World State की वैश्विक प्रतिबद्धता",
+    bn: "নীরব সংকট: শিশুশ্রমের অভিশাপ এবং New World State-এর বৈশ্বিক অঙ্গীকার",
+    zh: "无声的祸患：童工剥削问题与新世界国家的全球承诺",
+    ja: "静かなる災禍：児童労働の惨禍と新世界国家のグローバルな誓約",
+    ar: "الكارثة الصامتة: آفة عمالة الأطفال والالتزام العالمي لـ New World State"
+  },
+  "limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica": {
+    it: "L'impennata del costo dei carburanti: analisi profonda tra geopolitica, politiche statali e sfide per la sovranità energetica",
+    en: "Surging Fuel Costs: Deep Analysis of Geopolitics, State Policies, and Energy Sovereignty Challenges",
+    fr: "La Flambée des Prix des Carburants : Analyse Géopolitique, Politiques d'État et Souveraineté Énergétique",
+    es: "El Aumento del Costo de los Combustibles: Análisis Geopolítico, Políticas Estatales y Soberanía Energética",
+    pt: "A Alta dos Combustíveis: Análise Profunda entre Geopolítica, Políticas Estatais e Soberania Energética",
+    ru: "Всплеск цен на топливо: глубокий анализ геополитики, государственной политики и энергетического суверенитета",
+    hi: "ईंधन की बढ़ती कीमतें: भू-राजनीति, राज्य नीतियों और ऊर्जा संप्रभुता का गहन विश्लेषण",
+    bn: "জ্বালানির মূল্যবৃদ্ধি: ভূ-রাজনীতি, রাষ্ট্রীয় নীতি এবং শক্তি সার্বভৌমত্বের গভীর বিশ্লেষণ",
+    zh: "燃油价格飙升：地缘政治、国家政策与能源主权挑战深度分析",
+    ja: "燃料費高騰：地政学、国家政策、エネルギー主権の課題に関する徹底分析",
+    ar: "ارتفاع أسعار الوقود: تحليل عميق بين الجغرافيا السياسية وسياسات الدول وتحديات السيادة الطاقية"
+  },
+  "limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali": {
+    it: "L'Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali",
+    en: "Strategic Impotence: Deep Analysis of UN Paralysis in Contemporary Conflicts",
+    fr: "L'Impuissance Stratégique : Analyse Approfondie de la Paralysie de l'ONU dans les Conflits Actuels",
+    es: "La Impotencia Estratégica: Análisis de las Causas Profundas de la Parálisis de la ONU en los Conflictos Actuales",
+    pt: "A Impotência Estratégica: Análise das Causas Profundas da Paralisia da ONU nos Conflitos Atuais",
+    ru: "Стратегическое бессилие: глубокий анализ причин паралича ООН в современных конфликтах",
+    hi: "रणनीतिक नपुंसकता: वर्तमान संघर्षों में संयुक्त राष्ट्र के पक्षाघात के गहरे कारणों का विश्लेषण",
+    bn: "কৌশলগত অক্ষমতা: সমসাময়িক সংঘাতে জাতিসংঘের স্থবিরতার গভীর কারণ বিশ্লেষণ",
+    zh: "战略无能：当前冲突中联合国陷入瘫痪的深层原因剖析",
+    ja: "戦略的無力感：現代の紛争における国連機能不全の根本的原因分析",
+    ar: "العجز الاستراتيجي: تحليل للأسباب العميقة لشلل الأمم المتحدة في الصراعات الحالية"
+  },
+  "fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita": {
+    it: "Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita",
+    en: "Sovereign Community Support Fund and Distributed Ethical Finance",
+    fr: "Fonds Souverain de Soutien Communautaire : Finance Éthique et Distribuée",
+    es: "Fondo Soberano de Apoyo Comunitario: Finanzas Éticas y Distribuidas",
+    pt: "Fundo Soberano de Apoio Comunitário: Finanças Éticas e Distribuídas",
+    ru: "Суверенный фонд поддержки сообществ: этические и распределенные финансы",
+    hi: "संप्रभु सामुदायिक सहायता कोष: नैतिक और वितरित वित्त",
+    bn: "সার্বভৌম সম্প্রদায় সহায়তা তহবিল: নৈতিক ও বিতরণকৃত অর্থায়ন",
+    zh: "主权社区支持基金：伦理与分布式金融",
+    ja: "主権コミュニティ支援基金：倫理的かつ分散型の金融",
+    ar: "صندوق الدعم المجتمعي السيادي: تمويل أخلاقي وموزع"
+  },
+  "accademia-dei-custodi-diritto-naturale-programma-educativo-universale": {
+    it: "Accademia dei Custodi del Diritto Naturale: Programma Educativo Universale",
+    en: "Academy of the Custodians of Natural Law: Universal Educational Curriculum",
+    fr: "Académie des Gardiens du Droit Naturel : Programme Éducatif Universel",
+    es: "Academia de los Custodios del Derecho Natural: Programa Educativo Universal",
+    pt: "Academia dos Guardiões do Direito Natural: Programa Educativo Universal",
+    ru: "Академия хранителей естественного права: универсальная образовательная программа",
+    hi: "प्राकृतिक कानून के संरक्षकों की अकादमी: सार्वभौमिक शैक्षिक कार्यक्रम",
+    bn: "প্রাকৃতিক আইনের অভিভাবকদের একাডেমি: সর্বজনীন শিক্ষামূলক কর্মসূচি",
+    zh: "自然法则守护者学院：普遍教育课程",
+    ja: "自然法の守護者アカデミー：普遍的教育カリキュラム",
+    ar: "أكاديمية حماة القانون الطبيعي: منهج تعليمي شامل"
+  },
+  "protocollo-trasparenza-finanziaria-tutela-privacy": {
+    it: "Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini",
+    en: "Financial Transparency Protocol and Citizens' Privacy Protection",
+    fr: "Protocole de Transparence Financière et Protection de la Vie Privée des Citoyens",
+    es: "Protocolo de Transparencia Financiera y Protección de la Privacidad Ciudadana",
+    pt: "Protocolo de Transparência Financeira e Proteção da Privacidade dos Cidadãos",
+    ru: "Протокол финансовой прозрачности и защита конфиденциальности граждан",
+    hi: "वित्तीय पारदर्शिता प्रोटोकॉल और नागरिक गोपनीयता संरक्षण",
+    bn: "আর্থিক স্বচ্ছতা প্রোটোকল এবং নাগরিকদের গোপনীয়তা সুরক্ষা",
+    zh: "金融透明度协议与公民隐私保护",
+    ja: "金融透明性プロトコルと市民のプライバシー保護",
+    ar: "بروتوكول الشفافية المالية وحماية خصوصية المواطنين"
+  },
+  "carta-diritti-digitali-inviolabilita-sovranita-individuale": {
+    it: "Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale",
+    en: "Digital Rights Charter and Inviolability of Individual Sovereignty",
+    fr: "Charte des Droits Numériques et Inviolabilité de la Souveraineté Individuelle",
+    es: "Carta de Derechos Digitales e Inviolabilidad de la Soberanía Individual",
+    pt: "Carta dos Direitos Digitais e Inviolabilidade da Soberania Individual",
+    ru: "Хартия цифровых прав и неприкосновенность индивидуального суверенитета",
+    hi: "डिजिटल अधिकार चार्टर और व्यक्तिगत संप्रभुता की अनुल्लंघनीयता",
+    bn: "ডিজিটাল অধিকার সনদ এবং ব্যক্তিগত সার্বভৌমত্বের অলঙ্ঘনীয়তা",
+    zh: "数字权利宪章与个人主权的不可侵犯性",
+    ja: "デジタル権利憲章と個人の主権の不可侵性",
+    ar: "ميثاق الحقوق الرقمية وحرمة السيادة الفردية"
+  },
+  "economia-circolare-moneta-comunita-superare-usura-bancaria": {
+    it: "Economia Circolare e Moneta di Comunità: Superare l'Usura Bancaria Tradizionale",
+    en: "Circular Economy and Community Currency: Overcoming Traditional Banking Usury",
+    fr: "Économie Circulaire et Monnaie Communautaire : Surmonter l'Usure Bancaire Traditionnelle",
+    es: "Economía Circular y Moneda Comunitaria: Superar la Usura Bancaria Tradicional",
+    pt: "Economia Circular e Moeda Comunitária: Superar a Usura Bancária Tradicional",
+    ru: "Циркулярная экономика и валюта сообщества: преодоление традиционного банковского ростовщичества",
+    hi: "परिपत्र अर्थव्यवस्था और सामुदायिक मुद्रा: पारंपरिक बैंकिंग सूदखोरी से पार पाना",
+    bn: "বৃত্তাকার অর্থনীতি এবং কমিউনিটি মুদ্রা: ঐতিহ্যবাহী ব্যাংকিং সুদ থেকে মুক্তি",
+    zh: "循环经济与社区货币：克服传统银行高利贷",
+    ja: "循環型経済と地域通貨：従来の銀行による高利貸しの克服",
+    ar: "الاقتصاد الدائري وعملة المجتمع: التغلب على الربا المصرفي التقليدي"
+  },
+  "diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale": {
+    it: "Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale",
+    en: "Digital Diplomacy and Dialogue: New World State's Strategies for Global Peace",
+    fr: "Diplomatie Numérique et Dialogue : Stratégies du New World State pour la Paix Mondiale",
+    es: "Diplomacia Digital y Diálogo: Estrategias del New World State para la Paz Global",
+    pt: "Diplomacia Digital e Diálogo: Estratégias do New World State para a Paz Global",
+    ru: "Цифровая дипломатия и диалог: стратегии New World State для глобального мира",
+    hi: "डिजिटल कूटनीति और संवाद: वैश्विक शांति के लिए New World State की रणनीतियाँ",
+    bn: "ডিজিটাল কূটনীতি এবং সংলাপ: বৈশ্বিক শান্তির জন্য New World State-এর কৌশল",
+    zh: "数字外交与对话：新世界国家促进全球和平的战略",
+    ja: "デジタル外交と対話：世界平和に向けたNew World Stateの戦略",
+    ar: "الدبلوماسية الرقمية والحوار: استراتيجيات New World State للسلام العالمي"
+  },
+  "inaugurazione-registro-globale-democrazia-diretta-10": {
+    it: "Inaugurazione del Registro Globale per la Democrazia Diretta 1.0",
+    en: "Inauguration of the Global Registry for Direct Democracy 1.0",
+    fr: "Inauguration du Registre Mondial pour la Démocratie Directe 1.0",
+    es: "Inauguración del Registro Global para la Democracia Directa 1.0",
+    pt: "Inauguração do Registro Global para a Democracia Direta 1.0",
+    ru: "Открытие Глобального реестра прямой демократии 1.0",
+    hi: "प्रत्यक्ष लोकतंत्र 1.0 के लिए वैश्विक रजिस्ट्री का उद्घाटन",
+    bn: "প্রত্যক্ষ গণতন্ত্র ১.০-এর জন্য বৈশ্বিক রেজিস্ট্রির উদ্বোধন",
+    zh: "直接民主1.0全球注册处启动仪式",
+    ja: "直接民主主義1.0グローバルレジストリ開設式",
+    ar: "تدشين السجل العالمي للديمقراطية المباشرة 1.0"
+  },
+  "intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale": {
+    it: "Intelligenza Artificiale Etica e Sovranità dei Dati nell'Assemblea Digitale",
+    en: "Ethical Artificial Intelligence and Data Sovereignty in the Digital Assembly",
+    fr: "Intelligence Artificielle Éthique et Souveraineté des Données à l'Assemblée Numérique",
+    es: "Inteligencia Artificial Ética y Soberanía de Datos en la Asamblea Digital",
+    pt: "Inteligência Artificial Ética e Soberania dos Dados na Assembleia Digital",
+    ru: "Этичный искусственный интеллект и суверенитет данных в цифровой ассамблее",
+    hi: "डिजिटल असेंबली में नैतिक कृत्रिम बुद्धिमत्ता और डेटा संप्रभुता",
+    bn: "ডিজিটাল সমাবেশে নৈতিক কৃত্রিম বুদ্ধিমত্তা এবং ডেটা সার্বভৌমত্ব",
+    zh: "数字议会中的伦理人工智能与数据主权",
+    ja: "デジタル議会における倫理的AIとデータ主权",
+    ar: "الذكاء الاصطناعي الأخلاقي وسيادة البيانات في الجمعية الرقمية"
+  },
+  "patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte": {
+    it: "Patrimonio Culturale Mondiale: Rete delle Biblioteche Sovrane Aperte",
+    en: "World Cultural Heritage: Network of Open Sovereign Libraries",
+    fr: "Patrimoine Culturel Mondial : Réseau des Bibliothèques Souveraines Ouvertes",
+    es: "Patrimonio Cultural Mundial: Red de Bibliotecas Soberanas Abiertas",
+    pt: "Patrimônio Cultural Mundial: Rede de Bibliotecas Soberanas Abertas",
+    ru: "Всемирное культурное наследие: сеть открытых суверенных библиотек",
+    hi: "विश्व सांस्कृतिक विरासत: मुक्त संप्रभु पुस्तकालयों का नेटवर्क",
+    bn: "বিশ্ব সাংস্কৃতিক ঐতিহ্য: উন্মুক্ত সার্বভৌম গ্রন্থাগার নেটওয়ার্ক",
+    zh: "世界文化遗产：开放主权图书馆网络",
+    ja: "世界文化遺産：オープン主権図書館ネットワーク",
+    ar: "التراث الثقافي العالمي: شبكة المكتبات السيادية المفتوحة"
+  },
+  "lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile": {
+    it: "L'Alba di un'Era Energetica Globale: Innovazione e Sovranità del New World State verso un Futuro Sostenibile",
+    en: "The Dawn of a Global Energy Era: New World State Innovation and Sovereignty towards a Sustainable Future",
+    fr: "L'Aube d'une Ère Énergétique Mondiale : Innovation et Souveraineté du New World State vers un Avenir Durable",
+    es: "El Amanecer de una Era Energética Global: Innovación y Soberanía del New World State hacia un Futuro Sostenible",
+    pt: "O Alvorecer de uma Era Energética Global: Inovação e Soberania do New World State rumo a um Futuro Sustentável",
+    ru: "Рассвет глобальной энергетической эры: инновации и суверенитет New World State на пути к устойчивому будущему",
+    hi: "वैश्विक ऊर्जा युग की सुबह: सतत भविष्य की ओर New World State का नवाचार और संप्रभुता",
+    bn: "একটি বৈশ্বিক শক্তি যুগের ভোর: একটি টেকসই ভবিষ্যতের দিকে New World State-এর উদ্ভাবন এবং সার্বভৌমত্ব",
+    zh: "全球能源时代的黎明：新世界国家迈向可持续未来的创新与主权",
+    ja: "世界的なエネルギー時代の夜明け：持続可能な未来に向けたNew World Stateの革新と主権",
+    ar: "فجر عصر طاقي عالمي: ابتكار وسيادة New World State نحو مستقبل مستدام"
+  }
+};
+
+function getArticleTranslatedTitleWorker(article, lang = 'it') {
+  if (!article) return '';
+  if (lang === 'it' && article.title) return cleanMetaTextWorker(article.title);
+
+  if (article.translations && article.translations[lang] && article.translations[lang].title) {
+    return cleanMetaTextWorker(article.translations[lang].title);
+  }
+
+  const slug = article.slug || '';
+  if (slug && MULTILINGUAL_ARTICLE_TITLES_WORKER[slug] && MULTILINGUAL_ARTICLE_TITLES_WORKER[slug][lang]) {
+    return MULTILINGUAL_ARTICLE_TITLES_WORKER[slug][lang];
+  }
+
+  const norm = normalizeSlugWorker(slug);
+  for (const [keySlug, transMap] of Object.entries(MULTILINGUAL_ARTICLE_TITLES_WORKER)) {
+    if (normalizeSlugWorker(keySlug) === norm && transMap[lang]) {
+      return transMap[lang];
+    }
+  }
+
+  return cleanMetaTextWorker(article.title);
+}
+
+function renderArticleBodyHtmlForSsrWorker(rawContent) {
+  if (!rawContent) return '';
+  let text = String(rawContent).trim();
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  if (text.includes('<p>') || text.includes('</p>')) {
+    return text
+      .replace(/<p>/gi, '<p style="margin:0 0 24px 0;line-height:1.85;font-size:17px;color:#cbd5e1;letter-spacing:-0.01em;">')
+      .replace(/<h2>/gi, '<h2 style="font-size:24px;color:#ffffff;margin:38px 0 16px 0;font-weight:800;letter-spacing:-0.4px;border-bottom:1px solid rgba(197,168,128,0.25);padding-bottom:8px;">')
+      .replace(/<h3>/gi, '<h3 style="font-size:20px;color:#dfc299;margin:32px 0 14px 0;font-weight:700;letter-spacing:-0.3px;">')
+      .replace(/<blockquote>/gi, '<blockquote style="border-left:3px solid #c5a880;margin:24px 0;padding:14px 20px;background:rgba(197,168,128,0.08);color:#dfc299;font-style:italic;border-radius:0 8px 8px 0;font-size:17px;line-height:1.75;">');
+  }
+
+  let chunks = text.split(/\n\s*\n+/);
+  if (chunks.length <= 1 && text.length > 300) {
+    text = text.replace(/([^\n])\s*(#{2,3}\s+[^\n]+)/g, '$1\n\n$2\n\n');
+    chunks = text.split(/\n\s*\n+/);
+  }
+
+  return chunks.map(chunk => {
+    let p = chunk.trim();
+    if (!p) return '';
+
+    if (p.startsWith('### ')) {
+      const heading = escapeHtmlWorker(p.replace(/^###\s+/, ''));
+      return `<h3 style="font-size:20px;color:#dfc299;margin:32px 0 14px 0;font-weight:700;letter-spacing:-0.3px;">${heading}</h3>`;
+    }
+    if (p.startsWith('## ')) {
+      const heading = escapeHtmlWorker(p.replace(/^##\s+/, ''));
+      return `<h2 style="font-size:24px;color:#ffffff;margin:38px 0 16px 0;font-weight:800;letter-spacing:-0.4px;border-bottom:1px solid rgba(197,168,128,0.25);padding-bottom:8px;">${heading}</h2>`;
+    }
+    if (p.startsWith('> ')) {
+      const quote = escapeHtmlWorker(p.replace(/^>\s+/, ''));
+      return `<blockquote style="border-left:3px solid #c5a880;margin:24px 0;padding:14px 20px;background:rgba(197,168,128,0.08);color:#dfc299;font-style:italic;border-radius:0 8px 8px 0;font-size:17px;line-height:1.75;">${quote}</blockquote>`;
+    }
+    if (p.startsWith('- ') || p.startsWith('* ')) {
+      const items = p.split(/\n[-*]\s+/).map(item => item.replace(/^[-*]\s+/, '').trim()).filter(Boolean);
+      return `<ul style="margin:16px 0 24px 24px;padding:0;color:#cbd5e1;line-height:1.85;font-size:17px;">${items.map(it => `<li style="margin-bottom:10px;">${escapeHtmlWorker(it)}</li>`).join('')}</ul>`;
+    }
+    if (/^\d+\.\s+/.test(p)) {
+      const items = p.split(/\n\d+\.\s+/).map(item => item.replace(/^\d+\.\s+/, '').trim()).filter(Boolean);
+      return `<ol style="margin:16px 0 24px 24px;padding:0;color:#cbd5e1;line-height:1.85;font-size:17px;">${items.map(it => {
+        let formattedItem = escapeHtmlWorker(it)
+          .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;font-weight:700;">$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em style="color:#dfc299;">$1</em>');
+        return `<li style="margin-bottom:12px;">${formattedItem}</li>`;
+      }).join('')}</ol>`;
+    }
+
+    let formatted = escapeHtmlWorker(p)
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;font-weight:700;">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em style="color:#dfc299;">$1</em>')
+      .replace(/\n/g, '<br />');
+
+    return `<p style="margin:0 0 24px 0;line-height:1.85;font-size:17px;color:#cbd5e1;letter-spacing:-0.01em;">${formatted}</p>`;
+  }).filter(Boolean).join('\n');
+}
+
+function renderArticleBodyHtmlForNoscriptWorker(rawContent) {
+  if (!rawContent) return '';
+  const paragraphs = String(rawContent).trim().split(/\n\s*\n+/);
+  return paragraphs.map(p => {
+    const clean = p.trim().replace(/^#{1,6}\s+/, '').replace(/\*\*(.*?)\*\*/g, '$1');
+    return clean ? `<p style="margin:0 0 20px 0;line-height:1.8;color:#222;font-size:16px;">${escapeHtmlWorker(clean)}</p>` : '';
+  }).filter(Boolean).join('\n');
+}
+
+function injectArticleMetaTagsWorker(html, article, rawBaseUrl, targetLang = 'it') {
   let baseUrl = rawBaseUrl || 'https://newworldstate.cloud';
   if (baseUrl.includes('workers.dev') || baseUrl.includes('pages.dev') || !baseUrl.startsWith('http')) {
     baseUrl = 'https://newworldstate.cloud';
   }
-  const rawTitle = cleanMetaTextWorker(article.title);
+
+  const currentLang = SITE_SUPPORTED_LANGUAGES_WORKER.includes(targetLang) ? targetLang : 'it';
+  const langInfo = LANGUAGE_DETAILS_WORKER[currentLang] || LANGUAGE_DETAILS_WORKER['it'];
+
+  let rawTitle = cleanMetaTextWorker(article.title);
+  let rawIntro = cleanMetaTextWorker(article.intro || article.content);
+  let fullContentRaw = article.content || article.intro || '';
+
+  const translatedTitleCandidate = getArticleTranslatedTitleWorker(article, currentLang);
+  if (translatedTitleCandidate) {
+    rawTitle = translatedTitleCandidate;
+  }
+  if (article.translations && article.translations[currentLang]) {
+    const tr = article.translations[currentLang];
+    if (tr.title) rawTitle = cleanMetaTextWorker(tr.title);
+    if (tr.intro) rawIntro = cleanMetaTextWorker(tr.intro);
+    if (tr.content) fullContentRaw = tr.content;
+  }
+
   const fullTitle = `${rawTitle} | New World State News`;
-  const rawIntro = cleanMetaTextWorker(article.intro || article.content);
   const description = rawIntro.length > 220 ? rawIntro.slice(0, 217) + '...' : rawIntro;
-  const fullBodyText = cleanMetaTextWorker(article.content || article.intro);
+  const fullBodyText = cleanMetaTextWorker(fullContentRaw);
 
   let imageUrl = getThematicImageForSlugWorker(article.slug || '', rawTitle);
   if (article.images && Array.isArray(article.images) && article.images.length > 0) {
@@ -574,6 +965,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
 
   const slug = article.slug || article.id;
   const cleanArticleUrl = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
+  const canonicalUrlWithLang = currentLang === 'it' ? cleanArticleUrl : `${cleanArticleUrl}?lang=${currentLang}`;
   const authorName = cleanMetaTextWorker(article.authorName) || 'Cronista Ufficiale NWS';
   const authorRole = cleanMetaTextWorker(article.authorRole) || 'Giornalista Sovrano';
   const publishedDate = article.publishedAt || article.createdAt || new Date().toISOString();
@@ -583,6 +975,11 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
   if (rawTags.length === 0) rawTags.push('Notizie', 'NewWorldState', 'Informazione');
   const tagsString = rawTags.join(', ');
 
+  const hreflangTags = SITE_SUPPORTED_LANGUAGES_WORKER.map(lang => {
+    const u = `${baseUrl}/notizie/${encodeURIComponent(slug)}${lang === 'it' ? '' : '?lang=' + lang}`;
+    return `<link rel="alternate" hreflang="${lang}" href="${escapeHtmlWorker(u)}" />`;
+  }).join('\n    ');
+
   const metaBlock = `
     <!-- Dynamic Article Meta Tags for SEO & Social Media Previews (Facebook, WhatsApp, Twitter, Telegram, LinkedIn, AI Engines) -->
     <title>${escapeHtmlWorker(fullTitle)}</title>
@@ -591,13 +988,15 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
     <meta name="keywords" content="${escapeHtmlWorker(tagsString)}, notizie, new world state, giornalismo, cronaca, ai indexing" />
     <meta name="author" content="${escapeHtmlWorker(authorName)}" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-    <link rel="canonical" href="${cleanArticleUrl}" />
+    <link rel="canonical" href="${escapeHtmlWorker(canonicalUrlWithLang)}" />
+    ${hreflangTags}
+    <link rel="alternate" hreflang="x-default" href="${escapeHtmlWorker(cleanArticleUrl)}" />
 
     <!-- Open Graph / Facebook (1200x630 Large Landscape Preview) -->
     <meta property="fb:app_id" content="966242223397117" />
     <meta property="og:type" content="article" />
     <meta property="og:site_name" content="New World State News" />
-    <meta property="og:url" content="${cleanArticleUrl}" />
+    <meta property="og:url" content="${escapeHtmlWorker(canonicalUrlWithLang)}" />
     <meta property="og:title" content="${escapeHtmlWorker(rawTitle)}" />
     <meta property="og:description" content="${escapeHtmlWorker(description)}" />
     <meta property="og:image" content="${escapeHtmlWorker(imageUrl)}" />
@@ -606,7 +1005,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
     <meta property="og:image:height" content="630" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:alt" content="${escapeHtmlWorker(rawTitle)}" />
-    <meta property="og:locale" content="it_IT" />
+    <meta property="og:locale" content="${escapeHtmlWorker(langInfo.locale)}" />
     <meta property="article:published_time" content="${escapeHtmlWorker(publishedDate)}" />
     <meta property="article:modified_time" content="${escapeHtmlWorker(modifiedDate)}" />
     <meta property="article:author" content="${escapeHtmlWorker(authorName)}" />
@@ -616,7 +1015,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
     <!-- Twitter Large Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta property="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="${cleanArticleUrl}" />
+    <meta name="twitter:url" content="${escapeHtmlWorker(canonicalUrlWithLang)}" />
     <meta name="twitter:title" content="${escapeHtmlWorker(rawTitle)}" />
     <meta name="twitter:description" content="${escapeHtmlWorker(description)}" />
     <meta name="twitter:image" content="${escapeHtmlWorker(imageUrl)}" />
@@ -626,7 +1025,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
     <meta name="thumbnail" content="${escapeHtmlWorker(imageUrl)}" />
     <link rel="image_src" href="${escapeHtmlWorker(imageUrl)}" />
 
-    <!-- Schema.org / Google News Search Engine Structured Data (NewsArticle & Breadcrumbs) for Google News & AI Engines (ChatGPT, Claude, Perplexity, Gemini) -->
+    <!-- Schema.org / Google News Search Engine Structured Data (NewsArticle & Breadcrumbs) -->
     <meta itemprop="name" content="${escapeHtmlWorker(rawTitle)}" />
     <meta itemprop="description" content="${escapeHtmlWorker(description)}" />
     <meta itemprop="image" content="${escapeHtmlWorker(imageUrl)}" />
@@ -636,10 +1035,10 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
       "@graph": [
         {
           "@type": "NewsArticle",
-          "@id": `${cleanArticleUrl}#article`,
+          "@id": `${canonicalUrlWithLang}#article`,
           "isPartOf": {
             "@type": "WebPage",
-            "@id": cleanArticleUrl
+            "@id": canonicalUrlWithLang
           },
           "headline": rawTitle,
           "name": rawTitle,
@@ -654,7 +1053,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
           },
           "datePublished": publishedDate,
           "dateModified": modifiedDate,
-          "inLanguage": "it-IT",
+          "inLanguage": langInfo.locale.replace('_', '-'),
           "isAccessibleForFree": "True",
           "articleSection": "News & Geopolitica",
           "keywords": tagsString,
@@ -686,7 +1085,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
         },
         {
           "@type": "BreadcrumbList",
-          "@id": `${cleanArticleUrl}#breadcrumb`,
+          "@id": `${canonicalUrlWithLang}#breadcrumb`,
           "itemListElement": [
             {
               "@type": "ListItem",
@@ -704,7 +1103,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
               "@type": "ListItem",
               "position": 3,
               "name": rawTitle,
-              "item": cleanArticleUrl
+              "item": canonicalUrlWithLang
             }
           ]
         }
@@ -714,6 +1113,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
     <script>
       window.__NWS_INITIAL_ARTICLE__ = ${JSON.stringify(article)};
       window.__NWS_ACTIVE_TAB__ = 'news';
+      window.__NWS_TARGET_LANG__ = ${JSON.stringify(currentLang)};
     </script>
   `;
 
@@ -730,7 +1130,8 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
     .replace(/<meta\s+itemprop="[\s\S]*?>/gi, '')
     .replace(/<meta\s+name="thumbnail"[\s\S]*?>/gi, '')
     .replace(/<link\s+rel="image_src"[\s\S]*?>/gi, '')
-    .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '');
+    .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '')
+    .replace(/<link\s+rel="alternate"\s+hreflang="[\s\S]*?>/gi, '');
 
   let enrichedHtml = cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
 
@@ -752,28 +1153,19 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
     }
   } catch (e) {}
 
-  // Format markdown body paragraphs
-  const bodyParagraphs = fullBodyText.split(/\n\n+/).map(para => {
-    let p = para.trim();
-    if (!p) return '';
-    if (p.startsWith('### ')) {
-      const heading = escapeHtmlWorker(p.replace(/^###\s+/, ''));
-      return `<h3 style="font-size:20px;color:#ffffff;margin:28px 0 12px 0;font-weight:700;letter-spacing:-0.3px;">${heading}</h3>`;
-    }
-    if (p.startsWith('## ')) {
-      const heading = escapeHtmlWorker(p.replace(/^##\s+/, ''));
-      return `<h2 style="font-size:22px;color:#ffffff;margin:32px 0 14px 0;font-weight:800;letter-spacing:-0.4px;">${heading}</h2>`;
-    }
-    if (p.startsWith('> ')) {
-      const quote = escapeHtmlWorker(p.replace(/^>\s+/, ''));
-      return `<blockquote style="border-left:3px solid #c5a880;margin:18px 0;padding:12px 18px;background:rgba(197,168,128,0.08);color:#dfc299;font-style:italic;border-radius:0 8px 8px 0;">${quote}</blockquote>`;
-    }
-    let formatted = escapeHtmlWorker(p)
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#ffffff;">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em style="color:#dfc299;">$1</em>')
-      .replace(/\n/g, '<br />');
-    return `<p style="margin:0 0 18px 0;line-height:1.8;color:#cbd5e1;">${formatted}</p>`;
-  }).join('\n');
+  const formattedBodyHtml = renderArticleBodyHtmlForSsrWorker(fullContentRaw);
+
+  const langSelectorButtons = SITE_SUPPORTED_LANGUAGES_WORKER.map(lang => {
+    const lInfo = LANGUAGE_DETAILS_WORKER[lang] || { flag: '🌐', nativeName: lang.toUpperCase() };
+    const isActive = lang === currentLang;
+    const lUrl = `${cleanArticleUrl}${lang === 'it' ? '' : '?lang=' + lang}`;
+    return `
+      <a href="${escapeHtmlWorker(lUrl)}" title="${escapeHtmlWorker(lInfo.nativeName)}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:${isActive ? '700' : '500'};text-decoration:none;border:1px solid ${isActive ? '#c5a880' : 'rgba(255,255,255,0.12)'};background:${isActive ? 'rgba(197,168,128,0.2)' : 'rgba(255,255,255,0.04)'};color:${isActive ? '#dfc299' : '#cbd5e1'};">
+        <span>${lInfo.flag}</span>
+        <span>${lang.toUpperCase()}</span>
+      </a>
+    `;
+  }).join('');
 
   // Complete SSR Article View to ensure 0ms instant display without white screens
   const visibleSsrArticleBlock = `
@@ -810,7 +1202,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
           <span style="color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px;">${escapeHtmlWorker(rawTitle)}</span>
         </nav>
 
-        <article style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
+        <article style="background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:36px;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
           <!-- Category & Date Bar -->
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
             <span style="background:rgba(197,168,128,0.15);color:#dfc299;border:1px solid rgba(197,168,128,0.3);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
@@ -821,13 +1213,19 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
             </span>
           </div>
 
+          <!-- Language Selector Bar -->
+          <div style="margin-bottom:24px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:12px;color:#94a3b8;font-weight:600;margin-right:4px;">🌐 Lingua Articolo:</span>
+            ${langSelectorButtons}
+          </div>
+
           <!-- Headline -->
-          <h1 id="article-title" style="font-size:30px;line-height:1.3;font-weight:800;color:#ffffff;margin:0 0 20px 0;letter-spacing:-0.5px;">
+          <h1 id="article-title" style="font-size:32px;line-height:1.35;font-weight:800;color:#ffffff;margin:0 0 20px 0;letter-spacing:-0.5px;">
             ${escapeHtmlWorker(rawTitle)}
           </h1>
 
           <!-- Author Byline -->
-          <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:24px;">
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:28px;">
             <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#1e293b,#334155);display:flex;align-items:center;justify-content:center;color:#dfc299;font-weight:bold;font-size:16px;border:1px solid rgba(197,168,128,0.4);">
               ✍️
             </div>
@@ -839,30 +1237,30 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
 
           <!-- Featured Image -->
           ${imageUrl ? `
-          <div style="margin-bottom:28px;">
+          <div style="margin-bottom:32px;">
             <img src="${escapeHtmlWorker(imageUrl)}" alt="${escapeHtmlWorker(rawTitle)}" style="width:100%;max-height:480px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,0.1);" />
             <p style="font-size:12px;color:#94a3b8;margin-top:8px;text-align:center;font-style:italic;">${escapeHtmlWorker(rawTitle)}</p>
           </div>` : ''}
 
           <!-- Lead Introduction -->
           ${rawIntro ? `
-          <div id="article-intro" style="font-size:18px;line-height:1.6;color:#e2e8f0;font-weight:500;background:rgba(255,255,255,0.03);padding:18px 20px;border-left:4px solid #c5a880;border-radius:0 8px 8px 0;margin-bottom:28px;">
+          <div id="article-intro" style="font-size:18px;line-height:1.75;color:#f1f5f9;font-weight:500;background:rgba(197,168,128,0.06);padding:20px 24px;border-left:4px solid #c5a880;border-radius:0 10px 10px 0;margin-bottom:32px;letter-spacing:-0.01em;">
             ${escapeHtmlWorker(rawIntro)}
           </div>` : ''}
 
-          <!-- Full Formatted Content Body -->
-          <div id="article-body" style="font-size:16px;line-height:1.8;color:#cbd5e1;">
-            ${bodyParagraphs}
+          <!-- Full Formatted Content Body with spacious, uncompressed typography -->
+          <div id="article-body" style="color:#cbd5e1;">
+            ${formattedBodyHtml}
           </div>
 
           <!-- Tags Row -->
-          <div style="margin-top:36px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div style="margin-top:40px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span style="font-size:13px;color:#94a3b8;font-weight:600;">Tag:</span>
             ${rawTags.map(t => `<span style="background:rgba(255,255,255,0.06);color:#cbd5e1;padding:4px 10px;border-radius:6px;font-size:12px;border:1px solid rgba(255,255,255,0.1);">${escapeHtmlWorker(t)}</span>`).join(' ')}
           </div>
 
           <!-- Institutional Call To Action -->
-          <div style="margin-top:30px;padding:24px;background:rgba(10,28,62,0.6);border:1px solid rgba(197,168,128,0.3);border-radius:12px;text-align:center;">
+          <div style="margin-top:36px;padding:26px;background:rgba(10,28,62,0.6);border:1px solid rgba(197,168,128,0.3);border-radius:12px;text-align:center;">
             <h3 style="margin:0 0 10px 0;color:#dfc299;font-size:18px;font-weight:700;">Partecipa alla Democrazia Sovrana</h3>
             <p style="font-size:14px;color:#94a3b8;margin:0 0 18px 0;max-width:550px;margin-left:auto;margin-right:auto;">
               Iscriviti al Registro Mondiale di New World State 1.0 per votare sui referendum, commentare le inchieste e proporre nuove leggi popolari.
@@ -883,18 +1281,18 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl) {
 
   const semanticArticleBlock = `
     <noscript>
-      <article id="nws-seo-article" style="max-width:800px;margin:20px auto;padding:20px;font-family:sans-serif;line-height:1.6;">
+      <article id="nws-seo-article" style="max-width:800px;margin:20px auto;padding:20px;font-family:sans-serif;line-height:1.8;">
         <header>
-          <h1 id="article-title" style="font-size:28px;color:#0a1c3e;">${escapeHtmlWorker(rawTitle)}</h1>
-          <p style="color:#666;font-size:14px;">Pubblicato il: <time datetime="${escapeHtmlWorker(publishedDate)}">${escapeHtmlWorker(publishedDate)}</time> da <strong>${escapeHtmlWorker(authorName)}</strong> (${escapeHtmlWorker(authorRole)})</p>
-          ${imageUrl ? `<img src="${escapeHtmlWorker(imageUrl)}" alt="${escapeHtmlWorker(rawTitle)}" style="max-width:100%;height:auto;border-radius:8px;margin:15px 0;" />` : ''}
+          <h1 id="article-title" style="font-size:28px;color:#0a1c3e;margin-bottom:12px;">${escapeHtmlWorker(rawTitle)}</h1>
+          <p style="color:#666;font-size:14px;margin-bottom:20px;">Pubblicato il: <time datetime="${escapeHtmlWorker(publishedDate)}">${escapeHtmlWorker(publishedDate)}</time> da <strong>${escapeHtmlWorker(authorName)}</strong> (${escapeHtmlWorker(authorRole)})</p>
+          ${imageUrl ? `<img src="${escapeHtmlWorker(imageUrl)}" alt="${escapeHtmlWorker(rawTitle)}" style="max-width:100%;height:auto;border-radius:8px;margin-bottom:24px;" />` : ''}
         </header>
-        ${rawIntro ? `<p id="article-intro" style="font-size:18px;font-weight:bold;color:#333;">${escapeHtmlWorker(rawIntro)}</p>` : ''}
-        <div id="article-body" style="font-size:16px;color:#222;white-space:pre-line;">
-          ${escapeHtmlWorker(fullBodyText)}
+        ${rawIntro ? `<p id="article-intro" style="font-size:18px;font-weight:bold;color:#333;margin-bottom:24px;line-height:1.7;">${escapeHtmlWorker(rawIntro)}</p>` : ''}
+        <div id="article-body" style="font-size:16px;color:#222;">
+          ${renderArticleBodyHtmlForNoscriptWorker(fullContentRaw)}
         </div>
         <footer style="margin-top:30px;padding-top:15px;border-top:1px solid #ccc;font-size:13px;color:#777;">
-          <p>Fonte ufficiale: <a href="${cleanArticleUrl}">${cleanArticleUrl}</a></p>
+          <p>Fonte ufficiale: <a href="${canonicalUrlWithLang}">${canonicalUrlWithLang}</a></p>
           <p>Tag: ${escapeHtmlWorker(tagsString)}</p>
         </footer>
       </article>
@@ -8089,22 +8487,67 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
           const catName = categoryMap[a.categoryId] || 'Notizie Generali';
           const articleUrl = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
 
+          const translatedEditions = SITE_LANGS.map(lang => {
+            const langInfo = LANGUAGE_DETAILS_WORKER[lang] || { code: lang.toUpperCase(), name: lang.toUpperCase(), nativeName: lang.toUpperCase(), flag: '🌐', locale: `${lang}_${lang.toUpperCase()}` };
+            const transTitle = getArticleTranslatedTitleWorker(a, lang);
+            const transUrl = `${articleUrl}${lang === 'it' ? '' : '?lang=' + lang}`;
+            const isOriginal = lang === 'it';
+            return {
+              lang,
+              langInfo,
+              transTitle,
+              transUrl,
+              isOriginal
+            };
+          });
+
+          const allSearchTerms = [
+            cleanTitle,
+            catName,
+            author,
+            slug,
+            ...translatedEditions.map(te => te.transTitle)
+          ].join(' ');
+
           return `
-            <div class="sitemap-card article-card" data-search="${escapeHtmlWorker(cleanTitle + ' ' + catName + ' ' + author)}">
-              <div class="card-badge">${escapeHtmlWorker(catName)}</div>
+            <div class="sitemap-card article-card" data-search="${escapeHtmlWorker(allSearchTerms)}">
+              <div class="card-top-bar">
+                <span class="card-badge">${escapeHtmlWorker(catName)}</span>
+                <span class="card-slug-badge">ID: ${escapeHtmlWorker(slug)}</span>
+              </div>
               <h3 class="card-title">
-                <a href="${escapeHtmlWorker(articleUrl)}">${escapeHtmlWorker(cleanTitle)}</a>
+                <a href="${escapeHtmlWorker(articleUrl)}" hreflang="it" lang="it" class="primary-article-link">
+                  <span class="primary-lang-flag">🇮🇹</span>
+                  <span class="primary-title-text">${escapeHtmlWorker(cleanTitle)}</span>
+                </a>
               </h3>
               <p class="card-desc">${escapeHtmlWorker(cleanIntro)}</p>
               <div class="card-meta">
                 <span>✍️ ${escapeHtmlWorker(author)}</span>
                 <span>📅 ${escapeHtmlWorker(dateStr)}</span>
               </div>
-              <div class="lang-links">
-                <span class="lang-label">Traduzioni:</span>
-                ${SITE_LANGS.map(lang => 
-                  `<a href="${escapeHtmlWorker(articleUrl + (lang === 'it' ? '' : '?lang=' + lang))}" class="lang-pill" title="Lingua ${lang.toUpperCase()}">${lang.toUpperCase()}</a>`
-                ).join('')}
+
+              <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+              <div class="nested-translations-wrapper">
+                <div class="nested-header">
+                  <div class="nested-header-title">
+                    <span class="nested-icon">🌐</span>
+                    <strong>Edizioni Tradotte Ufficiali (${SITE_LANGS.length} Lingue)</strong>
+                  </div>
+                  <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+                </div>
+                <ul class="nested-translations-list" aria-label="Versioni tradotte di ${escapeHtmlWorker(cleanTitle)}">
+                  ${translatedEditions.map(ed => `
+                    <li class="nested-translation-item ${ed.isOriginal ? 'is-original' : ''}">
+                      <a href="${escapeHtmlWorker(ed.transUrl)}" class="nested-translation-link" hreflang="${ed.lang}" lang="${ed.lang}" title="${escapeHtmlWorker(ed.transTitle)}">
+                        <span class="lang-flag-badge">${ed.langInfo.flag}</span>
+                        <span class="lang-code-pill">${ed.lang.toUpperCase()}</span>
+                        <span class="translated-title-text" lang="${ed.lang}">${escapeHtmlWorker(ed.transTitle)}</span>
+                        ${ed.isOriginal ? '<span class="lang-original-tag">Originale IT</span>' : '<span class="lang-external-arrow">↗</span>'}
+                      </a>
+                    </li>
+                  `).join('')}
+                </ul>
               </div>
             </div>
           `;
@@ -8225,6 +8668,25 @@ Restituisci un array JSON con gli elementi aggiornati: [{"id": "...", "title": "
     .card-title a:hover { color: #936829; }
     .card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; flex: 1; }
     .card-meta { display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px; margin-top: 4px; }
+    .card-top-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .card-slug-badge { font-size: 10px; font-family: monospace; color: #64748b; background: #f8fafc; border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .primary-article-link { display: inline-flex; align-items: baseline; gap: 6px; text-decoration: none; color: var(--navy); transition: color 0.2s; }
+    .primary-lang-flag { font-size: 16px; line-height: 1; flex-shrink: 0; }
+    .nested-translations-wrapper { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); background: #f8fafc; border-radius: 8px; padding: 10px 12px; }
+    .nested-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .nested-header-title { font-size: 12px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 5px; }
+    .nested-badge { font-size: 10px; font-weight: 600; color: #047857; background: #d1fae5; padding: 2px 7px; border-radius: 4px; }
+    .nested-translations-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; max-height: 240px; overflow-y: auto; padding-right: 4px; }
+    .nested-translation-item { border-radius: 6px; transition: background 0.15s; }
+    .nested-translation-item:hover { background: #ffffff; }
+    .nested-translation-item.is-original { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .nested-translation-link { display: flex; align-items: center; gap: 8px; padding: 5px 8px; text-decoration: none; color: #334155; font-size: 12px; line-height: 1.4; border-radius: 6px; transition: all 0.15s; }
+    .nested-translation-link:hover { color: var(--navy); background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .lang-flag-badge { font-size: 14px; line-height: 1; flex-shrink: 0; }
+    .lang-code-pill { font-size: 10px; font-weight: 700; color: var(--navy); background: #e2e8f0; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+    .translated-title-text { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lang-original-tag { font-size: 10px; font-weight: 700; color: #1d4ed8; background: #dbeafe; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
+    .lang-external-arrow { font-size: 12px; color: #94a3b8; flex-shrink: 0; }
     .lang-links { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border); }
     .lang-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-right: 4px; }
     .lang-pill { font-size: 10px; font-weight: 700; text-decoration: none; color: var(--navy); background: #f1f5f9; border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; }
@@ -8473,7 +8935,7 @@ ${hreflangs}${imgXml}
             if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
               langTitle = cleanMetaTextWorker(a.translations[lang].title);
             }
-            const translatedSlug = lang === 'it' ? slug : (generateSlugWorker(langTitle) || slug);
+            const translatedSlug = slug; // Mantieni lo slug originale
             const encoded = encodeURIComponent(translatedSlug);
             return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
           };
@@ -8551,7 +9013,7 @@ ${articleXml}
             if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
               langTitle = cleanMetaTextWorker(a.translations[lang].title);
             }
-            const translatedSlug = lang === 'it' ? slug : (generateSlugWorker(langTitle) || slug);
+            const translatedSlug = slug; // Mantieni lo slug originale
             const encoded = encodeURIComponent(translatedSlug);
             return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
           };

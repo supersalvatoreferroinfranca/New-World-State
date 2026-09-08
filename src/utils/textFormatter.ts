@@ -34,7 +34,7 @@ export function stripFormattingSymbols(text: string | null | undefined): string 
 
 /**
  * Converts raw content (whether markdown or unformatted text) into clean,
- * semantic HTML with light, readable typography (<h3>, <p>, <ul>, <li>, <blockquote>).
+ * semantic HTML with spacious, readable typography (<h3>, <p>, <ul>, <li>, <blockquote>).
  * Removes stray markdown artifacts and orphan symbols.
  */
 export function formatArticleContentToHtml(content: string | null | undefined): string {
@@ -47,86 +47,82 @@ export function formatArticleContentToHtml(content: string | null | undefined): 
 
   if (containsHtml) {
     return text
+      // Replace any React JSX className with HTML class
+      .replace(/\bclassName=/g, 'class=')
       // Clean up markdown bold inside HTML tags: **text** -> <strong>text</strong>
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      // Clean up markdown italic inside HTML tags: *text* -> <em>text</em>
+      // Clean up markdown italic inside HTML tags: *text* -> <em>$1</em>
       .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       // Clean up markdown headers inside HTML tags if present: ### text -> <h3>text</h3>
-      .replace(/###\s*(.+)/g, '<h3 className="font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2">$1</h3>')
-      .replace(/##\s*(.+)/g, '<h2 className="font-serif text-xl font-bold text-[#0a1c3e] mt-6 mb-3">$1</h2>')
+      .replace(/###\s*(.+)/g, '<h3 class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">$1</h3>')
+      .replace(/##\s*(.+)/g, '<h2 class="font-serif text-2xl font-bold text-[#0a1c3e] mt-10 mb-4 tracking-tight">$1</h2>')
+      // Ensure <p> tags without custom classes get proper article paragraph classes
+      .replace(/<p(?![^>]*class=)/gi, '<p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans"')
       // Remove any orphan backticks or markdown hashtags
       .replace(/```[a-z]*/gi, '')
       .replace(/```/g, '');
   }
 
-  // Convert pure Markdown or raw text into clean semantic HTML
-  const lines = text.split('\n');
+  // Convert pure Markdown or raw text into clean semantic HTML with paragraph blocks
+  const rawBlocks = text.split(/\n\s*\n+/);
   const formattedBlocks: string[] = [];
-  let inList = false;
 
-  lines.forEach((line) => {
-    let trimmed = line.trim();
-    if (!trimmed) {
-      if (inList) {
-        formattedBlocks.push('</ul>');
-        inList = false;
-      }
-      return;
+  for (const block of rawBlocks) {
+    const trimmedBlock = block.trim();
+    if (!trimmedBlock) continue;
+
+    // Check if block starts with heading
+    if (trimmedBlock.startsWith('### ')) {
+      const headerText = stripFormattingSymbols(trimmedBlock.replace(/^###\s+/, ''));
+      formattedBlocks.push(`<h3 class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">${headerText}</h3>`);
+      continue;
+    }
+    if (trimmedBlock.startsWith('## ') || trimmedBlock.startsWith('# ')) {
+      const headerText = stripFormattingSymbols(trimmedBlock.replace(/^#+\s*/, ''));
+      formattedBlocks.push(`<h2 class="font-serif text-2xl font-bold text-[#0a1c3e] mt-10 mb-4 tracking-tight">${headerText}</h2>`);
+      continue;
     }
 
-    // Convert markdown headers
-    if (trimmed.startsWith('### ')) {
-      if (inList) { formattedBlocks.push('</ul>'); inList = false; }
-      const headerText = stripFormattingSymbols(trimmed.slice(4));
-      formattedBlocks.push(`<h3 class="font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2 tracking-tight">${headerText}</h3>`);
-      return;
+    // Check if block is a blockquote
+    if (trimmedBlock.startsWith('> ')) {
+      const quoteText = stripFormattingSymbols(trimmedBlock.replace(/^>\s*/gm, ''));
+      formattedBlocks.push(`<blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-5 my-6 rounded-r-2xl italic text-slate-800 text-base leading-relaxed">${quoteText}</blockquote>`);
+      continue;
     }
 
-    if (trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
-      if (inList) { formattedBlocks.push('</ul>'); inList = false; }
-      const headerText = stripFormattingSymbols(trimmed.replace(/^#+\s*/, ''));
-      formattedBlocks.push(`<h2 class="font-serif text-xl font-bold text-[#0a1c3e] mt-6 mb-3 tracking-tight">${headerText}</h2>`);
-      return;
+    // Check if block is a list
+    const lines = trimmedBlock.split('\n');
+    const isList = lines.every(l => {
+      const tl = l.trim();
+      return !tl || tl.startsWith('* ') || tl.startsWith('- ') || /^\d+\.\s+/.test(tl);
+    });
+
+    if (isList) {
+      const isOrdered = /^\d+\.\s+/.test(lines[0].trim());
+      const tag = isOrdered ? 'ol' : 'ul';
+      const listClass = isOrdered ? 'list-decimal list-outside space-y-2.5 my-6 text-slate-700 pl-7 font-sans' : 'list-disc list-outside space-y-2.5 my-6 text-slate-700 pl-7 font-sans';
+      const items = lines.map(l => {
+        const tl = l.trim();
+        if (!tl) return '';
+        let itemContent = tl.replace(/^[\*\-]\s+/, '').replace(/^\d+\.\s+/, '');
+        itemContent = itemContent
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        return `<li class="leading-relaxed text-slate-700 text-base md:text-lg font-sans my-1.5">${itemContent}</li>`;
+      }).filter(Boolean).join('\n');
+      formattedBlocks.push(`<${tag} class="${listClass}">\n${items}\n</${tag}>`);
+      continue;
     }
 
-    // Convert blockquotes
-    if (trimmed.startsWith('> ')) {
-      if (inList) { formattedBlocks.push('</ul>'); inList = false; }
-      const quoteText = stripFormattingSymbols(trimmed.slice(2));
-      formattedBlocks.push(`<blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-4 my-4 rounded-r-2xl italic text-slate-800 text-sm leading-relaxed">${quoteText}</blockquote>`);
-      return;
-    }
-
-    // Convert list items (* or -)
-    if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
-      if (!inList) {
-        formattedBlocks.push('<ul class="list-disc list-outside space-y-2.5 my-4 text-slate-700 pl-6 font-sans">');
-        inList = true;
-      }
-      let itemText = trimmed.slice(2);
-      itemText = itemText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      formattedBlocks.push(`<li class="leading-relaxed text-slate-700 text-sm md:text-base font-sans my-1">${itemText}</li>`);
-      return;
-    }
-
-    if (inList) {
-      formattedBlocks.push('</ul>');
-      inList = false;
-    }
-
-    // Paragraph conversion
-    let paragraphText = trimmed
+    // Standard Paragraph - join lines with a space to prevent chopped sentences, then parse markdown formatting
+    let paragraphText = lines.map(l => l.trim()).filter(Boolean).join(' ')
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
-    formattedBlocks.push(`<p class="leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans">${paragraphText}</p>`);
-  });
-
-  if (inList) {
-    formattedBlocks.push('</ul>');
+    formattedBlocks.push(`<p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans">${paragraphText}</p>`);
   }
 
-  return formattedBlocks.join('\n');
+  return formattedBlocks.join('\n\n');
 }
 
 /**

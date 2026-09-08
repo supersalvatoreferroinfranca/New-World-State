@@ -154,7 +154,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
             a.slug === decodedTarget || 
             a.id === decodedTarget || 
             a.slug === targetSlug ||
-            (a.translations && Object.values(a.translations).some(t => t.title && generateSlug(t.title) === decodedTarget))
+            (a.translations && Object.values(a.translations).some((t: any) => t?.title && generateSlug(t.title) === decodedTarget))
           );
         } else if (window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
           const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -166,8 +166,8 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
               a.id === decodedPathSlug || 
               a.slug === rawSlug ||
               encodeURIComponent(a.slug || '') === rawSlug ||
-              (a.translations && Object.values(a.translations).some(t => t.title && generateSlug(t.title) === decodedPathSlug)) ||
-              (a.translations && Object.values(a.translations).some(t => t.title && encodeURIComponent(generateSlug(t.title)) === rawSlug))
+              (a.translations && Object.values(a.translations).some((t: any) => t?.title && generateSlug(t.title) === decodedPathSlug)) ||
+              (a.translations && Object.values(a.translations).some((t: any) => t?.title && encodeURIComponent(generateSlug(t.title)) === rawSlug))
             );
           }
         }

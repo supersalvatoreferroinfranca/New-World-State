@@ -1020,23 +1020,23 @@ export default function ArticleDetailModal({
 
           {/* Testo Introduttivo (Abstract / Meta Description) */}
           {(localizedData.intro || activeArticle.intro) && (
-            <div className="bg-amber-50/70 border-l-4 border-brand-gold p-4 md:p-5 rounded-r-2xl text-slate-800 font-medium text-sm md:text-base leading-relaxed italic shadow-sm">
+            <div className="bg-amber-50/80 border-l-4 border-brand-gold p-5 md:p-6 rounded-r-2xl text-slate-800 font-medium text-base md:text-lg leading-relaxed italic shadow-sm my-6">
               "{stripFormattingSymbols(localizedData.intro || activeArticle.intro)}"
             </div>
           )}
 
           {/* Featured Images */}
           {activeArticle.images && activeArticle.images.length > 0 && (
-            <div className="space-y-3 my-4">
+            <div className="space-y-4 my-6">
               {activeArticle.images.map((img, idx) => (
                 <div key={idx} className="rounded-2xl overflow-hidden border border-slate-200 shadow-md bg-slate-900">
                   <img
                     src={img.url}
                     alt={img.caption || localizedData.title || activeArticle.title}
-                    className="w-full max-h-[450px] object-cover"
+                    className="w-full max-h-[480px] object-cover"
                   />
                   {img.caption && (
-                    <p className="bg-slate-900 text-slate-300 text-xs p-3 font-sans italic text-center">
+                    <p className="bg-slate-900 text-slate-300 text-sm p-3.5 font-sans italic text-center">
                       📷 {img.caption}
                     </p>
                   )}
@@ -1047,7 +1047,7 @@ export default function ArticleDetailModal({
 
           {/* Extended Text (Body) - Formatted Clean HTML */}
           <div 
-            className="article-body-content prose max-w-none text-slate-800 leading-relaxed text-sm md:text-base space-y-4 font-sans border-t border-slate-100 pt-4"
+            className="article-body-content max-w-3xl mx-auto border-t border-slate-200/80 pt-8 mt-6"
             dangerouslySetInnerHTML={{ __html: formatArticleContentToHtml(localizedData.content || activeArticle.content) }}
           />
 

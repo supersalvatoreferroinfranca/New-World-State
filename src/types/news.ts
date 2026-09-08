@@ -23,7 +23,7 @@ export type NewsLanguage = 'it' | 'en' | 'fr' | 'es' | 'pt' | 'ru' | 'hi' | 'bn'
 export interface ArticleTranslation {
   title: string;
   intro: string;
-  content: string;
+  content?: string;
   tags?: string[];
   translatedAt?: string;
   model?: string;
