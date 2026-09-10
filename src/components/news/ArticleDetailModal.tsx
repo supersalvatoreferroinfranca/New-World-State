@@ -82,6 +82,8 @@ export default function ArticleDetailModal({
   const [translationNotice, setTranslationNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const prevArticleIdRef = useRef<string | null>(null);
+
   const handleLanguageSelect = (langCode: NewsLanguage) => {
     setActiveLang(langCode);
     if (typeof window !== 'undefined' && window.history && window.history.pushState) {
@@ -94,24 +96,67 @@ export default function ArticleDetailModal({
       window.history.pushState({}, '', url.toString());
     }
   };
+
   useEffect(() => {
-    setCurrentArticle(article);
-    if (article && currentLanguage) {
-      setActiveLang((currentLanguage as NewsLanguage) || 'it');
+    if (!article) {
+      setCurrentArticle(null);
+      prevArticleIdRef.current = null;
+      return;
+    }
+
+    if (article.id !== prevArticleIdRef.current) {
+      // New article opened
+      prevArticleIdRef.current = article.id;
+      setCurrentArticle(article);
+
+      let initialLang: NewsLanguage = 'it';
+      if (typeof window !== 'undefined') {
+        const searchParams = new URLSearchParams(window.location.search);
+        const langParam = (searchParams.get('lang') || searchParams.get('hl'))?.toLowerCase() as NewsLanguage;
+        if (langParam && SUPPORTED_LANG_OPTIONS.some(l => l.code === langParam)) {
+          initialLang = langParam;
+        } else if (currentLanguage && SUPPORTED_LANG_OPTIONS.some(l => l.code === currentLanguage)) {
+          initialLang = currentLanguage as NewsLanguage;
+        }
+      } else if (currentLanguage && SUPPORTED_LANG_OPTIONS.some(l => l.code === currentLanguage)) {
+        initialLang = currentLanguage as NewsLanguage;
+      }
+      setActiveLang(initialLang);
+    } else {
+      // Same article updated in background: merge translations smoothly
+      setCurrentArticle(prev => {
+        if (!prev) return article;
+        return {
+          ...article,
+          translations: {
+            ...(article.translations || {}),
+            ...(prev.translations || {})
+          }
+        };
+      });
     }
   }, [article?.id, currentLanguage]);
 
-  // Derive active article safely: use currentArticle if same ID as prop, else fallback to article prop
-  const activeArticle: NewsArticle | null = (article && currentArticle?.id === article.id ? currentArticle : article) || currentArticle || null;
+  // Derive active article safely: prioritize currentArticle with latest in-memory translations
+  const activeArticle: NewsArticle | null = (currentArticle && (!article || currentArticle.id === article.id) ? currentArticle : article) || null;
 
   // Listen for background article updates
   useEffect(() => {
     const handleArticleUpdate = () => {
       if (!article?.id) return;
       const all = getArticles();
-      const found = all.find(a => a.id === article.id || a.slug === article.slug);
+      const found = all.find(a => String(a.id) === String(article.id) || a.slug === article.slug);
       if (found) {
-        setCurrentArticle(found);
+        setCurrentArticle(prev => {
+          if (!prev) return found;
+          return {
+            ...found,
+            translations: {
+              ...(found.translations || {}),
+              ...(prev.translations || {})
+            }
+          };
+        });
       }
     };
     window.addEventListener('nws_news_articles_updated', handleArticleUpdate);
@@ -141,7 +186,14 @@ export default function ArticleDetailModal({
     autoTranslateArticleOnDemand(activeArticle.id, activeLang as Language)
       .then((updated) => {
         if (!isCancelled && updated) {
-          setCurrentArticle(updated);
+          setCurrentArticle(prev => ({
+            ...(prev || activeArticle),
+            ...updated,
+            translations: {
+              ...((prev || activeArticle)?.translations || {}),
+              ...(updated.translations || {})
+            }
+          }));
           setTranslationNotice(tText('Article translated successfully', 'Articolo tradotto con successo'));
           setTimeout(() => setTranslationNotice(null), 3000);
         }

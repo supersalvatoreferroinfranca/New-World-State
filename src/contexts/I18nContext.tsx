@@ -1528,6 +1528,7 @@ const COMMON_PHRASES: Record<string, Record<Language, string>> = {
 
 interface I18nContextType {
   language: Language;
+  currentLanguage: Language;
   setLanguage: (lang: Language) => void;
   t: (key: keyof typeof TRANSLATIONS['en']) => string;
   tText: (english: string, italian?: string) => string;
@@ -1603,7 +1604,7 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <I18nContext.Provider value={{ language, setLanguage, t, tText }}>
+    <I18nContext.Provider value={{ language, currentLanguage: language, setLanguage, t, tText }}>
       {children}
     </I18nContext.Provider>
   );

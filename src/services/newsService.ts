@@ -1116,7 +1116,7 @@ export async function translateArticleWithAI(articleData: {
   if (articleData.id) {
     const articles = getArticles();
     const updated = articles.map(art => {
-      if (art.id === articleData.id || art.slug === articleData.id) {
+      if (String(art.id) === String(articleData.id) || art.slug === articleData.id) {
         return {
           ...art,
           translations: {
