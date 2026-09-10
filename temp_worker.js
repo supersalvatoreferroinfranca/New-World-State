@@ -1114,6 +1114,7 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl, targetLang = 'it
       window.__NWS_INITIAL_ARTICLE__ = ${JSON.stringify(article)};
       window.__NWS_ACTIVE_TAB__ = 'news';
       window.__NWS_TARGET_LANG__ = ${JSON.stringify(currentLang)};
+      window.__NWS_ACTIVE_LANG__ = ${JSON.stringify(currentLang)};
     </script>
   `;
 
@@ -9256,7 +9257,8 @@ ${articleFull}
           }
 
           if (foundArticle) {
-            htmlText = injectArticleMetaTagsWorker(htmlText, foundArticle, baseUrl);
+            const reqLang = (url.searchParams.get('lang') || url.searchParams.get('hl') || 'it').toLowerCase().trim();
+            htmlText = injectArticleMetaTagsWorker(htmlText, foundArticle, baseUrl, reqLang);
           } else {
             htmlText = injectNewsPortalMetaTagsWorker(htmlText, baseUrl);
           }

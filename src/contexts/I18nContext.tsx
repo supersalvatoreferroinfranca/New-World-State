@@ -1537,13 +1537,13 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
-  // Try to load initial language preference from URL or localStorage
+  // Try to load initial language preference from URL, SSR hydration variables, or localStorage
   const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
-      let langParam = searchParams.get('lang') || searchParams.get('hl');
+      let langParam = searchParams.get('lang') || searchParams.get('hl') || (window as any).__NWS_TARGET_LANG__ || (window as any).__NWS_ACTIVE_LANG__;
       if (langParam) {
-        langParam = langParam.toLowerCase();
+        langParam = String(langParam).toLowerCase().trim();
         if (TRANSLATIONS[langParam as Language]) {
            localStorage.setItem('nws_preferred_language', langParam);
            return langParam as Language;
@@ -1569,8 +1569,24 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
         setLanguageState(e.detail);
       }
     };
+    const handlePopState = () => {
+      if (typeof window !== 'undefined') {
+        const searchParams = new URLSearchParams(window.location.search);
+        let langParam = searchParams.get('lang') || searchParams.get('hl');
+        if (langParam) {
+          langParam = langParam.toLowerCase().trim();
+          if (TRANSLATIONS[langParam as Language] && langParam !== language) {
+            setLanguageState(langParam as Language);
+          }
+        }
+      }
+    };
     window.addEventListener('nws_language_changed', handleLangChange as EventListener);
-    return () => window.removeEventListener('nws_language_changed', handleLangChange as EventListener);
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('nws_language_changed', handleLangChange as EventListener);
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, [language]);
 
   const t = (key: keyof typeof TRANSLATIONS['en']) => {

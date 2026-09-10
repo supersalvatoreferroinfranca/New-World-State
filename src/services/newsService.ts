@@ -115,7 +115,38 @@ Proteggere i bambini non è un atto di carità, ma il pilastro irrinunciabile su
     translations: {
       en: {
         title: "The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State",
-        intro: "An in-depth investigation into the tragic dynamics of forced child labour around the world, presenting the manifesto of action and universal safeguards promoted by the New World State to restore dignity and a future to children."
+        intro: "An in-depth investigation into the tragic dynamics of forced child labour around the world, presenting the manifesto of action and universal safeguards promoted by the New World State to restore dignity and a future to children.",
+        content: `Over 160 million children worldwide are currently trapped in child labour, forced to sacrifice education, health, and human dignity in contexts of severe economic and geopolitical vulnerability. From the cobalt and coltan mines of sub-Saharan Africa to the textile sweatshops of South-East Asia, from agricultural plantations across Latin America to the invisible peripheries of Western metropolises, the exploitation of childhood remains one of the deepest and most intolerable wounds of the contemporary global economy.
+
+## The Invisible Dimension of the Global Emergency
+
+Data from international organizations confirm an unprecedented setback in the global fight against child exploitation. Nearly half of all children engaged in forced labour endure hazardous conditions, exposed to toxic chemicals, heavy machinery, and inhumane working hours. This is not a geographical or cultural inevitability, but the direct consequence of globalized supply chains engineered for ruthless cost compression and deregulation.
+
+> "An economic model that builds its profit or industrial competitiveness on the forced labour of a single child is an inherently bankrupt and morally illegitimate model. People's sovereignty begins with the unconditional protection of childhood."
+> — Manifesto for Human Dignity, New World State General Assembly
+
+## Opaque Supply Chains and Corporate Responsibility
+
+While major multinational technology, energy, and fast-fashion corporations publish glossy sustainability reports, essential raw materials for batteries, smartphones, and low-cost apparel continue to be extracted and processed by children's hands along subcontracting chains intentionally fragmented to evade criminal and civil liability.
+
+Voluntary corporate certification and auditing mechanisms have proven thoroughly inadequate:
+* Lack of unannounced, independent inspections in remote mining and manufacturing hubs.
+* Complicity of local authorities seeking foreign investments at any social cost.
+* Absence of tamper-proof traceability from the raw material extraction point to final retail consumption.
+* Transnational legal impunity enabled by the jurisdictional fragmentation of traditional nation-states.
+
+## The Charter of Children's Rights and Direct Action by the New World State
+
+Faced with the inertia of conventional diplomacies, New World State 1.0 declares child exploitation a crime against the universal human family and enacts binding measures for its sovereign community:
+
+1. **Sovereign Cryptographic Supply Chain Traceability**: Every good exchanged or certified within the New World State economic network must hold a digital passport with decentralized notarization certifying the complete absence of child labour across every supply tier.
+2. **Sovereign Redemption and Free Education Fund**: Immediate allocation of resources to fund scholarships, community educational centers, and dignity allowances for low-income families, enabling children to leave hazardous work and return permanently to education.
+3. **Public International Blacklist of Complicit Corporations**: Establishment of an immutable, publicly accessible registry alerting citizens to corporations directly or indirectly benefiting from forced child labour.
+4. **Academy of Childhood Custodians**: A permanent network of volunteers, investigative journalists, and sovereign jurists dedicated to documenting violations and securing immediate rescue for children in conditions of slavery or trafficking.
+
+## A Foundational Pact for the Future of Rising Generations
+
+Protecting children is not an act of charity, but the essential cornerstone upon which to build a new social order founded on justice, universal harmony, and lasting peace. The Foundational Constitution of the New World State guarantees every child the right to play, learn, dream, and grow free from violence and economic extortion. We invite all sovereign citizens, independent communities, and ethical organizations to unite in this historic civil battle.`
       },
       fr: {
         title: "Le Fléau Silencieux : Le Ravage du Travail des Enfants et l'Engagement Mondial du New World State",
@@ -1173,14 +1204,15 @@ export function getLocalizedArticle(
   }
 
   const translation = article.translations?.[lang as NewsLanguage];
-  if (translation && (translation.title || translation.content)) {
+  if (translation && (translation.title || translation.content || translation.intro)) {
+    const isFullyTranslated = !!(translation.title && translation.content);
     return {
       title: translation.title || article.title,
       intro: translation.intro || article.intro,
       content: translation.content || article.content,
       tags: translation.tags && translation.tags.length > 0 ? translation.tags : (article.tags || []),
       isTranslated: true,
-      hasTranslation: true
+      hasTranslation: isFullyTranslated
     };
   }
 

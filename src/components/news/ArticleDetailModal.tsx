@@ -690,12 +690,26 @@ export default function ArticleDetailModal({
     .map(id => allArticles.find(a => a.id === id))
     .filter((a): a is NewsArticle => !!a);
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const slug = activeArticle.slug || activeArticle.id;
     let url = getPublicArticleUrl(slug);
     if (activeLang !== 'it') {
       url += `?lang=${activeLang}`;
     }
+    
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: localizedData.title || activeArticle.title,
+          text: localizedData.intro || activeArticle.intro || localizedData.title,
+          url: url,
+        });
+        return;
+      } catch (e) {
+        // Fallback to clipboard copy
+      }
+    }
+
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
       setCopied(true);
@@ -1164,7 +1178,7 @@ export default function ArticleDetailModal({
           )}
 
           {/* Social Outreach & Sharing Kit Section */}
-          <SocialShareKit article={activeArticle} />
+          <SocialShareKit article={activeArticle} activeLang={activeLang} />
 
           {/* Related Articles Section */}
           {relatedArticles.length > 0 && (

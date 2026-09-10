@@ -8998,7 +8998,7 @@ ${newsItems}
     function injectArticleMetaTags(html: string, article: any, req: express.Request): string {
       const baseUrl = getCanonicalBaseUrl(req);
 
-      const reqLangRaw = typeof req.query.lang === 'string' ? req.query.lang.toLowerCase().trim() : '';
+      const reqLangRaw = (typeof req.query.lang === 'string' ? req.query.lang : (typeof req.query.hl === 'string' ? req.query.hl : '')).toLowerCase().trim();
       const currentLang = SITE_SUPPORTED_LANGUAGES.includes(reqLangRaw) ? reqLangRaw : 'it';
       const langInfo = LANGUAGE_DETAILS[currentLang] || LANGUAGE_DETAILS['it'];
 
@@ -9194,6 +9194,7 @@ ${newsItems}
           window.__NWS_INITIAL_ARTICLE__ = ${JSON.stringify(article)};
           window.__NWS_ACTIVE_TAB__ = 'news';
           window.__NWS_ACTIVE_LANG__ = '${currentLang}';
+          window.__NWS_TARGET_LANG__ = '${currentLang}';
         </script>
       `;
 
