@@ -59,7 +59,13 @@ export default function SocialShareKit({ article, activeLang = 'it' }: SocialSha
     
     // Core brand & movement hashtags
     set.add('#NewWorldState');
-    if (activeLang === 'en') {
+    if (activeLang === 'bn') {
+      set.add('#NewWorldState');
+      set.add('#মানবাধিকার');
+      set.add('#শিশুঅধিকার');
+      set.add('#স্বাধীনসংবাদ');
+      set.add('#নৈতিকসাংবাদিকতা');
+    } else if (activeLang === 'en') {
       set.add('#IndependentNews');
       set.add('#EthicalJournalism');
       set.add('#GlobalAffairs');
@@ -71,6 +77,30 @@ export default function SocialShareKit({ article, activeLang = 'it' }: SocialSha
       set.add('#InformationLibre');
       set.add('#JournalismeEthique');
       set.add('#Actualites');
+    } else if (activeLang === 'pt') {
+      set.add('#InformacaoLivre');
+      set.add('#JornalismoEtico');
+      set.add('#DireitosHumanos');
+    } else if (activeLang === 'ru') {
+      set.add('#ПраваЧеловека');
+      set.add('#НезависимыеНовости');
+      set.add('#Этика');
+    } else if (activeLang === 'hi') {
+      set.add('#मानवाधिकार');
+      set.add('#स्वतंत्रसमाचार');
+      set.add('#सच्चीपत्रकारिता');
+    } else if (activeLang === 'zh') {
+      set.add('#新世界国家');
+      set.add('#人权保护');
+      set.add('#独立新闻');
+    } else if (activeLang === 'ja') {
+      set.add('#国際ニュース');
+      set.add('#人権保護');
+      set.add('#独立系ジャーナリズム');
+    } else if (activeLang === 'ar') {
+      set.add('#حقوق_الإنسان');
+      set.add('#صحافة_مستقلة');
+      set.add('#أخبار_عالمية');
     } else {
       set.add('#InformazioneLibera');
       set.add('#GiornalismoEtico');
@@ -80,9 +110,9 @@ export default function SocialShareKit({ article, activeLang = 'it' }: SocialSha
     // Article tags
     if (localized.tags && Array.isArray(localized.tags)) {
       localized.tags.forEach(tag => {
-        const clean = stripFormattingSymbols(tag).replace(/[^a-zA-Z0-9àèéìòùÀÈÉÌÒÙ]/g, '');
-        if (clean.length > 2) {
-          set.add(`#${clean.charAt(0).toUpperCase() + clean.slice(1)}`);
+        const clean = stripFormattingSymbols(tag).replace(/[^a-zA-Z0-9àèéìòùÀÈÉÌÒÙ\u0980-\u09FF\u0600-\u06FF\u0400-\u04FF\u4e00-\u9fa5\u3040-\u30ff]/g, '');
+        if (clean.length > 1) {
+          set.add(`#${clean}`);
         }
       });
     }
@@ -90,22 +120,12 @@ export default function SocialShareKit({ article, activeLang = 'it' }: SocialSha
     // Keyword detection
     const fullText = (cleanTitle + ' ' + cleanIntro).toLowerCase();
     if (fullText.includes('iran') || fullText.includes('usa') || fullText.includes('israel') || fullText.includes('palestin') || fullText.includes('war') || fullText.includes('guerra') || fullText.includes('conflict')) {
-      set.add(activeLang === 'en' ? '#Geopolitics' : '#Geopolitica');
-      set.add(activeLang === 'en' ? '#Peace' : '#Pace');
-      set.add(activeLang === 'en' ? '#MiddleEast' : '#MedioOriente');
+      set.add(activeLang === 'bn' ? '#যুদ্ধ_ও_শান্তি' : activeLang === 'en' ? '#Geopolitics' : '#Geopolitica');
+      set.add(activeLang === 'bn' ? '#ভূরাজনীতি' : activeLang === 'en' ? '#Peace' : '#Pace');
     }
-    if (fullText.includes('econom') || fullText.includes('financ') || fullText.includes('finanza') || fullText.includes('market') || fullText.includes('crisis')) {
-      set.add(activeLang === 'en' ? '#Economy' : '#Economia');
-      set.add(activeLang === 'en' ? '#GlobalFinance' : '#FinanzaEtica');
-    }
-    if (fullText.includes('child') || fullText.includes('minor') || fullText.includes('right') || fullText.includes('diritt') || fullText.includes('libert') || fullText.includes('sovereign')) {
-      set.add(activeLang === 'en' ? '#HumanRights' : '#DirittiUmani');
-      set.add(activeLang === 'en' ? '#ChildrenRights' : '#TutelaInfanzia');
-      set.add(activeLang === 'en' ? '#Sovereignty' : '#Sovranità');
-    }
-    if (fullText.includes('technolog') || fullText.includes('tecnolog') || fullText.includes('ai') || fullText.includes('digit')) {
-      set.add(activeLang === 'en' ? '#Technology' : '#Tecnologia');
-      set.add(activeLang === 'en' ? '#Innovation' : '#Innovazione');
+    if (fullText.includes('child') || fullText.includes('minor') || fullText.includes('right') || fullText.includes('diritt') || fullText.includes('libert') || fullText.includes('sovereign') || fullText.includes('শিশু') || fullText.includes('শ্রম') || fullText.includes('অধিকার')) {
+      set.add(activeLang === 'bn' ? '#শিশুশ্রম_বন্ধ_করুন' : activeLang === 'en' ? '#HumanRights' : '#DirittiUmani');
+      set.add(activeLang === 'bn' ? '#সার্বভৌমত্ব' : activeLang === 'en' ? '#ChildrenRights' : '#TutelaInfanzia');
     }
 
     return Array.from(set);
@@ -117,7 +137,20 @@ export default function SocialShareKit({ article, activeLang = 'it' }: SocialSha
   const viralPostText = useMemo(() => {
     const hook = cleanIntro 
       ? (cleanIntro.length > 200 ? cleanIntro.slice(0, 197) + '...' : cleanIntro)
-      : (activeLang === 'en' ? 'A crucial in-depth report on the current global landscape and future developments.' : 'Un approfondimento fondamentale sul nostro presente per capire dove stiamo andando.');
+      : (activeLang === 'bn' ? 'নিউ ওয়ার্ল্ড স্টেট নিউজ অথরিটির বিশেষ অনুসন্ধানী প্রতিবেদন।' : activeLang === 'en' ? 'A crucial in-depth report on the current global landscape and future developments.' : 'Un approfondimento fondamentale sul nostro presente per capire dove stiamo andando.');
+
+    if (activeLang === 'bn') {
+      return `🌍 𝗕𝗥𝗘𝗔𝗞𝗜𝗡𝗚 𝗥𝗘𝗣𝗢𝗥𝗧 | ${cleanTitle}
+
+📌 ${hook}
+
+নিউ ওয়ার্ল্ড স্টেট নিউজ অথরিটির পক্ষ থেকে স্বাধীন, বস্তুনিষ্ঠ ও নিরপেক্ষ অনুসন্ধান।
+
+👇 সম্পূর্ণ প্রতিবেদনটি পড়ুন ও আলোচনায় অংশ নিন:
+🔗 ${articleUrl}
+
+${hashtagsString}`;
+    }
 
     if (activeLang === 'en') {
       return `🌍 𝗕𝗥𝗘𝗔𝗞𝗜𝗡𝗚 𝗥𝗘𝗣𝗢𝗥𝗧 | ${cleanTitle}
@@ -158,6 +191,84 @@ Une enquête indépendante et sans censure pour décrypter les enjeux géopoliti
 ${hashtagsString}`;
     }
 
+    if (activeLang === 'pt') {
+      return `🌍 𝗘𝗠 𝗗𝗘𝗦𝗧𝗔𝗤𝗨𝗘 | ${cleanTitle}
+
+📌 ${hook}
+
+Uma análise independente e sem censura da New World State News Authority para compreender o cenário global.
+
+👇 𝗟𝗲𝗶𝗮 𝗮 𝗺𝗮𝘁é𝗿𝗶𝗮 𝗰𝗼𝗺𝗽𝗹𝗲𝘁𝗮 𝗲 𝗽𝗮𝗿𝘁𝗶𝗰𝗶𝗽𝗲 𝗱𝗮 𝗱𝗶𝘀𝗰𝘂𝘀𝘀ã𝗼:
+🔗 ${articleUrl}
+
+${hashtagsString}`;
+    }
+
+    if (activeLang === 'ru') {
+      return `🌍 𝗚𝗟𝗔𝗩𝗡𝗢𝗘 | ${cleanTitle}
+
+📌 ${hook}
+
+Независимый и объективный анализ от New World State News Authority.
+
+👇 𝗖𝗵𝗶𝘁𝗮𝘁' 𝘀𝘁𝗮𝘁'𝘆𝘂 𝗽𝗼𝗹𝗻𝗼𝘀𝘁'𝘆𝘂:
+🔗 ${articleUrl}
+
+${hashtagsString}`;
+    }
+
+    if (activeLang === 'hi') {
+      return `🌍 𝗕𝗥𝗘𝗔𝗞𝗜𝗡𝗚 | ${cleanTitle}
+
+📌 ${hook}
+
+न्यू वर्ल्ड स्टेट न्यूज़ अथॉरिटी द्वारा स्वतंत्र, निष्पक्ष और गहन विश्लेषण।
+
+👇 पूरी रिपोर्ट पढ़ें और चर्चा में भाग लें:
+🔗 ${articleUrl}
+
+${hashtagsString}`;
+    }
+
+    if (activeLang === 'zh') {
+      return `🌍 深度报道 | ${cleanTitle}
+
+📌 ${hook}
+
+来自新世界国家新闻总署的独立、未删节深入分析。
+
+👇 阅读完整报道并参与讨论：
+🔗 ${articleUrl}
+
+${hashtagsString}`;
+    }
+
+    if (activeLang === 'ja') {
+      return `🌍 注目ニュース | ${cleanTitle}
+
+📌 ${hook}
+
+New World State News Authorityによる独立した公正な深層分析。
+
+👇 記事全文を読んでディスカッションに参加：
+🔗 ${articleUrl}
+
+${hashtagsString}`;
+    }
+
+    if (activeLang === 'ar') {
+      return `🌍 تقرير خاص | ${cleanTitle}
+
+📌 ${hook}
+
+تحليل مستقل وشامل من هيئة أخبار New World State.
+
+👇 اقرأ التحقيق الكامل وشارك في النقاش:
+🔗 ${articleUrl}
+
+${hashtagsString}`;
+    }
+
     return `🌍 𝗣𝗥𝗜𝗠𝗢 𝗣𝗜𝗔𝗡𝗢 | ${cleanTitle}
 
 📌 ${hook}
@@ -172,6 +283,14 @@ ${hashtagsString}`;
 
   // Template 2: Short & Punchy (for X / Twitter / WhatsApp Status / Stories)
   const shortPostText = useMemo(() => {
+    if (activeLang === 'bn') {
+      return `🚨 ${cleanTitle}
+
+নিউ ওয়ার্ল্ড স্টেট-এ সম্পূর্ণ প্রতিবেদন পড়ুন:
+👉 ${articleUrl}
+
+${generatedHashtags.slice(0, 4).join(' ')}`;
+    }
     if (activeLang === 'en') {
       return `🚨 ${cleanTitle}
 
@@ -206,6 +325,17 @@ ${generatedHashtags.slice(0, 4).join(' ')}`;
 
   // Template 3: Debate & Engagement (Prompts user opinions and comments)
   const debatePostText = useMemo(() => {
+    if (activeLang === 'bn') {
+      return `🗣️ উন্মুক্ত আলোচনা: ${cleanTitle}
+
+এই বিষয়ে আপনার মতামত কী এবং কোন পদক্ষেপগুলো অগ্রাধিকার দেওয়া উচিত?
+
+📖 সম্পূর্ণ অফিসিয়াল প্রতিবেদন পড়ুন:
+👉 ${articleUrl}
+
+মন্তব্যে আপনার মূল্যবান মতামত জানান! 👇
+${hashtagsString}`;
+    }
     if (activeLang === 'en') {
       return `🗣️ 𝗢𝗣𝗘𝗡 𝗗𝗘𝗕𝗔𝗧𝗘: ${cleanTitle}
 
@@ -252,6 +382,14 @@ ${hashtagsString}`;
 
   // Template 4: Direct Message (WhatsApp / Telegram / Email / DM)
   const dmPostText = useMemo(() => {
+    if (activeLang === 'bn') {
+      return `নমস্কার/সালাম! নিউ ওয়ার্ল্ড স্টেট-এ প্রকাশিত এই গুরুত্বপূর্ণ প্রতিবেদনটি আপনার সাথে শেয়ার করছি:
+
+"${cleanTitle}"
+
+${cleanIntro ? cleanIntro.slice(0, 160) + '...\n\n' : ''}সম্পূর্ণ প্রতিবেদনটি এখানে পড়তে পারবেন:
+${articleUrl}`;
+    }
     if (activeLang === 'en') {
       return `Hello! I wanted to share this important report with you from New World State:
 

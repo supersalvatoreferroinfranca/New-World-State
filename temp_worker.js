@@ -83,43 +83,246 @@ Proteggere i bambini non è un atto di carità, ma il pilastro irrinunciabile su
     translations: {
       en: {
         title: "The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State",
-        intro: "An in-depth investigation into the tragic dynamics of forced child labour around the world, presenting the manifesto of action and universal safeguards promoted by the New World State to restore dignity and a future to children."
+        intro: "An in-depth investigation into the tragic dynamics of forced child labour around the world, presenting the manifesto of action and universal safeguards promoted by the New World State to restore dignity and a future to children.",
+        content: `Over 160 million children worldwide are currently trapped in child labour, forced to sacrifice education, health, and human dignity in contexts of severe economic and geopolitical vulnerability. From the cobalt and coltan mines of sub-Saharan Africa to the textile sweatshops of South-East Asia, from agricultural plantations across Latin America to the invisible peripheries of Western metropolises, the exploitation of childhood remains one of the deepest and most intolerable wounds of the contemporary global economy.
+
+## The Invisible Dimension of the Global Emergency
+
+Data from international organizations confirm an unprecedented setback in the global fight against child exploitation. Nearly half of all children engaged in forced labour endure hazardous conditions, exposed to toxic chemicals, heavy machinery, and inhumane working hours. This is not a geographical or cultural inevitability, but the direct consequence of globalized supply chains engineered for ruthless cost compression and deregulation.
+
+> "An economic model that builds its profit or industrial competitiveness on the forced labour of a single child is an inherently bankrupt and morally illegitimate model. People's sovereignty begins with the unconditional protection of childhood."
+> — Manifesto for Human Dignity, New World State General Assembly
+
+## Opaque Supply Chains and Corporate Responsibility
+
+While major multinational technology, energy, and fast-fashion corporations publish glossy sustainability reports, essential raw materials for batteries, smartphones, and low-cost apparel continue to be extracted and processed by children's hands along subcontracting chains intentionally fragmented to evade criminal and civil liability.
+
+Voluntary corporate certification and auditing mechanisms have proven thoroughly inadequate:
+* Lack of unannounced, independent inspections in remote mining and manufacturing hubs.
+* Complicity of local authorities seeking foreign investments at any social cost.
+* Absence of tamper-proof traceability from the raw material extraction point to final retail consumption.
+* Transnational legal impunity enabled by the jurisdictional fragmentation of traditional nation-states.
+
+## The Charter of Children's Rights and Direct Action by the New World State
+
+Faced with the inertia of conventional diplomacies, New World State 1.0 declares child exploitation a crime against the universal human family and enacts binding measures for its sovereign community:
+
+1. **Sovereign Cryptographic Supply Chain Traceability**: Every good exchanged or certified within the New World State economic network must hold a digital passport with decentralized notarization certifying the complete absence of child labour across every supply tier.
+2. **Sovereign Redemption and Free Education Fund**: Immediate allocation of resources to fund scholarships, community educational centers, and dignity allowances for low-income families, enabling children to leave hazardous work and return permanently to education.
+3. **Public International Blacklist of Complicit Corporations**: Establishment of an immutable, publicly accessible registry alerting citizens to corporations directly or indirectly benefiting from forced child labour.
+4. **Academy of Childhood Custodians**: A permanent network of volunteers, investigative journalists, and sovereign jurists dedicated to documenting violations and securing immediate rescue for children in conditions of slavery or trafficking.
+
+## A Foundational Pact for the Future of Rising Generations
+
+Protecting children is not an act of charity, but the essential cornerstone upon which to build a new social order founded on justice, universal harmony, and lasting peace. The Foundational Constitution of the New World State guarantees every child the right to play, learn, dream, and grow free from violence and economic extortion. We invite all sovereign citizens, independent communities, and ethical organizations to unite in this historic civil battle.`
       },
       fr: {
         title: "Le Fléau Silencieux : Le Ravage du Travail des Enfants et l'Engagement Mondial du New World State",
-        intro: "Une enquête approfondie sur les dynamiques dramatiques du travail forcé des enfants dans le monde, avec le manifeste d'action et les protections universelles du New World State."
+        intro: "Une enquête approfondie sur les dynamiques dramatiques du travail forcé des enfants dans le monde, avec le manifeste d'action et les protections universelles du New World State.",
+        content: `Plus de 160 millions d'enfants dans le monde sont aujourd'hui pris au piège du travail forcé, contraints de sacrifier éducation, santé et dignité humaine dans des contextes d'extrême vulnérabilité économique et géopolitique. Des mines de cobalt et de coltan d'Afrique subsaharienne aux ateliers textiles d'Asie du Sud-Est, des plantations agricoles d'Amérique latine aux périphéries invisibles des métropoles occidentales, l'exploitation de l'enfance demeure l'une des blessures les plus intolérables de l'économie mondiale contemporaine.
+
+## La dimension invisible de l'urgence mondiale
+
+Les données des organisations internationales confirment un recul sans précédent dans la lutte contre l'exploitation des mineurs. Près de la moitié des enfants astreints au travail forcé subissent des conditions dangereuses, exposés à des produits chimiques toxiques, à des machines lourdes et à des horaires inhumains. Il ne s'agit pas d'une fatalité géographique, mais de la conséquence directe de chaînes d'approvisionnement mondialisées conçues pour la compression impitoyable des coûts.
+
+> "Un modèle économique qui fonde son profit ou sa compétitivité industrielle sur le travail forcé d'un seul enfant est un modèle intrinsèquement en faillite et moralement illégitime. La souveraineté des peuples commence par la protection inconditionnelle de l'enfance."
+> — Manifeste pour la Dignité Humaine, Assemblée Générale du New World State
+
+## Chaînes d'approvisionnement opaques et responsabilité des multinationales
+
+Alors que les grandes multinationales de la technologie, de l'énergie et de la mode rapide publient des rapports de durabilité soignés, les matières premières indispensables continuent d'être extraites et transformées par des mains d'enfants le long de filières de sous-traitance fragmentées pour échapper aux poursuites civiles et pénales.
+
+Les mécanismes d'audit d'entreprise et de certification volontaire ont démontré leur inefficacité totale :
+* Absence d'inspections indépendantes et inopinées sur les sites isolés.
+* Complicité des gouvernements locaux en quête d'investissements à tout prix.
+* Absence de traçabilité infalsifiable du point d'extraction au consommateur final.
+* Impunité juridique transnationale favorisée par le morcellement juridictionnel.
+
+## La Charte des Droits de l'Enfance et l'Action Directe du New World State
+
+Face à l'inertie des diplomaties traditionnelles, New World State 1.0 déclare l'exploitation infantile crime contre l'humanité universelle et adopte des mesures contraignantes :
+
+1. **Traçabilité Cryptographique Souveraine des Filières** : Passeport numérique décentralisé obligatoire certifiant l'absence absolue de travail des enfants à chaque échelon de production.
+2. **Fonds Souverain de Rachat et Éducation Gratuite** : Allocation directe de bourses et d'un revenu de dignité pour permettre aux enfants de quitter le travail et de retrouver l'école.
+3. **Blacklist Internationale Publique des Entreprises Complices** : Registre public immuable signalant et boycottant les firmes tirant profit du travail des enfants.
+4. **Académie des Gardiens de l'Enfance** : Réseau permanent de juristes, volontaires et journalistes d'investigation pour le secours immédiat des mineurs exploités.
+
+## Un Pacte Fondateur pour l'Avenir des Nouvelles Générations
+
+Protéger les enfants n'est pas un acte de charité, mais le pilier fondamental d'un nouvel ordre social fondé sur la justice et la paix. La Constitution du New World State garantit à chaque enfant le droit de jouer, d'apprendre, de rêver et de grandir à l'abri de toute violence.`
       },
       es: {
         title: "El Flagelo Silente: La Plaga del Trabajo Infantil y el Compromiso Global del New World State",
-        intro: "Una investigación profunda sobre la dramática realidad del trabajo infantil forzado en el mundo, con el manifiesto de acción y garantías universales del New World State."
+        intro: "Una investigación profunda sobre la dramática realidad del trabajo infantil forzado en el mundo, con el manifiesto de acción y garantías universales del New World State.",
+        content: `Más de 160 millones de niños en el mundo están hoy atrapados en las redes del trabajo infantil, obligados a sacrificar educación, salud y dignidad humana en contextos de extrema vulnerabilidad económica y geopolítica. Desde las minas de cobalto y coltán del África subsahariana hasta los talleres textiles del Sudeste Asiático, las plantaciones agrícolas de América Latina y las periferias invisibles de las metrópolis occidentales, la explotación de la infancia representa una de las heridas más profundas e intolerables de la economía global contemporánea.
+
+## La dimensión invisible de la emergencia global
+
+Los datos de los organismos internacionales certifican un retroceso sin precedentes en la lucha contra la explotación de menores. Casi la mitad de los niños sometidos a trabajos forzados sufren condiciones de alto riesgo, expuestos a sustancias tóxicas, maquinaria pesada y jornadas extenuantes. No es una fatalidad cultural, sino la consecuencia directa de cadenas de suministro globales diseñadas para abaratar costes sin escrúpulos.
+
+> "Un modelo económico que basa su beneficio o su competitividad en el trabajo forzado de un solo niño es intrínsecamente ilegítimo y moralmente quebrado. La soberanía de los pueblos comienza con la protección incondicional de la infancia."
+> — Manifiesto por la Dignidad Humana, Asamblea General del New World State
+
+## Cadenas de suministro opacas y responsabilidad corporativa
+
+Mientras grandes corporaciones publican lujosos informes de sostenibilidad, las materias primas fundamentales para baterías, teléfonos móviles y moda rápida siguen extrayéndose y procesándose con manos infantiles mediante cadenas de subcontratación fragmentadas para evadir responsabilidades legales.
+
+Los sistemas tradicionales de auditoría voluntaria han fracasado:
+* Carencia de inspecciones independientes e imprevistas en áreas mineras remotas.
+* Complicidad de autoridades locales interesadas en captar inversiones a cualquier coste.
+* Inexistencia de trazabilidad inmutable desde el yacimiento hasta el consumidor.
+* Impunidad jurídica transnacional propiciada por la división de fronteras convencionales.
+
+## La Carta de Derechos de la Infancia y la Acción Directa del New World State
+
+Ante la inacción de la diplomacia tradicional, New World State 1.0 declara la explotación infantil un crimen contra la familia humana universal e instaura medidas de obligado cumplimiento:
+
+1. **Trazabilidad Criptográfica Soberana de la Cadena de Suministro**: Pasaporte digital inmutable que certifica el origen limpio de cualquier producto dentro del circuito económico soberano.
+2. **Fondo Soberano de Rescate y Educación Gratuita**: Recursos directos para becas, comedores escolares y rentas de dignidad para apartar a los menores del trabajo.
+3. **Lista Negra Internacional de Corporaciones Cómplices**: Registro público accesible a toda la ciudadanía mundial para boicotear a las empresas infractoras.
+4. **Academia de Custodios de la Infancia**: Red de juristas, periodistas y voluntarios dedicada al rescate e integración de menores en situación de esclavitud.
+
+## Un Pacto Fundacional para el Futuro de las Nuevas Generaciones
+
+Proteger a la infancia no es caridad, sino el cimiento indispensable de un orden mundial justo y fraterno. La Constitución del New World State garantiza el derecho de cada niño a educarse, jugar y soñar libre de violencia.`
       },
       pt: {
         title: "O Flagelo Silencioso: A Chaga do Trabalho Infantil e o Compromisso Global do New World State",
-        intro: "Uma investigação aprofundada sobre a exploração infantil no mundo, com o manifesto de ação e salvaguardas universais do New World State para devolver dignidade às crianças."
+        intro: "Uma investigação aprofundada sobre a exploração infantil no mundo, com o manifesto de ação e salvaguardas universais do New World State para devolver dignidade às crianças.",
+        content: `Mais de 160 milhões de crianças no mundo estão hoje encurraladas no trabalho infantil forçado, sacrificando educação, saúde e dignidade humana. Desde as minas de cobalto na África até os setores têxteis na Ásia e lavouras na América Latina, a exploração infantil é uma chaga intolerável da economia contemporânea.
+
+## A dimensão invisível da emergência global
+
+Organizações internacionais apontam um retrocesso alarmante. Metade dessas crianças trabalham em condições perigosas, manipulando químicos tóxicos e maquinários pesados sob jornadas desumanas. Isso decorre diretamente da precarização das cadeias globais de suprimentos.
+
+> "Um modelo produtivo que obtém lucro com o trabalho forçado de uma única criança é falho e moralmente ilegítimo."
+> — Manifesto da Dignidade Humana, New World State
+
+## Cadeias de suprimento opacas e ação soberana
+
+Grandes corporações continuam a usar subcontratações obscuras para escapar da fiscalização e da responsabilidade jurídica.
+
+O New World State 1.0 estabelece medidas diretas e irrevogáveis:
+1. **Rastreabilidade Criptográfica Soberana**: Passaportes digitais auditáveis via blockchain para certificar a ausência total de mão de obra infantil.
+2. **Fundo Soberano de Educação Gratuita**: Rendas de dignidade para as famílias e bolsas de estudo para garantir o regresso das crianças à escola.
+3. **Lista Pública de Boicote a Empresas Cúmplices**: Registro aberto para transparência global.
+4. **Guardiões da Infância**: Força-tarefa jurídica e humanitária de proteção ativa aos menores.`
       },
       ru: {
         title: "Безмолвное бедствие: бремя детского труда и глобальные обязательства New World State",
-        intro: "Глубокое расследование проблемы детского труда и эксплуатации в мире, с манифестом действий и универсальными гарантиями New World State."
+        intro: "Глубокое расследование проблемы детского труда и эксплуатации в мире, с манифестом действий и универсальными гарантиями New World State.",
+        content: `Более 160 миллионов детей по всему миру вовлечены в принудительный детский труд, лишаясь права на образование, здоровье и человеческое достоинство. От кобальтовых шахт Африки до швейных производств Азии и плантаций Латинской Америки — эксплуатация детей остается одной из самых тяжелых ран мировой экономики.
+
+## Невидимый масштаб кризиса
+
+Почти половина работающих детей трудятся в опасных условиях: с токсичными веществами, тяжелой техникой и изнурительным графиком. Это прямой результат погони транснациональных корпораций за снижением издержек.
+
+> "Экономическая система, строящая свою прибыль на принудительном труде хотя бы одного ребенка, является банкротом и морально нелегитимна."
+> — Манифест человеческого достоинства, New World State
+
+## План прямого действия New World State 1.0
+
+1. **Криптографическая суверенная прослеживаемость**: Цифровые паспорта продукции, гарантирующие отсутствие детского труда по всей цепочке поставок.
+2. **Суверенный фонд бесплатного образования**: Выплата стипендий и пособий семьям для возвращения детей в школы.
+3. **Международный публичный реестр корпораций-нарушителей**: Открытый реестр для гражданского бойкота недобросовестных компаний.
+4. **Академия защитников детства**: Сеть юристов и волонтеров для оперативного спасения детей из рабства.`
       },
       hi: {
         title: "मूक विपत्ति: बाल श्रम का अभिशाप और New World State की वैश्विक प्रतिबद्धता",
-        intro: "दुनिया भर में बाल श्रम के शोषण पर गहन जांच और बच्चों के भविष्य व सम्मान की रक्षा के लिए New World State का वैश्विक घोषणापत्र।"
+        intro: "दुनिया भर में बाल श्रम के शोषण पर गहन जांच और बच्चों के भविष्य व सम्मान की रक्षा के लिए New World State का वैश्विक घोषणापत्र।",
+        content: `विश्व भर में 16 करोड़ से अधिक बच्चे बाल श्रम में फंसे हुए हैं, जो अत्यधिक आर्थिक और भू-राजनीतिक संकट के बीच शिक्षा, स्वास्थ्य और मानवीय गरिमा का त्याग करने को मजबूर हैं। अफ्रीका की खदानों से लेकर एशिया के कपड़ा कारखानों और लैटिन अमेरिका के खेतों तक, बाल शोषण आधुनिक वैश्विक अर्थव्यवस्था का एक असहनीय घाव है।
+
+## वैश्विक आपातकाल का अनदेखा पहलू
+
+जबरन श्रम में लगे लगभग आधे बच्चे खतरनाक परिस्थितियों में काम करते हैं, जहां वे जहरीले रसायनों और अमानवीय कामकाजी घंटों के शिकार होते हैं। यह लागत कम करने के लिए बनाई गई अनियंत्रित आपूर्ति श्रृंखलाओं का सीधा परिणाम है।
+
+> "जो आर्थिक मॉडल एक भी बच्चे के बंधुआ श्रम पर अपना लाभ खड़ा करता है, वह नैतिक रूप से अवैध है।"
+> — मानव गरिमा घोषणापत्र, New World State महासभा
+
+## New World State 1.0 की प्रत्यक्ष कार्ययोजना
+
+1. **संप्रभु क्रिप्टोग्राफिक आपूर्ति श्रृंखला ट्रैकिंग**: आपूर्ति श्रृंखला में बाल श्रम की पूर्ण अनुपस्थिति प्रमाणित करने के लिए विकेंद्रीकृत डिजिटल पासपोर्ट।
+2. **मुफ्त शिक्षा एवं गरिमा कोष**: बच्चों को श्रम से मुक्त कर स्कूल वापस लाने हेतु परिवारों के लिए छात्रवृत्ति और वित्तीय सहायता।
+3. **दोषी बहुराष्ट्रीय कंपनियों की सार्वजनिक ब्लैकलिस्ट**: बाल श्रम से लाभ कमाने वाली कंपनियों के खिलाफ खुला वैश्विक रजिस्टर।
+4. **बाल संरक्षक अकादमी**: बाल तस्करी और शोषण के खिलाफ कानूनी और मानवीय सुरक्षा नेटवर्क।`
       },
       bn: {
         title: "নীরব সংকট: শিশুশ্রমের অভিশাপ এবং New World State-এর বৈশ্বিক অঙ্গীকার",
-        intro: "বিশ্বজুড়ে শিশুশ্রমের করুণ পরিস্থিতির ওপর বিশেষ প্রতিবেদন এবং শিশুদের ভবিষ্যৎ রক্ষায় New World State-এর অঙ্গীকার।"
+        intro: "বিশ্বজুড়ে জবরদস্তিমূলক শিশুশ্রম এবং চরম শোষণের বিরুদ্ধে একটি গভীর অনুসন্ধানী প্রতিবেদন, যাতে শিশুদের মর্যাদা ও ভবিষ্যৎ পুনরুদ্ধারে New World State-এর সার্বজনীন কর্মপরিকল্পনা ও সুরক্ষা রূপরেখা তুলে ধরা হয়েছে।",
+        content: `বর্তমানে বিশ্বজুড়ে ১৬ কোটিরও বেশি শিশু জোরপূর্বক শ্রমে নিযুক্ত রয়েছে, যারা চরম অর্থনৈতিক ও ভূ-রাজনৈতিক ঝুঁকির মুখে শিক্ষা, স্বাস্থ্য এবং মৌলিক মানবিক মর্যাদা বিসর্জন দিতে বাধ্য হচ্ছে। সাব-সাহারান আফ্রিকার কোবাল্ট ও কোল্টান খনি থেকে শুরু করে দক্ষিণ-পূর্ব এশিয়ার পোশাক কারখানা, ল্যাটিন আমেরিকার কৃষিখামার থেকে পশ্চিমা মহানগরীর অদৃশ্য বস্তি এলাকা পর্যন্ত—শিশুদের এই শোষণ সমসাময়িক বৈশ্বিক অর্থনীতির সবচেয়ে বেদনাদায়ক ও অসহনীয় ক্ষতগুলোর একটি।
+
+## বৈশ্বিক জরুরি পরিস্থিতির অদৃশ্য রূপ
+
+আন্তর্জাতিক সংস্থাগুলোর সাম্প্রতিক তথ্য নিশ্চিত করে যে শিশুশ্রম নির্মূলে বৈশ্বিক লড়াইয়ে অভূতপূর্ব স্থবিরতা নেমে এসেছে। জবরদস্তিমূলক শ্রমে নিয়োজিত শিশুদের প্রায় অর্ধেকেরও বেশি বিপজ্জনক পরিবেশে কাজ করে, যেখানে তারা বিষাক্ত রাসায়নিক, ভারী যন্ত্রপাতি এবং অমানবিক কর্মঘণ্টার শিকার হয়। এটি কোনো ভৌগোলিক বা সাংস্কৃতিক নিয়তি নয়, বরং উৎপাদন খরচ কমানো এবং অনিয়ন্ত্রিত বাণিজ্যের জন্য নির্মিত বৈশ্বিক সরবরাহ শৃঙ্খলের সরাসরি পরিণতি।
+
+> "যে অর্থনৈতিক ব্যবস্থা একটি একক শিশুর জবরদস্তিমূলক শ্রমের ওপর ভিত্তি করে মুনাফা বা শিল্প প্রতিযোগিতা গড়ে তোলে, তা নীতিগতভাবে দেউলিয়া এবং নৈতিকভাবে অবৈধ। জনগণের প্রকৃত সার্বভৌমত্ব শুরু হয় শৈশবের নিঃশর্ত সুরক্ষার মধ্য দিয়ে।"
+> — মানব মর্যাদার ঘোষণাপত্র, New World State সাধারণ পরিষদ
+
+## অস্বচ্ছ সরবরাহ শৃঙ্খল এবং বহুজাতিক কর্পোরেশনের দায়
+
+যদিও শীর্ষস্থানীয় প্রযুক্তি, জ্বালানি ও ফ্যাশন কর্পোরেশনগুলো চকচকে টেকসই প্রতিবেদন প্রকাশ করে, তবুও ব্যাটারি, স্মার্টফোন এবং সস্তা পোশাক তৈরির কাঁচামাল শিশুদের হাতেই উত্তোলিত ও প্রক্রিয়াজাত হচ্ছে। আইনি দায় এড়াতে উপ-চুক্তিগুলোর শৃঙ্খল ইচ্ছাকৃতভাবে খণ্ড-বিখণ্ড করে রাখা হয়েছে।
+
+কর্পোরেট স্বেচ্ছাসেবী নিরীক্ষা এবং সার্টিফিকেশন ব্যবস্থা সম্পূর্ণ ব্যর্থ প্রমাণিত হয়েছে:
+* প্রত্যন্ত খনি ও উৎপাদন কেন্দ্রে পূর্বঘোষণা ছাড়া স্বাধীন পরিদর্শনের চরম অভাব।
+* যে কোনো মূল্যে বিদেশি বিনিয়োগ আকর্ষণের জন্য স্থানীয় কর্তৃপক্ষের পরোক্ষ যোগসাজশ।
+* কাঁচামাল উত্তোলন থেকে চূড়ান্ত ভোক্তা পর্যন্ত অপরিবর্তনীয় ডিজিটাল ট্র্যাকিং ব্যবস্থার অনুপস্থিতি।
+* ঐতিহ্যবাহী রাষ্ট্রগুলোর আঞ্চলিক সীমানার কারণে সৃষ্ট আন্তর্জাতিক আইনি দায়মুক্তি।
+
+## শিশুদের অধিকার সনদ এবং New World State-এর প্রত্যক্ষ পদক্ষেপ
+
+প্রচলিত কূটনৈতিক নিষ্ক্রিয়তার মুখে, New World State 1.0 শিশুশ্রম ও শোষণকে সমগ্র মানবজাতির বিরুদ্ধে অপরাধ হিসেবে ঘোষণা করেছে এবং নিজস্ব সার্বভৌম নাগরিক সমাজের জন্য বাধ্যতামূলক পদক্ষেপ গ্রহণ করেছে:
+
+1. **সার্বভৌম ক্রিপ্টোগ্রাফিক সরবরাহ শৃঙ্খল নজরদারি**: New World State অর্থনৈতিক নেটওয়ার্কের আওতায় সমস্ত পণ্যের জন্য বিকেন্দ্রীভূত ডিজিটাল পাসপোর্ট থাকা বাধ্যতামূলক, যা সরবরাহ শৃঙ্খলের প্রতিটি ধাপে শিশুশ্রমের সম্পূর্ণ অনুপস্থিতি নিশ্চিত করবে।
+2. **সার্বভৌম মুক্তি ও অবৈতনিক শিক্ষা তহবিল**: নিম্ন আয়ের পরিবারগুলোর জন্য বৃত্তি, সামাজিক শিক্ষা কেন্দ্র এবং মর্যাদা ভাতা প্রদানের লক্ষ্যে তাৎক্ষণিক তহবিল বরাদ্দ, যাতে শিশুরা বিপজ্জনক কাজ ছেড়ে স্থায়ীভাবে বিদ্যালয়ে ফিরতে পারে।
+3. **জড়িত বহুজাতিক প্রতিষ্ঠানের আন্তর্জাতিক গণ-তালিকা (Blacklist)**: একটি অপরিবর্তনীয় উন্মুক্ত পাবলিক রেজিস্ট্রি, যা শিশুশ্রম থেকে প্রত্যক্ষ বা পরোক্ষভাবে লাভবান হওয়া সংস্থাগুলোর বিরুদ্ধে বিশ্ববাসীকে সতর্ক ও সচেতন করবে।
+4. **শৈশব রক্ষক একাডেমি (Custodians of Childhood)**: স্বেচ্ছাসেবক, অনুসন্ধানী সাংবাদিক এবং আন্তর্জাতিক আইনবিদদের একটি স্থায়ী নেটওয়ার্ক, যা দাসত্ব বা পাচারের শিকার শিশুদের তাৎক্ষণিক উদ্ধার ও আইনি সহায়তা প্রদানে নিবেদিত।
+
+## নতুন প্রজন্মের ভবিষ্যতের জন্য একটি মৌলিক চুক্তি
+
+শিশুদের সুরক্ষা প্রদান কোনো করুণার বিষয় নয়, বরং ন্যায়বিচার, সার্বজনীন সম্প্রীতি এবং স্থায়ী শান্তির ওপর ভিত্তি করে একটি নতুন সামাজিক ব্যবস্থা গড়ে তোলার অপরিহার্য ভিত্তিস্তম্ভ। New World State-এর সংবিধান প্রতিটি শিশুর খেলাধুলা, শিক্ষা, স্বপ্ন দেখা এবং সহিংসতা ও অর্থনৈতিক শোষণমুক্ত পরিবেশে বেড়ে ওঠার অধিকার নিশ্চিত করে। আমরা সমস্ত সার্বভৌম নাগরিক, মুক্ত সম্প্রদায় ও নৈতিক সংস্থাকে এই ঐতিহাসিক মানবিক সংগ্রামে ঐক্যবদ্ধ হওয়ার আহ্বান জানাই।`
       },
       zh: {
         title: "无声的祸患：童工剥削问题与新世界国家的全球承诺",
-        intro: "关于全球童工与强迫劳动现状的深入调查报告，以及新世界国家为捍卫儿童权益所采取的全球行动宣言。"
+        intro: "关于全球童工与强迫劳动现状的深入调查报告，以及新世界国家为捍卫儿童权益所采取的全球行动宣言。",
+        content: `全球有超过1.6亿儿童被迫卷入童工劳动，在严酷的地缘政治与经济环境下失去了接受教育、保障健康和基本尊严的权利。从非洲的矿区到亚洲的制衣厂和拉美的农田，童工剥削依然是当代全球经济中最沉痛的伤疤。
+
+## 隐蔽的全球危机
+
+被迫劳动的儿童中，近半数处于高危工作环境，面临有毒有害化学品和非人道工时的折磨。这并非自然宿命，而是跨国企业为压缩成本而构建的全球供应链所造成的恶果。
+
+> “任何将利润建立在强迫童工基础之上的经济模式，在道德上都是非法的。”
+> — 新世界国家人权宣言
+
+## 新世界国家的直接行动举措
+
+1. **主权加密供应链溯源**：强制推行去中心化数字护照，确保认证产品全链条无童工参与。
+2. **主权教育救援基金**：为贫困家庭提供尊严补贴和全额助学金，让孩子们彻底重返校园。
+3. **涉事跨国企业全球公开黑名单**：设立不可篡改的公共登记册，抵制从童工劳动中获利的企业。
+4. **儿童守护者学院**：由法学家和志愿者组成的常设救援网络。`
       },
       ja: {
         title: "静かなる災禍：児童労働の惨禍と新世界国家のグローバルな誓約",
-        intro: "世界的な児童労働の過酷な現実に迫る徹底調査と、子どもの尊厳と未来を守るための新世界国家の行動指針。"
+        intro: "世界的な児童労働の過酷な現実に迫る徹底調査と、子どもの尊厳と未来を守るための新世界国家の行動指針。",
+        content: `現在、世界で1億6千万人を超える子どもたちが児童労働を強いられ、教育、健康、そして人間の尊厳を奪われています。鉱山から縫製工場、農園に至るまで、子どもの搾取は現代のグローバル経済における最も許されざる悲劇です。
+
+## 新世界国家の主権的アクションプラン
+
+1. **主権的暗号化サプライチェーン追跡**：児童労働の完全な不在を保証する分散型デジタル証明。
+2. **教育支援と救済基金**：子どもたちが労働から解放され学校へ復帰するための無償支援。
+3. **加担企業のグローバル・ブラックリスト**：児童労働から利益を得る企業を公表しボイコット。
+4. **児童守護団ネットワーク**：法学者と有志による緊急救出・保護体制。`
       },
       ar: {
         title: "الكارثة الصامتة: آفة عمالة الأطفال والالتزام العالمي لـ New World State",
-        intro: "تحقيق معمق حول الاستغلال والعمل القسري للأطفال حول العالم، مع ميثاق العمل والضمانات الشاملة التي ترعاها New World State."
+        intro: "تحقيق معمق حول الاستغلال والعمل القسري للأطفال حول العالم، مع ميثاق العمل والضمانات الشاملة التي ترعاها New World State.",
+        content: `يعاني أكثر من 160 مليون طفل حول العالم من العمل القسري، حيث يُحرمون من التعليم والصحة والكرامة الإنسانية. من مناجم الكوبالت في إفريقيا إلى مصانع النسيج في آسيا ومزارع أمريكا اللاتينية، يبقى استغلال الطفولة وصمة عار في جبين الاقتصاد العالمي.
+
+## خطة عمل New World State 1.0
+
+1. **التتبع الرقمي السيادي لسلاسل الإمداد**: اعتماد جوازات سفر رقمية لا مركزية تضمن خلو المنتجات تماماً من عمالة الأطفال.
+2. **صندوق الفداء السيادي والتعليم المجاني**: منح دراسية ومساعدات كرامة للأسر لتمكين الأطفال من العودة الدائمة إلى المدارس.
+3. **القائمة السوداء الدولية للشركات المتورطة**: سجل عام لحظر ومقاطعة المؤسسات المستفيدة من استغلال الأطفال.
+4. **أكاديمية حماة الطفولة**: شبكة دائمة من الحقوقيين والإعلاميين لإغاثة الأطفال ضحايا الاستعباد والاتجار.`
       }
     }
   },
@@ -822,27 +1025,585 @@ const MULTILINGUAL_ARTICLE_TITLES_WORKER = {
   }
 };
 
-function getArticleTranslatedTitleWorker(article, lang = 'it') {
-  if (!article) return '';
-  if (lang === 'it' && article.title) return cleanMetaTextWorker(article.title);
+const SSR_SHARE_I18N_WORKER = {
+  it: {
+    shareTitle: "Kit di Condivisione & Divulgazione Social",
+    shareSubtitle: "Testi pronti all'uso con hook strategici, hashtag e link diretto localizzato.",
+    optimizedBadge: "Ottimizzato per Massima Diffusione",
+    mobileShare: "Condividi dal Telefono",
+    shareInstantlyOn: "Pubblica / Condividi all'istante su:",
+    chooseFormat: "Scegli Formato Post:",
+    tabViral: "Completo / Virale",
+    tabShort: "Sintetico (X / Storie)",
+    tabDebate: "Dibattito / CTA",
+    tabDm: "Messaggio Diretto",
+    copyPost: "Copia Testo Post",
+    copied: "Copiato!",
+    copyLink: "Copia Link",
+    breaking: "PRIMO PIANO",
+    authorityDesc: "Un'analisi chiara, indipendente e senza censure dal Giornale Sovrano New World State per comprendere i veri scenari in evoluzione.",
+    readFullCta: "Leggi l'articolo completo e unisciti alla discussione:",
+    shortPrefix: "Leggi l'approfondimento completo su New World State:",
+    debateTitle: "DIBATTITO APERTO",
+    debateQuestion: "Cosa ne pensi di questa situazione e quali sono le soluzioni da attuare?",
+    debateCta: "Esprimi la tua opinione nei commenti!",
+    dmHello: "Ciao! Volevo segnalarti questo importante reportage pubblicato su New World State:"
+  },
+  bn: {
+    shareTitle: "সোশ্যাল শেয়ারিং ও প্রচার কিট",
+    shareSubtitle: "কার্যকর হুক, হ্যাশট্যাগ এবং সরাসরি লিংক সহ বাংলায় প্রস্তুতকৃত পোস্ট।",
+    optimizedBadge: "সর্বোচ্চ প্রচারের জন্য প্রস্তুত",
+    mobileShare: "মোবাইলে শেয়ার করুন",
+    shareInstantlyOn: "সরাসরি শেয়ার করুন:",
+    chooseFormat: "পোস্টের ধরন বেছে নিন:",
+    tabViral: "সম্পূর্ণ / ভাইরাল",
+    tabShort: "সংক্ষিপ্ত (X / স্টোরি)",
+    tabDebate: "বিতর্ক / মতামত",
+    tabDm: "সরাসরি বার্তা",
+    copyPost: "পোস্টের লেখা কপি করুন",
+    copied: "কপি করা হয়েছে!",
+    copyLink: "লিংক কপি করুন",
+    breaking: "বিশেষ প্রতিবেদন",
+    authorityDesc: "নিউ ওয়ার্ল্ড স্টেট নিউজ অথরিটির পক্ষ থেকে স্বাধীন, বস্তুনিষ্ঠ ও নিরপেক্ষ অনুসন্ধান।",
+    readFullCta: "সম্পূর্ণ প্রতিবেদনটি পড়ুন ও আলোচনায় অংশ নিন:",
+    shortPrefix: "নিউ ওয়ার্ল্ড স্টেট-এ সম্পূর্ণ প্রতিবেদন পড়ুন:",
+    debateTitle: "উন্মুক্ত আলোচনা",
+    debateQuestion: "এই বিষয়ে আপনার মতামত কী এবং কোন পদক্ষেপগুলো অগ্রাধিকার দেওয়া উচিত?",
+    debateCta: "মন্তব্যে আপনার মূল্যবান মতামত জানান!",
+    dmHello: "নমস্কার/সালাম! নিউ ওয়ার্ল্ড স্টেট-এ প্রকাশিত এই গুরুত্বপূর্ণ প্রতিবেদনটি আপনার সাথে শেয়ার করছি:"
+  },
+  en: {
+    shareTitle: "Social Outreach & Sharing Kit",
+    shareSubtitle: "Ready-to-post texts in EN with strategic hooks, hashtags, and localized direct link.",
+    optimizedBadge: "Optimized for Viral Reach",
+    mobileShare: "Share on Mobile",
+    shareInstantlyOn: "Publish / Share Instantly on:",
+    chooseFormat: "Select Post Style:",
+    tabViral: "Full / Viral",
+    tabShort: "Short (X / Stories)",
+    tabDebate: "Debate / CTA",
+    tabDm: "Direct Message",
+    copyPost: "Copy Post Text",
+    copied: "Copied!",
+    copyLink: "Copy Link",
+    breaking: "BREAKING REPORT",
+    authorityDesc: "Independent, uncensored analysis from the New World State News Authority, breaking down global dynamics.",
+    readFullCta: "Read the full investigation & join the discussion:",
+    shortPrefix: "Read the full report on New World State:",
+    debateTitle: "OPEN DEBATE",
+    debateQuestion: "What is your take on this issue, and what solutions should be prioritized?",
+    debateCta: "Drop your perspective in the comments below!",
+    dmHello: "Hello! I wanted to share this important report with you from New World State:"
+  },
+  es: {
+    shareTitle: "Kit de Difusión y Compartir en Redes",
+    shareSubtitle: "Textos listos para publicar en ES con ganchos estratégicos, hashtags y enlace directo.",
+    optimizedBadge: "Optimizado para Máxima Difusión",
+    mobileShare: "Compartir en Móvil",
+    shareInstantlyOn: "Publicar / Compartir al instante en:",
+    chooseFormat: "Elegir Formato de Publicación:",
+    tabViral: "Completo / Viral",
+    tabShort: "Sintético (X / Historias)",
+    tabDebate: "Debate / CTA",
+    tabDm: "Mensaje Directo",
+    copyPost: "Copiar Texto del Post",
+    copied: "¡Copiado!",
+    copyLink: "Copiar Enlace",
+    breaking: "EN PORTADA",
+    authorityDesc: "Un análisis independiente, riguroso y sin censura para comprender las dinámicas globales en evolución.",
+    readFullCta: "Lee el artículo completo y participa en el debate:",
+    shortPrefix: "Lee el informe completo en New World State:",
+    debateTitle: "DEBATE ABIERTO",
+    debateQuestion: "¿Cuál es tu opinión sobre este tema y qué medidas deberían tomarse?",
+    debateCta: "¡Comparte tu opinión en los comentarios!",
+    dmHello: "¡Hola! Quería compartir este importante reportaje de New World State:"
+  },
+  fr: {
+    shareTitle: "Kit de Partage et Diffusion Sociale",
+    shareSubtitle: "Textes prêts à publier en FR avec accroches stratégiques, hashtags et lien direct.",
+    optimizedBadge: "Optimisé pour une Portée Maximale",
+    mobileShare: "Partager sur Mobile",
+    shareInstantlyOn: "Publier / Partager instantanément sur :",
+    chooseFormat: "Choisir le Format :",
+    tabViral: "Complet / Viral",
+    tabShort: "Court (X / Stories)",
+    tabDebate: "Débat / CTA",
+    tabDm: "Message Direct",
+    copyPost: "Copier le Texte du Post",
+    copied: "Copié !",
+    copyLink: "Copier le Lien",
+    breaking: "À LA UNE",
+    authorityDesc: "Une enquête indépendante et sans censure pour décrypter les enjeux géopolitiques contemporains.",
+    readFullCta: "Lisez l'article complet et rejoignez la discussion :",
+    shortPrefix: "Découvrez l'enquête complète sur New World State :",
+    debateTitle: "DÉBAT OUVERT",
+    debateQuestion: "Quelle est votre vision sur ce sujet et quelles solutions préconisez-vous ?",
+    debateCta: "Partagez votre avis dans les commentaires !",
+    dmHello: "Bonjour ! Je souhaitais vous partager cette enquête essentielle publiée par le New World State :"
+  },
+  pt: {
+    shareTitle: "Kit de Divulgação e Compartilhamento Social",
+    shareSubtitle: "Textos prontos para publicação em PT com ganchos estratégicos e link direto.",
+    optimizedBadge: "Otimizado para Máximo Alcance",
+    mobileShare: "Compartilhar no Celular",
+    shareInstantlyOn: "Publicar / Compartilhar instantaneamente em:",
+    chooseFormat: "Escolher Formato:",
+    tabViral: "Completo / Viral",
+    tabShort: "Sintético (X / Stories)",
+    tabDebate: "Debate / CTA",
+    tabDm: "Mensagem Direta",
+    copyPost: "Copiar Texto do Post",
+    copied: "Copiado!",
+    copyLink: "Copiar Link",
+    breaking: "DESTAQUE",
+    authorityDesc: "Uma análise independente e sem censura da New World State News Authority para compreender o cenário global.",
+    readFullCta: "Leia a matéria completa e participe da discussão:",
+    shortPrefix: "Leia a reportagem completa no New World State:",
+    debateTitle: "DEBATE ABERTO",
+    debateQuestion: "Qual é a sua opinião sobre este tema e quais medidas devem ser tomadas?",
+    debateCta: "Deixe sua opinião nos comentários!",
+    dmHello: "Olá! Gostaria de compartilhar esta reportagem essencial do New World State:"
+  },
+  ru: {
+    shareTitle: "Набор для публикации в соцсетях",
+    shareSubtitle: "Готовые тексты с хэштегами и прямой ссылкой для максимального охвата.",
+    optimizedBadge: "Оптимизировано для виральности",
+    mobileShare: "Поделиться с телефона",
+    shareInstantlyOn: "Мгновенная публикация в:",
+    chooseFormat: "Выберите формат публикации:",
+    tabViral: "Полный / Вирусный",
+    tabShort: "Краткий (X / Истории)",
+    tabDebate: "Дискуссия / Опрос",
+    tabDm: "Личное сообщение",
+    copyPost: "Скопировать текст",
+    copied: "Скопировано!",
+    copyLink: "Скопировать ссылку",
+    breaking: "ГЛАВНОЕ СОБЫТИЕ",
+    authorityDesc: "Независимый и объективный анализ от New World State News Authority.",
+    readFullCta: "Читать статью полностью и присоединиться к обсуждению:",
+    shortPrefix: "Подробный материал на портале New World State:",
+    debateTitle: "ОТКРЫТАЯ ДИСКУССИЯ",
+    debateQuestion: "Что вы думаете по этому поводу и какие решения следует принять?",
+    debateCta: "Поделитесь своим мнением в комментариях!",
+    dmHello: "Здравствуйте! Хочу поделиться с вами этим важным материалом от New World State:"
+  },
+  hi: {
+    shareTitle: "सोशल मीडिया शेयरिंग व प्रसार किट",
+    shareSubtitle: "रणनीतिक हुक, हैशटैग और सीधे लिंक के साथ हिंदी में तैयार पोस्ट।",
+    optimizedBadge: "अधिकतम पहुंच के लिए तैयार",
+    mobileShare: "मोबाइल पर साझा करें",
+    shareInstantlyOn: "तुरंत साझा करें:",
+    chooseFormat: "पोस्ट प्रारूप चुनें:",
+    tabViral: "संपूर्ण / वायरल",
+    tabShort: "संक्षिप्त (X / स्टोरी)",
+    tabDebate: "चर्चा / राय",
+    tabDm: "सीधा संदेश",
+    copyPost: "पोस्ट टेक्स्ट कॉपी करें",
+    copied: "कॉपी किया गया!",
+    copyLink: "लिंक कॉपी करें",
+    breaking: "प्रमुख समाचार",
+    authorityDesc: "न्यू वर्ल्ड स्टेट न्यूज़ अथॉरिटी द्वारा स्वतंत्र, निष्पक्ष और गहन विश्लेषण।",
+    readFullCta: "पूरी रिपोर्ट पढ़ें और चर्चा में भाग लें:",
+    shortPrefix: "न्यू वर्ल्ड स्टेट पर पूरी रिपोर्ट पढ़ें:",
+    debateTitle: "खुली बहस",
+    debateQuestion: "इस मुद्दे पर आपकी क्या राय है और किन समाधानों को प्राथमिकता दी जानी चाहिए?",
+    debateCta: "नीचे टिप्पणियों में अपनी राय साझा करें!",
+    dmHello: "नमस्ते! मैं आपके साथ न्यू वर्ल्ड स्टेट की यह महत्वपूर्ण रिपोर्ट साझा करना चाहता हूँ:"
+  },
+  zh: {
+    shareTitle: "社交媒体分享与传播套件",
+    shareSubtitle: "精选文案、战略标签与直达链接，助力全球传播。",
+    optimizedBadge: "病毒式传播优化",
+    mobileShare: "在手机上分享",
+    shareInstantlyOn: "立即发布/分享至：",
+    chooseFormat: "选择文案格式：",
+    tabViral: "完整 / 深度",
+    tabShort: "精简 (X / 动态)",
+    tabDebate: "讨论 / 互动",
+    tabDm: "私信推荐",
+    copyPost: "复制文案",
+    copied: "已复制！",
+    copyLink: "复制链接",
+    breaking: "重磅报道",
+    authorityDesc: "来自新世界国家新闻总署的独立、未删节深入分析，剖析全球大局。",
+    readFullCta: "阅读完整深度报道并参与讨论：",
+    shortPrefix: "在 New World State 阅读全文：",
+    debateTitle: "开放讨论",
+    debateQuestion: "对此问题您有何看法？应优先采取哪些举措？",
+    debateCta: "欢迎在下方留言分享您的见解！",
+    dmHello: "您好！想与您分享新世界国家的这篇重要深度报道："
+  },
+  ja: {
+    shareTitle: "ソーシャル拡散＆シェアキット",
+    shareSubtitle: "最適化されたフック、ハッシュタグ、直接リンク付きの投稿文案。",
+    optimizedBadge: "拡散力最適化",
+    mobileShare: "スマートフォンでシェア",
+    shareInstantlyOn: "即時シェア・投稿：",
+    chooseFormat: "投稿スタイルを選択：",
+    tabViral: "完全版 / バイラル",
+    tabShort: "要約 (X / ストーリーズ)",
+    tabDebate: "議論 / コメント",
+    tabDm: "ダイレクトメッセージ",
+    copyPost: "文案をコピー",
+    copied: "コピー完了！",
+    copyLink: "リンクをコピー",
+    breaking: "注目ニュース",
+    authorityDesc: "New World State News Authorityによる独立した公正な深層分析。",
+    readFullCta: "記事全文を読んでディスカッションに参加：",
+    shortPrefix: "New World Stateで全文を読む：",
+    debateTitle: "オープンディベート",
+    debateQuestion: "この問題についてどう考えますか？どのような解決策が優先されるべきでしょうか？",
+    debateCta: "コメント欄でぜひご意見をお聞かせください！",
+    dmHello: "こんにちは！New World Stateの重要な報道記事をシェアします："
+  },
+  ar: {
+    shareTitle: "مجموعة المشاركة والنشر الاجتماعي",
+    shareSubtitle: "نصوص جاهزة للنشر باللغة العربية مع وسوم وروابط مباشرة.",
+    optimizedBadge: "محسن للانتشار الواسع",
+    mobileShare: "مشاركة عبر الهاتف",
+    shareInstantlyOn: "مشاركة فورية على:",
+    chooseFormat: "اختر نوع المنشور:",
+    tabViral: "كامل / واسع الانتشار",
+    tabShort: "موجز (X / ستوري)",
+    tabDebate: "نقاش / تفاعل",
+    tabDm: "رسالة مباشرة",
+    copyPost: "نسخ نص المنشور",
+    copied: "تم النسخ!",
+    copyLink: "نسخ الرابط",
+    breaking: "تقرير خاص",
+    authorityDesc: "تحليل مستقل وشامل من هيئة أخبار New World State لفهم التحولات العالمية.",
+    readFullCta: "اقرأ التحقيق الكامل وشارك في النقاش:",
+    shortPrefix: "اقرأ التقرير كاملاً على New World State:",
+    debateTitle: "نقاش مفتوح",
+    debateQuestion: "ما هو رأيك في هذه القضية وما هي الحلول الواجب تطبيقها؟",
+    debateCta: "شاركنا برأيك في التعليقات!",
+    dmHello: "مرحباً! أود مشاركة هذا التقرير الهام المنشور في New World State معك:"
+  }
+};
 
-  if (article.translations && article.translations[lang] && article.translations[lang].title) {
-    return cleanMetaTextWorker(article.translations[lang].title);
+function getArticleTranslatedDataWorker(article, lang = 'it') {
+  if (!article) return { title: '', intro: '', content: '', tags: [] };
+  
+  let title = cleanMetaTextWorker(article.title);
+  let intro = cleanMetaTextWorker(article.intro || article.content);
+  let content = article.content || article.intro || '';
+  let tags = Array.isArray(article.tags) ? article.tags : [];
+
+  if (lang === 'it') {
+    return { title, intro, content, tags };
   }
 
-  const slug = article.slug || '';
-  if (slug && MULTILINGUAL_ARTICLE_TITLES_WORKER[slug] && MULTILINGUAL_ARTICLE_TITLES_WORKER[slug][lang]) {
-    return MULTILINGUAL_ARTICLE_TITLES_WORKER[slug][lang];
+  // 1. Direct translation on the article object
+  if (article.translations && article.translations[lang]) {
+    const tr = article.translations[lang];
+    if (tr.title) title = cleanMetaTextWorker(tr.title);
+    if (tr.intro) intro = cleanMetaTextWorker(tr.intro);
+    if (tr.content) content = tr.content;
+    if (Array.isArray(tr.tags) && tr.tags.length > 0) tags = tr.tags;
+    return { title, intro, content, tags };
   }
 
+  // 2. Lookup in memoryWorkerArticles
+  const slug = article.slug || article.id || '';
   const norm = normalizeSlugWorker(slug);
-  for (const [keySlug, transMap] of Object.entries(MULTILINGUAL_ARTICLE_TITLES_WORKER)) {
-    if (normalizeSlugWorker(keySlug) === norm && transMap[lang]) {
-      return transMap[lang];
-    }
+  const memMatch = memoryWorkerArticles.find(m => m && (m.id === article.id || m.slug === slug || (m.slug && normalizeSlugWorker(m.slug) === norm) || (m.title && normalizeSlugWorker(m.title) === norm)));
+  if (memMatch && memMatch.translations && memMatch.translations[lang]) {
+    const tr = memMatch.translations[lang];
+    if (tr.title) title = cleanMetaTextWorker(tr.title);
+    if (tr.intro) intro = cleanMetaTextWorker(tr.intro);
+    if (tr.content) content = tr.content;
+    if (Array.isArray(tr.tags) && tr.tags.length > 0) tags = tr.tags;
+    return { title, intro, content, tags };
   }
 
-  return cleanMetaTextWorker(article.title);
+  // 3. Multilingual title fallback
+  const titleFallback = getArticleTranslatedTitleWorker(article, lang);
+  if (titleFallback) {
+    title = titleFallback;
+  }
+
+  return { title, intro, content, tags };
+}
+
+function generateSsrSocialShareKitWorker(article, currentLang, canonicalUrlWithLang, rawTitle, rawIntro, rawTags) {
+  const labels = SSR_SHARE_I18N_WORKER[currentLang] || SSR_SHARE_I18N_WORKER['it'];
+  const langDetails = LANGUAGE_DETAILS_WORKER[currentLang] || LANGUAGE_DETAILS_WORKER['it'];
+  const flag = langDetails.flag || '🌐';
+
+  // Smart hashtags
+  const hashtags = new Set();
+  hashtags.add('#NewWorldState');
+  if (currentLang === 'bn') {
+    hashtags.add('#মানবাধিকার');
+    hashtags.add('#শিশুঅধিকার');
+    hashtags.add('#স্বাধীনসংবাদ');
+    hashtags.add('#নৈতিকসাংবাদিকতা');
+  } else if (currentLang === 'en') {
+    hashtags.add('#IndependentNews');
+    hashtags.add('#EthicalJournalism');
+    hashtags.add('#GlobalAffairs');
+  } else if (currentLang === 'es') {
+    hashtags.add('#InformacionLibre');
+    hashtags.add('#PeriodismoEtico');
+    hashtags.add('#Actualidad');
+  } else if (currentLang === 'fr') {
+    hashtags.add('#InformationLibre');
+    hashtags.add('#JournalismeEthique');
+    hashtags.add('#Actualites');
+  } else if (currentLang === 'pt') {
+    hashtags.add('#InformacaoLivre');
+    hashtags.add('#JornalismoEtico');
+    hashtags.add('#DireitosHumanos');
+  } else if (currentLang === 'ru') {
+    hashtags.add('#ПраваЧеловека');
+    hashtags.add('#НезависимыеНовости');
+  } else if (currentLang === 'hi') {
+    hashtags.add('#मानवाधिकार');
+    hashtags.add('#स्वतंत्रसमाचार');
+  } else if (currentLang === 'zh') {
+    hashtags.add('#新世界国家');
+    hashtags.add('#人权保护');
+  } else if (currentLang === 'ja') {
+    hashtags.add('#国際ニュース');
+    hashtags.add('#独立系ジャーナリズム');
+  } else if (currentLang === 'ar') {
+    hashtags.add('#حقوق_الإنسان');
+    hashtags.add('#صحافة_مستقلة');
+  } else {
+    hashtags.add('#InformazioneLibera');
+    hashtags.add('#GiornalismoEtico');
+    hashtags.add('#NotizieSovrane');
+  }
+
+  if (Array.isArray(rawTags)) {
+    rawTags.forEach(t => {
+      const clean = String(t).trim().replace(/[^a-zA-Z0-9àèéìòùÀÈÉÌÒÙ\u0980-\u09FF\u0600-\u06FF\u0400-\u04FF\u4e00-\u9fa5\u3040-\u30ff]/g, '');
+      if (clean.length > 1) {
+        hashtags.add(`#${clean}`);
+      }
+    });
+  }
+
+  const smartHashtags = Array.from(hashtags);
+  const hashtagsString = smartHashtags.join(' ');
+  const hook = rawIntro ? (rawIntro.length > 200 ? rawIntro.slice(0, 197) + '...' : rawIntro) : rawTitle;
+
+  // 4 Post Templates
+  const viralPostText = `🌍 ${labels.breaking} | ${rawTitle}\n\n📌 ${hook}\n\n${labels.authorityDesc}\n\n👇 ${labels.readFullCta}\n🔗 ${canonicalUrlWithLang}\n\n${hashtagsString}`;
+  const shortPostText = `🚨 ${rawTitle}\n\n${labels.shortPrefix}\n👉 ${canonicalUrlWithLang}\n\n${smartHashtags.slice(0, 4).join(' ')}`;
+  const debatePostText = `🗣️ ${labels.debateTitle}: ${rawTitle}\n\n${labels.debateQuestion}\n\n📖 ${labels.shortPrefix}\n👉 ${canonicalUrlWithLang}\n\n${labels.debateCta} 👇\n${hashtagsString}`;
+  const dmPostText = `${labels.dmHello}\n\n"${rawTitle}"\n\n${rawIntro ? rawIntro.slice(0, 160) + '...\n\n' : ''}${canonicalUrlWithLang}`;
+
+  // Direct Social Share URLs
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(rawTitle + '\n\n' + hook + '\n\n👉 ' + canonicalUrlWithLang)}`;
+  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(canonicalUrlWithLang)}&text=${encodeURIComponent(rawTitle + '\n\n' + (rawIntro ? rawIntro.slice(0, 150) + '...\n\n' : '') + smartHashtags.slice(0, 3).join(' '))}`;
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonicalUrlWithLang)}`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(rawTitle + '\n')}&url=${encodeURIComponent(canonicalUrlWithLang)}&hashtags=${encodeURIComponent(smartHashtags.slice(0, 3).map(h => h.replace('#', '')).join(','))}`;
+  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonicalUrlWithLang)}`;
+  const redditUrl = `https://reddit.com/submit?url=${encodeURIComponent(canonicalUrlWithLang)}&title=${encodeURIComponent(rawTitle)}`;
+  const emailUrl = `mailto:?subject=${encodeURIComponent(rawTitle + ' | New World State')}&body=${encodeURIComponent(dmPostText)}`;
+
+  return `
+    <!-- Comprehensive SSR Social Outreach & Sharing Kit -->
+    <div id="nws-ssr-share-kit" class="nws-ssr-share-kit" style="margin:32px 0 20px 0;padding:24px;border:2px solid rgba(197,168,128,0.4);border-radius:16px;background:linear-gradient(135deg,rgba(10,28,62,0.85),rgba(197,168,128,0.12),rgba(15,23,42,0.9));box-shadow:0 12px 30px rgba(0,0,0,0.45);">
+      <!-- Header with Title & Badge -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid rgba(197,168,128,0.3);flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="padding:10px 12px;border-radius:12px;background:#0a1c3e;color:#dfc299;font-size:20px;border:1px solid rgba(197,168,128,0.5);box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+            📢
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <h3 style="margin:0;font-size:18px;font-weight:800;color:#ffffff;letter-spacing:-0.2px;">${escapeHtmlWorker(labels.shareTitle)}</h3>
+              <span style="font-size:11px;font-family:monospace;font-weight:700;background:rgba(197,168,128,0.25);color:#dfc299;padding:2px 8px;border-radius:6px;border:1px solid rgba(197,168,128,0.4);">${flag} ${currentLang.toUpperCase()}</span>
+              <span style="font-size:11px;font-weight:700;background:rgba(16,185,129,0.2);color:#34d399;padding:2px 8px;border-radius:6px;border:1px solid rgba(16,185,129,0.3);">${escapeHtmlWorker(labels.optimizedBadge)}</span>
+            </div>
+            <p style="margin:4px 0 0 0;font-size:13px;color:#94a3b8;">${escapeHtmlWorker(labels.shareSubtitle)}</p>
+          </div>
+        </div>
+        <button type="button" onclick="window.nwsSsrNativeShare()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;background:#0a1c3e;color:#dfc299;border:1px solid rgba(197,168,128,0.6);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s ease;">
+          <span>📱</span> <span>${escapeHtmlWorker(labels.mobileShare)}</span>
+        </button>
+      </div>
+
+      <!-- 1-Click Platform Share Buttons Row -->
+      <div style="margin-top:18px;">
+        <div style="font-size:12px;font-weight:700;color:#dfc299;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
+          ⚡ ${escapeHtmlWorker(labels.shareInstantlyOn)}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(115px, 1fr));gap:8px;">
+          <a href="${escapeHtmlWorker(whatsappUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:10px;background:#25D366;color:#ffffff;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+            <span>💬</span> <span>WhatsApp</span>
+          </a>
+          <a href="${escapeHtmlWorker(telegramUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:10px;background:#229ED9;color:#ffffff;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+            <span>✈️</span> <span>Telegram</span>
+          </a>
+          <a href="${escapeHtmlWorker(facebookUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:10px;background:#1877F2;color:#ffffff;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+            <span>📘</span> <span>Facebook</span>
+          </a>
+          <a href="${escapeHtmlWorker(twitterUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:10px;background:#000000;border:1px solid rgba(255,255,255,0.2);color:#ffffff;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+            <span>𝕏</span> <span>X (Twitter)</span>
+          </a>
+          <a href="${escapeHtmlWorker(linkedinUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:10px;background:#0A66C2;color:#ffffff;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+            <span>💼</span> <span>LinkedIn</span>
+          </a>
+          <a href="${escapeHtmlWorker(redditUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:10px;background:#FF4500;color:#ffffff;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+            <span>👽</span> <span>Reddit</span>
+          </a>
+          <a href="${escapeHtmlWorker(emailUrl)}" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:10px;background:#475569;color:#ffffff;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+            <span>✉️</span> <span>Email</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Format Selection Tabs -->
+      <div style="margin-top:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:700;color:#cbd5e1;text-transform:uppercase;letter-spacing:0.5px;">📝 ${escapeHtmlWorker(labels.chooseFormat)}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:6px;">
+          <button type="button" id="nws-tab-btn-viral" onclick="window.nwsSelectSsrTab('viral')" style="padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #c5a880;background:#0a1c3e;color:#dfc299;transition:all 0.15s ease;">
+            🔥 ${escapeHtmlWorker(labels.tabViral)}
+          </button>
+          <button type="button" id="nws-tab-btn-short" onclick="window.nwsSelectSsrTab('short')" style="padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#cbd5e1;transition:all 0.15s ease;">
+            ⚡ ${escapeHtmlWorker(labels.tabShort)}
+          </button>
+          <button type="button" id="nws-tab-btn-debate" onclick="window.nwsSelectSsrTab('debate')" style="padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#cbd5e1;transition:all 0.15s ease;">
+            💬 ${escapeHtmlWorker(labels.tabDebate)}
+          </button>
+          <button type="button" id="nws-tab-btn-dm" onclick="window.nwsSelectSsrTab('dm')" style="padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#cbd5e1;transition:all 0.15s ease;">
+            ✉️ ${escapeHtmlWorker(labels.tabDm)}
+          </button>
+        </div>
+      </div>
+
+      <!-- Formatted Preview Box with Floating Copy Button -->
+      <div style="margin-top:10px;position:relative;">
+        <div id="nws-ssr-post-preview" style="background:#050b14;border:1px solid rgba(197,168,128,0.3);border-radius:10px;padding:18px;color:#f1f5f9;font-size:13px;line-height:1.65;white-space:pre-line;max-height:220px;overflow-y:auto;font-family:system-ui,sans-serif;">${escapeHtmlWorker(viralPostText)}</div>
+        <div style="position:absolute;top:10px;right:10px;">
+          <button type="button" id="nws-ssr-copy-post-btn" onclick="window.nwsCopyCurrentSsrPost()" style="background:linear-gradient(135deg,#c5a880,#dfc299);color:#0a1c3e;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.35);">
+            <span>📋</span> <span id="nws-ssr-copy-post-label">${escapeHtmlWorker(labels.copyPost)}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hashtags row -->
+      <div style="margin-top:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span style="font-size:12px;color:#dfc299;font-weight:700;">#️⃣ Hashtags:</span>
+        ${smartHashtags.map(ht => `
+          <button type="button" onclick="window.nwsCopyText('${escapeHtmlWorker(ht)}', this, '✓')" style="font-size:11px;font-family:monospace;background:rgba(255,255,255,0.08);color:#dfc299;border:1px solid rgba(255,255,255,0.15);padding:3px 8px;border-radius:6px;cursor:pointer;transition:all 0.15s ease;">
+            ${escapeHtmlWorker(ht)}
+          </button>
+        `).join('')}
+      </div>
+
+      <!-- Direct Link Bar -->
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;font-size:12px;font-family:monospace;background:rgba(0,0,0,0.4);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          ${escapeHtmlWorker(canonicalUrlWithLang)}
+        </div>
+        <button type="button" id="nws-ssr-copy-link-btn" onclick="window.nwsCopyText('${escapeHtmlWorker(canonicalUrlWithLang)}', this, '✓ ${escapeHtmlWorker(labels.copied)}')" style="background:rgba(255,255,255,0.1);color:#f1f5f9;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s ease;">
+          <span>🔗</span> <span>${escapeHtmlWorker(labels.copyLink)}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Lightweight Vanilla JS for 0ms Instant SSR Interactivity -->
+    <script>
+    (function() {
+      var posts = {
+        viral: ${JSON.stringify(viralPostText)},
+        short: ${JSON.stringify(shortPostText)},
+        debate: ${JSON.stringify(debatePostText)},
+        dm: ${JSON.stringify(dmPostText)}
+      };
+      var currentTab = 'viral';
+
+      window.nwsSelectSsrTab = function(tab) {
+        if (!posts[tab]) return;
+        currentTab = tab;
+        var preview = document.getElementById('nws-ssr-post-preview');
+        if (preview) preview.textContent = posts[tab];
+
+        var tabs = ['viral', 'short', 'debate', 'dm'];
+        tabs.forEach(function(t) {
+          var btn = document.getElementById('nws-tab-btn-' + t);
+          if (btn) {
+            if (t === tab) {
+              btn.style.background = '#0a1c3e';
+              btn.style.color = '#dfc299';
+              btn.style.border = '1px solid #c5a880';
+            } else {
+              btn.style.background = 'rgba(255,255,255,0.06)';
+              btn.style.color = '#cbd5e1';
+              btn.style.border = '1px solid rgba(255,255,255,0.15)';
+            }
+          }
+        });
+      };
+
+      window.nwsCopyText = function(text, btnElement, successMsg) {
+        if (!text) return;
+        var origHtml = btnElement ? btnElement.innerHTML : '';
+        function setSuccess() {
+          if (btnElement) {
+            btnElement.innerHTML = successMsg || '✓ Copiato!';
+            setTimeout(function() {
+              btnElement.innerHTML = origHtml;
+            }, 2500);
+          }
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(setSuccess).catch(function() {
+            fallbackCopy();
+          });
+        } else {
+          fallbackCopy();
+        }
+
+        function fallbackCopy() {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand('copy');
+            setSuccess();
+          } catch (e) {}
+          document.body.removeChild(ta);
+        }
+      };
+
+      window.nwsCopyCurrentSsrPost = function() {
+        var text = posts[currentTab] || posts.viral;
+        var label = document.getElementById('nws-ssr-copy-post-label');
+        var orig = label ? label.textContent : '';
+        window.nwsCopyText(text, null, null);
+        if (label) {
+          label.textContent = ${JSON.stringify(labels.copied)};
+          setTimeout(function() {
+            label.textContent = orig;
+          }, 2500);
+        }
+      };
+
+      window.nwsSsrNativeShare = function() {
+        if (navigator.share) {
+          navigator.share({
+            title: ${JSON.stringify(rawTitle)},
+            text: ${JSON.stringify(rawIntro || rawTitle)},
+            url: ${JSON.stringify(canonicalUrlWithLang)}
+          }).catch(function() {});
+        } else {
+          window.nwsCopyText(${JSON.stringify(canonicalUrlWithLang)}, document.getElementById('nws-ssr-copy-link-btn'), '✓ ' + ${JSON.stringify(labels.copied)});
+        }
+      };
+    })();
+    </script>
+  `;
 }
 
 function renderArticleBodyHtmlForSsrWorker(rawContent) {
@@ -921,20 +1682,14 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl, targetLang = 'it
   const currentLang = SITE_SUPPORTED_LANGUAGES_WORKER.includes(targetLang) ? targetLang : 'it';
   const langInfo = LANGUAGE_DETAILS_WORKER[currentLang] || LANGUAGE_DETAILS_WORKER['it'];
 
-  let rawTitle = cleanMetaTextWorker(article.title);
-  let rawIntro = cleanMetaTextWorker(article.intro || article.content);
-  let fullContentRaw = article.content || article.intro || '';
-
-  const translatedTitleCandidate = getArticleTranslatedTitleWorker(article, currentLang);
-  if (translatedTitleCandidate) {
-    rawTitle = translatedTitleCandidate;
-  }
-  if (article.translations && article.translations[currentLang]) {
-    const tr = article.translations[currentLang];
-    if (tr.title) rawTitle = cleanMetaTextWorker(tr.title);
-    if (tr.intro) rawIntro = cleanMetaTextWorker(tr.intro);
-    if (tr.content) fullContentRaw = tr.content;
-  }
+  // Retrieve fully localized data (supporting both inline translations and memoryWorkerArticles translations for any language like bn, en, etc.)
+  const localizedData = getArticleTranslatedDataWorker(article, currentLang);
+  const rawTitle = localizedData.title || cleanMetaTextWorker(article.title);
+  const rawIntro = localizedData.intro || cleanMetaTextWorker(article.intro || article.content);
+  const fullContentRaw = localizedData.content || article.content || article.intro || '';
+  const rawTags = (localizedData.tags && localizedData.tags.length > 0) 
+    ? localizedData.tags.map(t => cleanMetaTextWorker(t)).filter(Boolean)
+    : (Array.isArray(article.tags) ? article.tags.map(t => cleanMetaTextWorker(t)).filter(Boolean) : []);
 
   const fullTitle = `${rawTitle} | New World State News`;
   const description = rawIntro.length > 220 ? rawIntro.slice(0, 217) + '...' : rawIntro;
@@ -971,7 +1726,6 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl, targetLang = 'it
   const publishedDate = article.publishedAt || article.createdAt || new Date().toISOString();
   const modifiedDate = article.updatedAt || publishedDate;
 
-  const rawTags = Array.isArray(article.tags) ? article.tags.map(t => cleanMetaTextWorker(t)).filter(Boolean) : [];
   if (rawTags.length === 0) rawTags.push('Notizie', 'NewWorldState', 'Informazione');
   const tagsString = rawTags.join(', ');
 
@@ -1259,6 +2013,9 @@ function injectArticleMetaTagsWorker(html, article, rawBaseUrl, targetLang = 'it
             <span style="font-size:13px;color:#94a3b8;font-weight:600;">Tag:</span>
             ${rawTags.map(t => `<span style="background:rgba(255,255,255,0.06);color:#cbd5e1;padding:4px 10px;border-radius:6px;font-size:12px;border:1px solid rgba(255,255,255,0.1);">${escapeHtmlWorker(t)}</span>`).join(' ')}
           </div>
+
+          <!-- Social Share & Outreach Kit (SSR Output for Instant Zero-JS & Rich Web Experience) -->
+          ${generateSsrSocialShareKitWorker(article, currentLang, canonicalUrlWithLang, rawTitle, rawIntro, rawTags)}
 
           <!-- Institutional Call To Action -->
           <div style="margin-top:36px;padding:26px;background:rgba(10,28,62,0.6);border:1px solid rgba(197,168,128,0.3);border-radius:12px;text-align:center;">
