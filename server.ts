@@ -4429,15 +4429,15 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
       return null;
     }
 
-    // Motore di ricerca universale per banche dati fotografiche autentiche (Unsplash, Pexels, Pixabay, Wikimedia)
-    async function searchDDGPlatformImages(
+    // Motore di ricerca universale multi-sorgente ad alta resilienza (Bing + DDG) per banche dati fotografiche autentiche
+    async function searchPlatformImagesMultiSource(
       keywordsList: string | string[],
-      platform: 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia',
+      platform: 'unsplash' | 'pexels' | 'pixabay' | 'flickr' | 'wikimedia',
       maxCount: number = 8
     ): Promise<Array<{
       id: string;
       type: 'image';
-      sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia';
+      sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'flickr' | 'wikimedia';
       url: string;
       previewUrl: string;
       sourceUrl: string;
@@ -4448,18 +4448,19 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
       const primaryTerm = list[0] || '';
       const secondaryTerm = list[1] || list[0] || '';
       
-      const searchTerms = [
-        `"${platform}.com" ${primaryTerm}`,
-        `"${platform} photo" ${primaryTerm}`,
-        `"${platform}.com" ${secondaryTerm}`,
-        `"${platform} photo" ${secondaryTerm}`,
-        `site:${platform}.com ${primaryTerm}`
-      ].filter(t => t.trim().length > 3);
+      const domainMap: Record<string, string> = {
+        unsplash: 'unsplash.com',
+        pexels: 'pexels.com',
+        pixabay: 'pixabay.com',
+        flickr: 'flickr.com',
+        wikimedia: 'commons.wikimedia.org'
+      };
+      const targetDomain = domainMap[platform] || `${platform}.com`;
 
       const items: Array<{
         id: string;
         type: 'image';
-        sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'wikimedia';
+        sourcePlatform: 'unsplash' | 'pexels' | 'pixabay' | 'flickr' | 'wikimedia';
         url: string;
         previewUrl: string;
         sourceUrl: string;
@@ -4468,67 +4469,165 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
       }> = [];
       const seenUrls = new Set<string>();
 
-      for (const term of searchTerms) {
+      // TIER 1: Motore Bing Images (Ultra-veloce e senza rate limit)
+      const bingTerms = [
+        `site:${targetDomain} ${primaryTerm}`,
+        `site:${targetDomain} ${secondaryTerm}`
+      ].filter((t, idx, arr) => t.trim().length > 3 && arr.indexOf(t) === idx);
+
+      for (const term of bingTerms) {
         if (items.length >= maxCount) break;
         try {
-          const res1 = await fetch('https://duckduckgo.com/?q=' + encodeURIComponent(term) + '&iax=images&ia=images', {
+          const res = await fetch(`https://www.bing.com/images/search?q=${encodeURIComponent(term)}&FORM=HDRSC2`, {
             headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+              'Accept': 'text/html',
+              'Accept-Language': 'en-US,en;q=0.9,it;q=0.8'
             },
-            signal: AbortSignal.timeout(4000)
+            signal: AbortSignal.timeout(3500)
           });
-          const text1 = await res1.text();
-          const vqdMatch = text1.match(/vqd=([0-9-]+)/) || text1.match(/vqd="([^"]+)"/);
-          if (!vqdMatch) continue;
-
-          const vqd = vqdMatch[1];
-          const res2 = await fetch('https://duckduckgo.com/i.js?l=it-it&o=json&q=' + encodeURIComponent(term) + '&vqd=' + vqd + '&f=,,,', {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-            },
-            signal: AbortSignal.timeout(4000)
-          });
-          const data = await res2.json();
-          const rawList = data.results || [];
-
-          for (const r of rawList) {
-            const imgUrl = r.image;
-            const pageUrl = r.url || imgUrl;
-            const thumbUrl = r.thumbnail || imgUrl;
-            if (!imgUrl || seenUrls.has(imgUrl)) continue;
-            if (imgUrl.includes('.svg') || imgUrl.includes('logo') || imgUrl.includes('icon')) continue;
-
-            const detected = detectPlatformFromUrl(pageUrl, imgUrl);
-            if (detected !== platform) continue; // Garanzia ferrea
-
-            seenUrls.add(imgUrl);
-            let rawTitle = r.title || '';
-            rawTitle = rawTitle
-              .replace(/[-|–—].*$/i, '')
-              .replace(/<[^>]*>?/gm, '')
-              .replace(/Download Free.*$/i, '')
-              .replace(/Free Stock.*$/i, '')
-              .replace(/Gratis.*$/i, '')
-              .trim();
-            if (!rawTitle || rawTitle.length < 3) rawTitle = list[0] || 'Fotografia ' + platform;
-
-            items.push({
-              id: `${platform.substring(0, 2)}_${Math.random().toString(36).substring(2, 9)}`,
-              type: 'image',
-              sourcePlatform: platform,
-              url: imgUrl,
-              previewUrl: thumbUrl,
-              sourceUrl: pageUrl,
-              title: rawTitle,
-              author: `${platform.charAt(0).toUpperCase() + platform.slice(1)} Contributor`
-            });
-
+          const html = await res.text();
+          const matches = [...html.matchAll(/class="iusc"[^>]*m="([^"]+)"/g)];
+          for (const m of matches) {
             if (items.length >= maxCount) break;
+            try {
+              const raw = m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+              const obj = JSON.parse(raw);
+              const imgUrl = obj.murl;
+              const pageUrl = obj.purl || imgUrl;
+              const thumbUrl = obj.turl || imgUrl;
+
+              if (!imgUrl || seenUrls.has(imgUrl)) continue;
+              if (imgUrl.includes('.svg') || imgUrl.includes('logo') || imgUrl.includes('icon')) continue;
+
+              const detected = detectPlatformFromUrl(pageUrl, imgUrl);
+              if (detected !== platform) continue;
+
+              seenUrls.add(imgUrl);
+              let title = obj.t || obj.desc || '';
+              title = decodeHtmlEntities(title)
+                .replace(/[-|–—].*$/i, '')
+                .replace(/<[^>]*>?/gm, '')
+                .replace(/Download Free.*$/i, '')
+                .replace(/Free Stock.*$/i, '')
+                .replace(/Free photo.*$/i, '')
+                .replace(/Gratis.*$/i, '')
+                .trim();
+
+              let authorExtracted = `${platform.charAt(0).toUpperCase() + platform.slice(1)} Contributor`;
+              if (platform === 'flickr') {
+                const flMatch = pageUrl.match(/flickr\.com\/photos\/([^\/]+)/i);
+                if (flMatch && flMatch[1] && !flMatch[1].includes('tags')) {
+                  authorExtracted = cleanAuthorName(flMatch[1], 'Flickr Photographer');
+                }
+              } else if (platform === 'unsplash') {
+                const unMatch = pageUrl.match(/unsplash\.com\/@([^\/\?]+)/i);
+                if (unMatch && unMatch[1]) {
+                  authorExtracted = unMatch[1].replace(/[-_]/g, ' ');
+                }
+              }
+
+              items.push({
+                id: `${platform.substring(0, 2)}_${Math.random().toString(36).substring(2, 9)}`,
+                type: 'image',
+                sourcePlatform: platform,
+                url: imgUrl,
+                previewUrl: thumbUrl,
+                sourceUrl: pageUrl,
+                title: title || `${primaryTerm} (${platform.charAt(0).toUpperCase() + platform.slice(1)})`,
+                author: authorExtracted
+              });
+            } catch (jsonErr) {}
           }
-        } catch (err) {
-          // ignore error and continue
+        } catch (bErr) {}
+      }
+
+      // TIER 2: Motore DuckDuckGo Images (solo se Bing non ha restituito alcun elemento)
+      if (items.length === 0) {
+        const ddgTerms = [
+          `site:${targetDomain} ${primaryTerm}`,
+          `"${platform}.com" ${primaryTerm}`
+        ].filter((t, idx, arr) => t.trim().length > 3 && arr.indexOf(t) === idx);
+
+        for (const term of ddgTerms) {
+          if (items.length >= maxCount) break;
+          try {
+            const res1 = await fetch('https://duckduckgo.com/?q=' + encodeURIComponent(term) + '&iax=images&ia=images', {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9,it;q=0.8'
+              },
+              signal: AbortSignal.timeout(2500)
+            });
+            const text1 = await res1.text();
+            const vqdMatch = text1.match(/vqd=["']?([0-9-_]+)["']?/) || text1.match(/vqd=([0-9-_]+)/);
+            if (!vqdMatch) continue;
+
+            const vqd = vqdMatch[1];
+            const res2 = await fetch('https://duckduckgo.com/i.js?l=wt-wt&o=json&q=' + encodeURIComponent(term) + '&vqd=' + vqd + '&f=,,,', {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+                'Referer': 'https://duckduckgo.com/',
+                'Accept': 'application/json, text/javascript, */*; q=0.01'
+              },
+              signal: AbortSignal.timeout(2500)
+            });
+            const data = await res2.json();
+            const rawList = data.results || [];
+
+            for (const r of rawList) {
+              const imgUrl = r.image;
+              const pageUrl = r.url || imgUrl;
+              const thumbUrl = r.thumbnail || imgUrl;
+              if (!imgUrl || seenUrls.has(imgUrl)) continue;
+              if (imgUrl.includes('.svg') || imgUrl.includes('logo') || imgUrl.includes('icon')) continue;
+
+              const detected = detectPlatformFromUrl(pageUrl, imgUrl);
+              if (detected !== platform) continue;
+
+              seenUrls.add(imgUrl);
+              let rawTitle = r.title || '';
+              rawTitle = decodeHtmlEntities(rawTitle)
+                .replace(/[-|–—].*$/i, '')
+                .replace(/<[^>]*>?/gm, '')
+                .replace(/Download Free.*$/i, '')
+                .replace(/Free Stock.*$/i, '')
+                .replace(/Free photo on.*$/i, '')
+                .replace(/Gratis.*$/i, '')
+                .trim();
+              if (!rawTitle || rawTitle.length < 3) rawTitle = `${primaryTerm} (${platform.charAt(0).toUpperCase() + platform.slice(1)})`;
+
+              let authorExtracted = `${platform.charAt(0).toUpperCase() + platform.slice(1)} Contributor`;
+              if (platform === 'flickr') {
+                const flUserMatch = pageUrl.match(/flickr\.com\/photos\/([^\/]+)/i);
+                if (flUserMatch && flUserMatch[1] && !flUserMatch[1].includes('tags')) {
+                  authorExtracted = cleanAuthorName(flUserMatch[1], 'Flickr Photographer');
+                }
+              } else if (platform === 'unsplash') {
+                const unUserMatch = pageUrl.match(/unsplash\.com\/@([^\/\?]+)/i);
+                if (unUserMatch && unUserMatch[1]) {
+                  authorExtracted = unUserMatch[1].replace(/[-_]/g, ' ');
+                }
+              }
+
+              items.push({
+                id: `${platform.substring(0, 2)}_${Math.random().toString(36).substring(2, 9)}`,
+                type: 'image',
+                sourcePlatform: platform,
+                url: imgUrl,
+                previewUrl: thumbUrl,
+                sourceUrl: pageUrl,
+                title: rawTitle,
+                author: authorExtracted
+              });
+
+              if (items.length >= maxCount) break;
+            }
+          } catch (ddgErr) {}
         }
       }
+
       return items;
     }
 
@@ -4566,7 +4665,7 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
         try {
           const expandPrompt = `Dato l'argomento di ricerca giornalistica: "${cleanQuery}"
 Restituisci un oggetto JSON con:
-- "enQuery": 2-3 parole chiave in lingua inglese per banche dati fotografiche internazionali (es. Unsplash, Pexels).
+- "enQuery": 2-3 parole chiave in lingua inglese per banche dati fotografiche internazionali (es. Unsplash, Pexels, Pixabay, Flickr).
 - "itQuery": 2-3 parole chiave in italiano ottimizzate per reportage fotogiornalistico.
 Formato: {"enQuery": "...", "itQuery": "..."}`;
 
@@ -4586,7 +4685,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
         }
 
         const isAll = reqPlatform === 'all';
-        const quotaPerProvider = isAll ? 4 : 24;
+        const quotaPerProvider = isAll ? 5 : 24;
 
         // Esecuzione parallela di tutti i provider per massimizzare velocità e varietà
         const [ytResult, wmResult, flResult, unResult, pxResult, pbResult] = await Promise.allSettled([
@@ -4654,7 +4753,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             const items: any[] = [];
             try {
               // Tentativo 1: MediaWiki API Commons
-              const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=1280&format=json&origin=*`;
+              const wmUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanQuery)}&gsrnamespace=6&gsrlimit=14&prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=1280&format=json&origin=*`;
               const wmRes = await fetch(wmUrl, {
                 headers: { 'User-Agent': 'NewWorldStateNews/1.0 (https://newworldstate.cloud)' },
                 signal: AbortSignal.timeout(5000)
@@ -4686,9 +4785,9 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
                 if (items.length >= quotaPerProvider) break;
               }
 
-              // Tentativo 2: Scraper DDG per Wikimedia se pochi risultati
+              // Tentativo 2: Scraper MultiSource per Wikimedia se pochi risultati
               if (items.length < quotaPerProvider) {
-                const extra = await searchDDGPlatformImages(cleanQuery, 'wikimedia', quotaPerProvider - items.length);
+                const extra = await searchPlatformImagesMultiSource([cleanQuery, enKeywords], 'wikimedia', quotaPerProvider - items.length);
                 for (const ex of extra) {
                   if (!items.some(i => i.url === ex.url)) items.push(ex);
                 }
@@ -4719,40 +4818,50 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             }
           })(),
 
-          // 3. Flickr Live Community Feed Engine
+          // 3. Flickr Live & Verified Photography Engine
           (async () => {
             if (!isAll && reqPlatform !== 'flickr') return [];
             const flStart = Date.now();
-            const items: any[] = [];
             try {
-              const flUrl = `https://www.flickr.com/services/feeds/photos_public.gne?text=${encodeURIComponent(cleanQuery)}&format=json&nojsoncallback=1`;
-              const flRes = await fetch(flUrl, { signal: AbortSignal.timeout(5000) }).then(r => r.json()).catch(() => ({}));
-              const flFeedItems = flRes.items || [];
-              for (const item of flFeedItems) {
-                if (item.media?.m) {
-                  const imgUrl = item.media.m.replace('_m.jpg', '_b.jpg');
-                  const authorClean = cleanAuthorName(item.author, 'Flickr Photographer');
-                  const itemTitle = item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia Flickr`;
-                  const itemSourceUrl = item.link || `https://www.flickr.com/search/?text=${encodeURIComponent(cleanQuery)}`;
+              const queryList = [cleanQuery, enKeywords, itKeywords];
+              const items = await searchPlatformImagesMultiSource(queryList, 'flickr', quotaPerProvider);
+              
+              // Se MultiSource non ha trovato abbastanza scatti, usiamo feed mirato con tags
+              if (items.length < quotaPerProvider) {
+                const tagsParam = cleanQuery.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().split(/\s+/).join(',');
+                const flUrl = `https://www.flickr.com/services/feeds/photos_public.gne?tags=${encodeURIComponent(tagsParam)}&tagmode=all&format=json&nojsoncallback=1`;
+                const flRes = await fetch(flUrl, { signal: AbortSignal.timeout(4000) }).then(r => r.json()).catch(() => ({}));
+                const flFeedItems = flRes.items || [];
+                for (const item of flFeedItems) {
+                  if (item.media?.m) {
+                    const imgUrl = item.media.m.replace('_m.jpg', '_b.jpg');
+                    if (items.some(i => i.url === imgUrl)) continue;
 
-                  items.push({
-                    id: 'fl_' + Math.random().toString(36).substring(2, 9),
-                    type: 'image',
-                    sourcePlatform: 'flickr',
-                    url: imgUrl,
-                    previewUrl: item.media.m,
-                    sourceUrl: itemSourceUrl,
-                    title: itemTitle,
-                    author: authorClean
-                  });
-                  if (items.length >= quotaPerProvider) break;
+                    const authorClean = cleanAuthorName(item.author, 'Flickr Photographer');
+                    let itemTitle = item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia Flickr`;
+                    itemTitle = itemTitle.replace(/[-|–—].*$/i, '').trim();
+                    const itemSourceUrl = item.link || `https://www.flickr.com/search/?text=${encodeURIComponent(cleanQuery)}`;
+
+                    items.push({
+                      id: 'fl_' + Math.random().toString(36).substring(2, 9),
+                      type: 'image',
+                      sourcePlatform: 'flickr',
+                      url: imgUrl,
+                      previewUrl: item.media.m,
+                      sourceUrl: itemSourceUrl,
+                      title: itemTitle,
+                      author: authorClean
+                    });
+                    if (items.length >= quotaPerProvider) break;
+                  }
                 }
               }
+
               const flLatency = Date.now() - flStart;
               debugProviders.push({
                 name: 'Flickr Search Engine',
                 platform: 'flickr',
-                endpoint: 'live.staticflickr.com',
+                endpoint: 'live.staticflickr.com / flickr.com',
                 status: '200 OK',
                 count: items.length,
                 latencyMs: flLatency,
@@ -4763,7 +4872,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
               debugProviders.push({
                 name: 'Flickr Search Engine',
                 platform: 'flickr',
-                endpoint: 'live.staticflickr.com',
+                endpoint: 'flickr.com',
                 status: 'Error',
                 count: 0,
                 latencyMs: Date.now() - flStart,
@@ -4778,8 +4887,8 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             if (!isAll && reqPlatform !== 'unsplash') return [];
             const unStart = Date.now();
             try {
-              const queryList = [enKeywords, cleanQuery, cleanQuery.split(' ')[0], enKeywords.split(' ')[0]];
-              const items = await searchDDGPlatformImages(queryList, 'unsplash', quotaPerProvider);
+              const queryList = [enKeywords, cleanQuery, `${cleanQuery} photo`, `${enKeywords} photography`];
+              const items = await searchPlatformImagesMultiSource(queryList, 'unsplash', quotaPerProvider);
               const unLatency = Date.now() - unStart;
               debugProviders.push({
                 name: 'Unsplash Search Engine',
@@ -4810,8 +4919,8 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             if (!isAll && reqPlatform !== 'pexels') return [];
             const pxStart = Date.now();
             try {
-              const queryList = [enKeywords, cleanQuery, cleanQuery.split(' ')[0], enKeywords.split(' ')[0]];
-              const items = await searchDDGPlatformImages(queryList, 'pexels', quotaPerProvider);
+              const queryList = [enKeywords, cleanQuery, `${cleanQuery} photography`, `${enKeywords} stock`];
+              const items = await searchPlatformImagesMultiSource(queryList, 'pexels', quotaPerProvider);
               const pxLatency = Date.now() - pxStart;
               debugProviders.push({
                 name: 'Pexels Search Engine',
@@ -4842,8 +4951,8 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             if (!isAll && reqPlatform !== 'pixabay') return [];
             const pbStart = Date.now();
             try {
-              const queryList = [cleanQuery, enKeywords, cleanQuery.split(' ')[0], enKeywords.split(' ')[0]];
-              const items = await searchDDGPlatformImages(queryList, 'pixabay', quotaPerProvider);
+              const queryList = [cleanQuery, enKeywords, `${cleanQuery} picture`, `${enKeywords} photo`];
+              const items = await searchPlatformImagesMultiSource(queryList, 'pixabay', quotaPerProvider);
               const pbLatency = Date.now() - pbStart;
               debugProviders.push({
                 name: 'Pixabay Search Engine',
@@ -4914,15 +5023,16 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
           execLogs.push(`[${nowStr()}] 🤖 [Gemini AI] Avvio traduzione ed ottimizzazione titoli per ${itemsToReturn.length} elementi (Ancoraggio per ID)...`);
           const itemsPayload = itemsToReturn.map(i => ({ id: i.id, originalTitle: i.title, sourcePlatform: i.sourcePlatform }));
           const prompt = `Sei il caporedattore del quotidiano 'New World State'.
-Ho recuperato dal web i seguenti elementi multimediali pertinenti per l'argomento: '${cleanQuery}'.
+Ho recuperato dal web i seguenti elementi multimediali autentici per la ricerca: '${cleanQuery}'.
 
 ${JSON.stringify(itemsPayload, null, 2)}
 
-Il tuo compito è ESCLUSIVAMENTE perfezionare e tradurre 'originalTitle' in un titolo italiano elegante, accurato, altamente pertinente e giornalistico per l'articolo su '${cleanQuery}'.
+Il tuo compito è tradurre e rifinire 'originalTitle' in un titolo in lingua italiana conciso, accurato e fedele all'effettivo soggetto visivo indicato (es. "Cardinal in flight" -> "Cardinale in volo", "Gulls Birds Flying" -> "Gabbiani in volo").
 REGOLE TASSATIVE:
-- Restituisci un array JSON di oggetti con formato: [{"id": "...", "title": "Titolo in italiano pertinente"}]
+- Restituisci un array JSON di oggetti: [{"id": "...", "title": "Titolo in italiano descrittivo"}]
 - Mantieni rigorosamente intatti gli 'id' ricevuti in input.
-- NON restituire altri campi o modificare la struttura.`;
+- Non inventare soggetti assenti dal titolo originale.
+- Non includere boilerplate promozionali (es. "Download", "Gratis", "HD").`;
 
           const response = await generateGeminiContentWithFallback(
             prompt,

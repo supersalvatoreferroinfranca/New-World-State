@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
 import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/textFormatter';
 import { 
@@ -8,6 +8,7 @@ import {
   Strikethrough, 
   Subscript, 
   Superscript, 
+  Heading1,
   Heading2, 
   Heading3, 
   Heading4, 
@@ -35,7 +36,8 @@ import {
   Maximize2, 
   Minimize2, 
   ChevronDown,
-  Type
+  Type,
+  Check
 } from 'lucide-react';
 
 interface WysiwygEditorProps {
@@ -62,14 +64,50 @@ export default function WysiwygEditor({
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [showHeadingPicker, setShowHeadingPicker] = useState(false);
   const [showTablePicker, setShowTablePicker] = useState(false);
+  const [currentBlockTag, setCurrentBlockTag] = useState('p');
 
   const editorRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const highlightPickerRef = useRef<HTMLDivElement>(null);
   const headingPickerRef = useRef<HTMLDivElement>(null);
   const tablePickerRef = useRef<HTMLDivElement>(null);
 
-  // Sync value into contentEditable when not focused or initially
+  // Memorizza la selezione attiva all'interno dell'editor
+  const saveSelection = useCallback(() => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current?.contains(sel.anchorNode)) {
+      savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+      
+      // Rileva il blocco corrente
+      let node: Node | null = sel.anchorNode;
+      let foundTag = 'p';
+      while (node && node !== editorRef.current) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const elName = (node as HTMLElement).tagName.toLowerCase();
+          if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'].includes(elName)) {
+            foundTag = elName;
+            break;
+          }
+        }
+        node = node.parentNode;
+      }
+      setCurrentBlockTag(foundTag);
+    }
+  }, []);
+
+  // Ripristina la selezione salvata
+  const restoreSelection = useCallback(() => {
+    if (savedRangeRef.current && editorRef.current) {
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(savedRangeRef.current);
+      }
+    }
+  }, []);
+
+  // Sincronizza il valore HTML iniziale o esterno quando l'utente non sta digitando
   useEffect(() => {
     if (editorRef.current) {
       const formattedHtml = formatArticleContentToHtml(value || '');
@@ -79,7 +117,19 @@ export default function WysiwygEditor({
     }
   }, [value, isHtmlMode]);
 
-  // Close dropdowns on outside click
+  // Listener per salvare la selezione durante la digitazione e il click
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      saveSelection();
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [saveSelection]);
+
+  // Chiusura dropdown al click fuori
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
@@ -101,7 +151,12 @@ export default function WysiwygEditor({
 
   const execCommand = (command: string, arg: string | undefined = undefined) => {
     if (isHtmlMode) return;
+    if (editorRef.current) {
+      editorRef.current.focus();
+      restoreSelection();
+    }
     document.execCommand(command, false, arg);
+    saveSelection();
     if (editorRef.current) {
       editorRef.current.focus();
       onChange(editorRef.current.innerHTML);
@@ -110,6 +165,7 @@ export default function WysiwygEditor({
 
   const handleInput = () => {
     if (editorRef.current) {
+      saveSelection();
       onChange(editorRef.current.innerHTML);
     }
   };
@@ -161,12 +217,70 @@ export default function WysiwygEditor({
   };
 
   const handleSetHeading = (tag: string) => {
-    if (tag === 'p') {
-      execCommand('formatBlock', '<p>');
-    } else {
-      execCommand('formatBlock', `<${tag}>`);
+    if (isHtmlMode) return;
+    if (editorRef.current) {
+      editorRef.current.focus();
+      restoreSelection();
     }
+
+    const tagParam = tag.toLowerCase() === 'p' ? '<p>' : `<${tag}>`;
+    
+    // Tentativo primario con formatBlock
+    let success = false;
+    try {
+      success = document.execCommand('formatBlock', false, tagParam);
+      if (!success) {
+        success = document.execCommand('formatBlock', false, tag);
+      }
+    } catch (e) {
+      console.warn('execCommand formatBlock error:', e);
+    }
+
+    // Fallback chirurgico per nodi DOM se il browser non ha completato il comando
+    if (!success && editorRef.current) {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        let blockContainer: HTMLElement | null = null;
+        let curr: Node | null = sel.anchorNode;
+        while (curr && curr !== editorRef.current) {
+          if (curr.nodeType === Node.ELEMENT_NODE && ['P', 'H1', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'PRE', 'DIV'].includes((curr as HTMLElement).tagName)) {
+            blockContainer = curr as HTMLElement;
+            break;
+          }
+          curr = curr.parentNode;
+        }
+
+        if (blockContainer && blockContainer !== editorRef.current) {
+          const newElem = document.createElement(tag);
+          newElem.innerHTML = blockContainer.innerHTML || '<br>';
+          blockContainer.parentNode?.replaceChild(newElem, blockContainer);
+          // Sposta cursore
+          const newRange = document.createRange();
+          newRange.selectNodeContents(newElem);
+          newRange.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+        } else {
+          const selectedText = range.toString();
+          if (selectedText) {
+            const newElem = document.createElement(tag);
+            newElem.textContent = selectedText;
+            range.deleteContents();
+            range.insertNode(newElem);
+          }
+        }
+      }
+    }
+
+    setCurrentBlockTag(tag.toLowerCase());
     setShowHeadingPicker(false);
+
+    if (editorRef.current) {
+      editorRef.current.focus();
+      saveSelection();
+      onChange(editorRef.current.innerHTML);
+    }
   };
 
   const handleSetTextColor = (color: string) => {
@@ -177,6 +291,19 @@ export default function WysiwygEditor({
   const handleSetHighlight = (color: string) => {
     execCommand('hiliteColor', color);
     setShowHighlightPicker(false);
+  };
+
+  // Calcolo etichetta del formato per il pulsante
+  const getBlockFormatLabel = () => {
+    switch (currentBlockTag) {
+      case 'h1': return tText('Heading 1', 'Titolo 1 (H1)');
+      case 'h2': return tText('Heading 2', 'Titolo 2 (H2)');
+      case 'h3': return tText('Heading 3', 'Sottotitolo (H3)');
+      case 'h4': return tText('Heading 4', 'Sezione (H4)');
+      case 'blockquote': return tText('Quote', 'Citazione');
+      case 'pre': return tText('Code', 'Codice');
+      default: return tText('Paragraph', 'Paragrafo');
+    }
   };
 
   // Metrics computation
@@ -196,6 +323,7 @@ export default function WysiwygEditor({
           <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('undo')}
               disabled={isHtmlMode}
               title={tText('Undo (Ctrl+Z)', 'Annulla (Ctrl+Z)')}
@@ -205,6 +333,7 @@ export default function WysiwygEditor({
             </button>
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('redo')}
               disabled={isHtmlMode}
               title={tText('Redo (Ctrl+Y)', 'Ripristina (Ctrl+Y)')}
@@ -220,49 +349,129 @@ export default function WysiwygEditor({
           <div className="relative" ref={headingPickerRef}>
             <button
               type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                saveSelection();
+              }}
               onClick={() => !isHtmlMode && setShowHeadingPicker(!showHeadingPicker)}
               disabled={isHtmlMode}
               title={tText('Typography & Headings', 'Stili e Intestazioni')}
-              className="px-2 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold flex items-center gap-1 transition cursor-pointer disabled:opacity-30 shadow-2xs"
+              className={`px-2.5 py-1.5 rounded-lg border bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-30 shadow-2xs ${
+                showHeadingPicker ? 'border-[#0a1c3e] ring-2 ring-[#0a1c3e]/20' : 'border-slate-200'
+              }`}
             >
-              <Type className="w-3.5 h-3.5 text-slate-600" />
-              <span className="hidden sm:inline">{tText('Format', 'Formato')}</span>
-              <ChevronDown className="w-3 h-3 text-slate-500" />
+              <Type className="w-3.5 h-3.5 text-[#0a1c3e]" />
+              <span className="font-medium text-slate-800">{getBlockFormatLabel()}</span>
+              <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform duration-150 ${showHeadingPicker ? 'rotate-180' : ''}`} />
             </button>
 
             {showHeadingPicker && (
-              <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHeading('p')}
-                  className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 flex items-center justify-between"
+                  className={`w-full text-left px-3 py-2 text-xs hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                    currentBlockTag === 'p' ? 'bg-amber-50/70 font-bold text-[#0a1c3e]' : 'text-slate-700'
+                  }`}
                 >
-                  <span>{tText('Normal Paragraph', 'Paragrafo Normale')}</span>
+                  <span className="flex items-center gap-2">
+                    {currentBlockTag === 'p' && <Check className="w-3 h-3 text-[#0a1c3e]" />}
+                    <span>{tText('Normal Paragraph', 'Paragrafo Normale')}</span>
+                  </span>
                   <span className="text-[10px] text-slate-400 font-mono">&lt;p&gt;</span>
                 </button>
+
                 <button
                   type="button"
-                  onClick={() => handleSetHeading('h2')}
-                  className="w-full text-left px-3 py-1.5 text-sm font-bold text-[#0a1c3e] hover:bg-slate-100 flex items-center justify-between"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSetHeading('h1')}
+                  className={`w-full text-left px-3 py-2 text-sm font-extrabold hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                    currentBlockTag === 'h1' ? 'bg-amber-50/70 text-[#0a1c3e]' : 'text-[#0a1c3e]'
+                  }`}
                 >
-                  <span className="flex items-center gap-1.5"><Heading2 className="w-3.5 h-3.5 text-brand-gold" /> {tText('Heading 2', 'Titolo Principale (H2)')}</span>
+                  <span className="flex items-center gap-2">
+                    {currentBlockTag === 'h1' ? <Check className="w-3 h-3 text-[#0a1c3e]" /> : <Heading1 className="w-3.5 h-3.5 text-[#c5a059]" />}
+                    <span>{tText('Main Title (H1)', 'Titolo Principale (H1)')}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">&lt;h1&gt;</span>
+                </button>
+
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSetHeading('h2')}
+                  className={`w-full text-left px-3 py-2 text-sm font-bold hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                    currentBlockTag === 'h2' ? 'bg-amber-50/70 text-[#0a1c3e]' : 'text-[#0a1c3e]'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {currentBlockTag === 'h2' ? <Check className="w-3 h-3 text-[#0a1c3e]" /> : <Heading2 className="w-3.5 h-3.5 text-[#c5a059]" />}
+                    <span>{tText('Section Heading (H2)', 'Intestazione Sezione (H2)')}</span>
+                  </span>
                   <span className="text-[10px] text-slate-400 font-mono">&lt;h2&gt;</span>
                 </button>
+
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHeading('h3')}
-                  className="w-full text-left px-3 py-1.5 text-xs font-semibold text-[#0a1c3e] hover:bg-slate-100 flex items-center justify-between"
+                  className={`w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                    currentBlockTag === 'h3' ? 'bg-amber-50/70 text-[#0a1c3e]' : 'text-slate-800'
+                  }`}
                 >
-                  <span className="flex items-center gap-1.5"><Heading3 className="w-3.5 h-3.5 text-brand-gold" /> {tText('Heading 3', 'Sottotitolo (H3)')}</span>
+                  <span className="flex items-center gap-2">
+                    {currentBlockTag === 'h3' ? <Check className="w-3 h-3 text-[#0a1c3e]" /> : <Heading3 className="w-3.5 h-3.5 text-[#c5a059]" />}
+                    <span>{tText('Subsection (H3)', 'Sottotitolo (H3)')}</span>
+                  </span>
                   <span className="text-[10px] text-slate-400 font-mono">&lt;h3&gt;</span>
                 </button>
+
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHeading('h4')}
-                  className="w-full text-left px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-100 flex items-center justify-between"
+                  className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                    currentBlockTag === 'h4' ? 'bg-amber-50/70 text-[#0a1c3e]' : 'text-slate-700'
+                  }`}
                 >
-                  <span className="flex items-center gap-1.5"><Heading4 className="w-3.5 h-3.5 text-slate-500" /> {tText('Heading 4', 'Sezione (H4)')}</span>
+                  <span className="flex items-center gap-2">
+                    {currentBlockTag === 'h4' ? <Check className="w-3 h-3 text-[#0a1c3e]" /> : <Heading4 className="w-3.5 h-3.5 text-slate-400" />}
+                    <span>{tText('Minor Heading (H4)', 'Paragrafo Sezione (H4)')}</span>
+                  </span>
                   <span className="text-[10px] text-slate-400 font-mono">&lt;h4&gt;</span>
+                </button>
+
+                <div className="h-px bg-slate-200 my-1" />
+
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSetHeading('blockquote')}
+                  className={`w-full text-left px-3 py-2 text-xs italic hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                    currentBlockTag === 'blockquote' ? 'bg-amber-50/70 font-semibold text-[#0a1c3e]' : 'text-slate-700'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {currentBlockTag === 'blockquote' ? <Check className="w-3 h-3 text-[#0a1c3e]" /> : <Quote className="w-3.5 h-3.5 text-[#c5a059]" />}
+                    <span>{tText('Quote Block', 'Citazione / Blockquote')}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">&lt;quote&gt;</span>
+                </button>
+
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSetHeading('pre')}
+                  className={`w-full text-left px-3 py-2 text-xs font-mono hover:bg-slate-100 flex items-center justify-between cursor-pointer ${
+                    currentBlockTag === 'pre' ? 'bg-amber-50/70 font-bold text-[#0a1c3e]' : 'text-slate-700'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {currentBlockTag === 'pre' ? <Check className="w-3 h-3 text-[#0a1c3e]" /> : <Code className="w-3.5 h-3.5 text-slate-500" />}
+                    <span>{tText('Code Block', 'Codice / Monospace')}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">&lt;pre&gt;</span>
                 </button>
               </div>
             )}
@@ -272,6 +481,7 @@ export default function WysiwygEditor({
           <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('bold')}
               disabled={isHtmlMode}
               title={tText('Bold', 'Grassetto (Ctrl+B)')}
@@ -282,6 +492,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('italic')}
               disabled={isHtmlMode}
               title={tText('Italic', 'Corsivo (Ctrl+I)')}
@@ -292,6 +503,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('underline')}
               disabled={isHtmlMode}
               title={tText('Underline', 'Sottolineato (Ctrl+U)')}
@@ -302,6 +514,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('strikeThrough')}
               disabled={isHtmlMode}
               title={tText('Strikethrough', 'Barrato')}
@@ -312,6 +525,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('subscript')}
               disabled={isHtmlMode}
               title={tText('Subscript', 'Pedice')}
@@ -322,6 +536,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('superscript')}
               disabled={isHtmlMode}
               title={tText('Superscript', 'Apice')}
@@ -337,6 +552,10 @@ export default function WysiwygEditor({
           <div className="relative" ref={colorPickerRef}>
             <button
               type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                saveSelection();
+              }}
               onClick={() => !isHtmlMode && setShowColorPicker(!showColorPicker)}
               disabled={isHtmlMode}
               title={tText('Text Color', 'Colore Testo')}
@@ -350,48 +569,56 @@ export default function WysiwygEditor({
               <div className="absolute top-full left-0 mt-1 p-2 bg-white rounded-xl shadow-xl border border-slate-200 z-30 grid grid-cols-4 gap-1.5 w-40">
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetTextColor('#0f172a')}
                   className="w-7 h-7 rounded-md bg-[#0f172a] hover:scale-110 transition cursor-pointer border border-slate-300"
                   title="Nero / Slate"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetTextColor('#0A1C3E')}
                   className="w-7 h-7 rounded-md bg-[#0A1C3E] hover:scale-110 transition cursor-pointer border border-slate-300"
                   title="Blu Istituzionale NWS"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetTextColor('#C5A059')}
                   className="w-7 h-7 rounded-md bg-[#C5A059] hover:scale-110 transition cursor-pointer border border-slate-300"
                   title="Oro NWS"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetTextColor('#dc2626')}
                   className="w-7 h-7 rounded-md bg-[#dc2626] hover:scale-110 transition cursor-pointer border border-slate-300"
                   title="Rosso / Bordeaux"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetTextColor('#16a34a')}
                   className="w-7 h-7 rounded-md bg-[#16a34a] hover:scale-110 transition cursor-pointer border border-slate-300"
                   title="Verde Smeraldo"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetTextColor('#2563eb')}
                   className="w-7 h-7 rounded-md bg-[#2563eb] hover:scale-110 transition cursor-pointer border border-slate-300"
                   title="Blu Elettrico"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetTextColor('#9333ea')}
                   className="w-7 h-7 rounded-md bg-[#9333ea] hover:scale-110 transition cursor-pointer border border-slate-300"
                   title="Viola"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetTextColor('#d97706')}
                   className="w-7 h-7 rounded-md bg-[#d97706] hover:scale-110 transition cursor-pointer border border-slate-300"
                   title="Ambra / Bronzo"
@@ -404,6 +631,10 @@ export default function WysiwygEditor({
           <div className="relative" ref={highlightPickerRef}>
             <button
               type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                saveSelection();
+              }}
               onClick={() => !isHtmlMode && setShowHighlightPicker(!showHighlightPicker)}
               disabled={isHtmlMode}
               title={tText('Highlighter', 'Evidenziatore Testo')}
@@ -417,6 +648,7 @@ export default function WysiwygEditor({
               <div className="absolute top-full left-0 mt-1 p-2 bg-white rounded-xl shadow-xl border border-slate-200 z-30 grid grid-cols-4 gap-1.5 w-40">
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHighlight('transparent')}
                   className="w-7 h-7 rounded-md bg-white hover:scale-110 transition cursor-pointer border border-slate-300 text-[10px] flex items-center justify-center font-bold text-slate-500"
                   title="Nessuno"
@@ -425,42 +657,49 @@ export default function WysiwygEditor({
                 </button>
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHighlight('#fef08a')}
                   className="w-7 h-7 rounded-md bg-[#fef08a] hover:scale-110 transition cursor-pointer border border-amber-300"
                   title="Giallo Evidenziatore"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHighlight('#fef3c7')}
                   className="w-7 h-7 rounded-md bg-[#fef3c7] hover:scale-110 transition cursor-pointer border border-amber-300"
                   title="Oro Tenue NWS"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHighlight('#dcfce7')}
                   className="w-7 h-7 rounded-md bg-[#dcfce7] hover:scale-110 transition cursor-pointer border border-emerald-300"
                   title="Verde Tenue"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHighlight('#e0f2fe')}
                   className="w-7 h-7 rounded-md bg-[#e0f2fe] hover:scale-110 transition cursor-pointer border border-sky-300"
                   title="Azzurro Tenue"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHighlight('#fce7f3')}
                   className="w-7 h-7 rounded-md bg-[#fce7f3] hover:scale-110 transition cursor-pointer border border-pink-300"
                   title="Rosa Tenue"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHighlight('#f3e8ff')}
                   className="w-7 h-7 rounded-md bg-[#f3e8ff] hover:scale-110 transition cursor-pointer border border-purple-300"
                   title="Lavanda"
                 />
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSetHighlight('#ffedd5')}
                   className="w-7 h-7 rounded-md bg-[#ffedd5] hover:scale-110 transition cursor-pointer border border-orange-300"
                   title="Pesca / Albicocca"
@@ -475,6 +714,7 @@ export default function WysiwygEditor({
           <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('justifyLeft')}
               disabled={isHtmlMode}
               title={tText('Align Left', 'Allinea a Sinistra')}
@@ -484,6 +724,7 @@ export default function WysiwygEditor({
             </button>
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('justifyCenter')}
               disabled={isHtmlMode}
               title={tText('Align Center', 'Allinea al Centro')}
@@ -493,6 +734,7 @@ export default function WysiwygEditor({
             </button>
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('justifyRight')}
               disabled={isHtmlMode}
               title={tText('Align Right', 'Allinea a Destra')}
@@ -502,6 +744,7 @@ export default function WysiwygEditor({
             </button>
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('justifyFull')}
               disabled={isHtmlMode}
               title={tText('Justify', 'Giustificato')}
@@ -517,6 +760,7 @@ export default function WysiwygEditor({
           <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('insertUnorderedList')}
               disabled={isHtmlMode}
               title={tText('Bullet List', 'Elenco Puntato')}
@@ -526,6 +770,7 @@ export default function WysiwygEditor({
             </button>
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('insertOrderedList')}
               disabled={isHtmlMode}
               title={tText('Numbered List', 'Elenco Numerato')}
@@ -535,6 +780,7 @@ export default function WysiwygEditor({
             </button>
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('outdent')}
               disabled={isHtmlMode}
               title={tText('Decrease Indent', 'Riduci Rientro')}
@@ -544,6 +790,7 @@ export default function WysiwygEditor({
             </button>
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('indent')}
               disabled={isHtmlMode}
               title={tText('Increase Indent', 'Aumenta Rientro')}
@@ -559,7 +806,8 @@ export default function WysiwygEditor({
           <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
             <button
               type="button"
-              onClick={() => execCommand('formatBlock', '<blockquote>')}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => handleSetHeading('blockquote')}
               disabled={isHtmlMode}
               title={tText('Quote Block', 'Citazione / Blockquote')}
               className="p-1.5 rounded-md hover:bg-slate-100 text-slate-700 hover:text-black transition cursor-pointer disabled:opacity-30"
@@ -569,6 +817,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={handleInsertCallout}
               disabled={isHtmlMode}
               title={tText('Institutional Callout Box', 'Box in Evidenza Istituzionale')}
@@ -579,6 +828,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('insertHorizontalRule')}
               disabled={isHtmlMode}
               title={tText('Horizontal Divider', 'Linea Divisoria Orizzontale')}
@@ -591,6 +841,10 @@ export default function WysiwygEditor({
             <div className="relative" ref={tablePickerRef}>
               <button
                 type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  saveSelection();
+                }}
                 onClick={() => !isHtmlMode && setShowTablePicker(!showTablePicker)}
                 disabled={isHtmlMode}
                 title={tText('Insert Table', 'Inserisci Tabella')}
@@ -606,24 +860,27 @@ export default function WysiwygEditor({
                   </div>
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleInsertTable(2, 2)}
-                    className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 flex items-center justify-between"
+                    className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 flex items-center justify-between cursor-pointer"
                   >
                     <span>2 Colonne x 2 Righe</span>
                     <span className="text-slate-400 font-mono">2x2</span>
                   </button>
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleInsertTable(3, 3)}
-                    className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 flex items-center justify-between"
+                    className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 flex items-center justify-between cursor-pointer"
                   >
                     <span>3 Colonne x 3 Righe</span>
                     <span className="text-slate-400 font-mono">3x3</span>
                   </button>
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleInsertTable(4, 3)}
-                    className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 flex items-center justify-between"
+                    className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 flex items-center justify-between cursor-pointer"
                   >
                     <span>3 Colonne x 4 Righe</span>
                     <span className="text-slate-400 font-mono">3x4</span>
@@ -634,6 +891,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={handleAddLink}
               disabled={isHtmlMode}
               title={tText('Insert Link', 'Inserisci Link')}
@@ -644,6 +902,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={handleRemoveLink}
               disabled={isHtmlMode}
               title={tText('Remove Link', 'Rimuovi Link')}
@@ -654,6 +913,7 @@ export default function WysiwygEditor({
 
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => execCommand('removeFormat')}
               disabled={isHtmlMode}
               title={tText('Clear Formatting', 'Rimuovi Formattazione (Gomma)')}
@@ -668,6 +928,7 @@ export default function WysiwygEditor({
         <div className="flex items-center gap-1.5">
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => setIsExpanded(!isExpanded)}
             title={isExpanded ? tText('Reduce Height', 'Riduci Altezza Editor') : tText('Expand Height', 'Espandi Altezza Editor')}
             className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition cursor-pointer shadow-2xs"
@@ -677,10 +938,11 @@ export default function WysiwygEditor({
 
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => setIsHtmlMode(!isHtmlMode)}
             className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 border shadow-2xs ${
               isHtmlMode
-                ? 'bg-[#0a1c3e] text-brand-gold border-[#0a1c3e]'
+                ? 'bg-[#0a1c3e] text-[#c5a059] border-[#0a1c3e]'
                 : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-100'
             }`}
           >
@@ -727,6 +989,8 @@ export default function WysiwygEditor({
               contentEditable
               onInput={handleInput}
               onBlur={handleInput}
+              onKeyUp={saveSelection}
+              onMouseUp={saveSelection}
               data-placeholder={placeholder}
               className="editor-body p-5 text-[16px] text-slate-900 leading-relaxed outline-none focus:outline-none font-sans min-h-full selection:bg-amber-100 selection:text-slate-900"
               style={{ minHeight }}
@@ -757,7 +1021,7 @@ export default function WysiwygEditor({
               ↕ Barra di scorrimento attiva
             </span>
             {isExpanded && (
-              <span className="text-[10px] font-bold text-brand-blue bg-amber-100/80 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-bold text-[#0a1c3e] bg-amber-100/80 px-1.5 py-0.5 rounded">
                 Espanso
               </span>
             )}
