@@ -682,18 +682,24 @@ export default function PWANotifierBanner() {
     }
   };
 
+  const [showInstallGuideModal, setShowInstallGuideModal] = useState(false);
+
   const handleInstallPWA = async () => {
-    if (!installPrompt) {
-      // Guide iPhone/Safari manually
-      alert(txt.iosGuideAlert);
-      return;
+    if (installPrompt) {
+      try {
+        await installPrompt.prompt();
+        const { outcome } = await installPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setIsInstalled(true);
+          setInstallPrompt(null);
+          return;
+        }
+      } catch (e) {
+        console.warn('[PWA-INSTALL-PROMPT-ERR]', e);
+      }
     }
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setIsInstalled(true);
-      setInstallPrompt(null);
-    }
+    // If prompt is not directly triggered or browser uses native menu (e.g. Brave/iOS), show guided modal
+    setShowInstallGuideModal(true);
   };
 
   const clearNotificationCache = () => {
@@ -1096,6 +1102,63 @@ export default function PWANotifierBanner() {
           )}
         </div>
       </div>
+
+      {/* MODAL GUIDA INSTALLAZIONE PWA / BRAVE / ANDROID / IOS */}
+      {showInstallGuideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in" id="pwa-install-guide-modal">
+          <div className="bg-white text-slate-850 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-brand-gold/15 text-brand-gold rounded-xl border border-brand-gold/25">
+                  <Smartphone className="w-5 h-5 text-[#0a1c3e]" />
+                </div>
+                <h3 className="font-serif text-base font-bold text-[#0a1c3e] uppercase tracking-wide">
+                  Installa App Portale NWS
+                </h3>
+              </div>
+              <button 
+                onClick={() => setShowInstallGuideModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Il portale di <strong>New World State 1.0</strong> rispetta tutti gli standard moderni <strong>PWA (Progressive Web App)</strong>. Per aggiungerlo alla schermata principale del tuo dispositivo:
+            </p>
+
+            <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80 text-xs">
+              <div className="font-bold text-[#0a1c3e] flex items-center gap-1.5">
+                <span>🦁</span> Su Brave Mobile / Chrome (Android):
+              </div>
+              <ol className="list-decimal list-inside space-y-1.5 text-slate-700 pl-1">
+                <li>Tocca i <strong>tre puntini (⋮)</strong> in alto o in basso a destra nel menu di Brave.</li>
+                <li>Seleziona <strong>&quot;Installa applicazione&quot;</strong> o <strong>&quot;Aggiungi a schermata Home&quot;</strong>.</li>
+                <li>Conferma cliccando su <strong>&quot;Installa&quot;</strong>. L&apos;icona apparirà sul tuo launcher!</li>
+              </ol>
+
+              <div className="border-t border-slate-200 pt-2 font-bold text-[#0a1c3e] flex items-center gap-1.5">
+                <span>🍏</span> Su iPhone / iPad (Safari):
+              </div>
+              <ol className="list-decimal list-inside space-y-1.5 text-slate-700 pl-1">
+                <li>Tocca il pulsante <strong>Condividi</strong> (icona quadrata con freccia verso l&apos;alto in basso).</li>
+                <li>Scorri le opzioni verso il basso e seleziona <strong>&quot;Aggiungi alla schermata Home&quot;</strong>.</li>
+                <li>Tocca <strong>&quot;Aggiungi&quot;</strong> in alto a destra.</li>
+              </ol>
+            </div>
+
+            <div className="pt-1 flex gap-2">
+              <button
+                onClick={() => setShowInstallGuideModal(false)}
+                className="w-full bg-[#0a1c3e] hover:bg-[#152b54] text-[#f7f5f0] font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition shadow cursor-pointer"
+              >
+                Ho Capito
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

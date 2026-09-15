@@ -1,1 +1,78 @@
-{"name":"","short_name":"","icons":[{"src":"/android-chrome-192x192.png?v=5","sizes":"192x192","type":"image/png"},{"src":"/android-chrome-512x512.png?v=5","sizes":"512x512","type":"image/png"}],"theme_color":"#ffffff","background_color":"#ffffff","display":"standalone"}
+{
+  "id": "/",
+  "name": "New World State 1.0",
+  "short_name": "NWS 1.0",
+  "description": "Portale della Democrazia Diretta, Registro dei Cittadini e Quotidiano Sovrano di New World State",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0a1c3e",
+  "theme_color": "#0a1c3e",
+  "categories": ["government", "news", "productivity", "utilities"],
+  "lang": "it-IT",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Giornale Sovrano",
+      "short_name": "Giornale",
+      "description": "Leggi le ultime inchieste e notizie ufficiali",
+      "url": "/?tab=news",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Democrazia Diretta",
+      "short_name": "Voto & Referendum",
+      "description": "Consulta le proposte e vota nei referendum",
+      "url": "/?tab=democracy",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Registro Cittadini",
+      "short_name": "Anagrafe",
+      "description": "Richiedi o gestisci la tua cittadinanza sovrana",
+      "url": "/?tab=register",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

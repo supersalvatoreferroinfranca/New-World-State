@@ -560,7 +560,8 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
 
               <div className="space-y-2.5">
                 {Object.entries(data?.cities || {}).map(([city, count], idx) => {
-                  const maxCity = Math.max(...Object.values(data?.cities || {}), 100);
+                  const cityVals = Object.values(data?.cities || {}).map((v: any) => Number(v) || 0);
+                  const maxCity = Math.max(...cityVals, 100);
                   const pct = Math.round((Number(count) / maxCity) * 100);
 
                   return (

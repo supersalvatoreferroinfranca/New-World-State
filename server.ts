@@ -170,6 +170,7 @@ process.on('uncaughtException', (err) => {
 
 // In-Memory Fallback Database for registered citizens
 const memoryCitizens: any[] = [];
+let memoryProposals: any[] = [];
 
 // Geografic Areas & Custom Roles default registers
 let memoryGeographicAreas: any[] = [
@@ -3922,14 +3923,14 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
         }).sort((a, b) => b.views - a.views).slice(0, 10);
 
         // Formatta top paesi
-        const totalGeoViews = Object.values(globalAnalytics.geoCountries || {}).reduce((sum: number, c: any) => sum + (c.views || 0), 0);
+        const totalGeoViews: number = (Object.values(globalAnalytics.geoCountries || {}) as any[]).reduce((sum: number, c: any) => sum + (Number(c?.views) || 0), 0);
         const formattedCountries = Object.entries(globalAnalytics.geoCountries || {}).map(([code, data]: [string, any]) => {
-          const views = data.views || 0;
+          const views: number = Number(data?.views) || 0;
           return {
             code,
-            name: data.name || code,
+            name: data?.name || code,
             views,
-            visitors: data.visitors || Math.round(views * 0.7),
+            visitors: data?.visitors || Math.round(views * 0.7),
             percentage: totalGeoViews > 0 ? Math.round((views / totalGeoViews) * 100) : 0
           };
         }).sort((a, b) => b.views - a.views);
@@ -3948,9 +3949,9 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
           other_referrer: 'Altri Portali Referrer'
         };
 
-        const totalSourceVisits = Object.values(globalAnalytics.sources || {}).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+        const totalSourceVisits: number = (Object.values(globalAnalytics.sources || {}) as any[]).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
         const formattedSources = Object.entries(globalAnalytics.sources || {}).map(([src, count]: [string, any]) => {
-          const cnt = Number(count) || 0;
+          const cnt: number = Number(count) || 0;
           return {
             key: src,
             label: sourceLabels[src] || src,
@@ -10589,6 +10590,39 @@ Genera un JSON con chiave "translations" contenente le lingue.`;
       } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message });
       }
+    });
+
+    // Explicit PWA Endpoints for Chromium / Brave / iOS Manifest and Service Worker Delivery
+    app.get(['/manifest.json', '/site.webmanifest', '/manifest.webmanifest'], (req, res) => {
+      const publicPath = path.join(process.cwd(), 'public', 'manifest.json');
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      if (fs.existsSync(publicPath)) {
+        return res.sendFile(publicPath);
+      }
+      return res.json({
+        id: '/',
+        name: 'New World State 1.0',
+        short_name: 'NWS 1.0',
+        description: 'Portale ufficiale di New World State',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        background_color: '#0a1c3e',
+        theme_color: '#0a1c3e'
+      });
+    });
+
+    app.get(['/sw.js', '/service-worker.js'], (req, res) => {
+      const swPath = path.join(process.cwd(), 'public', 'sw.js');
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      res.setHeader('Service-Worker-Allowed', '/');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      if (fs.existsSync(swPath)) {
+        return res.sendFile(swPath);
+      }
+      return res.status(404).send('// Service worker not found');
     });
 
     // Middleware to dynamically intercept ALL HTML GET requests for news articles, sections & multilingual routes

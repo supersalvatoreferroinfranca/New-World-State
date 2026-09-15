@@ -63,37 +63,45 @@ export async function registerPWAResources() {
       return;
     }
   } catch (e) {
-    // In extremely sandboxed iframes, accessing window.top might throw a security error directly
     console.log('[PWA-SW] Context is sandboxed, skipping Service Worker registration.');
     return;
   }
   
-  try {
-    const registration = await navigator.serviceWorker.register('/sw.js', {
-      scope: '/'
-    });
-    console.log('[PWA-SW] Service Worker registrato con successo. Scopo:', registration.scope);
+  const doRegister = async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/'
+      });
+      console.log('[PWA-SW] Service Worker registrato con successo. Scopo:', registration.scope);
 
-    // Register Periodic Background Sync if supported and permitted
-    if ('periodicSync' in registration) {
+      // Trigger background update check
       try {
-        const status = await navigator.permissions.query({
-          name: 'periodic-background-sync' as any
-        });
-        if (status.state === 'granted') {
-          await (registration as any).periodicSync.register('nws-sync', {
-            minInterval: 15 * 60 * 1000 // 15 minuti (minimo consentito dai browser)
+        await registration.update();
+      } catch (_) {}
+
+      // Register Periodic Background Sync if supported and permitted
+      if ('periodicSync' in registration) {
+        try {
+          const status = await navigator.permissions.query({
+            name: 'periodic-background-sync' as any
           });
-          console.log('[PWA-SW] Periodic Background Sync registrato con successo!');
-        } else {
-          console.log('[PWA-SW] Permesso per Periodic Sync non concesso o in attesa di installazione PWA.');
-        }
-      } catch (pErr) {
-        console.debug('[PWA-SW] Periodic Sync non configurato (necessita installazione PWA sulla home screen).');
+          if (status.state === 'granted') {
+            await (registration as any).periodicSync.register('nws-sync', {
+              minInterval: 15 * 60 * 1000 // 15 minuti
+            });
+            console.log('[PWA-SW] Periodic Background Sync registrato con successo!');
+          }
+        } catch (_) {}
       }
+    } catch (err) {
+      console.warn('[PWA-SW] Registrazione Service Worker non riuscita:', err);
     }
-  } catch (err) {
-    console.warn('[PWA-SW] Registrazione Service Worker non riuscita:', err);
+  };
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    doRegister();
+  } else {
+    window.addEventListener('load', doRegister);
   }
 }
 

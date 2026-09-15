@@ -1,9 +1,18 @@
-// New World State PWA Service Worker - v3.0
-const CACHE_NAME = 'nws-cache-v3';
+// New World State PWA Service Worker - v4.0
+const CACHE_NAME = 'nws-cache-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/site.webmanifest',
+  '/manifest.webmanifest',
+  '/favicon.ico',
+  '/android-chrome-192x192.png',
+  '/android-chrome-512x512.png',
+  '/pwa-192x192.png',
+  '/pwa-512x512.png',
+  '/pwa-maskable-512x512.png',
+  '/apple-touch-icon.png'
 ];
 
 // Helper to read state from cache (since Service Workers don't have localStorage)
@@ -323,7 +332,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For API and HTML pages: Network-first with cache fallback
+  // For API and HTML pages: Network-first with robust cache and navigation fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
@@ -335,9 +344,19 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => {
-        return caches.match(event.request).then((cached) => {
-          return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        
+        // If navigating to a page while offline, fallback to cached App shell
+        if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+          const rootCached = await caches.match('/') || await caches.match('/index.html');
+          if (rootCached) return rootCached;
+        }
+
+        return new Response('Offline - New World State PWA', { 
+          status: 200, 
+          headers: { 'Content-Type': 'text/html; charset=utf-8' } 
         });
       })
   );
