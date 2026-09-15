@@ -4469,15 +4469,47 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
       }> = [];
       const seenUrls = new Set<string>();
 
-      // TIER 1: Motore Bing Images con query mirate per piattaforma fotografica (es. "unsplash seagull photo", "pexels seagull photo")
-      const searchTerms = [
-        `${platform} ${primaryTerm} photo`,
-        `${platform} ${secondaryTerm} photography`,
-        `${platform} ${primaryTerm}`,
-        `"${platform}.com" ${primaryTerm}`,
-        `site:${targetDomain} ${primaryTerm}`
-      ].filter((t, idx, arr) => t.trim().length > 3 && arr.indexOf(t) === idx);
+      // Configurazione specifica delle query mirate per ciascun canale per massimizzare pertinenza e qualità
+      let tailoredBingTerms: string[] = [];
+      if (platform === 'unsplash') {
+        tailoredBingTerms = [
+          `site:unsplash.com/photos ${primaryTerm}`,
+          `site:unsplash.com ${primaryTerm}`,
+          `unsplash ${primaryTerm} photo`,
+          `unsplash ${secondaryTerm} photography`
+        ];
+      } else if (platform === 'pexels') {
+        tailoredBingTerms = [
+          `site:pexels.com/photo ${primaryTerm}`,
+          `site:pexels.com ${primaryTerm}`,
+          `pexels ${primaryTerm} photo`,
+          `pexels ${secondaryTerm} photography`
+        ];
+      } else if (platform === 'pixabay') {
+        tailoredBingTerms = [
+          `site:pixabay.com/photos ${primaryTerm}`,
+          `site:pixabay.com ${primaryTerm}`,
+          `pixabay ${primaryTerm} photo`,
+          `pixabay ${secondaryTerm} picture`
+        ];
+      } else if (platform === 'flickr') {
+        tailoredBingTerms = [
+          `site:flickr.com/photos ${primaryTerm}`,
+          `site:flickr.com ${primaryTerm}`,
+          `flickr ${primaryTerm} photography`,
+          `flickr ${secondaryTerm} photo`
+        ];
+      } else {
+        tailoredBingTerms = [
+          `site:commons.wikimedia.org ${primaryTerm}`,
+          `wikimedia ${primaryTerm} photo`,
+          `site:wikimedia.org ${primaryTerm}`
+        ];
+      }
 
+      const searchTerms = tailoredBingTerms.filter((t, idx, arr) => t.trim().length > 3 && arr.indexOf(t) === idx);
+
+      // TIER 1: Motore Bing Images con query mirate
       for (const term of searchTerms) {
         if (items.length >= maxCount) break;
         try {
@@ -4487,7 +4519,7 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
               'Accept': 'text/html,application/xhtml+xml',
               'Accept-Language': 'en-US,en;q=0.9,it;q=0.8'
             },
-            signal: AbortSignal.timeout(3000)
+            signal: AbortSignal.timeout(4000)
           });
           const html = await res.text();
           const matches = [...html.matchAll(/class="iusc"[^>]*m="([^"]+)"/g)];
@@ -4504,7 +4536,6 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
               if (imgUrl.includes('.svg') || imgUrl.includes('logo') || imgUrl.includes('icon')) continue;
 
               const detected = detectPlatformFromUrl(pageUrl, imgUrl);
-              // Verifica se corrisponde alla piattaforma richiesta
               const isMatch = detected === platform || 
                 imgUrl.toLowerCase().includes(platform) || 
                 pageUrl.toLowerCase().includes(platform);
@@ -4571,7 +4602,7 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9,it;q=0.8'
               },
-              signal: AbortSignal.timeout(2500)
+              signal: AbortSignal.timeout(3500)
             });
             const text1 = await res1.text();
             const vqdMatch = text1.match(/vqd=["']?([0-9-_]+)["']?/) || text1.match(/vqd=([0-9-_]+)/);
@@ -4584,7 +4615,7 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
                 'Referer': 'https://duckduckgo.com/',
                 'Accept': 'application/json, text/javascript, */*; q=0.01'
               },
-              signal: AbortSignal.timeout(2500)
+              signal: AbortSignal.timeout(3500)
             });
             const data = await res2.json();
             const rawList = data.results || [];
@@ -4676,7 +4707,7 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
       }> = [];
 
       try {
-        // Step 0: Ottimizzazione Query & Espansione Linguistica con Gemini AI (se disponibile)
+        // Step 0: Ottimizzazione Query & Espansione Linguistica con Gemini AI (se disponibile, timeout 2500ms)
         let enKeywords = cleanQuery;
         let itKeywords = cleanQuery;
         try {
@@ -4686,12 +4717,15 @@ Restituisci un oggetto JSON con:
 - "itQuery": 2-3 parole chiave in italiano ottimizzate per reportage fotogiornalistico.
 Formato: {"enQuery": "...", "itQuery": "..."}`;
 
-          const expRes = await generateGeminiContentWithFallback(
+          const expPromise = generateGeminiContentWithFallback(
             expandPrompt,
             { responseMimeType: 'application/json' },
             'gemini-2.5-flash'
           );
-          if (expRes.text) {
+          const timeoutPromise = new Promise<any>((_, reject) => setTimeout(() => reject(new Error('AI expand timeout')), 2500));
+          const expRes = await Promise.race([expPromise, timeoutPromise]);
+
+          if (expRes && expRes.text) {
             const parsedExp = JSON.parse(expRes.text.trim());
             if (parsedExp.enQuery) enKeywords = parsedExp.enQuery;
             if (parsedExp.itQuery) itKeywords = parsedExp.itQuery;
@@ -4840,39 +4874,8 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             if (!isAll && reqPlatform !== 'flickr') return [];
             const flStart = Date.now();
             try {
-              const queryList = [cleanQuery, enKeywords, itKeywords];
+              const queryList = [cleanQuery, enKeywords, `${cleanQuery} photography`, `${enKeywords} photo`];
               const items = await searchPlatformImagesMultiSource(queryList, 'flickr', quotaPerProvider);
-              
-              // Se MultiSource non ha trovato abbastanza scatti, usiamo feed mirato con tags
-              if (items.length < quotaPerProvider) {
-                const tagsParam = cleanQuery.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().split(/\s+/).join(',');
-                const flUrl = `https://www.flickr.com/services/feeds/photos_public.gne?tags=${encodeURIComponent(tagsParam)}&tagmode=all&format=json&nojsoncallback=1`;
-                const flRes = await fetch(flUrl, { signal: AbortSignal.timeout(4000) }).then(r => r.json()).catch(() => ({}));
-                const flFeedItems = flRes.items || [];
-                for (const item of flFeedItems) {
-                  if (item.media?.m) {
-                    const imgUrl = item.media.m.replace('_m.jpg', '_b.jpg');
-                    if (items.some(i => i.url === imgUrl)) continue;
-
-                    const authorClean = cleanAuthorName(item.author, 'Flickr Photographer');
-                    let itemTitle = item.title && item.title.trim() ? item.title.trim() : `${cleanQuery} - Fotografia Flickr`;
-                    itemTitle = itemTitle.replace(/[-|–—].*$/i, '').trim();
-                    const itemSourceUrl = item.link || `https://www.flickr.com/search/?text=${encodeURIComponent(cleanQuery)}`;
-
-                    items.push({
-                      id: 'fl_' + Math.random().toString(36).substring(2, 9),
-                      type: 'image',
-                      sourcePlatform: 'flickr',
-                      url: imgUrl,
-                      previewUrl: item.media.m,
-                      sourceUrl: itemSourceUrl,
-                      title: itemTitle,
-                      author: authorClean
-                    });
-                    if (items.length >= quotaPerProvider) break;
-                  }
-                }
-              }
 
               const flLatency = Date.now() - flStart;
               debugProviders.push({
@@ -4882,7 +4885,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
                 status: '200 OK',
                 count: items.length,
                 latencyMs: flLatency,
-                details: `Recuperati ${items.length} scatti fotografici autentici da Flickr.`
+                details: `Recuperati ${items.length} scatti fotografici autentici e pertinenti da Flickr.`
               });
               return items;
             } catch (e: any) {
@@ -5051,13 +5054,15 @@ REGOLE TASSATIVE:
 - Non inventare soggetti assenti dal titolo originale.
 - Non includere boilerplate promozionali (es. "Download", "Gratis", "HD").`;
 
-          const response = await generateGeminiContentWithFallback(
+          const aiPromise = generateGeminiContentWithFallback(
             prompt,
             { responseMimeType: 'application/json' },
             'gemini-2.5-flash'
           );
+          const aiTimeoutPromise = new Promise<any>((_, reject) => setTimeout(() => reject(new Error('AI polish timeout')), 2500));
+          const response = await Promise.race([aiPromise, aiTimeoutPromise]);
 
-          if (response.text) {
+          if (response && response.text) {
             const parsed = JSON.parse(response.text.trim());
             if (Array.isArray(parsed) && parsed.length > 0) {
               const titleMap = new Map<string, string>();
@@ -9523,10 +9528,16 @@ ${newsItems}
 
     function injectNewsPortalMetaTags(html: string, req: express.Request): string {
       const baseUrl = getCanonicalBaseUrl(req);
-      const canonicalUrl = `${baseUrl}/?tab=news`;
+      const currentLang = (req.query.lang as string || 'it').toLowerCase();
+      const canonicalUrl = currentLang === 'it' ? `${baseUrl}/?tab=news` : `${baseUrl}/?tab=news&lang=${currentLang}`;
       const title = "Portale Notizie & Giornalismo Sovrano | New World State 1.0";
       const description = "Leggi le notizie ufficiali, i reportage, le inchieste e gli approfondimenti della comunità globale New World State. Giornalismo verificato, etico e indipendente.";
       const imageUrl = "https://www.newworldstate.org/documents/branding_logo/fronte.jpg";
+
+      const hreflangTags = SITE_SUPPORTED_LANGUAGES.map(l => {
+        const u = l === 'it' ? `${baseUrl}/?tab=news` : `${baseUrl}/?tab=news&lang=${l}`;
+        return `<link rel="alternate" hreflang="${l}" href="${escapeHtml(u)}" />`;
+      }).join('\n        ') + `\n        <link rel="alternate" hreflang="x-default" href="${escapeHtml(baseUrl)}/?tab=news" />`;
 
       const metaBlock = `
         <!-- Dynamic News Portal Meta Tags -->
@@ -9535,6 +9546,7 @@ ${newsItems}
         <meta name="description" content="${escapeHtml(description)}" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+        ${hreflangTags}
 
         <meta property="fb:app_id" content="${escapeHtml(process.env.FB_APP_ID || '966242223397117')}" />
         <meta property="og:type" content="website" />
@@ -9560,7 +9572,117 @@ ${newsItems}
         .replace(/<meta\s+property="og:[\s\S]*?>/gi, '')
         .replace(/<meta\s+property="twitter:[\s\S]*?>/gi, '')
         .replace(/<meta\s+name="twitter:[\s\S]*?>/gi, '')
-        .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '');
+        .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '')
+        .replace(/<link\s+rel="alternate"[\s\S]*?>/gi, '');
+
+      return cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
+    }
+
+    // Dynamic Universal Page Meta Tags Injector for Home, Multilingual Versions & Institutional Tabs
+    function injectUniversalPageMetaTags(html: string, req: express.Request): string {
+      const baseUrl = getCanonicalBaseUrl(req);
+      const currentLang = (req.query.lang as string || 'it').toLowerCase();
+      const tab = (req.query.tab as string || '').toLowerCase();
+      const compliance = (req.query.compliance as string || '').toLowerCase();
+      const isVerify = req.path.startsWith('/verify');
+      const isSitemapHtml = req.path.startsWith('/sitemap.html');
+
+      // Calcolo preciso dell'URL canonico auto-referenziale
+      let canonicalUrl = baseUrl;
+      let buildUrlForLang = (l: string) => `${baseUrl}/`;
+
+      if (isSitemapHtml) {
+        canonicalUrl = `${baseUrl}/sitemap.html`;
+        buildUrlForLang = () => `${baseUrl}/sitemap.html`;
+      } else if (isVerify) {
+        canonicalUrl = currentLang === 'it' ? `${baseUrl}/verify` : `${baseUrl}/verify?lang=${currentLang}`;
+        buildUrlForLang = (l: string) => l === 'it' ? `${baseUrl}/verify` : `${baseUrl}/verify?lang=${l}`;
+      } else if (compliance) {
+        canonicalUrl = currentLang === 'it' ? `${baseUrl}/?compliance=${compliance}` : `${baseUrl}/?compliance=${compliance}&lang=${currentLang}`;
+        buildUrlForLang = (l: string) => l === 'it' ? `${baseUrl}/?compliance=${compliance}` : `${baseUrl}/?compliance=${compliance}&lang=${l}`;
+      } else if (tab) {
+        canonicalUrl = currentLang === 'it' ? `${baseUrl}/?tab=${tab}` : `${baseUrl}/?tab=${tab}&lang=${currentLang}`;
+        buildUrlForLang = (l: string) => l === 'it' ? `${baseUrl}/?tab=${tab}` : `${baseUrl}/?tab=${tab}&lang=${l}`;
+      } else {
+        canonicalUrl = currentLang === 'it' ? `${baseUrl}/` : `${baseUrl}/?lang=${currentLang}`;
+        buildUrlForLang = (l: string) => l === 'it' ? `${baseUrl}/` : `${baseUrl}/?lang=${l}`;
+      }
+
+      // Titoli e descrizioni localizzati in base alla sezione
+      let pageTitle = "New World State 1.0 | Registro Mondiale • Global Citizenship Registry";
+      let pageDesc = "Portale ufficiale di New World State 1.0. Registro globale di cittadinanza sovrana, democrazia diretta digitale, costituzione universale e portale indipendente di informazione e geopolitica.";
+
+      if (tab === 'register') {
+        pageTitle = "Registro Cittadini del Mondo | New World State 1.0";
+        pageDesc = "Richiedi la cittadinanza globale sovrana su New World State. Partecipa alla governance democratica decentralizzata, ottieni il tuo certificato e firma la Costituzione.";
+      } else if (tab === 'constitution') {
+        pageTitle = "Costituzione dello Stato Mondiale Sovrano | New World State 1.0";
+        pageDesc = "Consulta e scarica la Costituzione ufficiale dello Stato Mondiale in 11 lingue mondiali. I principi inalienabili di pace, libertà e autodeterminazione dei popoli.";
+      } else if (tab === 'vote' || tab === 'referendum') {
+        pageTitle = "Democrazia Diretta & Votazioni Popolari | New World State 1.0";
+        pageDesc = "Vota sui referendum istituzionali globali con crittografia sovrana verificata e proponi nuove iniziative di legge per la comunità mondiale.";
+      } else if (tab === 'chat') {
+        pageTitle = "Assemblea Federale e Comunicazioni Sovrane | New World State 1.0";
+        pageDesc = "Canale di discussione aperta, assemblea deliberativa e scambio di proposte per tutti i cittadini sovrani registrati.";
+      } else if (tab === 'stats') {
+        pageTitle = "Statistiche e Censimento Mondiale | New World State 1.0";
+        pageDesc = "Monitoraggio in tempo reale del censimento globale dei cittadini registrati per nazione, lingua, continente e distribuzione demografica.";
+      } else if (tab === 'faq') {
+        pageTitle = "Domande Frequenti (FAQ) Istituzionali | New World State 1.0";
+        pageDesc = "Tutte le risposte ufficiali sui diritti, validità della cittadinanza mondiale, sicurezza crittografica e funzionamento della democrazia diretta.";
+      } else if (isVerify) {
+        pageTitle = "Verifica Crittografica Cittadino e Certificati | New World State 1.0";
+        pageDesc = "Strumento ufficiale di verifica di autenticità dei certificati di cittadinanza sovrana e dei documenti d'identità crittografici New World State.";
+      } else if (compliance === 'privacy') {
+        pageTitle = "Informativa sulla Privacy & Protezione Dati GDPR | New World State 1.0";
+        pageDesc = "Dettagli completi sulla crittografia dei dati personali, assenza di profilazione commerciale e conformità agli standard di sovranità digitale.";
+      }
+
+      const hreflangTags = !isSitemapHtml ? SITE_SUPPORTED_LANGUAGES.map(l => {
+        const u = buildUrlForLang(l);
+        return `<link rel="alternate" hreflang="${l}" href="${escapeHtml(u)}" />`;
+      }).join('\n        ') + `\n        <link rel="alternate" hreflang="x-default" href="${escapeHtml(buildUrlForLang('it'))}" />` : '';
+
+      const imageUrl = "https://www.newworldstate.org/documents/branding_logo/fronte.jpg";
+
+      const metaBlock = `
+        <!-- Universal Dynamic Meta Tags (Language: ${currentLang}) -->
+        <title>${escapeHtml(pageTitle)}</title>
+        <meta name="title" content="${escapeHtml(pageTitle)}" />
+        <meta name="description" content="${escapeHtml(pageDesc)}" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+        ${hreflangTags}
+
+        <meta property="fb:app_id" content="${escapeHtml(process.env.FB_APP_ID || '966242223397117')}" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="New World State 1.0" />
+        <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+        <meta property="og:title" content="${escapeHtml(pageTitle)}" />
+        <meta property="og:description" content="${escapeHtml(pageDesc)}" />
+        <meta property="og:image" content="${escapeHtml(imageUrl)}" />
+        <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="${escapeHtml(canonicalUrl)}" />
+        <meta name="twitter:title" content="${escapeHtml(pageTitle)}" />
+        <meta name="twitter:description" content="${escapeHtml(pageDesc)}" />
+        <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+      `;
+
+      let cleanHtml = html
+        .replace(/<title>[\s\S]*?<\/title>/gi, '')
+        .replace(/<meta\s+name="title"[\s\S]*?>/gi, '')
+        .replace(/<meta\s+name="description"[\s\S]*?>/gi, '')
+        .replace(/<meta\s+property="fb:[\s\S]*?>/gi, '')
+        .replace(/<meta\s+property="og:[\s\S]*?>/gi, '')
+        .replace(/<meta\s+property="twitter:[\s\S]*?>/gi, '')
+        .replace(/<meta\s+name="twitter:[\s\S]*?>/gi, '')
+        .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '')
+        .replace(/<link\s+rel="alternate"[\s\S]*?>/gi, '');
 
       return cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
     }
@@ -9943,11 +10065,11 @@ Genera un JSON con chiave "translations" contenente le lingue.`;
       }
     });
 
-    // Middleware to dynamically intercept HTML GET requests for news articles & news section
+    // Middleware to dynamically intercept ALL HTML GET requests for news articles, sections & multilingual routes
     app.use(async (req, res, next) => {
       if (req.method !== 'GET') return next();
       if (req.path.startsWith('/api')) return next();
-      if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff2?|ttf|eot)$/i)) return next();
+      if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff2?|ttf|eot|pdf|xml|txt)$/i)) return next();
 
       const targetSlug = (req.query.notizia || req.query.article || req.query.slug) as string;
       const isNewsRoute = req.path.startsWith('/notizie') || req.path.startsWith('/news');
@@ -9962,36 +10084,39 @@ Genera un JSON con chiave "translations" contenente le lingue.`;
 
       const slugToFind = (targetSlug || pathSlug || '').trim();
 
-      if (slugToFind || isNewsRoute || req.query.tab === 'news') {
-        const articles = getServerArticles();
-        let foundArticle = null;
-        if (slugToFind) {
-          foundArticle = findArticleBySlugOrId(slugToFind, articles);
-        }
+      const indexPath = !isProd
+        ? path.join(process.cwd(), 'index.html')
+        : path.join(distPath, 'index.html');
 
-        const indexPath = !isProd
-          ? path.join(process.cwd(), 'index.html')
-          : path.join(distPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        try {
+          let html = fs.readFileSync(indexPath, 'utf-8');
+          if (!isProd && viteServer) {
+            html = await viteServer.transformIndexHtml(req.originalUrl, html);
+          }
 
-        if (fs.existsSync(indexPath)) {
-          try {
-            let html = fs.readFileSync(indexPath, 'utf-8');
-            if (!isProd && viteServer) {
-              html = await viteServer.transformIndexHtml(req.originalUrl, html);
-            }
-
+          if (slugToFind) {
+            const articles = getServerArticles();
+            const foundArticle = findArticleBySlugOrId(slugToFind, articles);
             if (foundArticle) {
               const customHtml = injectArticleMetaTags(html, foundArticle, req);
               res.setHeader('Content-Type', 'text/html; charset=utf-8');
               return res.send(customHtml);
-            } else if (isNewsRoute || req.query.tab === 'news') {
-              const portalHtml = injectNewsPortalMetaTags(html, req);
-              res.setHeader('Content-Type', 'text/html; charset=utf-8');
-              return res.send(portalHtml);
             }
-          } catch (err: any) {
-            console.error('[SERVER-META-INJECT-ERR]', err.message);
           }
+
+          if (isNewsRoute || req.query.tab === 'news') {
+            const portalHtml = injectNewsPortalMetaTags(html, req);
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            return res.send(portalHtml);
+          }
+
+          // Universal Dynamic Meta Tags & Canonical per ogni tab, lingua e pagina istituzionale
+          const universalHtml = injectUniversalPageMetaTags(html, req);
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(universalHtml);
+        } catch (err: any) {
+          console.error('[SERVER-META-INJECT-ERR]', err.message);
         }
       }
 
@@ -10029,6 +10154,17 @@ Genera un JSON con chiave "translations" contenente le lingue.`;
         }
         
         const indexPath = path.join(distPath, 'index.html');
+        if (fs.existsSync(indexPath)) {
+          try {
+            const rawHtml = fs.readFileSync(indexPath, 'utf-8');
+            const universalHtml = injectUniversalPageMetaTags(rawHtml, req);
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            return res.send(universalHtml);
+          } catch (err: any) {
+            console.error(`[SERVER] Error injecting meta in production fallback: ${err.message}`);
+          }
+        }
+
         res.sendFile(indexPath, (err) => {
           if (err) {
             console.error(`[SERVER] Error sending index.html: ${err.message}`);
