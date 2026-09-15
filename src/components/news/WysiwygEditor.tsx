@@ -218,62 +218,84 @@ export default function WysiwygEditor({
 
   const handleSetHeading = (tag: string) => {
     if (isHtmlMode) return;
+    const targetTag = tag.toLowerCase();
+
     if (editorRef.current) {
       editorRef.current.focus();
       restoreSelection();
     }
 
-    const tagParam = tag.toLowerCase() === 'p' ? '<p>' : `<${tag}>`;
-    
-    // Tentativo primario con formatBlock
-    let success = false;
-    try {
-      success = document.execCommand('formatBlock', false, tagParam);
-      if (!success) {
-        success = document.execCommand('formatBlock', false, tag);
-      }
-    } catch (e) {
-      console.warn('execCommand formatBlock error:', e);
-    }
+    const sel = window.getSelection();
+    let applied = false;
 
-    // Fallback chirurgico per nodi DOM se il browser non ha completato il comando
-    if (!success && editorRef.current) {
-      const sel = window.getSelection();
-      if (sel && sel.rangeCount > 0) {
-        const range = sel.getRangeAt(0);
-        let blockContainer: HTMLElement | null = null;
-        let curr: Node | null = sel.anchorNode;
-        while (curr && curr !== editorRef.current) {
-          if (curr.nodeType === Node.ELEMENT_NODE && ['P', 'H1', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'PRE', 'DIV'].includes((curr as HTMLElement).tagName)) {
+    if (sel && sel.rangeCount > 0 && editorRef.current?.contains(sel.anchorNode)) {
+      const range = sel.getRangeAt(0);
+
+      // Trova il blocco contenitore più vicino all'interno dell'editor
+      let blockContainer: HTMLElement | null = null;
+      let curr: Node | null = sel.anchorNode;
+      while (curr && curr !== editorRef.current) {
+        if (curr.nodeType === Node.ELEMENT_NODE) {
+          const elTag = (curr as HTMLElement).tagName.toLowerCase();
+          if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'div', 'li'].includes(elTag)) {
             blockContainer = curr as HTMLElement;
             break;
           }
-          curr = curr.parentNode;
         }
+        curr = curr.parentNode;
+      }
 
-        if (blockContainer && blockContainer !== editorRef.current) {
-          const newElem = document.createElement(tag);
-          newElem.innerHTML = blockContainer.innerHTML || '<br>';
-          blockContainer.parentNode?.replaceChild(newElem, blockContainer);
-          // Sposta cursore
+      if (blockContainer && blockContainer !== editorRef.current && blockContainer.tagName.toLowerCase() !== 'li') {
+        const newElem = document.createElement(targetTag);
+        newElem.innerHTML = blockContainer.innerHTML || '<br>';
+        // Copia eventuali stili inline compatibili se presenti
+        if (blockContainer.className) newElem.className = blockContainer.className;
+        blockContainer.parentNode?.replaceChild(newElem, blockContainer);
+
+        // Riposiziona il cursore all'interno del nuovo elemento
+        try {
           const newRange = document.createRange();
           newRange.selectNodeContents(newElem);
           newRange.collapse(false);
           sel.removeAllRanges();
           sel.addRange(newRange);
-        } else {
-          const selectedText = range.toString();
-          if (selectedText) {
-            const newElem = document.createElement(tag);
-            newElem.textContent = selectedText;
-            range.deleteContents();
-            range.insertNode(newElem);
-          }
+        } catch (e) {}
+        applied = true;
+      } else {
+        // Se c'è testo selezionato senza blocco contenitore intero
+        const selectedHtml = range.cloneContents();
+        const hasText = range.toString().length > 0;
+        if (hasText) {
+          const newElem = document.createElement(targetTag);
+          newElem.appendChild(selectedHtml);
+          range.deleteContents();
+          range.insertNode(newElem);
+
+          try {
+            const newRange = document.createRange();
+            newRange.selectNodeContents(newElem);
+            newRange.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          } catch (e) {}
+          applied = true;
         }
       }
     }
 
-    setCurrentBlockTag(tag.toLowerCase());
+    // Se non è stato applicato via DOM manipulation, fallback a execCommand
+    if (!applied) {
+      const tagParam = targetTag === 'p' ? '<p>' : `<${targetTag}>`;
+      try {
+        document.execCommand('formatBlock', false, tagParam);
+      } catch (e) {
+        try {
+          document.execCommand('formatBlock', false, targetTag);
+        } catch (err) {}
+      }
+    }
+
+    setCurrentBlockTag(targetTag);
     setShowHeadingPicker(false);
 
     if (editorRef.current) {

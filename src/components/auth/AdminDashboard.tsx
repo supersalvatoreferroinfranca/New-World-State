@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { safeFetch } from '../../services/api';
 import { useBranding } from '../../hooks/useBranding';
 import AdminLegalTab from './AdminLegalTab';
+import AdminAnalyticsTab from './AdminAnalyticsTab';
 import { 
   Users, 
   CheckCircle, 
@@ -26,7 +27,10 @@ import {
   Plus,
   Edit,
   Image,
-  UploadCloud
+  UploadCloud,
+  BarChart3,
+  TrendingUp,
+  Activity
 } from 'lucide-react';
 
 interface Citizen {
@@ -79,7 +83,7 @@ export default function AdminDashboard() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Core navigation state
-  const [activeTab, setActiveTab] = useState<'citizens' | 'proposals' | 'roles' | 'candidacies' | 'broadcasts' | 'branding' | 'legal'>('citizens');
+  const [activeTab, setActiveTab] = useState<'citizens' | 'analytics' | 'proposals' | 'roles' | 'candidacies' | 'broadcasts' | 'branding' | 'legal'>('citizens');
 
   // Role Applications Candidacies State
   const [roleApplications, setRoleApplications] = useState<any[]>([]);
@@ -1173,6 +1177,12 @@ export default function AdminDashboard() {
           <Users className="w-4 h-4 text-brand-gold" /> Anagrafe & Incarichi
         </button>
         <button
+          onClick={() => { setActiveTab('analytics'); }}
+          className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'analytics' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <BarChart3 className="w-4 h-4 text-brand-gold" /> Statistiche & Analytics
+        </button>
+        <button
           onClick={() => { setActiveTab('proposals'); setSelectedProposal(null); }}
           className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'proposals' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
@@ -1212,7 +1222,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12">
         {/* LATERALE CONTENUTO TAB (SINISTRA) */}
-        <div className={`${activeTab === 'legal' ? 'lg:col-span-12 xl:col-span-12' : 'lg:col-span-12 xl:col-span-8'} p-6 md:p-8 space-y-6 border-r border-slate-100`}>
+        <div className={`${(activeTab === 'legal' || activeTab === 'analytics') ? 'lg:col-span-12 xl:col-span-12' : 'lg:col-span-12 xl:col-span-8'} p-6 md:p-8 space-y-6 border-r border-slate-100`}>
           
           {/* TAB 1: GESTIONE CITTADINI */}
           {activeTab === 'citizens' && (
@@ -1975,6 +1985,13 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {activeTab === 'analytics' && (
+            <AdminAnalyticsTab 
+              adminPasswordValue={getAdminPassword()} 
+              showAlert={showAlert} 
+            />
+          )}
+
           {activeTab === 'legal' && (
             <AdminLegalTab 
               adminPasswordValue={getAdminPassword()} 
@@ -1985,7 +2002,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* LATERALE DETTAGLIO / WORKSPACE (DESTRA) */}
-        {activeTab !== 'legal' && (
+        {activeTab !== 'legal' && activeTab !== 'analytics' && (
           <div className="lg:col-span-12 xl:col-span-4 p-6 bg-slate-50/70 border-t xl:border-t-0 border-slate-100 flex flex-col justify-between min-h-[500px]">
           
           {/* RENDER DETTAGLIO CITTADINO */}

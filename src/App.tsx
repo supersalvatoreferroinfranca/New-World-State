@@ -27,6 +27,7 @@ import LegalComplianceModal from './components/pwa/LegalComplianceModal';
 import AccessibilityWidget from './components/pwa/AccessibilityWidget';
 import CookieConsentBanner from './components/pwa/CookieConsentBanner';
 import SovereignCustodeDebugWidget from './components/pwa/SovereignCustodeDebugWidget';
+import { initAnalyticsTracking, trackPageView } from './services/analyticsTracker';
 
 function AppContent() {
   const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news'>(() => {
@@ -70,6 +71,7 @@ function AppContent() {
 
   const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news') => {
     setActiveTabState(tab);
+    trackPageView(tab);
     try {
       localStorage.setItem('nws_last_active_tab', tab);
       if (typeof window !== 'undefined' && window.history && window.history.pushState) {
@@ -97,21 +99,27 @@ function AppContent() {
     } catch (e) {}
   };
 
+  // Inizializza analytics tracking globale e sync navigazione popstate
+  React.useEffect(() => {
+    initAnalyticsTracking(activeTab);
+  }, []);
+
   // Sync state on browser back / forward navigation
   React.useEffect(() => {
     const handlePopState = () => {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
       const hasArticleParam = searchParams.has('notizia') || searchParams.has('article') || searchParams.has('slug');
+      let newTab: any = 'welcome';
       if (tabParam === 'news' || hasArticleParam || window.location.pathname === '/news' || window.location.pathname === '/notizie' || window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
-        setActiveTabState('news');
+        newTab = 'news';
       } else if (tabParam === 'democracy' || tabParam === 'chat' || window.location.pathname === '/democracy' || window.location.pathname === '/chat') {
-        setActiveTabState('democracy');
+        newTab = 'democracy';
       } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network'].includes(tabParam)) {
-        setActiveTabState(tabParam as any);
-      } else {
-        setActiveTabState('welcome');
+        newTab = tabParam;
       }
+      setActiveTabState(newTab);
+      trackPageView(newTab);
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
