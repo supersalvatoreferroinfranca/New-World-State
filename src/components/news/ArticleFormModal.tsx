@@ -988,6 +988,7 @@ export default function ArticleFormModal({
               onChange={setIntro}
               placeholder={tText('Scrivi un testo introduttivo chiaro e sintetico...', 'Write a clear, concise introductory text...')}
               minHeight="120px"
+              maxHeight="240px"
             />
           </div>
 
@@ -1003,7 +1004,8 @@ export default function ArticleFormModal({
               value={content}
               onChange={setContent}
               placeholder={tText('Scrivi il testo completo dell\'articolo qui...', 'Write the full news article body here...')}
-              minHeight="240px"
+              minHeight="260px"
+              maxHeight="480px"
             />
           </div>
 

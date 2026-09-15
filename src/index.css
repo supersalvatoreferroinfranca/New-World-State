@@ -118,6 +118,98 @@
   color: #334155 !important; /* slate-700 */
 }
 
+/* Custom Scrollbar for Editor */
+.editor-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+.editor-scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.editor-scroll-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.editor-scroll-container::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+.editor-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Dark mode scrollbar for HTML editor mode */
+.editor-scroll-container-dark {
+  scrollbar-width: thin;
+  scrollbar-color: #475569 #020617;
+}
+.editor-scroll-container-dark::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.editor-scroll-container-dark::-webkit-scrollbar-track {
+  background: #020617;
+  border-radius: 4px;
+}
+.editor-scroll-container-dark::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+.editor-scroll-container-dark::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Callouts, Dividers, and Tables inside Article & Editor */
+.article-body-content hr,
+.editor-body hr {
+  border: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(197, 168, 128, 0.7), transparent);
+  margin: 2rem 0;
+}
+
+.article-body-content table,
+.editor-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+  border: 1px solid #e2e8f0;
+}
+
+.article-body-content th,
+.editor-body th {
+  background-color: #0a1c3e;
+  color: #ffffff;
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  font-weight: 700;
+  border: 1px solid #1e293b;
+}
+
+.article-body-content td,
+.editor-body td {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+}
+
+.article-body-content tr:nth-child(even) td,
+.editor-body tr:nth-child(even) td {
+  background-color: #f8fafc;
+}
+
+.nws-callout {
+  border-left: 4px solid #c5a059;
+  background: #fdfbf7;
+  padding: 1rem 1.25rem;
+  border-radius: 0 0.75rem 0.75rem 0;
+  margin: 1.5rem 0;
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
 @media (min-width: 768px) {
   .article-body-content p,
   .article-body-content .article-p,

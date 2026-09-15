@@ -1025,6 +1025,27 @@ const MULTILINGUAL_ARTICLE_TITLES_WORKER = {
   }
 };
 
+function getArticleTranslatedTitleWorker(article, lang = 'it') {
+  if (!article) return '';
+  if (lang === 'it' && article.title) return cleanMetaTextWorker(article.title);
+
+  if (article.translations && article.translations[lang] && article.translations[lang].title) {
+    return cleanMetaTextWorker(article.translations[lang].title);
+  }
+
+  const slug = article.slug || article.id || '';
+  const norm = normalizeSlugWorker(slug);
+  for (const [keySlug, transMap] of Object.entries(MULTILINGUAL_ARTICLE_TITLES_WORKER)) {
+    if (normalizeSlugWorker(keySlug) === norm && transMap[lang]) {
+      return transMap[lang];
+    }
+  }
+
+  const baseTitle = cleanMetaTextWorker(article.title) || 'Notizia';
+  const langName = LANGUAGE_DETAILS_WORKER[lang] ? LANGUAGE_DETAILS_WORKER[lang].nativeName : lang.toUpperCase();
+  return `${baseTitle} (${langName})`;
+}
+
 const SSR_SHARE_I18N_WORKER = {
   it: {
     shareTitle: "Kit di Condivisione & Divulgazione Social",
