@@ -4429,7 +4429,7 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
       return null;
     }
 
-    // Motore di ricerca universale multi-sorgente ad alta resilienza (Bing + DDG) per banche dati fotografiche autentiche
+    // Motore di ricerca universale multi-sorgente ad alta resilienza per banche dati fotografiche autentiche (Unsplash, Pexels, Pixabay, Flickr, Wikimedia)
     async function searchPlatformImagesMultiSource(
       keywordsList: string | string[],
       platform: 'unsplash' | 'pexels' | 'pixabay' | 'flickr' | 'wikimedia',
@@ -4469,22 +4469,25 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
       }> = [];
       const seenUrls = new Set<string>();
 
-      // TIER 1: Motore Bing Images (Ultra-veloce e senza rate limit)
-      const bingTerms = [
-        `site:${targetDomain} ${primaryTerm}`,
-        `site:${targetDomain} ${secondaryTerm}`
+      // TIER 1: Motore Bing Images con query mirate per piattaforma fotografica (es. "unsplash seagull photo", "pexels seagull photo")
+      const searchTerms = [
+        `${platform} ${primaryTerm} photo`,
+        `${platform} ${secondaryTerm} photography`,
+        `${platform} ${primaryTerm}`,
+        `"${platform}.com" ${primaryTerm}`,
+        `site:${targetDomain} ${primaryTerm}`
       ].filter((t, idx, arr) => t.trim().length > 3 && arr.indexOf(t) === idx);
 
-      for (const term of bingTerms) {
+      for (const term of searchTerms) {
         if (items.length >= maxCount) break;
         try {
           const res = await fetch(`https://www.bing.com/images/search?q=${encodeURIComponent(term)}&FORM=HDRSC2`, {
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-              'Accept': 'text/html',
+              'Accept': 'text/html,application/xhtml+xml',
               'Accept-Language': 'en-US,en;q=0.9,it;q=0.8'
             },
-            signal: AbortSignal.timeout(3500)
+            signal: AbortSignal.timeout(3000)
           });
           const html = await res.text();
           const matches = [...html.matchAll(/class="iusc"[^>]*m="([^"]+)"/g)];
@@ -4501,7 +4504,12 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
               if (imgUrl.includes('.svg') || imgUrl.includes('logo') || imgUrl.includes('icon')) continue;
 
               const detected = detectPlatformFromUrl(pageUrl, imgUrl);
-              if (detected !== platform) continue;
+              // Verifica se corrisponde alla piattaforma richiesta
+              const isMatch = detected === platform || 
+                imgUrl.toLowerCase().includes(platform) || 
+                pageUrl.toLowerCase().includes(platform);
+              
+              if (!isMatch) continue;
 
               seenUrls.add(imgUrl);
               let title = obj.t || obj.desc || '';
@@ -4525,6 +4533,11 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
                 if (unMatch && unMatch[1]) {
                   authorExtracted = unMatch[1].replace(/[-_]/g, ' ');
                 }
+              } else if (platform === 'pexels') {
+                const pxMatch = pageUrl.match(/pexels\.com\/@([^\/\?]+)/i);
+                if (pxMatch && pxMatch[1]) {
+                  authorExtracted = pxMatch[1].replace(/[-_]/g, ' ');
+                }
               }
 
               items.push({
@@ -4542,11 +4555,11 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
         } catch (bErr) {}
       }
 
-      // TIER 2: Motore DuckDuckGo Images (solo se Bing non ha restituito alcun elemento)
-      if (items.length === 0) {
+      // TIER 2: Motore DuckDuckGo Images (se necessario per raggiungere il quorum)
+      if (items.length < maxCount) {
         const ddgTerms = [
           `site:${targetDomain} ${primaryTerm}`,
-          `"${platform}.com" ${primaryTerm}`
+          `${platform} ${primaryTerm} photo`
         ].filter((t, idx, arr) => t.trim().length > 3 && arr.indexOf(t) === idx);
 
         for (const term of ddgTerms) {
@@ -4554,7 +4567,7 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
           try {
             const res1 = await fetch('https://duckduckgo.com/?q=' + encodeURIComponent(term) + '&iax=images&ia=images', {
               headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.9,it;q=0.8'
               },
@@ -4567,7 +4580,7 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
             const vqd = vqdMatch[1];
             const res2 = await fetch('https://duckduckgo.com/i.js?l=wt-wt&o=json&q=' + encodeURIComponent(term) + '&vqd=' + vqd + '&f=,,,', {
               headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 'Referer': 'https://duckduckgo.com/',
                 'Accept': 'application/json, text/javascript, */*; q=0.01'
               },
@@ -4584,7 +4597,11 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
               if (imgUrl.includes('.svg') || imgUrl.includes('logo') || imgUrl.includes('icon')) continue;
 
               const detected = detectPlatformFromUrl(pageUrl, imgUrl);
-              if (detected !== platform) continue;
+              const isMatch = detected === platform || 
+                imgUrl.toLowerCase().includes(platform) || 
+                pageUrl.toLowerCase().includes(platform);
+              
+              if (!isMatch) continue;
 
               seenUrls.add(imgUrl);
               let rawTitle = r.title || '';

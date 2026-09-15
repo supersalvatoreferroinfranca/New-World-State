@@ -148,20 +148,30 @@ export default function ArticleFormModal({
   const [previewingVideo, setPreviewingVideo] = useState<{ url: string; title: string; sourceUrl?: string } | null>(null);
 
   const handleSearchMedia = async (overrideQuery?: string, overridePlatform?: string) => {
-    const q = (overrideQuery || searchQuery || title || aiTopic).trim();
+    const targetQ = (overrideQuery !== undefined ? overrideQuery : (searchQuery || title || aiTopic || '')).trim();
     const targetPlatform = overridePlatform || selectedPlatform;
-    if (!q) {
+    if (!targetQ) {
       setError(tText('Please specify a topic or title to search media.', 'Inserisci un argomento o un titolo per la ricerca automatica di foto e filmati.'));
       return;
     }
+    
+    // Pulisci rigorosamente i risultati della ricerca precedente e azzera gli errori
+    setMediaSearchResults([]);
     setIsSearchingMedia(true);
     setMediaSearchError(null);
-    if (!searchQuery) setSearchQuery(q);
+    setSearchQuery(targetQ);
+    if (overridePlatform) setSelectedPlatform(overridePlatform as any);
 
     try {
-      const { results, debug } = await searchArticleMedia(q, targetPlatform);
-      setMediaSearchResults(results);
+      const { results, debug } = await searchArticleMedia(targetQ, targetPlatform);
+      setMediaSearchResults(results || []);
       if (debug) setSearchDebugInfo(debug);
+      if (!results || results.length === 0) {
+        setMediaSearchError(tText(
+          `No media found for "${targetQ}". Try different keywords or select "All Channels".`,
+          `Nessun elemento multimediale trovato per "${targetQ}". Prova con altre parole chiave o seleziona "Tutti i Canali".`
+        ));
+      }
     } catch (err: any) {
       console.error('[MEDIA-SEARCH-ERR]', err);
       setMediaSearchError(err.message || tText('Failed to search media.', 'Errore durante la ricerca media.'));

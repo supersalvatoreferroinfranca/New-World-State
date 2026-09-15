@@ -58,6 +58,7 @@ export const MediaDebuggerModal: React.FC<MediaDebuggerModalProps> = ({
       return;
     }
 
+    setResults([]);
     setIsLoading(true);
     setErrorMessage(null);
 

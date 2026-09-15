@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mappa del Sito (Sitemap HTML) | New World State 1.0</title>
+  <meta name="description" content="Mappa del sito e indice gerarchico completo del portale New World State 1.0: sezioni istituzionali, democrazia diretta, archivio notizie, testi costituzionali in 11 lingue e conformità GDPR.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://newworldstate.cloud/sitemap.html">
+  <meta property="og:title" content="Mappa del Sito (Sitemap HTML) | New World State 1.0">
+  <meta property="og:description" content="Indice completo e navigabile di tutte le sezioni, notizie e documenti ufficiali dello Stato Mondiale Sovrano.">
+  <meta property="og:url" content="https://newworldstate.cloud/sitemap.html">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.newworldstate.org/documents/branding_logo/fronte.jpg">
+  <link rel="icon" type="image/x-icon" href="https://newworldstate.cloud/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="RSS News Feed" href="https://newworldstate.cloud/rss.xml">
+  <link rel="sitemap" type="application/xml" title="Sitemap XML" href="https://newworldstate.cloud/sitemap.xml">
+  <link rel="sitemap" type="application/xml" title="News Sitemap XML" href="https://newworldstate.cloud/sitemap-news.xml">
+  
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-card: #ffffff;
+      --navy: #0a1c3e;
+      --navy-light: #162b55;
+      --gold: #c5a880;
+      --gold-light: #dfc8a8;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-accent: rgba(197, 168, 128, 0.3);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(10,28,62,0.07);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 0;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      color: #ffffff;
+      padding: 48px 24px 40px;
+      border-bottom: 4px solid var(--gold);
+      box-shadow: var(--shadow-md);
+    }
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-logo {
+      height: 50px;
+      width: auto;
+      max-width: 140px;
+      object-fit: contain;
+    }
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--gold-light);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .quick-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-quick {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(197, 168, 128, 0.4);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-quick:hover {
+      background: var(--gold);
+      color: var(--navy);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+    .hero-title {
+      font-size: 32px;
+      font-weight: 800;
+      margin-top: 10px;
+      color: #ffffff;
+    }
+    .hero-desc {
+      font-size: 16px;
+      color: #cbd5e1;
+      max-width: 800px;
+      line-height: 1.5;
+    }
+    .search-bar-wrap {
+      margin-top: 12px;
+      position: relative;
+      max-width: 600px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 14px 20px 14px 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border-accent);
+      background: #ffffff;
+      font-size: 15px;
+      color: var(--text-main);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .search-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.35);
+    }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: #94a3b8;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      max-width: 1200px;
+      margin: -24px auto 32px;
+      padding: 0 24px;
+      position: relative;
+      z-index: 10;
+    }
+    .stat-box {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--navy);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 40px 0 20px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.02em;
+    }
+    .section-count {
+      background: #e2e8f0;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .sitemap-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 14px;
+    }
+    .sitemap-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    .sitemap-item:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .item-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--navy);
+      font-weight: 600;
+      font-size: 14px;
+      flex: 1;
+    }
+    .item-link:hover {
+      color: #936829;
+    }
+    .item-icon {
+      font-size: 18px;
+    }
+    .item-url {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: #f1f5f9;
+      padding: 3px 6px;
+      border-radius: 4px;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .item-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #936829;
+      background: #fef3c7;
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 20px;
+    }
+    .article-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .article-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .card-badge {
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--navy);
+      background: #e0e7ff;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+    .card-title a {
+      text-decoration: none;
+      color: var(--navy);
+      transition: color 0.2s;
+    }
+    .card-title a:hover {
+      color: #936829;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      flex: 1;
+    }
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #94a3b8;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+    .card-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-slug-badge {
+      font-size: 10px;
+      font-family: monospace;
+      color: #64748b;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .primary-article-link {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--navy);
+      transition: color 0.2s;
+    }
+    .primary-lang-flag {
+      font-size: 16px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .nested-translations-wrapper {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .nested-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .nested-header-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .nested-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: #047857;
+      background: #d1fae5;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .nested-translations-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .nested-translation-item {
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .nested-translation-item:hover {
+      background: #ffffff;
+    }
+    .nested-translation-item.is-original {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+    }
+    .nested-translation-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      text-decoration: none;
+      color: #334155;
+      font-size: 12px;
+      line-height: 1.4;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .nested-translation-link:hover {
+      color: var(--navy);
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .lang-flag-badge {
+      font-size: 14px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .lang-code-pill {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--navy);
+      background: #e2e8f0;
+      padding: 2px 5px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      min-width: 22px;
+      text-align: center;
+    }
+    .translated-title-text {
+      flex: 1;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .lang-original-tag {
+      font-size: 9px;
+      font-weight: 700;
+      color: #1d4ed8;
+      background: #dbeafe;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .lang-external-arrow {
+      font-size: 11px;
+      color: #94a3b8;
+      flex-shrink: 0;
+    }
+    .feed-links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .feed-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--navy);
+      border-radius: 8px;
+      padding: 16px 20px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .feed-card:hover {
+      border-left-color: var(--gold);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .feed-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .feed-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .feed-target {
+      font-size: 11px;
+      font-family: monospace;
+      color: #936829;
+      margin-top: 4px;
+    }
+    .site-footer {
+      background: var(--navy);
+      color: #94a3b8;
+      padding: 40px 24px;
+      text-align: center;
+      font-size: 13px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .footer-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .footer-links a:hover {
+      color: var(--gold);
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 768px) {
+      .header-banner { padding: 32px 16px 30px; }
+      .hero-title { font-size: 24px; }
+      .sitemap-list { grid-template-columns: 1fr; }
+      .articles-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header-banner">
+    <div class="header-container">
+      <div class="top-nav">
+        <a href="https://newworldstate.cloud/" class="brand-group">
+          <img src="https://www.newworldstate.org/documents/branding_logo/fronte.jpg" alt="Logo New World State" class="brand-logo" onerror="this.onerror=null;this.src='https://newworldstate.cloud/logo.svg';">
+          <div>
+            <div class="brand-title">New World State 1.0</div>
+            <div class="brand-subtitle">Mappa del Sito Ufficiale &amp; Indice Risorse</div>
+          </div>
+        </a>
+        <div class="quick-links">
+          <a href="https://newworldstate.cloud/" class="btn-quick">🏛️ Portale Home</a>
+          <a href="https://newworldstate.cloud/?tab=news" class="btn-quick">📰 Notizie</a>
+          <a href="https://newworldstate.cloud/?tab=constitution" class="btn-quick">📜 Costituzione</a>
+          <a href="https://newworldstate.cloud/sitemap.xml" target="_blank" class="btn-quick">⚙️ Sitemap XML</a>
+        </div>
+      </div>
+
+      <div>
+        <h1 class="hero-title">Mappa del Sito (HTML Sitemap)</h1>
+        <p class="hero-desc">Indice gerarchico completo e navigabile di tutte le sezioni di governo, archivio notizie indipendenti, testi costituzionali in 11 lingue ufficiali e informative di conformità legale.</p>
+        
+        <div class="search-bar-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="sitemapFilter" class="search-input" placeholder="Cerca tra tutte le pagine, articoli, costituzioni e sezioni..." aria-label="Filtra sitemap">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-number">24</div>
+      <div class="stat-label">Pagine &amp; Sezioni</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">11</div>
+      <div class="stat-label">Articoli Madre</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">121</div>
+      <div class="stat-label">Edizioni Multilingua Annidate</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">11</div>
+      <div class="stat-label">Lingue Indicizzate</div>
+    </div>
+  </div>
+
+  <main class="main-container">
+
+    <!-- SEZIONE 1: PIATTAFORMA ISTITUZIONALE -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">🏛️ Piattaforma &amp; Servizi Sovrani</h2>
+      <span class="section-count">Principali</span>
+    </div>
+    <ul class="sitemap-list" id="institutionalList">
+      
+          <li class="sitemap-item" data-search="New World State 1.0 - Portale Ufficiale e Registro Mondiale">
+            <a href="https://newworldstate.cloud/" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">New World State 1.0 - Portale Ufficiale e Registro Mondiale</span>
+            </a>
+            <span class="item-url">/</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Mappa del Sito Ufficiale (HTML Sitemap) - New World State 1.0">
+            <a href="https://newworldstate.cloud/sitemap.html" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Mappa del Sito Ufficiale (HTML Sitemap) - New World State 1.0</span>
+            </a>
+            <span class="item-url">/sitemap.html</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Portale Notizie &amp; Giornalismo Sovrano | New World State 1.0">
+            <a href="https://newworldstate.cloud/?tab=news" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Portale Notizie &amp; Giornalismo Sovrano | New World State 1.0</span>
+            </a>
+            <span class="item-url">/?tab=news</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Richiesta Cittadinanza Sovrana &amp; Registro Mondiale">
+            <a href="https://newworldstate.cloud/?tab=register" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Richiesta Cittadinanza Sovrana &amp; Registro Mondiale</span>
+            </a>
+            <span class="item-url">/?tab=register</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Democrazia Diretta &amp; Referendum Popolari Sovrani">
+            <a href="https://newworldstate.cloud/?tab=democracy" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Democrazia Diretta &amp; Referendum Popolari Sovrani</span>
+            </a>
+            <span class="item-url">/?tab=democracy</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Assemblea Federale e Comunicazioni Sovrane">
+            <a href="https://newworldstate.cloud/?tab=chat" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Assemblea Federale e Comunicazioni Sovrane</span>
+            </a>
+            <span class="item-url">/?tab=chat</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Costituzione dello Stato Mondiale Sovrano">
+            <a href="https://newworldstate.cloud/?tab=constitution" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Costituzione dello Stato Mondiale Sovrano</span>
+            </a>
+            <span class="item-url">/?tab=constitution</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Carta Fondamentale dei Diritti e Doveri Sovrani">
+            <a href="https://newworldstate.cloud/?tab=charter" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Carta Fondamentale dei Diritti e Doveri Sovrani</span>
+            </a>
+            <span class="item-url">/?tab=charter</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Governance &amp; Organigramma Istituzionale Sovrano">
+            <a href="https://newworldstate.cloud/?tab=governance" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Governance &amp; Organigramma Istituzionale Sovrano</span>
+            </a>
+            <span class="item-url">/?tab=governance</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Protocollo di Crittografia e Privacy dei Cittadini">
+            <a href="https://newworldstate.cloud/?tab=privacy" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Protocollo di Crittografia e Privacy dei Cittadini</span>
+            </a>
+            <span class="item-url">/?tab=privacy</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Stato dei Nodi di Rete e Server Decentralizzati">
+            <a href="https://newworldstate.cloud/?tab=network" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Stato dei Nodi di Rete e Server Decentralizzati</span>
+            </a>
+            <span class="item-url">/?tab=network</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Verifica Crittografica Cittadino e Documenti d&#039;Identità">
+            <a href="https://newworldstate.cloud/verify" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Verifica Crittografica Cittadino e Documenti d&#039;Identità</span>
+            </a>
+            <span class="item-url">/verify</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Registro Mondiale dell&#039;Identità Digitale Sovrana">
+            <a href="https://newworldstate.cloud/?tab=identity" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Registro Mondiale dell&#039;Identità Digitale Sovrana</span>
+            </a>
+            <span class="item-url">/?tab=identity</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Domande Frequenti &amp; Risposte Istituzionali (FAQ)">
+            <a href="https://newworldstate.cloud/?tab=faq" class="item-link">
+              <span class="item-icon">🏛️</span>
+              <span class="item-name">Domande Frequenti &amp; Risposte Istituzionali (FAQ)</span>
+            </a>
+            <span class="item-url">/?tab=faq</span>
+          </li>
+        
+    </ul>
+
+    <!-- SEZIONE 2: ARCHIVIO NOTIZIE -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">📰 Archivio Notizie con Edizioni Multilingua Annidate</h2>
+      <span class="section-count">11 Articoli (121 Edizioni Indicizzabili)</span>
+    </div>
+    <div class="articles-grid" id="newsGrid">
+      
+          <div class="sitemap-card article-card" data-search="Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l&#039;Impegno Globale del New World State Diritti &amp; Costituzione Elenor Vance (Cronista Capo) il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l&#039;Impegno Globale del New World State The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State Le Fléau Silencieux : Le Ravage du Travail des Enfants et l&#039;Engagement Mondial du New World State El Flagelo Silente: La Plaga del Trabajo Infantil y el Compromiso Global del New World State O Flagelo Silencioso: A Chaga do Trabalho Infantil e o Compromisso Global do New World State Безмолвное бедствие: бремя детского труда и глобальные обязательства New World State मूक विपत्ति: बाल श्रम का अभिशाप और New World State की वैश्विक प्रतिबद्धता নীরব সংকট: শিশুশ্রমের অভিশাপ এবং New World State-এর বৈশ্বিক অঙ্গীকার 无声的祸患：童工剥削问题与新世界国家的全球承诺 静かなる災禍：児童労働の惨禍と新世界国家のグローバルな誓約 الكارثة الصامتة: آفة عمالة الأطفال والالتزام العالمي لـ New World State">
+            <div class="card-top-bar">
+              <span class="card-badge">Diritti &amp; Costituzione</span>
+              <span class="card-slug-badge">ID: il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l&#039;Impegno Globale del New World State</span>
+              </a>
+            </h3>
+            <p class="card-desc">Un&#039;inchiesta approfondita sulle drammatiche dinamiche del lavoro forzato e dello sfruttamento minorile nel mondo, con il manifesto d&#039;azione ...</p>
+            <div class="card-meta">
+              <span>✍️ Elenor Vance (Cronista Capo)</span>
+              <span>📅 2026-08-26</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l&#039;Impegno Globale del New World State">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state" class="nested-translation-link" hreflang="it" lang="it" title="Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l&#039;Impegno Globale del New World State">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l&#039;Impegno Globale del New World State</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Le Fléau Silencieux : Le Ravage du Travail des Enfants et l&#039;Engagement Mondial du New World State">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Le Fléau Silencieux : Le Ravage du Travail des Enfants et l&#039;Engagement Mondial du New World State</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="El Flagelo Silente: La Plaga del Trabajo Infantil y el Compromiso Global del New World State">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">El Flagelo Silente: La Plaga del Trabajo Infantil y el Compromiso Global del New World State</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="O Flagelo Silencioso: A Chaga do Trabalho Infantil e o Compromisso Global do New World State">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">O Flagelo Silencioso: A Chaga do Trabalho Infantil e o Compromisso Global do New World State</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Безмолвное бедствие: бремя детского труда и глобальные обязательства New World State">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Безмолвное бедствие: бремя детского труда и глобальные обязательства New World State</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="मूक विपत्ति: बाल श्रम का अभिशाप और New World State की वैश्विक प्रतिबद्धता">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">मूक विपत्ति: बाल श्रम का अभिशाप और New World State की वैश्विक प्रतिबद्धता</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="নীরব সংকট: শিশুশ্রমের অভিশাপ এবং New World State-এর বৈশ্বিক অঙ্গীকার">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">নীরব সংকট: শিশুশ্রমের অভিশাপ এবং New World State-এর বৈশ্বিক অঙ্গীকার</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="无声的祸患：童工剥削问题与新世界国家的全球承诺">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">无声的祸患：童工剥削问题与新世界国家的全球承诺</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="静かなる災禍：児童労働の惨禍と新世界国家のグローバルな誓約">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">静かなる災禍：児童労働の惨禍と新世界国家のグローバルな誓約</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="الكارثة الصامتة: آفة عمالة الأطفال والالتزام العالمي لـ New World State">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">الكارثة الصامتة: آفة عمالة الأطفال والالتزام العالمي لـ New World State</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali Politica &amp; Sovranità Elenor Vance (Cronista Capo) limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (English) L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Français) L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Español) L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Português) L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Русский) L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (हिन्दी) L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (বাংলা) L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (中文) L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (日本語) L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (العربية)">
+            <div class="card-top-bar">
+              <span class="card-badge">Politica &amp; Sovranità</span>
+              <span class="card-slug-badge">ID: limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</span>
+              </a>
+            </h3>
+            <p class="card-desc">Analisi di approfondimento geopolitico sulla paralisi del Consiglio di Sicurezza ONU nei conflitti contemporanei e sulla necessità di nuove ...</p>
+            <div class="card-meta">
+              <span>✍️ Elenor Vance (Cronista Capo)</span>
+              <span>📅 2026-08-25</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali" class="nested-translation-link" hreflang="it" lang="it" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (English)">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (English)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Français)">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Français)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Español)">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Español)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Português)">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Português)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Русский)">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (Русский)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (हिन्दी)">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (हिन्दी)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (বাংলা)">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (বাংলা)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (中文)">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (中文)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (日本語)">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (日本語)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (العربية)">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali (العربية)</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server Tecnologia &amp; Rete Sophia Chen infrastrutture-decentralizzate-test-nodo-rete-ridondanza Infrastrutture Decentralizzate: Test di Nodo e Rete a Ridondanza Globale Decentralized Infrastructure: Node Testing and Global Redundancy Network Infrastructures Décentralisées : Tests de Nœuds et Réseau de Redondance Globale Infraestructuras Descentralizadas: Pruebas de Nodos y Red de Redundancia Global Infraestruturas Descentralizadas: Teste de Nó e Rede de Redundância Global Децентрализованная инфраструктура: тестирование узлов и глобальная сеть резервирования विकेंद्रीकृत बुनियादी ढांचा: नोड परीक्षण और वैश्विक अतिरेक नेटवर्क বিকেন্দ্রীভূত অবকাঠামো: নোড পরীক্ষা এবং বৈশ্বিক রিডানড্যান্সি নেটওয়ার্ক 去中心化基础设施：节点测试与全球冗余网络 分散型インフラ：ノードテストとグローバル冗長性ネットワーク البنية التحتية اللامركزية: اختبار العقد وشبكة التكرار العالمية">
+            <div class="card-top-bar">
+              <span class="card-badge">Tecnologia &amp; Rete</span>
+              <span class="card-slug-badge">ID: infrastrutture-decentralizzate-test-nodo-rete-ridondanza</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</span>
+              </a>
+            </h3>
+            <p class="card-desc">Test di resilienza completato con successo su 12 nodi distribuiti globalmente per garantire l&#039;operatività ininterrotta del portale....</p>
+            <div class="card-meta">
+              <span>✍️ Sophia Chen</span>
+              <span>📅 2026-08-25</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza" class="nested-translation-link" hreflang="it" lang="it" title="Infrastrutture Decentralizzate: Test di Nodo e Rete a Ridondanza Globale">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Infrastrutture Decentralizzate: Test di Nodo e Rete a Ridondanza Globale</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="Decentralized Infrastructure: Node Testing and Global Redundancy Network">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">Decentralized Infrastructure: Node Testing and Global Redundancy Network</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Infrastructures Décentralisées : Tests de Nœuds et Réseau de Redondance Globale">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Infrastructures Décentralisées : Tests de Nœuds et Réseau de Redondance Globale</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="Infraestructuras Descentralizadas: Pruebas de Nodos y Red de Redundancia Global">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">Infraestructuras Descentralizadas: Pruebas de Nodos y Red de Redundancia Global</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="Infraestruturas Descentralizadas: Teste de Nó e Rede de Redundância Global">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">Infraestruturas Descentralizadas: Teste de Nó e Rede de Redundância Global</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Децентрализованная инфраструктура: тестирование узлов и глобальная сеть резервирования">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Децентрализованная инфраструктура: тестирование узлов и глобальная сеть резервирования</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="विकेंद्रीकृत बुनियादी ढांचा: नोड परीक्षण और वैश्विक अतिरेक नेटवर्क">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">विकेंद्रीकृत बुनियादी ढांचा: नोड परीक्षण और वैश्विक अतिरेक नेटवर्क</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="বিকেন্দ্রীভূত অবকাঠামো: নোড পরীক্ষা এবং বৈশ্বিক রিডানড্যান্সি নেটওয়ার্ক">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">বিকেন্দ্রীভূত অবকাঠামো: নোড পরীক্ষা এবং বৈশ্বিক রিডানড্যান্সি নেটওয়ার্ক</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="去中心化基础设施：节点测试与全球冗余网络">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">去中心化基础设施：节点测试与全球冗余网络</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="分散型インフラ：ノードテストとグローバル冗長性ネットワーク">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">分散型インフラ：ノードテストとグローバル冗長性ネットワーク</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="البنية التحتية اللامركزية: اختبار العقد وشبكة التكرار العالمية">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">البنية التحتية اللامركزية: اختبار العقد وشبكة التكرار العالمية</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita Economia &amp; Finanza Marcus Thorne fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita Fondo Sovrano di Sostegno Comunitario: Finanza Etica e Distribuita Sovereign Community Support Fund: Ethical and Distributed Finance Fonds Souverain de Soutien Communautaire : Finance Éthique et Distribuée Fondo Soberano de Apoyo Comunitario: Finanzas Éticas y Distribuidas Fundo Soberano de Apoio Comunitário: Finanças Éticas e Distribuídas Суверенный фонд поддержки сообществ: этические и распределенные финансы संप्रभु सामुदायिक सहायता कोष: नैतिक और वितरित वित्त সার্বভৌম সম্প্রদায় সহায়তা তহবিল: নৈতিক ও বিতরণকৃত অর্থায়ন 主权社区支持基金：伦理与分布式金融 主権コミュニティ支援基金：倫理的かつ分散型の金融 صندوق الدعم المجتمعي السيادي: تمويل أخلاقي وموزع">
+            <div class="card-top-bar">
+              <span class="card-badge">Economia &amp; Finanza</span>
+              <span class="card-slug-badge">ID: fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</span>
+              </a>
+            </h3>
+            <p class="card-desc">Istituito il Fondo Sovrano d&#039;Investimento Solidale per finanziare progetti di autosufficienza energetica e sviluppo agroalimentare sostenibi...</p>
+            <div class="card-meta">
+              <span>✍️ Marcus Thorne</span>
+              <span>📅 2026-08-24</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita" class="nested-translation-link" hreflang="it" lang="it" title="Fondo Sovrano di Sostegno Comunitario: Finanza Etica e Distribuita">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Fondo Sovrano di Sostegno Comunitario: Finanza Etica e Distribuita</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="Sovereign Community Support Fund: Ethical and Distributed Finance">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">Sovereign Community Support Fund: Ethical and Distributed Finance</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Fonds Souverain de Soutien Communautaire : Finance Éthique et Distribuée">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Fonds Souverain de Soutien Communautaire : Finance Éthique et Distribuée</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="Fondo Soberano de Apoyo Comunitario: Finanzas Éticas y Distribuidas">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">Fondo Soberano de Apoyo Comunitario: Finanzas Éticas y Distribuidas</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="Fundo Soberano de Apoio Comunitário: Finanças Éticas e Distribuídas">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">Fundo Soberano de Apoio Comunitário: Finanças Éticas e Distribuídas</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Суверенный фонд поддержки сообществ: этические и распределенные финансы">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Суверенный фонд поддержки сообществ: этические и распределенные финансы</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="संप्रभु सामुदायिक सहायता कोष: नैतिक और वितरित वित्त">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">संप्रभु सामुदायिक सहायता कोष: नैतिक और वितरित वित्त</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="সার্বভৌম সম্প্রদায় সহায়তা তহবিল: নৈতিক ও বিতরণকৃত অর্থায়ন">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">সার্বভৌম সম্প্রদায় সহায়তা তহবিল: নৈতিক ও বিতরণকৃত অর্থায়ন</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="主权社区支持基金：伦理与分布式金融">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">主权社区支持基金：伦理与分布式金融</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="主権コミュニティ支援基金：倫理的かつ分散型の金融">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">主権コミュニティ支援基金：倫理的かつ分散型の金融</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="صندوق الدعم المجتمعي السيادي: تمويل أخلاقي وموزع">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">صندوق الدعم المجتمعي السيادي: تمويل أخلاقي وموزع</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale Cultura &amp; Società Elenor Vance (Cronista Capo) accademia-dei-custodi-diritto-naturale-programma-educativo-universale Accademia dei Custodi del Diritto Naturale: Programma Educativo Universale Academy of the Custodians of Natural Law: Universal Educational Curriculum Académie des Gardiens du Droit Naturel : Programme Éducatif Universel Academia de los Custodios del Derecho Natural: Programa Educativo Universal Academia dos Guardiões do Direito Natural: Programa Educativo Universal Академия хранителей естественного права: универсальная образовательная программа प्राकृतिक कानून के संरक्षकों की अकादमी: सार्वभौमिक शैक्षिक कार्यक्रम প্রাকৃতিক আইনের অভিভাবকদের একাডেমি: সর্বজনীন শিক্ষামূলক কর্মসূচি 自然法则守护者学院：普遍教育课程 自然法の守護者アカデミー：普遍的教育カリキュラム أكاديمية حماة القانون الطبيعي: منهج تعليمي شامل">
+            <div class="card-top-bar">
+              <span class="card-badge">Cultura &amp; Società</span>
+              <span class="card-slug-badge">ID: accademia-dei-custodi-diritto-naturale-programma-educativo-universale</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</span>
+              </a>
+            </h3>
+            <p class="card-desc">Aperte le iscrizioni per i corsi internazionali liberi su sovranità personale, diritti inalienabili e autodeterminazione dei popoli....</p>
+            <div class="card-meta">
+              <span>✍️ Elenor Vance (Cronista Capo)</span>
+              <span>📅 2026-08-23</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale" class="nested-translation-link" hreflang="it" lang="it" title="Accademia dei Custodi del Diritto Naturale: Programma Educativo Universale">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Accademia dei Custodi del Diritto Naturale: Programma Educativo Universale</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="Academy of the Custodians of Natural Law: Universal Educational Curriculum">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">Academy of the Custodians of Natural Law: Universal Educational Curriculum</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Académie des Gardiens du Droit Naturel : Programme Éducatif Universel">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Académie des Gardiens du Droit Naturel : Programme Éducatif Universel</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="Academia de los Custodios del Derecho Natural: Programa Educativo Universal">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">Academia de los Custodios del Derecho Natural: Programa Educativo Universal</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="Academia dos Guardiões do Direito Natural: Programa Educativo Universal">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">Academia dos Guardiões do Direito Natural: Programa Educativo Universal</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Академия хранителей естественного права: универсальная образовательная программа">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Академия хранителей естественного права: универсальная образовательная программа</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="प्राकृतिक कानून के संरक्षकों की अकादमी: सार्वभौमिक शैक्षिक कार्यक्रम">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">प्राकृतिक कानून के संरक्षकों की अकादमी: सार्वभौमिक शैक्षिक कार्यक्रम</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="প্রাকৃতিক আইনের অভিভাবকদের একাডেমি: সর্বজনীন শিক্ষামূলক কর্মসূচি">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">প্রাকৃতিক আইনের অভিভাবকদের একাডেমি: সর্বজনীন শিক্ষামূলক কর্মসূচি</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="自然法则守护者学院：普遍教育课程">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">自然法则守护者学院：普遍教育课程</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="自然法の守護者アカデミー：普遍的教育カリキュラム">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">自然法の守護者アカデミー：普遍的教育カリキュラム</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="أكاديمية حماة القانون الطبيعي: منهج تعليمي شامل">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">أكاديمية حماة القانون الطبيعي: منهج تعليمي شامل</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini Diritti &amp; Costituzione Marcus Thorne protocollo-trasparenza-finanziaria-tutela-privacy Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini Financial Transparency Protocol and Citizens&#039; Privacy Protection Protocole de Transparence Financière et Protection de la Vie Privée des Citoyens Protocolo de Transparencia Financiera y Protección de la Privacidad Ciudadana Protocolo de Transparência Financeira e Proteção da Privacidade dos Cidadãos Протокол финансовой прозрачности и защита конфиденциальности граждан वित्तीय पारदर्शिता प्रोटोकॉल और नागरिक गोपनीयता संरक्षण আর্থিক স্বচ্ছতা প্রোটোকল এবং নাগরিকদের গোপনীয়তা সুরক্ষা 金融透明度协议与公民隐私保护 金融透明性プロトコルと市民のプライバシー保護 بروتوكول الشفافية المالية وحماية خصوصية المواطنين">
+            <div class="card-top-bar">
+              <span class="card-badge">Diritti &amp; Costituzione</span>
+              <span class="card-slug-badge">ID: protocollo-trasparenza-finanziaria-tutela-privacy</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</span>
+              </a>
+            </h3>
+            <p class="card-desc">Approvato a maggioranza qualificata il nuovo disciplinare a protezione dei dati biometrici e per la riservatezza delle transazioni comunitar...</p>
+            <div class="card-meta">
+              <span>✍️ Marcus Thorne</span>
+              <span>📅 2026-08-23</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy" class="nested-translation-link" hreflang="it" lang="it" title="Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="Financial Transparency Protocol and Citizens&#039; Privacy Protection">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">Financial Transparency Protocol and Citizens&#039; Privacy Protection</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Protocole de Transparence Financière et Protection de la Vie Privée des Citoyens">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Protocole de Transparence Financière et Protection de la Vie Privée des Citoyens</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="Protocolo de Transparencia Financiera y Protección de la Privacidad Ciudadana">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">Protocolo de Transparencia Financiera y Protección de la Privacidad Ciudadana</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="Protocolo de Transparência Financeira e Proteção da Privacidade dos Cidadãos">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">Protocolo de Transparência Financeira e Proteção da Privacidade dos Cidadãos</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Протокол финансовой прозрачности и защита конфиденциальности граждан">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Протокол финансовой прозрачности и защита конфиденциальности граждан</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="वित्तीय पारदर्शिता प्रोटोकॉल और नागरिक गोपनीयता संरक्षण">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">वित्तीय पारदर्शिता प्रोटोकॉल और नागरिक गोपनीयता संरक्षण</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="আর্থিক স্বচ্ছতা প্রোটোকল এবং নাগরিকদের গোপনীয়তা সুরক্ষা">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">আর্থিক স্বচ্ছতা প্রোটোকল এবং নাগরিকদের গোপনীয়তা সুরক্ষা</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="金融透明度协议与公民隐私保护">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">金融透明度协议与公民隐私保护</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="金融透明性プロトコルと市民のプライバシー保護">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">金融透明性プロトコルと市民のプライバシー保護</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="بروتوكول الشفافية المالية وحماية خصوصية المواطنين">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">بروتوكول الشفافية المالية وحماية خصوصية المواطنين</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale Diritti &amp; Costituzione Marcus Thorne carta-diritti-digitali-inviolabilita-sovranita-individuale Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale Digital Rights Charter and Inviolability of Individual Sovereignty Charte des Droits Numériques et Inviolabilité de la Souveraineté Individuelle Carta de Derechos Digitales e Inviolabilidad de la Soberanía Individual Carta dos Direitos Digitais e Inviolabilidade da Soberania Individual Хартия цифровых прав и неприкосновенность индивидуального суверенитета डिजिटल अधिकार चार्टर और व्यक्तिगत संप्रभुता की अनुल्लंघनीयता ডিজিটাল অধিকার সনদ এবং ব্যক্তিগত সার্বভৌমত্বের অলঙ্ঘনীয়তা 数字权利宪章与个人主权的不可侵犯性 デジタル権利憲章と個人の主権の不可侵性 ميثاق الحقوق الرقمية وحرمة السيادة الفردية">
+            <div class="card-top-bar">
+              <span class="card-badge">Diritti &amp; Costituzione</span>
+              <span class="card-slug-badge">ID: carta-diritti-digitali-inviolabilita-sovranita-individuale</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</span>
+              </a>
+            </h3>
+            <p class="card-desc">Risoluzione fondamentale approvata dal Consiglio dei Garanti sulla tutela dell&#039;integrità biologica e dell&#039;identità digitale sovrana....</p>
+            <div class="card-meta">
+              <span>✍️ Marcus Thorne</span>
+              <span>📅 2026-08-22</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale" class="nested-translation-link" hreflang="it" lang="it" title="Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="Digital Rights Charter and Inviolability of Individual Sovereignty">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">Digital Rights Charter and Inviolability of Individual Sovereignty</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Charte des Droits Numériques et Inviolabilité de la Souveraineté Individuelle">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Charte des Droits Numériques et Inviolabilité de la Souveraineté Individuelle</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="Carta de Derechos Digitales e Inviolabilidad de la Soberanía Individual">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">Carta de Derechos Digitales e Inviolabilidad de la Soberanía Individual</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="Carta dos Direitos Digitais e Inviolabilidade da Soberania Individual">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">Carta dos Direitos Digitais e Inviolabilidade da Soberania Individual</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Хартия цифровых прав и неприкосновенность индивидуального суверенитета">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Хартия цифровых прав и неприкосновенность индивидуального суверенитета</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="डिजिटल अधिकार चार्टर और व्यक्तिगत संप्रभुता की अनुल्लंघनीयता">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">डिजिटल अधिकार चार्टर और व्यक्तिगत संप्रभुता की अनुल्लंघनीयता</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="ডিজিটাল অধিকার সনদ এবং ব্যক্তিগত সার্বভৌমত্বের অলঙ্ঘনীয়তা">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">ডিজিটাল অধিকার সনদ এবং ব্যক্তিগত সার্বভৌমত্বের অলঙ্ঘনীয়তা</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="数字权利宪章与个人主权的不可侵犯性">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">数字权利宪章与个人主权的不可侵犯性</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="デジタル権利憲章と個人の主権の不可侵性">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">デジタル権利憲章と個人の主権の不可侵性</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="ميثاق الحقوق الرقمية وحرمة السيادة الفردية">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">ميثاق الحقوق الرقمية وحرمة السيادة الفردية</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale Economia &amp; Finanza Sophia Chen economia-circolare-moneta-comunita-superare-usura-bancaria Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale Circular Economy and Community Currency: Overcoming Traditional Banking Usury Économie Circulaire et Monnaie Communautaire : Surmonter l&#039;Usure Bancaire Traditionnelle Economía Circular y Moneda Comunitaria: Superar la Usura Bancaria Tradicional Economia Circular e Moeda Comunitária: Superar a Usura Bancária Tradicional Циркулярная экономика и валюта сообщества: преодоление традиционного банковского ростовщичества परिपत्र अर्थव्यवस्था और सामुदायिक मुद्रा: पारंपरिक बैंकिंग सूदखोरी से पार पाना বৃত্তাকার অর্থনীতি এবং কমিউনিটি মুদ্রা: ঐতিহ্যবাহী ব্যাংকিং সুদ থেকে মুক্তি 循环经济与社区货币：克服传统银行高利贷 循環型経済と地域通貨：従来の銀行による高利貸しの克服 الاقتصاد الدائري وعملة المجتمع: التغلب على الربا المصرفي التقليدي">
+            <div class="card-top-bar">
+              <span class="card-badge">Economia &amp; Finanza</span>
+              <span class="card-slug-badge">ID: economia-circolare-moneta-comunita-superare-usura-bancaria</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</span>
+              </a>
+            </h3>
+            <p class="card-desc">Reportage economico sui circuiti di credito reciproco e sull&#039;adozione di unità di scambio ancorate al valore del lavoro reale....</p>
+            <div class="card-meta">
+              <span>✍️ Sophia Chen</span>
+              <span>📅 2026-08-21</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria" class="nested-translation-link" hreflang="it" lang="it" title="Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="Circular Economy and Community Currency: Overcoming Traditional Banking Usury">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">Circular Economy and Community Currency: Overcoming Traditional Banking Usury</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Économie Circulaire et Monnaie Communautaire : Surmonter l&#039;Usure Bancaire Traditionnelle">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Économie Circulaire et Monnaie Communautaire : Surmonter l&#039;Usure Bancaire Traditionnelle</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="Economía Circular y Moneda Comunitaria: Superar la Usura Bancaria Tradicional">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">Economía Circular y Moneda Comunitaria: Superar la Usura Bancaria Tradicional</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="Economia Circular e Moeda Comunitária: Superar a Usura Bancária Tradicional">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">Economia Circular e Moeda Comunitária: Superar a Usura Bancária Tradicional</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Циркулярная экономика и валюта сообщества: преодоление традиционного банковского ростовщичества">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Циркулярная экономика и валюта сообщества: преодоление традиционного банковского ростовщичества</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="परिपत्र अर्थव्यवस्था और सामुदायिक मुद्रा: पारंपरिक बैंकिंग सूदखोरी से पार पाना">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">परिपत्र अर्थव्यवस्था और सामुदायिक मुद्रा: पारंपरिक बैंकिंग सूदखोरी से पार पाना</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="বৃত্তাকার অর্থনীতি এবং কমিউনিটি মুদ্রা: ঐতিহ্যবাহী ব্যাংকিং সুদ থেকে মুক্তি">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">বৃত্তাকার অর্থনীতি এবং কমিউনিটি মুদ্রা: ঐতিহ্যবাহী ব্যাংকিং সুদ থেকে মুক্তি</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="循环经济与社区货币：克服传统银行高利贷">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">循环经济与社区货币：克服传统银行高利贷</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="循環型経済と地域通貨：従来の銀行による高利貸しの克服">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">循環型経済と地域通貨：従来の銀行による高利貸しの克服</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="الاقتصاد الدائري وعملة المجتمع: التغلب على الربا المصرفي التقليدي">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">الاقتصاد الدائري وعملة المجتمع: التغلب على الربا المصرفي التقليدي</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0 Politica &amp; Sovranità Elenor Vance (Cronista Capo) inaugurazione-registro-globale-democrazia-diretta-10 Inaugurazione del Registro Globale per la Democrazia Diretta 1.0 Inauguration of the Global Registry for Direct Democracy 1.0 Inauguration du Registre Mondial pour la Démocratie Directe 1.0 Inauguración del Registro Global para la Democracia Directa 1.0 Inauguração do Registro Global para a Democracia Direta 1.0 Открытие Глобального реестра прямой демократии 1.0 प्रत्यक्ष लोकतंत्र 1.0 के लिए वैश्विक रजिस्ट्री का उद्घाटन প্রত্যক্ষ গণতন্ত্র ১.০-এর জন্য বৈশ্বিক রেজিস্ট্রির উদ্বোধন 直接民主1.0全球注册处启动仪式 直接民主主義1.0グローバルレジストリ開設式 تدشين السجل العالمي للديمقراطية المباشرة 1.0">
+            <div class="card-top-bar">
+              <span class="card-badge">Politica &amp; Sovranità</span>
+              <span class="card-slug-badge">ID: inaugurazione-registro-globale-democrazia-diretta-10</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</span>
+              </a>
+            </h3>
+            <p class="card-desc">L&#039;Assemblea Fondativa annuncia l&#039;apertura del portale sovrano decentralizzato. Tutti i cittadini hanno ora diritto di voto diretto sui refer...</p>
+            <div class="card-meta">
+              <span>✍️ Elenor Vance (Cronista Capo)</span>
+              <span>📅 2026-08-21</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10" class="nested-translation-link" hreflang="it" lang="it" title="Inaugurazione del Registro Globale per la Democrazia Diretta 1.0">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Inaugurazione del Registro Globale per la Democrazia Diretta 1.0</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="Inauguration of the Global Registry for Direct Democracy 1.0">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">Inauguration of the Global Registry for Direct Democracy 1.0</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Inauguration du Registre Mondial pour la Démocratie Directe 1.0">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Inauguration du Registre Mondial pour la Démocratie Directe 1.0</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="Inauguración del Registro Global para la Democracia Directa 1.0">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">Inauguración del Registro Global para la Democracia Directa 1.0</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="Inauguração do Registro Global para a Democracia Direta 1.0">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">Inauguração do Registro Global para a Democracia Direta 1.0</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Открытие Глобального реестра прямой демократии 1.0">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Открытие Глобального реестра прямой демократии 1.0</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="प्रत्यक्ष लोकतंत्र 1.0 के लिए वैश्विक रजिस्ट्री का उद्घाटन">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">प्रत्यक्ष लोकतंत्र 1.0 के लिए वैश्विक रजिस्ट्री का उद्घाटन</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="প্রত্যক্ষ গণতন্ত্র ১.০-এর জন্য বৈশ্বিক রেজিস্ট্রির উদ্বোধন">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">প্রত্যক্ষ গণতন্ত্র ১.০-এর জন্য বৈশ্বিক রেজিস্ট্রির উদ্বোধন</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="直接民主1.0全球注册处启动仪式">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">直接民主1.0全球注册处启动仪式</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="直接民主主義1.0グローバルレジストリ開設式">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">直接民主主義1.0グローバルレジストリ開設式</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="تدشين السجل العالمي للديمقراطية المباشرة 1.0">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">تدشين السجل العالمي للديمقراطية المباشرة 1.0</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale Tecnologia &amp; Rete Sophia Chen intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale Ethical Artificial Intelligence and Data Sovereignty in the Digital Assembly Intelligence Artificielle Éthique et Souveraineté des Données à l&#039;Assemblée Numérique Inteligencia Artificial Ética y Soberanía de Datos en la Asamblea Digital Inteligência Artificial Ética e Soberania dos Dados na Assembleia Digital Этичный искусственный интеллект и суверенитет данных в цифровой ассамблее डिजिटल असेंबली में नैतिक कृत्रिम बुद्धिमत्ता और डेटा संप्रभुता ডিজিটাল সমাবেশে নৈতিক কৃত্রিম বুদ্ধিমত্তা এবং ডেটা সার্বভৌমত্ব 数字议会中的伦理人工智能与数据主权 デジタル議会における倫理的AIとデータ主权 الذكاء الاصطناعي الأخلاقي وسيادة البيانات في الجمعية الرقمية">
+            <div class="card-top-bar">
+              <span class="card-badge">Tecnologia &amp; Rete</span>
+              <span class="card-slug-badge">ID: intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</span>
+              </a>
+            </h3>
+            <p class="card-desc">Linee guida per l&#039;impiego di modelli linguistici aperti al servizio della sintesi legislativa e della trasparenza amministrativa....</p>
+            <div class="card-meta">
+              <span>✍️ Sophia Chen</span>
+              <span>📅 2026-08-20</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale" class="nested-translation-link" hreflang="it" lang="it" title="Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="Ethical Artificial Intelligence and Data Sovereignty in the Digital Assembly">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">Ethical Artificial Intelligence and Data Sovereignty in the Digital Assembly</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Intelligence Artificielle Éthique et Souveraineté des Données à l&#039;Assemblée Numérique">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Intelligence Artificielle Éthique et Souveraineté des Données à l&#039;Assemblée Numérique</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="Inteligencia Artificial Ética y Soberanía de Datos en la Asamblea Digital">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">Inteligencia Artificial Ética y Soberanía de Datos en la Asamblea Digital</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="Inteligência Artificial Ética e Soberania dos Dados na Assembleia Digital">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">Inteligência Artificial Ética e Soberania dos Dados na Assembleia Digital</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Этичный искусственный интеллект и суверенитет данных в цифровой ассамблее">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Этичный искусственный интеллект и суверенитет данных в цифровой ассамблее</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="डिजिटल असेंबली में नैतिक कृत्रिम बुद्धिमत्ता और डेटा संप्रभुता">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">डिजिटल असेंबली में नैतिक कृत्रिम बुद्धिमत्ता और डेटा संप्रभुता</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="ডিজিটাল সমাবেশে নৈতিক কৃত্রিম বুদ্ধিমত্তা এবং ডেটা সার্বভৌমত্ব">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">ডিজিটাল সমাবেশে নৈতিক কৃত্রিম বুদ্ধিমত্তা এবং ডেটা সার্বভৌমত্ব</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="数字议会中的伦理人工智能与数据主权">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">数字议会中的伦理人工智能与数据主权</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="デジタル議会における倫理的AIとデータ主权">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">デジタル議会における倫理的AIとデータ主权</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="الذكاء الاصطناعي الأخلاقي وسيادة البيانات في الجمعية الرقمية">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">الذكاء الاصطناعي الأخلاقي وسيادة البيانات في الجمعية الرقمية</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+          <div class="sitemap-card article-card" data-search="Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte Cultura &amp; Società Elenor Vance (Cronista Capo) patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte Patrimonio Culturale Mondiale: Rete delle Biblioteche Sovrane Aperte World Cultural Heritage: Network of Open Sovereign Libraries Patrimoine Culturel Mondial : Réseau des Bibliothèques Souveraines Ouvertes Patrimonio Cultural Mundial: Red de Bibliotecas Soberanas Abiertas Patrimônio Cultural Mundial: Rede de Bibliotecas Soberanas Abertas Всемирное культурное наследие: сеть открытых суверенных библиотек विश्व सांस्कृतिक विरासत: मुक्त संप्रभु पुस्तकालयों का नेटवर्क বিশ্ব সাংস্কৃতিক ঐতিহ্য: উন্মুক্ত সার্বভৌম গ্রন্থাগার নেটওয়ার্ক 世界文化遗产：开放主权图书馆网络 世界文化遺産：オープン主権図書館ネットワーク التراث الثقافي العالمي: شبكة المكتبات السيادية المفتوحة">
+            <div class="card-top-bar">
+              <span class="card-badge">Cultura &amp; Società</span>
+              <span class="card-slug-badge">ID: patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte</span>
+            </div>
+            <h3 class="card-title">
+              <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte" hreflang="it" lang="it" class="primary-article-link">
+                <span class="primary-lang-flag">🇮🇹</span>
+                <span class="primary-title-text">Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</span>
+              </a>
+            </h3>
+            <p class="card-desc">Iniziativa per la conservazione digitale permanente dei testi storici, filosofici e scientifici liberi da copyright restrittivo....</p>
+            <div class="card-meta">
+              <span>✍️ Elenor Vance (Cronista Capo)</span>
+              <span>📅 2026-08-19</span>
+            </div>
+
+            <!-- Annidamento Gerarchico Indicizzabile: Edizioni Multilingua con Titoli Tradotti per Motori di Ricerca -->
+            <div class="nested-translations-wrapper">
+              <div class="nested-header">
+                <div class="nested-header-title">
+                  <span class="nested-icon">🌐</span>
+                  <strong>Edizioni Tradotte Ufficiali (11 Lingue)</strong>
+                </div>
+                <span class="nested-badge">Indicizzate con Titoli Tradotti</span>
+              </div>
+              <ul class="nested-translations-list" aria-label="Versioni tradotte di Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte">
+                
+                  <li class="nested-translation-item is-original">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte" class="nested-translation-link" hreflang="it" lang="it" title="Patrimonio Culturale Mondiale: Rete delle Biblioteche Sovrane Aperte">
+                      <span class="lang-flag-badge">🇮🇹</span>
+                      <span class="lang-code-pill">IT</span>
+                      <span class="translated-title-text" lang="it">Patrimonio Culturale Mondiale: Rete delle Biblioteche Sovrane Aperte</span>
+                      <span class="lang-original-tag">Originale IT</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=en" class="nested-translation-link" hreflang="en" lang="en" title="World Cultural Heritage: Network of Open Sovereign Libraries">
+                      <span class="lang-flag-badge">🇬🇧</span>
+                      <span class="lang-code-pill">EN</span>
+                      <span class="translated-title-text" lang="en">World Cultural Heritage: Network of Open Sovereign Libraries</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=fr" class="nested-translation-link" hreflang="fr" lang="fr" title="Patrimoine Culturel Mondial : Réseau des Bibliothèques Souveraines Ouvertes">
+                      <span class="lang-flag-badge">🇫🇷</span>
+                      <span class="lang-code-pill">FR</span>
+                      <span class="translated-title-text" lang="fr">Patrimoine Culturel Mondial : Réseau des Bibliothèques Souveraines Ouvertes</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=es" class="nested-translation-link" hreflang="es" lang="es" title="Patrimonio Cultural Mundial: Red de Bibliotecas Soberanas Abiertas">
+                      <span class="lang-flag-badge">🇪🇸</span>
+                      <span class="lang-code-pill">ES</span>
+                      <span class="translated-title-text" lang="es">Patrimonio Cultural Mundial: Red de Bibliotecas Soberanas Abiertas</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=pt" class="nested-translation-link" hreflang="pt" lang="pt" title="Patrimônio Cultural Mundial: Rede de Bibliotecas Soberanas Abertas">
+                      <span class="lang-flag-badge">🇵🇹</span>
+                      <span class="lang-code-pill">PT</span>
+                      <span class="translated-title-text" lang="pt">Patrimônio Cultural Mundial: Rede de Bibliotecas Soberanas Abertas</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ru" class="nested-translation-link" hreflang="ru" lang="ru" title="Всемирное культурное наследие: сеть открытых суверенных библиотек">
+                      <span class="lang-flag-badge">🇷🇺</span>
+                      <span class="lang-code-pill">RU</span>
+                      <span class="translated-title-text" lang="ru">Всемирное культурное наследие: сеть открытых суверенных библиотек</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=hi" class="nested-translation-link" hreflang="hi" lang="hi" title="विश्व सांस्कृतिक विरासत: मुक्त संप्रभु पुस्तकालयों का नेटवर्क">
+                      <span class="lang-flag-badge">🇮🇳</span>
+                      <span class="lang-code-pill">HI</span>
+                      <span class="translated-title-text" lang="hi">विश्व सांस्कृतिक विरासत: मुक्त संप्रभु पुस्तकालयों का नेटवर्क</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=bn" class="nested-translation-link" hreflang="bn" lang="bn" title="বিশ্ব সাংস্কৃতিক ঐতিহ্য: উন্মুক্ত সার্বভৌম গ্রন্থাগার নেটওয়ার্ক">
+                      <span class="lang-flag-badge">🇧🇩</span>
+                      <span class="lang-code-pill">BN</span>
+                      <span class="translated-title-text" lang="bn">বিশ্ব সাংস্কৃতিক ঐতিহ্য: উন্মুক্ত সার্বভৌম গ্রন্থাগার নেটওয়ার্ক</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=zh" class="nested-translation-link" hreflang="zh" lang="zh" title="世界文化遗产：开放主权图书馆网络">
+                      <span class="lang-flag-badge">🇨🇳</span>
+                      <span class="lang-code-pill">ZH</span>
+                      <span class="translated-title-text" lang="zh">世界文化遗产：开放主权图书馆网络</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ja" class="nested-translation-link" hreflang="ja" lang="ja" title="世界文化遺産：オープン主権図書館ネットワーク">
+                      <span class="lang-flag-badge">🇯🇵</span>
+                      <span class="lang-code-pill">JA</span>
+                      <span class="translated-title-text" lang="ja">世界文化遺産：オープン主権図書館ネットワーク</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+                  <li class="nested-translation-item ">
+                    <a href="https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ar" class="nested-translation-link" hreflang="ar" lang="ar" title="التراث الثقافي العالمي: شبكة المكتبات السيادية المفتوحة">
+                      <span class="lang-flag-badge">🇸🇦</span>
+                      <span class="lang-code-pill">AR</span>
+                      <span class="translated-title-text" lang="ar">التراث الثقافي العالمي: شبكة المكتبات السيادية المفتوحة</span>
+                      <span class="lang-external-arrow">↗</span>
+                    </a>
+                  </li>
+                
+              </ul>
+            </div>
+          </div>
+        
+    </div>
+
+    <!-- SEZIONE 3: CATEGORIE NOTIZIE -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">📂 Categorie &amp; Canali Tematici</h2>
+      <span class="section-count">5 Categorie</span>
+    </div>
+    <ul class="sitemap-list" id="categoryList">
+      
+          <li class="sitemap-item" data-search="Notizie Politica &amp; Sovranità - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-politica" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Politica &amp; Sovranità - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-politica</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Notizie Economia &amp; Finanza Sostenibile - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-economia" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Economia &amp; Finanza Sostenibile - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-economia</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Notizie Diritti &amp; Costituzione Sovrana - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-diritti" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Diritti &amp; Costituzione Sovrana - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-diritti</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Notizie Tecnologia &amp; Innovazione Decentralizzata - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-tecnologia" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Tecnologia &amp; Innovazione Decentralizzata - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-tecnologia</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Notizie Cultura &amp; Società Globale - New World State">
+            <a href="https://newworldstate.cloud/?tab=news&amp;category=cat-cultura" class="item-link">
+              <span class="item-icon">📂</span>
+              <span class="item-name">Notizie Cultura &amp; Società Globale - New World State</span>
+            </a>
+            <span class="item-url">/?tab=news&amp;category=cat-cultura</span>
+          </li>
+        
+    </ul>
+
+    <!-- SEZIONE 4: COSTITUZIONE NELLE 11 LINGUE -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">📜 Costituzione e Testi Fondamentali nelle 11 Lingue Ufficiali</h2>
+      <span class="section-count">11 Documenti PDF</span>
+    </div>
+    <ul class="sitemap-list" id="constitutionList">
+      
+          <li class="sitemap-item" data-search="Costituzione e Atto Costitutivo dello Stato Mondiale (Italiano) it">
+            <a href="https://newworldstate.cloud/costitution/COSTITUZIONE-E-ATTO-COSTITUTIVO-STATO-MONDIALE.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇮🇹</span>
+              <span class="item-name">Costituzione e Atto Costitutivo dello Stato Mondiale (Italiano)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (IT)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Constitution of the Sovereign World State (English) en">
+            <a href="https://newworldstate.cloud/costitution/CONSTITUTION-OF-THE-SOVEREIGN-WORLD-STATE.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇬🇧</span>
+              <span class="item-name">Constitution of the Sovereign World State (English)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (EN)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Constitution de l&#039;État Mondial Souverain (Français) fr">
+            <a href="https://newworldstate.cloud/costitution/CONSTITUTION-DE-LETAT-MONDIAL-SOUVERAIN-Francese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇫🇷</span>
+              <span class="item-name">Constitution de l&#039;État Mondial Souverain (Français)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (FR)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Constitución del Estado Mundial Soberano (Español) es">
+            <a href="https://newworldstate.cloud/costitution/CONSTITUCION-DEL-ESTADO-MUNDIAL-SOBERANO.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇪🇸</span>
+              <span class="item-name">Constitución del Estado Mundial Soberano (Español)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (ES)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Constituição do Estado Soberano Mundial (Português) pt">
+            <a href="https://newworldstate.cloud/costitution/CONSTITUICAO-DO-ESTADO-SOBERANO-MUNDIAL-Portoghese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇵🇹</span>
+              <span class="item-name">Constituição do Estado Soberano Mundial (Português)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (PT)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Конституция Суверенного Мирового Государства (Русский) ru">
+            <a href="https://newworldstate.cloud/costitution/КОНСТИТУЦИЯ-СУВЕРЕННОГО-МИРОВОГО-ГОСУДАРСТВА-Russo.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇷🇺</span>
+              <span class="item-name">Конституция Суверенного Мирового Государства (Русский)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (RU)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="संप्रभु विश्व राज्य का संविधान (हिन्दी) hi">
+            <a href="https://newworldstate.cloud/costitution/संप्रभु-विश्व-राज्य-Hindi.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇮🇳</span>
+              <span class="item-name">संप्रभु विश्व राज्य का संविधान (हिन्दी)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (HI)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="সার্বভৌম বিশ্ব রাষ্ট্রের সংবিধান (বাংলা) bn">
+            <a href="https://newworldstate.cloud/costitution/সার্বভৌম-विश्व-রাষ্ট্র-Bengalese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇧🇩</span>
+              <span class="item-name">সার্বভৌম বিশ্ব রাষ্ট্রের সংবিধান (বাংলা)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (BN)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="主权世界国家宪法 (中文) zh">
+            <a href="https://newworldstate.cloud/costitution/主权世界国家-Cinese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇨🇳</span>
+              <span class="item-name">主权世界国家宪法 (中文)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (ZH)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="主権世界国家憲法 (日本語) ja">
+            <a href="https://newworldstate.cloud/costitution/主権世界国家-Giapponese.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇯🇵</span>
+              <span class="item-name">主権世界国家憲法 (日本語)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (JA)</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="دستور الدولة العالمية ذات السيادة (العربية) ar">
+            <a href="https://newworldstate.cloud/costitution/دستور-الدولة-العالمية-ذات-السيادة-Arabo.pdf" target="_blank" rel="noopener noreferrer" class="item-link">
+              <span class="item-icon">🇸🇦</span>
+              <span class="item-name">دستور الدولة العالمية ذات السيادة (العربية)</span>
+            </a>
+            <span class="item-badge">PDF Ufficiale (AR)</span>
+          </li>
+        
+    </ul>
+
+    <!-- SEZIONE 5: CONFORMITÀ E LEGALI -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">⚖️ Conformità Legale, Trasparenza &amp; GDPR</h2>
+      <span class="section-count">5 Documenti</span>
+    </div>
+    <ul class="sitemap-list" id="complianceList">
+      
+          <li class="sitemap-item" data-search="Informativa sulla Privacy &amp; Normativa GDPR">
+            <a href="https://newworldstate.cloud/?compliance=privacy" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">Informativa sulla Privacy &amp; Normativa GDPR</span>
+            </a>
+            <span class="item-url">/?compliance=privacy</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Termini e Condizioni di Utilizzo della Piattaforma">
+            <a href="https://newworldstate.cloud/?compliance=terms" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">Termini e Condizioni di Utilizzo della Piattaforma</span>
+            </a>
+            <span class="item-url">/?compliance=terms</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Informativa Estesa sui Cookie e Tracciamento">
+            <a href="https://newworldstate.cloud/?compliance=cookies" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">Informativa Estesa sui Cookie e Tracciamento</span>
+            </a>
+            <span class="item-url">/?compliance=cookies</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="Dichiarazione di Accessibilità Universale">
+            <a href="https://newworldstate.cloud/?compliance=accessibility" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">Dichiarazione di Accessibilità Universale</span>
+            </a>
+            <span class="item-url">/?compliance=accessibility</span>
+          </li>
+        
+          <li class="sitemap-item" data-search="California Consumer Privacy Act (CCPA) Disclosure">
+            <a href="https://newworldstate.cloud/?compliance=ccpa" class="item-link">
+              <span class="item-icon">⚖️</span>
+              <span class="item-name">California Consumer Privacy Act (CCPA) Disclosure</span>
+            </a>
+            <span class="item-url">/?compliance=ccpa</span>
+          </li>
+        
+    </ul>
+
+    <!-- SEZIONE 6: FEEDS E CRAWLER -->
+    <div class="section-title-wrap">
+      <h2 class="section-title">🤖 Feed, Mappe XML &amp; Risorse per Motori di Ricerca / IA</h2>
+      <span class="section-count">Crawler &amp; LLM</span>
+    </div>
+    <div class="feed-links-grid">
+      <a href="https://newworldstate.cloud/sitemap.xml" target="_blank" class="feed-card">
+        <div class="feed-name">Sitemap XML Globale</div>
+        <div class="feed-desc">Indice completo in formato standard Sitemaps.org con estensioni immagini e hreflang multilingua.</div>
+        <div class="feed-target">/sitemap.xml</div>
+      </a>
+      <a href="https://newworldstate.cloud/sitemap-news.xml" target="_blank" class="feed-card">
+        <div class="feed-name">Google News Sitemap</div>
+        <div class="feed-desc">Indice tempestivo ottimizzato per Googlebot-News in tutte le 11 lingue mondiali.</div>
+        <div class="feed-target">/sitemap-news.xml</div>
+      </a>
+      <a href="https://newworldstate.cloud/sitemap.html" class="feed-card">
+        <div class="feed-name">Sitemap HTML Navigabile</div>
+        <div class="feed-desc">Mappa del sito interattiva accessibile a tutti gli utenti e ai crawler di ricerca.</div>
+        <div class="feed-target">/sitemap.html</div>
+      </a>
+      <a href="https://newworldstate.cloud/rss.xml" target="_blank" class="feed-card">
+        <div class="feed-name">Feed RSS 2.0 / Atom</div>
+        <div class="feed-desc">Flusso di syndication per aggregatori di notizie, lettori RSS e canali informativi.</div>
+        <div class="feed-target">/rss.xml</div>
+      </a>
+      <a href="https://newworldstate.cloud/llms.txt" target="_blank" class="feed-card">
+        <div class="feed-name">File di Contesto LLM (llms.txt)</div>
+        <div class="feed-desc">Documento strutturato per ingestion da parte di ChatGPT, Perplexity, Claude e Gemini.</div>
+        <div class="feed-target">/llms.txt</div>
+      </a>
+      <a href="https://newworldstate.cloud/robots.txt" target="_blank" class="feed-card">
+        <div class="feed-name">Direttive Robots (robots.txt)</div>
+        <div class="feed-desc">Istruzioni di scansione e permessi per tutti i web crawler e bot di intelligenza artificiale.</div>
+        <div class="feed-target">/robots.txt</div>
+      </a>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-links">
+      <a href="https://newworldstate.cloud/">Portale Principale</a>
+      <a href="https://newworldstate.cloud/?tab=news">Notizie</a>
+      <a href="https://newworldstate.cloud/?tab=democracy">Democrazia Diretta</a>
+      <a href="https://newworldstate.cloud/?tab=constitution">Costituzione</a>
+      <a href="https://newworldstate.cloud/?compliance=privacy">Privacy GDPR</a>
+      <a href="https://newworldstate.cloud/?compliance=terms">Termini</a>
+      <a href="https://newworldstate.cloud/sitemap.xml">Sitemap XML</a>
+      <a href="https://newworldstate.cloud/sitemap.html">Sitemap HTML</a>
+    </div>
+    <p>© 2026 New World State Authority. Tutti i diritti riservati. Mappa del sito aggiornata al 15 settembre 2026.</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('sitemapFilter');
+      if (!searchInput) return;
+
+      searchInput.addEventListener('input', function(e) {
+        const query = (e.target.value || '').toLowerCase().trim();
+        const items = document.querySelectorAll('[data-search]');
+        
+        items.forEach(function(item) {
+          const text = (item.getAttribute('data-search') || '').toLowerCase();
+          if (!query || text.includes(query)) {
+            item.classList.remove('hidden');
+          } else {
+            item.classList.add('hidden');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
