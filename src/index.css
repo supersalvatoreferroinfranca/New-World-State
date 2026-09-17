@@ -161,59 +161,65 @@
 }
 
 /* Rich WYSIWYG Editor Typography & Live Visual Elements */
+.article-body-content h1,
 .editor-body h1 {
   font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important;
-  font-size: 1.75rem !important; /* 28px */
+  font-size: 1.85rem !important; /* ~30px */
   font-weight: 800 !important;
   color: #0a1c3e !important;
-  margin-top: 1.5rem !important;
-  margin-bottom: 0.75rem !important;
+  margin-top: 2rem !important;
+  margin-bottom: 0.85rem !important;
   line-height: 1.25 !important;
   letter-spacing: -0.02em !important;
 }
 
+.article-body-content h2,
 .editor-body h2 {
   font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important;
-  font-size: 1.45rem !important; /* 23px */
+  font-size: 1.5rem !important; /* ~24px */
   font-weight: 700 !important;
   color: #0a1c3e !important;
-  margin-top: 1.25rem !important;
-  margin-bottom: 0.5rem !important;
+  margin-top: 1.75rem !important;
+  margin-bottom: 0.75rem !important;
   line-height: 1.3 !important;
   letter-spacing: -0.015em !important;
 }
 
+.article-body-content h3,
 .editor-body h3 {
   font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif !important;
-  font-size: 1.25rem !important; /* 20px */
+  font-size: 1.28rem !important; /* ~20px */
   font-weight: 700 !important;
-  color: #1e293b !important;
-  margin-top: 1rem !important;
-  margin-bottom: 0.5rem !important;
+  color: #0a1c3e !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.65rem !important;
   line-height: 1.35 !important;
 }
 
+.article-body-content h4,
 .editor-body h4 {
   font-family: ui-sans-serif, system-ui, sans-serif !important;
   font-size: 1.1rem !important;
   font-weight: 600 !important;
   color: #334155 !important;
-  margin-top: 0.85rem !important;
-  margin-bottom: 0.4rem !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
 }
 
+.article-body-content p,
 .editor-body p {
   font-size: 1.0625rem !important;
   line-height: 1.75 !important;
-  margin-bottom: 1rem !important;
+  margin-bottom: 1.25rem !important;
   color: #1e293b !important;
 }
 
+.article-body-content blockquote,
 .editor-body blockquote {
   border-left: 4px solid #c5a059 !important;
   background: linear-gradient(to right, rgba(197, 168, 128, 0.15), rgba(197, 168, 128, 0.03)) !important;
-  padding: 1rem 1.25rem !important;
-  margin: 1.25rem 0 !important;
+  padding: 1.15rem 1.35rem !important;
+  margin: 1.5rem 0 !important;
   border-radius: 0 0.75rem 0.75rem 0 !important;
   font-style: italic !important;
   color: #334155 !important;
@@ -221,6 +227,7 @@
   line-height: 1.7 !important;
 }
 
+.article-body-content pre,
 .editor-body pre {
   background-color: #0f172a !important;
   color: #38bdf8 !important;
@@ -228,25 +235,28 @@
   border-radius: 0.5rem !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   font-size: 0.875rem !important;
-  margin: 1rem 0 !important;
+  margin: 1.25rem 0 !important;
   overflow-x: auto !important;
 }
 
+.article-body-content ul,
 .editor-body ul {
   list-style-type: disc !important;
-  padding-left: 1.5rem !important;
-  margin: 0.75rem 0 !important;
+  padding-left: 1.75rem !important;
+  margin: 1rem 0 !important;
 }
 
+.article-body-content ol,
 .editor-body ol {
   list-style-type: decimal !important;
-  padding-left: 1.5rem !important;
-  margin: 0.75rem 0 !important;
+  padding-left: 1.75rem !important;
+  margin: 1rem 0 !important;
 }
 
+.article-body-content li,
 .editor-body li {
-  margin-bottom: 0.35rem !important;
-  line-height: 1.6 !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.65 !important;
 }
 
 /* Callouts, Dividers, and Tables inside Article & Editor */

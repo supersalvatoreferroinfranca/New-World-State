@@ -7,6 +7,7 @@ import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/
 import { getPublicCanonicalOrigin, getPublicArticleUrl } from '../../utils/urlUtils';
 import { splitTextIntoSentenceChunks } from '../../utils/ttsChunker';
 import { globalFallbackTtsPlayer } from '../../utils/fallbackAudioTts';
+import { UI_LOCALIZATIONS, CATEGORY_LOCALIZATIONS, AUTHOR_ROLE_LOCALIZATIONS } from '../../data/newsTranslationsData';
 import SocialShareKit from './SocialShareKit';
 import { 
   X, 
@@ -81,6 +82,14 @@ export default function ArticleDetailModal({
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationNotice, setTranslationNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Dedicated i18n translation lookup strictly for activeLang
+  const tLang = (key: string, defaultText = ''): string => {
+    if (UI_LOCALIZATIONS[key]) {
+      return UI_LOCALIZATIONS[key][activeLang] || UI_LOCALIZATIONS[key]['it'] || defaultText;
+    }
+    return defaultText;
+  };
 
   const prevArticleIdRef = useRef<string | null>(null);
 
@@ -686,6 +695,33 @@ export default function ArticleDetailModal({
   const category = categories.find(c => c.id === activeArticle.categoryId);
   const allArticles = getArticles();
 
+  const localizedCategoryName = (activeArticle.categoryId && CATEGORY_LOCALIZATIONS[activeArticle.categoryId]?.[activeLang]) || category?.name || tLang('sovereignNews', 'Notizia Sovrana');
+
+  const localizedAuthorRole = (activeArticle.authorRole && AUTHOR_ROLE_LOCALIZATIONS[activeArticle.authorRole]?.[activeLang]) || activeArticle.authorRole || tLang('officialReporter', 'Cronista Ufficiale');
+
+  const localizedDateStr = activeArticle.publishedAt ? (() => {
+    try {
+      const localeMap: Record<string, string> = {
+        it: 'it-IT',
+        en: 'en-US',
+        fr: 'fr-FR',
+        es: 'es-ES',
+        pt: 'pt-BR',
+        ru: 'ru-RU',
+        hi: 'hi-IN',
+        bn: 'bn-BD',
+        zh: 'zh-CN',
+        ja: 'ja-JP',
+        ar: 'ar-SA'
+      };
+      const d = new Date(activeArticle.publishedAt);
+      if (isNaN(d.getTime())) return activeArticle.publishedAt;
+      return d.toLocaleDateString(localeMap[activeLang] || 'it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch {
+      return activeArticle.publishedAt;
+    }
+  })() : tLang('draft', 'Bozza');
+
   const relatedArticles = (activeArticle.relatedArticleIds || [])
     .map(id => allArticles.find(a => a.id === id))
     .filter((a): a is NewsArticle => !!a);
@@ -744,10 +780,10 @@ export default function ArticleDetailModal({
               className="text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full text-white shadow-sm"
               style={{ backgroundColor: category?.color || '#c5a880' }}
             >
-              {category?.name || tText('Sovereign News', 'Notizia Sovrana')}
+              {localizedCategoryName}
             </span>
             <span className="text-xs text-slate-300 font-tech">
-              {activeArticle.publishedAt ? new Date(activeArticle.publishedAt).toLocaleDateString(currentLanguage === 'it' ? 'it-IT' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : tText('Draft', 'Bozza')}
+              {localizedDateStr}
             </span>
           </div>
 
@@ -759,10 +795,10 @@ export default function ArticleDetailModal({
                   onClose();
                 }}
                 className="px-3 py-2 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold hover:bg-white transition cursor-pointer flex items-center gap-1.5 text-xs shadow-md border border-brand-gold"
-                title={tText('Edit Article', 'Modifica Articolo')}
+                title={tLang('editArticle', 'Modifica Articolo')}
               >
                 <PenTool className="w-4 h-4 text-[#0a1c3e]" />
-                <span className="hidden sm:inline">{tText('Edit', 'Modifica')}</span>
+                <span className="hidden sm:inline">{tLang('edit', 'Modifica')}</span>
               </button>
             )}
 
@@ -772,20 +808,20 @@ export default function ArticleDetailModal({
                   onDeleteArticle(activeArticle);
                 }}
                 className="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold transition cursor-pointer flex items-center gap-1.5 text-xs shadow-md border border-red-500"
-                title={tText('Delete Article', 'Elimina Articolo')}
+                title={tLang('deleteArticle', 'Elimina Articolo')}
               >
                 <Trash2 className="w-4 h-4 text-white" />
-                <span className="hidden sm:inline">{tText('Delete', 'Elimina')}</span>
+                <span className="hidden sm:inline">{tLang('delete', 'Elimina')}</span>
               </button>
             )}
 
             <button
               onClick={handleShare}
               className="p-2 rounded-xl bg-white/10 text-brand-gold hover:bg-white/20 transition cursor-pointer flex items-center gap-1 text-xs"
-              title={tText('Share News', 'Condividi Notizia')}
+              title={tLang('shareNews', 'Condividi Notizia')}
             >
               {copied ? <Check className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
-              <span className="hidden sm:inline">{copied ? tText('Copied!', 'Copiato!') : tText('Share', 'Condividi')}</span>
+              <span className="hidden sm:inline">{copied ? tLang('copied', 'Copiato!') : tLang('shareBtn', 'Condividi')}</span>
             </button>
 
             <button
@@ -808,11 +844,11 @@ export default function ArticleDetailModal({
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-[#0a1c3e] flex items-center gap-1.5 uppercase tracking-wider">
-                    <span>{tText('Multilingual Article Edition', 'Edizione Notizia Multilingue')}</span>
-                    <span className="text-[10px] bg-brand-gold/20 text-[#0a1c3e] px-1.5 py-0.5 rounded font-tech font-bold">11 {tText('Langs', 'Lingue')}</span>
+                    <span>{tLang('multilingualEditions', 'Edizioni Multilingua')}</span>
+                    <span className="text-[10px] bg-brand-gold/20 text-[#0a1c3e] px-1.5 py-0.5 rounded font-tech font-bold">11 {tLang('langsCount', 'Lingue')}</span>
                   </h4>
                   <p className="text-[11px] text-slate-500">
-                    {tText('Read in your preferred official language translated with Gemini AI', 'Leggi nella lingua ufficiale desiderata tradotta con Gemini AI')}
+                    {tLang('multilingualArticleDesc', 'Leggi nella lingua ufficiale desiderata')}
                   </p>
                 </div>
               </div>
@@ -822,16 +858,16 @@ export default function ArticleDetailModal({
                 {isTranslating ? (
                   <span className="flex items-center gap-1.5 text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded-xl border border-amber-300 font-medium animate-pulse">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-700" />
-                    <span>{tText('AI Translating...', 'Traduzione AI in corso...')}</span>
+                    <span>{tLang('aiTranslating', 'Traduzione AI in corso...')}</span>
                   </span>
                 ) : activeLang !== 'it' && (
                   <button
                     onClick={handleForceTranslate}
                     className="flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-[#0a1c3e] bg-white hover:bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-200 transition cursor-pointer shadow-2xs"
-                    title={tText('Regenerate translation with Gemini AI', 'Rigenera traduzione con Gemini AI')}
+                    title={tLang('regenerateAiTitle', 'Rigenera traduzione con Gemini AI')}
                   >
                     <Sparkles className="w-3 h-3 text-brand-gold" />
-                    <span>{tText('Re-translate AI', 'Rigenera AI')}</span>
+                    <span>{tLang('regenerateAiBtn', 'Rigenera AI')}</span>
                   </button>
                 )}
               </div>
@@ -861,7 +897,7 @@ export default function ArticleDetailModal({
                     {lang.code === 'it' ? (
                       <span className="text-[9px] px-1 rounded bg-slate-200/80 text-slate-600 font-mono uppercase">Orig</span>
                     ) : hasTranslation ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title={tText('Translated', 'Tradotto')} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title={tLang('translated', 'Tradotto')} />
                     ) : (
                       <span className="text-[9px] text-amber-600 font-mono">AI</span>
                     )}
@@ -883,14 +919,14 @@ export default function ArticleDetailModal({
                 <div className="flex items-center gap-1.5">
                   <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>
-                    {tText('Translated into', 'Tradotto in')} <strong>{SUPPORTED_LANG_OPTIONS.find(l => l.code === activeLang)?.nativeName}</strong> {tText('via Gemini AI Official Press Office', 'tramite Ufficio Stampa AI Gemini')}
+                    {tLang('translatedIntoPrefix', 'Tradotto in')} <strong>{SUPPORTED_LANG_OPTIONS.find(l => l.code === activeLang)?.nativeName}</strong> {tLang('translatedViaPressOffice', 'tramite Ufficio Stampa AI Gemini')}
                   </span>
                 </div>
                 <button
                   onClick={() => handleLanguageSelect('it')}
                   className="underline hover:text-emerald-950 font-semibold cursor-pointer shrink-0"
                 >
-                  {tText('Show Italian original', 'Mostra originale italiano')}
+                  {tLang('showItalianOriginal', 'Mostra originale italiano')}
                 </button>
               </div>
             )}
@@ -910,7 +946,7 @@ export default function ArticleDetailModal({
                 </div>
                 <div>
                   <span className="text-[#0a1c3e] font-bold">{activeArticle.authorName || 'Cronista NWS'}</span>
-                  <span className="text-[10px] text-slate-400 block font-tech">{activeArticle.authorRole || tText('Official Reporter', 'Cronista')}</span>
+                  <span className="text-[10px] text-slate-400 block font-tech">{localizedAuthorRole}</span>
                 </div>
               </div>
 
@@ -918,7 +954,7 @@ export default function ArticleDetailModal({
 
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span className="font-medium text-emerald-700">{tText('Verified by Digital Custodians', 'Verificato dai Custodi Digitali')}</span>
+                <span className="font-medium text-emerald-700">{tLang('verifiedByCustodians', 'Verificato dai Custodi Digitali')}</span>
               </div>
 
               {activeArticle.viewsCount !== undefined && (
@@ -926,7 +962,7 @@ export default function ArticleDetailModal({
                   <div className="h-4 w-px bg-slate-200" />
                   <div className="flex items-center gap-1.5">
                     <Eye className="w-4 h-4 text-slate-400" />
-                    <span>{activeArticle.viewsCount} {tText('reads', 'letture')}</span>
+                    <span>{activeArticle.viewsCount} {tLang('reads', 'letture')}</span>
                   </div>
                 </>
               )}
@@ -943,22 +979,22 @@ export default function ArticleDetailModal({
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-bold text-sm text-brand-gold tracking-wide">
-                      {tText('TTS Audio Reader', 'Lettore Vocale TTS')}
+                      {tLang('ttsReaderTitle', 'Lettore Vocale TTS')}
                     </h4>
                     {isPlaying && (
                       <span className="flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-tech">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                        {tText('Reading...', 'In riproduzione...')}
+                        {tLang('readingStatus', 'In riproduzione...')}
                       </span>
                     )}
                     {isPaused && (
                       <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30 font-tech">
-                        {tText('Paused', 'In Pausa')}
+                        {tLang('pausedStatus', 'In Pausa')}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-slate-300">
-                    {tText('Listen to the article read aloud with live voice selection and speed control', 'Ascolta l\'articolo letto a voce alta con cambio voce in tempo reale')}
+                    {tLang('ttsReaderSubtitle', 'Ascolta l\'articolo letto a voce alta')}
                   </p>
                 </div>
               </div>
@@ -968,11 +1004,11 @@ export default function ArticleDetailModal({
                 <div className="text-[11px] font-mono text-slate-300 self-start sm:self-auto bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 shrink-0">
                   {isPlaying || isPaused ? (
                     <span className="text-brand-gold font-bold">
-                      {tText('Sentence', 'Frase')} {currentChunkIndex + 1}/{articleChunks.length}
+                      {tLang('sentenceWord', 'Frase')} {currentChunkIndex + 1}/{articleChunks.length}
                     </span>
                   ) : (
                     <span className="text-slate-400">
-                      {articleChunks.length} {tText('sentences', 'frasi')}
+                      {articleChunks.length} {tLang('sentencesTotal', 'frasi')}
                     </span>
                   )}
                 </div>
@@ -985,16 +1021,16 @@ export default function ArticleDetailModal({
               <div className="flex items-center gap-2 bg-[#06122a] px-3 py-2 rounded-xl border border-white/10 flex-1 min-w-0">
                 <Mic className="w-4 h-4 text-brand-gold shrink-0" />
                 <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0 tracking-wider">
-                  {tText('Voice:', 'Voce:')}
+                  {tLang('voiceLabel', 'Voce:')}
                 </span>
                 <select
                   value={selectedVoiceName}
                   onChange={(e) => handleVoiceChange(e.target.value)}
                   className="bg-transparent text-xs text-amber-100 font-medium w-full focus:outline-none cursor-pointer truncate"
-                  title={tText('Select or switch reading voice in real time', 'Seleziona o cambia voce di lettura in tempo reale')}
+                  title={tLang('voiceSelectorTitle', 'Seleziona voce')}
                 >
                   <option value="default" className="text-slate-900 bg-white">
-                    {tText(`Default Auto (${activeLang.toUpperCase()})`, `Auto Predefinita (${activeLang.toUpperCase()})`)}
+                    {tLang('defaultAutoVoice', 'Auto Predefinita')} ({activeLang.toUpperCase()})
                   </option>
                   {sortedVoices.map((v) => {
                     const cleanName = v.name
@@ -1052,7 +1088,7 @@ export default function ArticleDetailModal({
                     className="px-3.5 py-2 rounded-xl bg-amber-500 text-slate-900 font-bold text-xs hover:bg-amber-400 transition cursor-pointer flex items-center gap-1.5 shadow"
                   >
                     <Pause className="w-4 h-4 fill-current" />
-                    <span>{tText('Pause', 'Pausa')}</span>
+                    <span>{tLang('pause', 'Pausa')}</span>
                   </button>
                 ) : (
                   <button
@@ -1061,7 +1097,7 @@ export default function ArticleDetailModal({
                     className="px-4 py-2 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold text-xs hover:bg-amber-300 transition cursor-pointer flex items-center gap-1.5 shadow-md border border-brand-gold"
                   >
                     <Play className="w-4 h-4 fill-current" />
-                    <span>{isPaused ? tText('Resume', 'Riprendi') : tText('Listen', 'Ascolta')}</span>
+                    <span>{isPaused ? tLang('resume', 'Riprendi') : tLang('listen', 'Ascolta')}</span>
                   </button>
                 )}
 
@@ -1075,10 +1111,10 @@ export default function ArticleDetailModal({
                       ? 'bg-red-500/20 border-red-400/40 text-red-300 hover:bg-red-500 hover:text-white'
                       : 'bg-white/5 border-white/10 text-slate-500 cursor-not-allowed opacity-50'
                   }`}
-                  title={tText('Stop and completely terminate audio playback', 'Interrompi e termina del tutto la riproduzione audio')}
+                  title={tLang('stop', 'Stop')}
                 >
                   <Square className="w-3.5 h-3.5 fill-current" />
-                  <span>{tText('Stop', 'Stop')}</span>
+                  <span>{tLang('stop', 'Stop')}</span>
                 </button>
               </div>
             </div>
@@ -1122,7 +1158,7 @@ export default function ArticleDetailModal({
             <div className="space-y-4 my-6">
               <h3 className="font-serif text-base font-bold text-[#0a1c3e] flex items-center gap-2">
                 <Video className="w-5 h-5 text-brand-gold" />
-                <span>{tText('Attached Videos', 'Video Allegati')}</span>
+                <span>{tLang('attachedVideos', 'Video Allegati')}</span>
               </h3>
               {activeArticle.videos.map((vid, idx) => {
                 const embedUrl = getEmbedVideoUrl(vid.url);
@@ -1164,7 +1200,7 @@ export default function ArticleDetailModal({
             <div className="pt-4 border-t border-slate-200 flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                 <Tag className="w-3.5 h-3.5 text-slate-400" />
-                <span>Tags:</span>
+                <span>{tLang('tagsLabel', 'Tag:')}</span>
               </span>
               {(localizedData.tags && localizedData.tags.length > 0 ? localizedData.tags : activeArticle.tags).map(t => (
                 <span
@@ -1185,29 +1221,32 @@ export default function ArticleDetailModal({
             <div className="pt-6 border-t border-slate-200 space-y-3">
               <h3 className="font-serif text-base font-bold text-[#0a1c3e] flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-brand-gold" />
-                <span>{tText('Related Articles', 'Articoli Correlati')}</span>
+                <span>{tLang('relatedArticles', 'Articoli Correlati')}</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {relatedArticles.map(rel => (
-                  <div
-                    key={rel.id}
-                    onClick={() => onSelectArticle?.(rel)}
-                    className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-[#0a1c3e]/30 shadow-sm transition cursor-pointer flex flex-col justify-between"
-                  >
-                    <div>
-                      <h4 className="font-bold text-xs text-[#0a1c3e] line-clamp-2 mb-1">
-                        {rel.title}
-                      </h4>
-                      <p className="text-[11px] text-slate-500 line-clamp-2">
-                        {rel.intro}
-                      </p>
+                {relatedArticles.map(rel => {
+                  const localizedRel = getLocalizedArticle(rel, activeLang as Language);
+                  return (
+                    <div
+                      key={rel.id}
+                      onClick={() => onSelectArticle?.(rel)}
+                      className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-[#0a1c3e]/30 shadow-sm transition cursor-pointer flex flex-col justify-between"
+                    >
+                      <div>
+                        <h4 className="font-bold text-xs text-[#0a1c3e] line-clamp-2 mb-1">
+                          {localizedRel.title || rel.title}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 line-clamp-2">
+                          {localizedRel.intro || rel.intro}
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-brand-gold font-bold mt-2 hover:underline inline-block">
+                        {tLang('readMoreNewsBtn', 'Leggi articolo →')}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-brand-gold font-bold mt-2 hover:underline inline-block">
-                      {tText('Read article →', 'Leggi articolo →')}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1225,7 +1264,7 @@ export default function ArticleDetailModal({
                 className="px-5 py-2.5 rounded-xl bg-brand-gold text-[#0a1c3e] font-extrabold text-xs uppercase tracking-wider hover:bg-[#0a1c3e] hover:text-white transition cursor-pointer flex items-center gap-2 shadow-md border border-brand-gold"
               >
                 <PenTool className="w-4 h-4" />
-                <span>{tText('Edit Article', 'Modifica Articolo')}</span>
+                <span>{tLang('editArticle', 'Modifica Articolo')}</span>
               </button>
             )}
 
@@ -1237,7 +1276,7 @@ export default function ArticleDetailModal({
                 className="px-4 py-2.5 rounded-xl bg-red-100 text-red-700 hover:bg-red-600 hover:text-white font-extrabold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-2 border border-red-200 shadow-sm"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>{tText('Delete Article', 'Elimina Articolo')}</span>
+                <span>{tLang('deleteArticle', 'Elimina Articolo')}</span>
               </button>
             )}
           </div>
@@ -1246,7 +1285,7 @@ export default function ArticleDetailModal({
             onClick={onClose}
             className="px-6 py-2.5 rounded-xl bg-[#0a1c3e] text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition cursor-pointer"
           >
-            {tText('Close Article', 'Chiudi Articolo')}
+            {tLang('closeArticle', 'Chiudi Articolo')}
           </button>
         </div>
       </div>

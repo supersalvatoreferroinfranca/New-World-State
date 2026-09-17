@@ -10,6 +10,9 @@ import {
   generateArticleWithAI,
   translateArticleWithAI,
   searchArticleMedia,
+  getPexelsApiKey,
+  setPexelsApiKey,
+  testPexelsApiKey,
   MediaSearchResult,
   MediaSearchDebugInfo,
   RELIABLE_NEWS_SOURCES
@@ -48,7 +51,8 @@ import {
   CheckSquare,
   Square,
   ShieldCheck,
-  Star
+  Star,
+  Key
 } from 'lucide-react';
 
 interface ArticleFormModalProps {
@@ -146,6 +150,50 @@ export default function ArticleFormModal({
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [isDebuggerModalOpen, setIsDebuggerModalOpen] = useState(false);
   const [previewingVideo, setPreviewingVideo] = useState<{ url: string; title: string; sourceUrl?: string } | null>(null);
+
+  // Pexels API Key Configuration States
+  const [pexelsKey, setPexelsKey] = useState<string>('');
+  const [showPexelsModal, setShowPexelsModal] = useState<boolean>(false);
+  const [pexelsKeyInput, setPexelsKeyInput] = useState<string>('');
+  const [isTestingPexelsKey, setIsTestingPexelsKey] = useState<boolean>(false);
+  const [pexelsTestFeedback, setPexelsTestFeedback] = useState<{ success: boolean; message: string } | null>(null);
+
+  useEffect(() => {
+    const savedKey = getPexelsApiKey();
+    setPexelsKey(savedKey);
+    setPexelsKeyInput(savedKey);
+  }, []);
+
+  const handleOpenPexelsModal = () => {
+    const current = getPexelsApiKey();
+    setPexelsKeyInput(current);
+    setPexelsTestFeedback(null);
+    setShowPexelsModal(true);
+  };
+
+  const handleTestPexelsKey = async () => {
+    if (!pexelsKeyInput.trim()) {
+      setPexelsTestFeedback({ success: false, message: 'Inserisci una chiave API prima di testare.' });
+      return;
+    }
+    setIsTestingPexelsKey(true);
+    setPexelsTestFeedback(null);
+    try {
+      const res = await testPexelsApiKey(pexelsKeyInput.trim());
+      setPexelsTestFeedback(res);
+    } catch (e: any) {
+      setPexelsTestFeedback({ success: false, message: 'Errore durante la verifica: ' + e.message });
+    } finally {
+      setIsTestingPexelsKey(false);
+    }
+  };
+
+  const handleSavePexelsKey = () => {
+    const clean = pexelsKeyInput.trim();
+    setPexelsApiKey(clean);
+    setPexelsKey(clean);
+    setShowPexelsModal(false);
+  };
 
   const handleSearchMedia = async (overrideQuery?: string, overridePlatform?: string) => {
     const targetQ = (overrideQuery !== undefined ? overrideQuery : (searchQuery || title || aiTopic || '')).trim();
@@ -1199,8 +1247,22 @@ export default function ArticleFormModal({
                   })}
                 </div>
 
-                {/* Debug Panel Toggle Button */}
-                <div className="flex items-center gap-2">
+                {/* Debug Panel & Pexels Config Toggle Buttons */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleOpenPexelsModal}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer border ${
+                      pexelsKey
+                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 shadow-sm'
+                        : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-400/40'
+                    }`}
+                    title="Configura la tua chiave API personale di Pexels per l'accesso diretto a foto HD"
+                  >
+                    <Key className="w-3.5 h-3.5" />
+                    <span>{pexelsKey ? '🔑 Pexels API: Attiva' : '⚙️ Configura Chiave Pexels'}</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setIsDebuggerModalOpen(true)}
@@ -1917,6 +1979,113 @@ export default function ArticleFormModal({
             : undefined
         }
       />
+
+      {/* Pexels API Key Configuration Modal */}
+      {showPexelsModal && (
+        <div className="fixed inset-0 z-[160] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-amber-400/40 rounded-3xl w-full max-w-lg p-6 text-white shadow-2xl space-y-5 animate-fade-in">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-300">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif font-bold text-base text-amber-300">
+                    Configurazione Chiave Pexels API
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Accesso diretto alle fotografie stock in HD da Pexels
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPexelsModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Inserisci qui la tua <strong>API Key</strong> generata gratuitamente su <a href="https://www.pexels.com/api/" target="_blank" rel="noopener noreferrer" className="text-amber-300 underline font-semibold">pexels.com/api</a>. Il sistema la utilizzerà per recuperare immagini ad altissima definizione con licenza editoriale libera.
+              </p>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1">
+                  Chiave API Pexels:
+                </label>
+                <input
+                  type="password"
+                  value={pexelsKeyInput}
+                  onChange={(e) => {
+                    setPexelsKeyInput(e.target.value);
+                    setPexelsTestFeedback(null);
+                  }}
+                  placeholder="Incolla qui la chiave API (es. 563492ad6f91700001000001...)"
+                  className="w-full bg-slate-950 border border-white/20 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 font-mono outline-none focus:ring-2 focus:ring-amber-400"
+                />
+              </div>
+
+              {pexelsTestFeedback && (
+                <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+                  pexelsTestFeedback.success
+                    ? 'bg-emerald-950/80 border border-emerald-500/50 text-emerald-300'
+                    : 'bg-red-950/80 border border-red-500/50 text-red-300'
+                }`}>
+                  {pexelsTestFeedback.success ? (
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                  )}
+                  <span>{pexelsTestFeedback.message}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                disabled={isTestingPexelsKey || !pexelsKeyInput.trim()}
+                onClick={handleTestPexelsKey}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-bold transition flex items-center gap-2 border border-amber-400/30 disabled:opacity-50 cursor-pointer"
+              >
+                {isTestingPexelsKey ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                <span>Testa Connessione</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                {pexelsKeyInput && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPexelsKeyInput('');
+                      setPexelsApiKey('');
+                      setPexelsKey('');
+                      setShowPexelsModal(false);
+                    }}
+                    className="px-3 py-2 rounded-xl bg-red-950/50 hover:bg-red-900/60 text-red-300 text-xs font-bold transition border border-red-500/30 cursor-pointer"
+                  >
+                    Rimuovi
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleSavePexelsKey}
+                  className="px-5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold uppercase tracking-wider transition cursor-pointer shadow-lg"
+                >
+                  Salva Chiave
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

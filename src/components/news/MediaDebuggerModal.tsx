@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   searchArticleMedia, 
+  getPexelsApiKey,
+  setPexelsApiKey,
+  testPexelsApiKey,
   MediaSearchResult, 
   MediaSearchDebugInfo 
 } from '../../services/newsService';
@@ -20,7 +23,10 @@ import {
   Globe, 
   Image as ImageIcon,
   Check,
-  Code
+  Code,
+  Key,
+  ShieldCheck,
+  AlertCircle
 } from 'lucide-react';
 import { VideoPreviewModal } from './VideoPreviewModal';
 

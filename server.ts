@@ -9,6 +9,8 @@ import pg from 'pg';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { GoogleGenAI, Type } from '@google/genai';
+import { FULL_ARTICLE_TRANSLATIONS } from './src/data/fullArticleContentTranslations.ts';
+import { UI_LOCALIZATIONS, CATEGORY_LOCALIZATIONS, AUTHOR_ROLE_LOCALIZATIONS } from './src/data/newsTranslationsData.ts';
 
 const { Pool } = pg;
 
@@ -40,15 +42,16 @@ function getGenAIClient() {
 async function generateGeminiContentWithFallback(
   contents: any,
   config?: any,
-  preferredModel: string = 'gemini-2.5-flash'
+  preferredModel: string = 'gemini-3.8-flash'
 ): Promise<any> {
   const ai = getGenAIClient();
   const candidateModels = [
     preferredModel,
+    'gemini-3.8-flash',
+    'gemini-flash-latest',
     'gemini-2.5-flash',
-    'gemini-2.5-pro',
     'gemini-2.0-flash',
-    'gemini-3.7-flash'
+    'gemini-3.1-pro-preview'
   ];
   // Deduplicate list preserving order
   const modelsToTry = Array.from(new Set(candidateModels));
@@ -56,7 +59,7 @@ async function generateGeminiContentWithFallback(
   let lastError: any = null;
 
   for (const model of modelsToTry) {
-    const maxRetries = 2;
+    const maxRetries = 1;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const response = await ai.models.generateContent({
@@ -69,50 +72,36 @@ async function generateGeminiContentWithFallback(
         lastError = err;
         const errMsg = (err?.message || '').toLowerCase();
         const errStatus = err?.status || err?.code || '';
-        const isUnavailableOrRateLimited =
+        const isQuotaExhausted =
+          errMsg.includes('resource_exhausted') ||
+          errMsg.includes('quota exceeded') ||
+          errMsg.includes('limit: 25000000');
+        const isTransient =
           errMsg.includes('503') ||
           errMsg.includes('high demand') ||
           errMsg.includes('unavailable') ||
           errMsg.includes('429') ||
-          errMsg.includes('resource_exhausted') ||
-          errMsg.includes('rate') ||
           errStatus === 'UNAVAILABLE' ||
           errStatus === 503 ||
           errStatus === 429;
 
-        if (isUnavailableOrRateLimited) {
-          console.warn(`[GEMINI-RETRY] Model "${model}" temporarily unavailable/high demand (attempt ${attempt + 1}/${maxRetries + 1}): ${err?.message}`);
+        if (isQuotaExhausted) {
+          console.warn(`[GEMINI-QUOTA] Quota reached for "${model}". Immediately falling back to next available model...`);
+          // Don't retry the same exhausted model, immediately break to try next model in loop
+          break;
+        }
+
+        if (isTransient) {
+          console.warn(`[GEMINI-RETRY] Model "${model}" temporarily busy (attempt ${attempt + 1}/${maxRetries + 1}): ${err?.message}`);
           if (attempt < maxRetries) {
-            // Exponential backoff: 1s, 2s
-            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+            await new Promise(resolve => setTimeout(resolve, 800));
             continue;
           }
-          console.warn(`[GEMINI-FALLBACK] Max retries reached for "${model}". Falling back to next available model in queue...`);
-          
-          if (errStatus === 429 || errMsg.includes('429')) {
-             let delayStr = '';
-             try {
-                if (err.details && Array.isArray(err.details)) {
-                   const retryInfo = err.details.find((d: any) => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
-                   if (retryInfo && retryInfo.retryDelay) {
-                       delayStr = ' Attendi ' + retryInfo.retryDelay.replace('s', ' secondi') + ' prima di riprovare.';
-                   }
-                } else if (errMsg.includes('retry in')) {
-                   const match = errMsg.match(/retry in ([\d\.]+s)/);
-                   if (match) delayStr = ' Attendi ' + match[1].replace('s', ' secondi') + ' prima di riprovare.';
-                }
-             } catch(e) {}
-             
-             // Check if it's the free tier rate limit
-             if (errMsg.includes('free_tier_requests') || errMsg.includes('quota')) {
-                 lastError = new Error(`Limite quota API superato per l'AI gratuita.${delayStr}`);
-             } else {
-                 lastError = new Error(`Troppe richieste all'API AI (Rate Limit).${delayStr}`);
-             }
-          }
+          console.warn(`[GEMINI-FALLBACK] Falling back from "${model}" to next model...`);
           break;
         } else {
-          // If error is not transient (e.g. invalid auth or prompt validation), stop retrying same model
+          // If search tool or other parameter is incompatible with specific model, try next
+          console.warn(`[GEMINI-FALLBACK] Model "${model}" encountered error: ${err?.message}. Trying next model...`);
           break;
         }
       }
@@ -4648,77 +4637,6 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       }
     });
 
-    // Assistente AI per la redazione e generazione di articoli di giornale
-    apiRouter.post('/news/ai-generate', async (req, res) => {
-      const { topic, categoryName, tone } = req.body || {};
-      if (!topic || typeof topic !== 'string' || !topic.trim()) {
-        return res.status(400).json({ success: false, message: 'L\'argomento o tema dell\'articolo è obbligatorio per procedere con la generazione AI.' });
-      }
-
-      try {
-        const prompt = `Sei l'Assistente AI di Redazione Giornalistica dell'Organo di Stampa Ufficiale dello "New World State" (una nazione digitale sovrana e globale fondata sulla democrazia diretta, diritti digitali e stato di diritto).
-Il tuo compito è elaborare un articolo di giornale completo, professionale, solenne ed elegante basato sull'argomento fornito dall'amministratore/cronista.
-
-ARGOMENTO / TEMA DELL'ARTICOLO:
-"${topic.trim()}"
-
-CATEGORIA PREVISTA: "${categoryName || 'Notizie di Stato & Riforme'}"
-TONO / STILE: "${tone || 'Giornalistico Solenne, Ufficiale ed Elegante'}"
-
-Genera una risposta in formato JSON contenente i seguenti campi:
-1. "title": Un titolo di giornale d'impatto, chiaro, professionale e accattivante (in lingua italiana).
-2. "intro": Un abstract / sommario introduttivo di 2-3 frasi (circa 180-250 caratteri) che sintetizzi i punti chiave e la ratio dell'articolo.
-3. "content": Il testo esteso dell'articolo organizzato in eleganti paragrafi in formato Markdown. Utilizza intestazioni di sezione con '###', grassetto per evidenziare concetti chiave e punti elenco dove opportuno per garantire massima leggibilità.
-4. "tags": Un array di 3-5 hashtag tematici pertinenti in italiano (es. ["#NotizieSovrane", "#RiformeStato", "#InnovazioneDigitale"]).
-5. "suggestedCategory": La categoria consigliata tra le categorie del giornale.
-
-Regole tassative per il testo:
-- Non citare MAI la "Costituzione di Ginevra", "Convenzione di Ginevra" o "Ginevra". Fai riferimento unicamente al "New World State" e alle sue leggi o istituzioni sovrane.
-- Il linguaggio deve essere autorevole, impeccabile dal punto di vista grammaticale e giornalistico.
-
-Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
-
-        const response = await generateGeminiContentWithFallback(
-          prompt,
-          {
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                intro: { type: Type.STRING },
-                content: { type: Type.STRING },
-                tags: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING }
-                },
-                suggestedCategory: { type: Type.STRING }
-              },
-              required: ['title', 'intro', 'content', 'tags']
-            }
-          },
-          'gemini-2.5-flash'
-        );
-
-        const jsonText = response.text;
-        if (!jsonText) {
-          throw new Error('Nessuna risposta ricevuta dall\'Intelligenza Artificiale.');
-        }
-
-        const parsed = JSON.parse(jsonText.trim());
-        return res.json({ success: true, data: parsed });
-      } catch (err: any) {
-        console.error('[NEWS-AI-GENERATE-ERR]', err);
-        const isKeyError = err.message && (err.message.includes('GEMINI_API_KEY') || err.message.includes('API key'));
-        return res.status(500).json({
-          success: false,
-          message: isKeyError
-            ? 'La chiave API di Gemini ("GEMINI_API_KEY") non è configurata nei segreti del portale. Configura la chiave nei segreti del pannello di controllo per sbloccare la generazione AI articoli!'
-            : 'Impossibile generare l\'articolo con l\'AI: ' + err.message
-        });
-      }
-    });
-
     // Endpoint per la traduzione automatica AI degli articoli in tutte le 11 lingue ufficiali
     apiRouter.post('/news/translate-article', async (req, res) => {
       const { title, intro, content, tags, articleId, targetLangs } = req.body || {};
@@ -5206,9 +5124,82 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
       return items;
     }
 
+    let serverPexelsApiKey = process.env.PEXELS_API_KEY || process.env.VITE_PEXELS_API_KEY || '';
+
+    // Endpoint Configurazione & Test Chiave Pexels API
+    apiRouter.get('/news/pexels-config', (req, res) => {
+      const activeKey = serverPexelsApiKey || process.env.PEXELS_API_KEY || '';
+      const hasKey = !!activeKey && activeKey.trim().length > 5;
+      const maskedKey = hasKey 
+        ? `${activeKey.trim().slice(0, 4)}••••••••${activeKey.trim().slice(-4)}`
+        : '';
+      return res.json({
+        success: true,
+        hasKey,
+        maskedKey
+      });
+    });
+
+    apiRouter.post('/news/pexels-config', (req, res) => {
+      const { pexelsApiKey } = req.body || {};
+      if (pexelsApiKey !== undefined) {
+        serverPexelsApiKey = String(pexelsApiKey).trim();
+      }
+      const hasKey = !!serverPexelsApiKey && serverPexelsApiKey.length > 5;
+      const maskedKey = hasKey 
+        ? `${serverPexelsApiKey.slice(0, 4)}••••••••${serverPexelsApiKey.slice(-4)}`
+        : '';
+      return res.json({
+        success: true,
+        message: hasKey ? 'Chiave API Pexels salvata sul server!' : 'Chiave API Pexels rimossa dal server.',
+        hasKey,
+        maskedKey
+      });
+    });
+
+    apiRouter.post('/news/pexels-config/test', async (req, res) => {
+      const rawKey = req.body?.pexelsApiKey || req.headers['x-pexels-key'] || serverPexelsApiKey || process.env.PEXELS_API_KEY || '';
+      const key = String(rawKey).trim();
+      if (!key) {
+        return res.status(400).json({ success: false, message: 'Nessuna chiave API fornita per il test.' });
+      }
+
+      try {
+        const testRes = await fetch('https://api.pexels.com/v1/search?query=nature&per_page=1', {
+          headers: {
+            'Authorization': key,
+            'User-Agent': 'NewWorldStateNews/1.0'
+          },
+          signal: AbortSignal.timeout(5000)
+        });
+
+        if (testRes.ok) {
+          const testData = await testRes.json();
+          const totalResults = testData.total_results || 0;
+          return res.json({
+            success: true,
+            message: `Chiave API Pexels valida ed attiva! (${totalResults.toLocaleString('it-IT')} foto disponibili su Pexels).`,
+            photoCount: totalResults
+          });
+        } else {
+          const status = testRes.status;
+          return res.status(400).json({
+            success: false,
+            message: `Errore Pexels API (HTTP ${status}): Chiave non valida o non autorizzata.`
+          });
+        }
+      } catch (err: any) {
+        return res.status(500).json({
+          success: false,
+          message: 'Errore di connessione a api.pexels.com: ' + err.message
+        });
+      }
+    });
+
     // Endpoint di Ricerca Automatica Multimediale ad Alta Pertinenza (Unsplash, Pexels, Pixabay, Wikimedia, Flickr, YouTube) con Debug
     apiRouter.post('/news/search-media', async (req, res) => {
-      const { query, platform = 'all' } = req.body || {};
+      const { query, platform = 'all', pexelsApiKey: clientPexelsKey } = req.body || {};
+      const requestPexelsKey = (clientPexelsKey || req.headers['x-pexels-key'] || serverPexelsApiKey || process.env.PEXELS_API_KEY || '').toString().trim();
       if (!query || typeof query !== 'string' || !query.trim()) {
         return res.status(400).json({ success: false, message: 'Fornisci una parola chiave o argomento per cercare foto e video.' });
       }
@@ -5461,22 +5452,75 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
             }
           })(),
 
-          // 5. Pexels Stock Photo Engine
+          // 5. Pexels Stock Photo Engine (con supporto API Ufficiale e fallback avanzato)
           (async () => {
             if (!isAll && reqPlatform !== 'pexels') return [];
             const pxStart = Date.now();
             try {
-              const queryList = [enKeywords, cleanQuery, `${cleanQuery} photography`, `${enKeywords} stock`];
-              const items = await searchPlatformImagesMultiSource(queryList, 'pexels', quotaPerProvider);
+              let items: any[] = [];
+              let usedOfficialApi = false;
+
+              // Tentativo 1: API Ufficiale Pexels (se la chiave è presente)
+              if (requestPexelsKey && requestPexelsKey.length > 5) {
+                try {
+                  const pexSearchTerm = enKeywords || cleanQuery;
+                  const pexUrl = `https://api.pexels.com/v1/search?query=${encodeURIComponent(pexSearchTerm)}&per_page=${quotaPerProvider}&locale=it-IT`;
+                  const pexRes = await fetch(pexUrl, {
+                    headers: {
+                      'Authorization': requestPexelsKey,
+                      'User-Agent': 'NewWorldStateNews/1.0 (https://newworldstate.cloud)'
+                    },
+                    signal: AbortSignal.timeout(6000)
+                  });
+
+                  if (pexRes.ok) {
+                    const pexData = await pexRes.json();
+                    const photos = pexData.photos || [];
+                    for (const ph of photos) {
+                      const imgUrl = ph.src?.large2x || ph.src?.large || ph.src?.original;
+                      const thumbUrl = ph.src?.medium || ph.src?.small || ph.src?.portrait || imgUrl;
+                      const pageUrl = ph.url || imgUrl;
+                      if (!imgUrl) continue;
+
+                      items.push({
+                        id: `px_${ph.id}`,
+                        type: 'image',
+                        sourcePlatform: 'pexels',
+                        url: imgUrl,
+                        previewUrl: thumbUrl,
+                        sourceUrl: pageUrl,
+                        title: ph.alt || `${cleanQuery} (Pexels)`,
+                        author: ph.photographer || 'Pexels Contributor'
+                      });
+                      if (items.length >= quotaPerProvider) break;
+                    }
+                    if (items.length > 0) {
+                      usedOfficialApi = true;
+                      execLogs.push(`[${nowStr()}] 🔑 [Pexels API Ufficiale] Estratte ${items.length} immagini HD con licenza Pexels.`);
+                    }
+                  }
+                } catch (pexApiErr: any) {
+                  execLogs.push(`[${nowStr()}] ⚠️ [Pexels API] Errore chiamata: ${pexApiErr.message}. Esecuzione fallback su motore web.`);
+                }
+              }
+
+              // Fallback: se l'API ufficiale non è configurata o non ha restituito foto
+              if (items.length === 0) {
+                const queryList = [enKeywords, cleanQuery, `${cleanQuery} photography`, `${enKeywords} stock`];
+                items = await searchPlatformImagesMultiSource(queryList, 'pexels', quotaPerProvider);
+              }
+
               const pxLatency = Date.now() - pxStart;
               debugProviders.push({
-                name: 'Pexels Search Engine',
+                name: usedOfficialApi ? 'Pexels Official API Engine' : 'Pexels Search Engine',
                 platform: 'pexels',
-                endpoint: 'pexels.com',
+                endpoint: usedOfficialApi ? 'api.pexels.com/v1/search' : 'pexels.com',
                 status: '200 OK',
                 count: items.length,
                 latencyMs: pxLatency,
-                details: `Estratte ${items.length} fotografie stock di qualità da Pexels.`
+                details: usedOfficialApi 
+                  ? `Estratte ${items.length} fotografie HD autenticate tramite API Ufficiale Pexels.`
+                  : `Estratte ${items.length} fotografie stock di qualità da Pexels (motore multi-source).`
               });
               return items;
             } catch (e: any) {
@@ -6545,63 +6589,57 @@ REGOLE TASSATIVE:
           ? sources 
           : ['Fonti Vaticane / Vatican News', 'Reuters', 'Associated Press (AP)', 'ANSA', 'Agence France-Presse (AFP)', 'Ufficio Stampa NWS'];
 
-        const genAI = getGenAIClient();
-
         const systemPrompt = `
-Sei il Redattore Capo del Giornale di Stato e dell'Organo di Stampa Sovrana di New World State (NWS).
-Il tuo compito è scrivere un articolo di cronaca o approfondimento di altissima qualità, basato su fonti informative accreditate ed affidabili, formattato in modo pulito, leggero, elegante e perfettamente leggibile, senza alcun simbolo di formattazione grezzo.
+Sei il Capo Redattore e Fact-Checker Ufficiale dell'Organo di Stampa Sovrana di New World State (NWS).
+L'utente richiede la massima serietà, precisione e assoluta assenza di allucinazioni o invenzioni.
 
-FONTI INFORMATIVE ACCREDITATE DI RIFERIMENTO SELEZIONATE DALL'UTENTE:
-${selectedSourcesList.map(s => `- ${s}`).join('\n')}
+PROTOCOLLO ANTI-ALLUCINAZIONE E VERIFICA FONTI:
+1. RICERCA REALE NELLE FONTI ACCREDITATE:
+   - Utilizza lo strumento di ricerca web per reperire e verificare i fatti reali, i dati storici/statistici, le dichiarazioni ufficiali e gli avvenimenti documentati dalle seguenti fonti: ${selectedSourcesList.join(', ')}.
+   - Riporta ESCLUSIVAMENTE ciò che è attestato dalle fonti verificate. NON inventare MAI notizie, virgolettati fasulli, leggi o trattati inesistenti.
+2. CITAZIONE E ATTRIBUZIONE:
+   - Cita esplicitamente nel corpo dell'articolo l'origine delle notizie (es. "Secondo quanto riportato da Reuters...", "In base al bollettino ufficiale di Vatican News...", "Come riferito dall'Associated Press (AP)...").
+   - Se un fatto non è confermato dalle fonti selezionate, indicalo con cautela giornalistica senza congetture o invenzioni.
+3. FORMATTAZIONE GRAFICA PERFETTA ED ELEGANTE:
+   - Il campo 'content' deve essere formattato in HTML semantico pulito:
+     * Ogni sezione inizia con: <h3 class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">Titolo Sezione</h3>. NON inserire mai testo lungo o interi paragrafi dentro il tag <h3>!
+     * Ogni paragrafo di testo DEVE essere racchiuso in: <p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans">...</p>.
+     * Per dichiarazioni o virgolettati ufficiali delle fonti, usa: <blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-5 my-6 rounded-r-2xl italic text-slate-800 text-base leading-relaxed">«...»</blockquote>.
+     * Per punti chiave, usa: <ul class="list-disc list-outside space-y-2.5 my-6 text-slate-700 pl-7 font-sans"><li class="leading-relaxed text-slate-700 text-base md:text-lg font-sans my-1.5">...</li></ul>.
+     * Inserisci in calce all'articolo un box chiaro: <div class="mt-8 p-4 bg-slate-100/90 border border-slate-300/80 rounded-2xl text-xs text-slate-700 font-sans"><strong class="text-[#0a1c3e] block mb-1">Fonti Verificate & Agenzie Consultate:</strong> ${selectedSourcesList.join(' • ')}</div>.
+   - NON inserire MAI simboli markdown grezzi (nessun ***, ###, \`\`\`, o asterischi sparsi) nel testo HTML.
+4. METADATI SEO & AI:
+   - 'title': Titolo giornalistico rigoroso, chiaro e veritiero (45-75 caratteri).
+   - 'intro': Sommario chiaro, sobrio ed esplicativo (120-180 caratteri), solo testo puro.
+   - 'tags': 4-6 parole chiave altamente pertinenti.
+   - 'suggestedCategory': Categoria adatta all'argomento.
+   - 'usedSources': Array con i nomi delle fonti consultate.
 
-REGOLE TASSATIVE DI FORMATTAZIONE E STILE:
-1. RIGORE INFORMATIVO BASATO SULLE FONTI SELEZIONATE:
-   - L'articolo deve basarsi su fatti, verifiche e diplomazia internazionale garantiti dalle fonti sopra citate (${selectedSourcesList.join(', ')}).
-   - Inserisci nel testo dell'articolo o nel paragrafo conclusivo la menzione esplicita delle analisi e del rigoroso riscontro informativo fornito da queste agenzie/organi ufficiali.
-2. NESSUN SIMBOLO DI FORMATTAZIONE GREZZO O MARKDOWN:
-   - NON inserire MAI asterischi (es. **testo**, *testo*), hashtag (es. ### Titolo), o trattini markdown.
-   - NON inserire mai tag HTML grezzi non chiusi o entità scappate nel testo.
-3. STRUTTURA DEL CONTENUTO ('content'):
-   - Il contenuto 'content' deve essere formattato ESCLUSIVAMENTE con tag HTML semantici puliti e ben strutturati:
-     - Utilizza <h3 class="font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2">...</h3> per i sottotitoli di paragrafo.
-     - Utilizza <p class="leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans">...</p> per ciascun paragrafo di testo.
-     - Utilizza <ul class="list-disc list-outside space-y-2.5 my-4 text-slate-700 pl-6 font-sans"><li class="leading-relaxed text-slate-700 text-sm md:text-base my-1">...</li></ul> se ci sono elenchi puntati.
-     - Utilizza <blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-4 my-4 rounded-r-2xl italic text-slate-800 text-sm leading-relaxed">...</blockquote> per citazioni o bollettini ufficiali.
-   - I testi all'interno dei tag HTML devono essere puliti e privi di simboli di formattazione o asterischi.
-4. OTTIMIZZAZIONE SEO & AI:
-   - 'title': Titolo d'impatto, giornalistico, chiaro, tra 40 e 70 caratteri. Nessuna virgoletta grezza o simbolo.
-   - 'intro': Sommario/Meta description esplicativo di 2-3 frasi (80-160 caratteri). SOLO testo semplice pulito, senza tag HTML o simboli markdown.
-   - 'content': Articolo approfondito (almeno 300-600 parole), ben suddiviso con 3-5 sottotitoli <h3> per garantire un'impaginazione chiara, aria e massima leggibilità sia per lettori umani sia per motori di ricerca e LLM. Include anche un piccolo box di citazione delle fonti accreditate alla fine.
-   - 'tags': Array di 4-6 parole chiave altamente pertinenti per la SEO e la ricerca AI (es. ["Innovazione", "Riforme", "StatoSovrano", "Trasparenza"]).
-   - 'suggestedCategory': Categoria pertinente per l'articolo.
-   - 'usedSources': Array con i nomi delle fonti utilizzate tra quelle selezionate.
-
-Rispondi ESCLUSIVAMENTE con un oggetto JSON valido privo di blocchi di codice markdown extra:
+Rispondi ESCLUSIVAMENTE con un JSON valido nel seguente formato:
 {
-  "title": "Titolo Ottimizzato SEO senza simboli",
-  "intro": "Sommario pulito ed elegante per la meta description...",
-  "content": "<p class=\"leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans\">Primo paragrafo dell'articolo...</p><h3 class=\"font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2\">Primo Sottotitolo</h3><p class=\"leading-relaxed text-slate-700 text-sm md:text-base my-3 font-sans\">Secondo paragrafo approfondito...</p>",
-  "tags": ["ParolaChiave1", "ParolaChiave2", "ParolaChiave3"],
-  "suggestedCategory": "Cronaca Ufficiale",
-  "usedSources": ["Fonti Vaticane / Vatican News", "Reuters"]
-}
-`;
+  "title": "Titolo Giornalistico Veritiero e Chiaro",
+  "intro": "Sommario introduttivo rigoroso e chiaro solo testo puro...",
+  "content": "<p class=\"article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans\">Primo paragrafo con i fatti accertati...</p><h3 class=\"font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight\">Sottotitolo di Approfondimento</h3><p class=\"article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans\">Secondo paragrafo con le dichiarazioni verificate...</p>",
+  "tags": ["Tag1", "Tag2", "Tag3"],
+  "suggestedCategory": "Categoria",
+  "usedSources": ["Fonte 1", "Fonte 2"]
+}`;
 
         const userPrompt = `
-Genera l'articolo completo basandoti sulle fonti selezionate per:
-- Tema/Argomento: "${topicQuery.trim()}"
-- Categoria indicata: "${categoryName || 'Generale'}"
-- Tono della notizia: "${tone || 'Giornalistico e Formale'}"
-- Fonti da citare e consultare: ${selectedSourcesList.join(', ')}
-`;
+ARGOMENTO RICHIESTO: "${topicQuery.trim()}"
+CATEGORIA: "${categoryName || 'Attualità & Cronaca'}"
+TONO: "${tone || 'Giornalistico e Formale'}"
+FONTI SELEZIONATE DA CONSULTARE CON SEARCH GROUNDING: ${selectedSourcesList.join(', ')}
+
+Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificato.`;
 
         const response = await generateGeminiContentWithFallback(
           systemPrompt + '\n' + userPrompt,
           {
-            responseMimeType: 'application/json',
-            temperature: 0.7,
+            tools: [{ googleSearch: {} }],
+            temperature: 0.2,
           },
-          'gemini-2.5-flash'
+          'gemini-3.8-flash'
         );
 
         const textResponse = response.text || '';
@@ -6611,35 +6649,79 @@ Genera l'articolo completo basandoti sulle fonti selezionate per:
           parsedData = JSON.parse(textResponse);
         } catch (jsonErr) {
           const cleanText = textResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
-          parsedData = JSON.parse(cleanText);
+          try {
+            parsedData = JSON.parse(cleanText);
+          } catch (e2) {
+            // If model returned pure text or mixed text, extract JSON substring
+            const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              parsedData = JSON.parse(jsonMatch[0]);
+            } else {
+              throw new Error('Impossibile interpretare la risposta strutturata dell\'AI.');
+            }
+          }
         }
 
         if (!parsedData || !parsedData.title) {
-          throw new Error('La risposta dell\'IA non contiene i campi articolo validi.');
+          throw new Error('La risposta dell\'IA non contiene i dati validi dell\'articolo.');
         }
 
-        // Clean any leftover markdown symbol artifacts from string fields
-        parsedData.title = parsedData.title.replace(/[\*\_`#]/g, '').replace(/<[^>]*>?/gm, '').trim();
-        parsedData.intro = parsedData.intro.replace(/[\*\_`#]/g, '').replace(/<[^>]*>?/gm, '').trim();
+        // Extract grounding links if available from Google Search
+        const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+        const webSearchQueries = response.candidates?.[0]?.groundingMetadata?.webSearchQueries || [];
+        const verifiedWebLinks: Array<{ title: string; uri: string }> = [];
 
+        for (const chunk of groundingChunks) {
+          if (chunk.web?.uri && chunk.web?.title) {
+            verifiedWebLinks.push({
+              title: chunk.web.title,
+              uri: chunk.web.uri
+            });
+          }
+        }
+
+        // Clean string fields
+        parsedData.title = String(parsedData.title || '').replace(/[\*\_`#]/g, '').replace(/<[^>]*>?/gm, '').trim();
+        parsedData.intro = String(parsedData.intro || '').replace(/[\*\_`#]/g, '').replace(/<[^>]*>?/gm, '').trim();
+
+        // Ensure content is formatted with clean typography
         if (parsedData.content) {
           parsedData.content = parsedData.content
             .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-            .replace(/###\s*(.+)/g, '<h3 class="font-serif text-lg font-bold text-[#0a1c3e] mt-6 mb-2">$1</h3>')
-            .replace(/##\s*(.+)/g, '<h2 class="font-serif text-xl font-bold text-[#0a1c3e] mt-6 mb-3">$1</h2>');
+            .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+            .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+            .replace(/###\s*(.+)/g, '<h3 class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">$1</h3>')
+            .replace(/##\s*(.+)/g, '<h2 class="font-serif text-2xl font-bold text-[#0a1c3e] mt-10 mb-4 tracking-tight">$1</h2>');
+
+          // If content didn't have paragraphs, wrap lines
+          if (!parsedData.content.includes('<p') && !parsedData.content.includes('<div')) {
+            const rawParagraphs = parsedData.content.split(/\n\s*\n+/);
+            parsedData.content = rawParagraphs
+              .map((p: string) => {
+                const tp = p.trim();
+                if (!tp) return '';
+                if (tp.startsWith('<h') || tp.startsWith('<block') || tp.startsWith('<ul')) return tp;
+                return `<p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans">${tp}</p>`;
+              })
+              .filter(Boolean)
+              .join('\n\n');
+          }
         }
 
         return res.json({
           success: true,
-          data: parsedData
+          data: {
+            ...parsedData,
+            groundingQueries: webSearchQueries,
+            groundingLinks: verifiedWebLinks
+          }
         });
 
       } catch (err: any) {
         console.error('[NEWS-AI-GENERATE-ERR]', err.message);
         return res.status(500).json({
           success: false,
-          message: 'Errore durante la generazione dell\'articolo con IA: ' + err.message
+          message: 'Errore durante la generazione verificata dell\'articolo con IA: ' + err.message
         });
       }
     });
@@ -8054,6 +8136,14 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
     function getArticleTranslatedTitle(article: any, lang: string): string {
       const slug = (article.slug || article.id || '').toLowerCase().trim();
       const normSlug = slug.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\-]/g, '');
+
+      // 0. Check FULL_ARTICLE_TRANSLATIONS
+      const fullTrans = (FULL_ARTICLE_TRANSLATIONS as any)[slug]?.[lang] || 
+                         (FULL_ARTICLE_TRANSLATIONS as any)[normSlug]?.[lang] ||
+                         (FULL_ARTICLE_TRANSLATIONS as any)[article.id]?.[lang];
+      if (fullTrans && fullTrans.title) {
+        return cleanMetaText(fullTrans.title);
+      }
       
       // 1. Direct match in dictionary
       for (const [key, transMap] of Object.entries(MULTILINGUAL_ARTICLE_TITLES)) {
@@ -9661,19 +9751,46 @@ ${newsItems}
       const currentLang = SITE_SUPPORTED_LANGUAGES.includes(reqLangRaw) ? reqLangRaw : 'it';
       const langInfo = LANGUAGE_DETAILS[currentLang] || LANGUAGE_DETAILS['it'];
 
+      const tSsr = (key: string, fallback: string) => {
+        return (UI_LOCALIZATIONS as any)?.[key]?.[currentLang] || (UI_LOCALIZATIONS as any)?.[key]?.['it'] || fallback;
+      };
+
+      const slug = (article.slug || article.id || '').toLowerCase().trim();
+      const normSlug = slug.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\-]/g, '');
+
       let rawTitle = cleanMetaText(article.title);
       let rawIntro = cleanMetaText(article.intro || article.content);
       let fullContentRaw = article.content || article.intro || '';
+      let rawTags = Array.isArray(article.tags) ? article.tags.map((t: string) => cleanMetaText(t)).filter(Boolean) : [];
 
-      const translatedTitleCandidate = getArticleTranslatedTitle(article, currentLang);
-      if (translatedTitleCandidate) {
-        rawTitle = translatedTitleCandidate;
+      // 1. Look in FULL_ARTICLE_TRANSLATIONS
+      const dictTrans = (FULL_ARTICLE_TRANSLATIONS as any)[slug]?.[currentLang] || 
+                        (FULL_ARTICLE_TRANSLATIONS as any)[normSlug]?.[currentLang] ||
+                        (FULL_ARTICLE_TRANSLATIONS as any)[article.id]?.[currentLang];
+
+      if (dictTrans) {
+        if (dictTrans.title) rawTitle = cleanMetaText(dictTrans.title);
+        if (dictTrans.intro) rawIntro = cleanMetaText(dictTrans.intro);
+        if (dictTrans.content) fullContentRaw = dictTrans.content;
+        if (dictTrans.tags && Array.isArray(dictTrans.tags) && dictTrans.tags.length > 0) {
+          rawTags = dictTrans.tags.map((t: string) => cleanMetaText(t)).filter(Boolean);
+        }
       }
+
+      // 2. Look in database / article.translations object
       if (article.translations && article.translations[currentLang]) {
         const tr = article.translations[currentLang];
         if (tr.title) rawTitle = cleanMetaText(tr.title);
         if (tr.intro) rawIntro = cleanMetaText(tr.intro);
         if (tr.content) fullContentRaw = tr.content;
+        if (tr.tags && Array.isArray(tr.tags) && tr.tags.length > 0) {
+          rawTags = tr.tags.map((t: string) => cleanMetaText(t)).filter(Boolean);
+        }
+      } else {
+        const translatedTitleCandidate = getArticleTranslatedTitle(article, currentLang);
+        if (translatedTitleCandidate && !dictTrans?.title) {
+          rawTitle = translatedTitleCandidate;
+        }
       }
 
       const fullTitle = `${rawTitle} | New World State News`;
@@ -9703,16 +9820,22 @@ ${newsItems}
 
       imageUrl = formatOgImageUrl(imageUrl);
 
-      const slug = article.slug || article.id;
       const canonicalArticleUrl = `${baseUrl}/notizie/${encodeURIComponent(slug)}`;
       const activeArticleUrl = currentLang === 'it' ? canonicalArticleUrl : `${canonicalArticleUrl}?lang=${currentLang}`;
-      const authorName = cleanMetaText(article.authorName) || 'Cronista Ufficiale NWS';
-      const authorRole = cleanMetaText(article.authorRole) || 'Giornalista Sovrano';
+      const authorName = cleanMetaText(article.authorName) || 'Marcus Thorne';
+      
+      const localizedAuthorRole = (AUTHOR_ROLE_LOCALIZATIONS as any)?.[article.authorRole]?.[currentLang] ||
+                                  cleanMetaText(article.authorRole) ||
+                                  (currentLang === 'zh' ? '主权记者' : currentLang === 'en' ? 'Sovereign Journalist' : 'Giornalista Sovrano');
+      
       const publishedDate = article.publishedAt || article.createdAt || new Date().toISOString();
       const modifiedDate = article.updatedAt || publishedDate;
 
-      const rawTags = Array.isArray(article.tags) ? article.tags.map((t: string) => cleanMetaText(t)).filter(Boolean) : [];
-      if (rawTags.length === 0) rawTags.push('Notizie', 'NewWorldState', 'Informazione');
+      if (rawTags.length === 0) {
+        rawTags = currentLang === 'zh' ? ['新闻', 'NewWorldState', '主权治理'] : 
+                  currentLang === 'en' ? ['News', 'NewWorldState', 'Governance'] : 
+                  ['Notizie', 'NewWorldState', 'Informazione'];
+      }
       const tagsString = rawTags.join(', ');
 
       const hreflangAlternateTags = SITE_SUPPORTED_LANGUAGES.map(l => {
@@ -9799,7 +9922,7 @@ ${newsItems}
               "author": {
                 "@type": "Person",
                 "name": authorName,
-                "jobTitle": authorRole,
+                "jobTitle": localizedAuthorRole,
                 "url": `${baseUrl}/?tab=news`
               },
               "publisher": {
@@ -9875,21 +9998,16 @@ ${newsItems}
 
       let enrichedHtml = cleanHtml.replace('<head>', `<head>\n${metaBlock}`);
 
-      const categoryNameMap: Record<string, string> = {
-        'cat-politica': 'Politica & Sovranità',
-        'cat-economia': 'Economia & Finanza',
-        'cat-diritti': 'Diritti & Costituzione',
-        'cat-tecnologia': 'Tecnologia & Innovazione',
-        'cat-cultura': 'Cultura & Società'
-      };
-      const categoryName = categoryNameMap[article.categoryId] || article.categoryName || 'Geopolitica & Attualità';
+      const categoryName = (CATEGORY_LOCALIZATIONS as any)?.[article.categoryId]?.[currentLang] ||
+                           (CATEGORY_LOCALIZATIONS as any)?.[article.categoryId]?.['it'] ||
+                           article.categoryName ||
+                           (currentLang === 'zh' ? '地缘政治与时事' : currentLang === 'en' ? 'Geopolitics & News' : 'Geopolitica & Attualità');
 
       let formattedDateStr = publishedDate;
       try {
         const d = new Date(publishedDate);
         if (!isNaN(d.getTime())) {
-          const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
-          formattedDateStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+          formattedDateStr = d.toLocaleDateString(langInfo.locale || 'it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
         }
       } catch (e) {}
 
@@ -9901,7 +10019,7 @@ ${newsItems}
         <div style="margin-bottom:24px;padding:12px 18px;background:rgba(15,23,42,0.9);border:1px solid rgba(197,168,128,0.3);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#dfc299;font-weight:600;">
             <span style="font-size:16px;">🌐</span>
-            <span>Edizioni Multilingua Disponibili:</span>
+            <span>${escapeHtml(tSsr('multilingualEditionsAvailable', 'Edizioni Multilingua Disponibili:'))}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             ${SITE_SUPPORTED_LANGUAGES.map(l => {
@@ -9924,15 +10042,15 @@ ${newsItems}
                 <img src="https://www.newworldstate.org/documents/branding_logo/fronte.jpg" alt="New World State" onerror="this.onerror=null;this.src='${baseUrl}/logo.svg';" style="height:40px;width:auto;max-width:120px;object-fit:contain;" />
                 <div>
                   <div style="font-weight:700;font-size:16px;color:#f8fafc;letter-spacing:0.5px;">NEW WORLD STATE 1.0</div>
-                  <div style="font-size:11px;color:#c5a880;text-transform:uppercase;letter-spacing:1px;">Giornale Sovrano • News Authority</div>
+                  <div style="font-size:11px;color:#c5a880;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(tSsr('sovereignJournalTitle', 'Giornale Sovrano • News Authority'))}</div>
                 </div>
               </a>
               <div style="display:flex;align-items:center;gap:10px;">
                 <a href="${baseUrl}/?tab=news" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);color:#f1f5f9;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,0.15);">
-                  ← Tutte le Notizie
+                  ${escapeHtml(tSsr('allNewsBack', '← Tutte le Notizie'))}
                 </a>
                 <a href="${baseUrl}/?tab=register" style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#c5a880,#dfc299);color:#0a1c3e;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">
-                  Cittadinanza Sovrana
+                  ${escapeHtml(tSsr('sovereignCitizenship', 'Cittadinanza Sovrana'))}
                 </a>
               </div>
             </div>
@@ -9942,9 +10060,9 @@ ${newsItems}
           <main style="max-width:860px;margin:30px auto;padding:0 20px;">
             <!-- Breadcrumbs -->
             <nav style="font-size:13px;color:#94a3b8;margin-bottom:20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <a href="${baseUrl}/" style="color:#94a3b8;text-decoration:none;">Home</a>
+              <a href="${baseUrl}/" style="color:#94a3b8;text-decoration:none;">${escapeHtml(tSsr('home', 'Home'))}</a>
               <span>›</span>
-              <a href="${baseUrl}/?tab=news" style="color:#c5a880;text-decoration:none;">Notizie & Geopolitica</a>
+              <a href="${baseUrl}/?tab=news" style="color:#c5a880;text-decoration:none;">${escapeHtml(tSsr('newsGeopolitics', 'Notizie & Geopolitica'))}</a>
               <span>›</span>
               <span style="color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px;">${escapeHtml(rawTitle)}</span>
             </nav>
@@ -9975,7 +10093,7 @@ ${newsItems}
                 </div>
                 <div>
                   <div style="font-weight:700;font-size:14px;color:#f1f5f9;">${escapeHtml(authorName)}</div>
-                  <div style="font-size:12px;color:#94a3b8;">${escapeHtml(authorRole)} • New World State News</div>
+                  <div style="font-size:12px;color:#94a3b8;">${escapeHtml(localizedAuthorRole)} • New World State News</div>
                 </div>
               </div>
 
@@ -9999,22 +10117,22 @@ ${newsItems}
 
               <!-- Tags Row -->
               <div style="margin-top:36px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <span style="font-size:13px;color:#94a3b8;font-weight:600;">Tag:</span>
+                <span style="font-size:13px;color:#94a3b8;font-weight:600;">${escapeHtml(tSsr('tagsLabel', 'Tag:'))}</span>
                 ${rawTags.map((t: string) => `<span style="background:rgba(255,255,255,0.06);color:#cbd5e1;padding:4px 10px;border-radius:6px;font-size:12px;border:1px solid rgba(255,255,255,0.1);">${escapeHtml(t)}</span>`).join(' ')}
               </div>
 
               <!-- Institutional Call To Action -->
               <div style="margin-top:36px;padding:24px;background:rgba(10,28,62,0.6);border:1px solid rgba(197,168,128,0.3);border-radius:12px;text-align:center;">
-                <h3 style="margin:0 0 10px 0;color:#dfc299;font-size:18px;font-weight:700;">Partecipa alla Democrazia Sovrana</h3>
+                <h3 style="margin:0 0 10px 0;color:#dfc299;font-size:18px;font-weight:700;">${escapeHtml(tSsr('participateSovereignTitle', 'Partecipa alla Democrazia Sovrana'))}</h3>
                 <p style="font-size:14px;color:#94a3b8;margin:0 0 18px 0;max-width:550px;margin-left:auto;margin-right:auto;">
-                  Iscriviti al Registro Mondiale di New World State 1.0 per votare sui referendum, commentare le inchieste e proporre nuove leggi popolari.
+                  ${escapeHtml(tSsr('participateSovereignDesc', 'Iscriviti al Registro Mondiale di New World State 1.0 per votare sui referendum, commentare le inchieste e proporre nuove leggi popolari.'))}
                 </p>
                 <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
                   <a href="${baseUrl}/?tab=register" style="background:linear-gradient(135deg,#c5a880,#dfc299);color:#0a1c3e;padding:10px 20px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">
-                    Richiedi la Cittadinanza Digitale
+                    ${escapeHtml(tSsr('requestDigitalCitizenship', 'Richiedi la Cittadinanza Digitale'))}
                   </a>
                   <a href="${baseUrl}/?tab=news" style="background:rgba(255,255,255,0.1);color:#ffffff;padding:10px 20px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;border:1px solid rgba(255,255,255,0.2);">
-                    Leggi Altre Notizie
+                    ${escapeHtml(tSsr('readOtherNews', 'Leggi Altre Notizie'))}
                   </a>
                 </div>
               </div>
@@ -10029,7 +10147,7 @@ ${newsItems}
           <article id="nws-seo-article" style="max-width:800px;margin:20px auto;padding:20px;font-family:sans-serif;line-height:1.7;">
             <header>
               <h1 id="article-title" style="font-size:28px;color:#0a1c3e;">${escapeHtml(rawTitle)}</h1>
-              <p style="color:#666;font-size:14px;">Pubblicato il: <time datetime="${escapeHtml(publishedDate)}">${escapeHtml(publishedDate)}</time> da <strong>${escapeHtml(authorName)}</strong> (${escapeHtml(authorRole)})</p>
+              <p style="color:#666;font-size:14px;">${escapeHtml(formattedDateStr)} • <strong>${escapeHtml(authorName)}</strong> (${escapeHtml(localizedAuthorRole)})</p>
               ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(rawTitle)}" style="max-width:100%;height:auto;border-radius:8px;margin:15px 0;" />` : ''}
             </header>
             ${rawIntro ? `<p id="article-intro" style="font-size:18px;font-weight:bold;color:#333;margin-bottom:20px;">${escapeHtml(rawIntro)}</p>` : ''}
@@ -10037,8 +10155,8 @@ ${newsItems}
               ${renderArticleBodyHtmlForNoscript(fullContentRaw)}
             </div>
             <footer style="margin-top:30px;padding-top:15px;border-top:1px solid #ccc;font-size:13px;color:#777;">
-              <p>Fonte ufficiale: <a href="${escapeHtml(activeArticleUrl)}">${escapeHtml(activeArticleUrl)}</a></p>
-              <p>Tag: ${escapeHtml(tagsString)}</p>
+              <p>URL: <a href="${escapeHtml(activeArticleUrl)}">${escapeHtml(activeArticleUrl)}</a></p>
+              <p>${escapeHtml(tSsr('tagsLabel', 'Tag:'))} ${escapeHtml(tagsString)}</p>
             </footer>
           </article>
         </noscript>
@@ -10625,12 +10743,8 @@ Genera un JSON con chiave "translations" contenente le lingue.`;
       return res.status(404).send('// Service worker not found');
     });
 
-    // Middleware to dynamically intercept ALL HTML GET requests for news articles, sections & multilingual routes
-    app.use(async (req, res, next) => {
-      if (req.method !== 'GET') return next();
-      if (req.path.startsWith('/api')) return next();
-      if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff2?|ttf|eot|pdf|xml|txt)$/i)) return next();
-
+    // Helper function to serve enhanced HTML (SEO, SSR meta, news injection, multilingual)
+    async function handleHtmlRequest(req: express.Request, res: express.Response) {
       const targetSlug = (req.query.notizia || req.query.article || req.query.slug) as string;
       const isNewsRoute = req.path.startsWith('/notizie') || req.path.startsWith('/news');
       let pathSlug = '';
@@ -10677,20 +10791,42 @@ Genera un JSON con chiave "translations" contenente le lingue.`;
           return res.send(universalHtml);
         } catch (err: any) {
           console.error('[SERVER-META-INJECT-ERR]', err.message);
+          if (!isProd && viteServer) {
+            viteServer.ssrFixStacktrace(err);
+          }
         }
       }
 
-      next();
-    });
+      if (isProd) {
+        res.sendFile(indexPath, (err) => {
+          if (err) {
+            console.error(`[SERVER] Error sending index.html: ${err.message}`);
+            res.status(500).send('Errore nel caricamento dell\'applicazione.');
+          }
+        });
+      } else {
+        res.status(500).send('Errore nel caricamento dell\'applicazione in modalità sviluppo.');
+      }
+    }
 
-    // Static file serving logic
+    // Static file and Vite middleware serving logic
     if (!isProd) {
-      console.log('[SERVER] Starting Vite in middleware mode...');
+      console.log('[SERVER] Starting Vite in custom middleware mode...');
       viteServer = await createViteServer({
         server: { middlewareMode: true },
-        appType: 'spa',
+        appType: 'custom',
       });
       app.use(viteServer.middlewares);
+
+      // Handle HTML navigation requests in development
+      app.get('*', async (req, res, next) => {
+        if (req.path.startsWith('/api')) return next();
+        if (req.path.startsWith('/@') || req.path.startsWith('/src') || req.path.startsWith('/node_modules')) return next();
+        if (req.path.match(/\.(js|ts|tsx|jsx|mjs|cjs|css|scss|less|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|pdf|xml|txt|map)$/i)) {
+          return next();
+        }
+        await handleHtmlRequest(req, res);
+      });
     } else {
       console.log(`[SERVER] Serving static files from: ${distPath}`);
       
@@ -10706,31 +10842,9 @@ Genera un JSON con chiave "translations" contenente le lingue.`;
         }
       }));
       
-      app.get('*', (req, res, next) => {
-        // Skip API routes properly
-        if (req.path.startsWith('/api')) {
-          console.warn(`[SERVER] API route reached SPA fallback: ${req.method} ${req.path}`);
-          return next();
-        }
-        
-        const indexPath = path.join(distPath, 'index.html');
-        if (fs.existsSync(indexPath)) {
-          try {
-            const rawHtml = fs.readFileSync(indexPath, 'utf-8');
-            const universalHtml = injectUniversalPageMetaTags(rawHtml, req);
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            return res.send(universalHtml);
-          } catch (err: any) {
-            console.error(`[SERVER] Error injecting meta in production fallback: ${err.message}`);
-          }
-        }
-
-        res.sendFile(indexPath, (err) => {
-          if (err) {
-            console.error(`[SERVER] Error sending index.html: ${err.message}`);
-            res.status(500).send('Errore nel caricamento dell\'applicazione.');
-          }
-        });
+      app.get('*', async (req, res, next) => {
+        if (req.path.startsWith('/api')) return next();
+        await handleHtmlRequest(req, res);
       });
     }
 

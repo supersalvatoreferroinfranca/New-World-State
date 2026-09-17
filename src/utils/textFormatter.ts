@@ -13,7 +13,7 @@ export function stripFormattingSymbols(text: string | null | undefined): string 
 
   return text
     // Remove HTML tags
-    .replace(/<[^>]*>?/gm, '')
+    .replace(/<[^>]*>?/gm, ' ')
     // Remove markdown headers (###, ##, #)
     .replace(/^#{1,6}\s+/gm, '')
     // Remove bold and italic markdown (**bold**, *italic*, __bold__, _italic_)
@@ -33,96 +33,196 @@ export function stripFormattingSymbols(text: string | null | undefined): string 
 }
 
 /**
- * Converts raw content (whether markdown or unformatted text) into clean,
+ * Converts raw content (whether markdown, mixed HTML, or unformatted text) into clean,
  * semantic HTML with spacious, readable typography (<h3>, <p>, <ul>, <li>, <blockquote>).
- * Removes stray markdown artifacts and orphan symbols.
+ * Guarantees that headings and paragraphs are never fused together.
  */
 export function formatArticleContentToHtml(content: string | null | undefined): string {
   if (!content) return '';
 
   let text = content.trim();
 
-  // If text already has HTML paragraph tags or headers, polish and clean stray symbols
-  const containsHtml = /<[a-z][\s\S]*>/i.test(text);
+  // If text already has HTML tags
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(text);
 
-  if (containsHtml) {
-    return text
-      // Replace any React JSX className with HTML class
-      .replace(/\bclassName=/g, 'class=')
-      // Clean up markdown bold inside HTML tags: **text** -> <strong>text</strong>
+  if (hasHtmlTags) {
+    // 1. Normalize JSX className
+    let sanitized = text.replace(/\bclassName=/g, 'class=');
+
+    // 2. Convert markdown bold/italic inside HTML
+    sanitized = sanitized
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      // Clean up markdown italic inside HTML tags: *text* -> <em>$1</em>
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-      // Clean up markdown headers inside HTML tags if present: ### text -> <h3>text</h3>
-      .replace(/###\s*(.+)/g, '<h3 class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">$1</h3>')
-      .replace(/##\s*(.+)/g, '<h2 class="font-serif text-2xl font-bold text-[#0a1c3e] mt-10 mb-4 tracking-tight">$1</h2>')
-      // Ensure <p> tags without custom classes get proper article paragraph classes
-      .replace(/<p(?![^>]*class=)/gi, '<p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans"')
-      // Remove any orphan backticks or markdown hashtags
+      .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+      .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
       .replace(/```[a-z]*/gi, '')
       .replace(/```/g, '');
-  }
 
-  // Convert pure Markdown or raw text into clean semantic HTML with paragraph blocks
-  const rawBlocks = text.split(/\n\s*\n+/);
-  const formattedBlocks: string[] = [];
+    // 3. Fix merged headers (e.g. <h3>Heading Text Long Paragraph...</h3>)
+    // If an <h3> or <h2> contains more than 160 characters or multiple sentences, split it
+    sanitized = sanitized.replace(/<(h[23])([^>]*)>([\s\S]*?)<\/\1>/gi, (match, tag, attrs, innerText) => {
+      const cleanInner = innerText.trim();
+      // If innerText is short, keep as heading
+      if (cleanInner.length <= 120 && !cleanInner.includes('\n')) {
+        return `<${tag} class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">${cleanInner}</${tag}>`;
+      }
+      
+      // If innerText has newlines, split at first newline
+      if (cleanInner.includes('\n')) {
+        const parts = cleanInner.split('\n').map((p: string) => p.trim()).filter(Boolean);
+        const headerPart = parts[0];
+        const restParagraphs = parts.slice(1).map((p: string) => `<p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans">${p}</p>`).join('\n');
+        return `<${tag} class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">${headerPart}</${tag}>\n${restParagraphs}`;
+      }
 
-  for (const block of rawBlocks) {
-    const trimmedBlock = block.trim();
-    if (!trimmedBlock) continue;
+      // If innerText is long without newlines, check for colon or first sentence
+      const splitMatch = cleanInner.match(/^([^:?!\.\n]{15,90}[:?!\.]|\b[A-Z0-9\s]{10,60}\b)\s+([A-Z].+)$/);
+      if (splitMatch && cleanInner.length > 140) {
+        return `<${tag} class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">${splitMatch[1]}</${tag}>\n<p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans">${splitMatch[2]}</p>`;
+      }
 
-    // Check if block starts with heading
-    if (trimmedBlock.startsWith('### ')) {
-      const headerText = stripFormattingSymbols(trimmedBlock.replace(/^###\s+/, ''));
-      formattedBlocks.push(`<h3 class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">${headerText}</h3>`);
-      continue;
-    }
-    if (trimmedBlock.startsWith('## ') || trimmedBlock.startsWith('# ')) {
-      const headerText = stripFormattingSymbols(trimmedBlock.replace(/^#+\s*/, ''));
-      formattedBlocks.push(`<h2 class="font-serif text-2xl font-bold text-[#0a1c3e] mt-10 mb-4 tracking-tight">${headerText}</h2>`);
-      continue;
-    }
-
-    // Check if block is a blockquote
-    if (trimmedBlock.startsWith('> ')) {
-      const quoteText = stripFormattingSymbols(trimmedBlock.replace(/^>\s*/gm, ''));
-      formattedBlocks.push(`<blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-5 my-6 rounded-r-2xl italic text-slate-800 text-base leading-relaxed">${quoteText}</blockquote>`);
-      continue;
-    }
-
-    // Check if block is a list
-    const lines = trimmedBlock.split('\n');
-    const isList = lines.every(l => {
-      const tl = l.trim();
-      return !tl || tl.startsWith('* ') || tl.startsWith('- ') || /^\d+\.\s+/.test(tl);
+      return `<${tag} class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">${cleanInner}</${tag}>`;
     });
 
-    if (isList) {
-      const isOrdered = /^\d+\.\s+/.test(lines[0].trim());
-      const tag = isOrdered ? 'ol' : 'ul';
-      const listClass = isOrdered ? 'list-decimal list-outside space-y-2.5 my-6 text-slate-700 pl-7 font-sans' : 'list-disc list-outside space-y-2.5 my-6 text-slate-700 pl-7 font-sans';
-      const items = lines.map(l => {
-        const tl = l.trim();
-        if (!tl) return '';
-        let itemContent = tl.replace(/^[\*\-]\s+/, '').replace(/^\d+\.\s+/, '');
-        itemContent = itemContent
+    // 4. Ensure <p> tags have standard styling
+    sanitized = sanitized.replace(/<p(?![^>]*class=)/gi, '<p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans"');
+
+    // 5. Convert standalone markdown headers inside HTML
+    sanitized = sanitized
+      .replace(/###\s+(.+?)(?=(<|\n|$))/g, '<h3 class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">$1</h3>')
+      .replace(/##\s+(.+?)(?=(<|\n|$))/g, '<h2 class="font-serif text-2xl font-bold text-[#0a1c3e] mt-10 mb-4 tracking-tight">$1</h2>');
+
+    return sanitized;
+  }
+
+  // Pure Markdown parsing - Line by line processor
+  const lines = text.split('\n');
+  const blocks: string[] = [];
+  let currentParagraphLines: string[] = [];
+  let currentListLines: string[] = [];
+  let currentListIsOrdered = false;
+  let currentQuoteLines: string[] = [];
+
+  const flushParagraph = () => {
+    if (currentParagraphLines.length > 0) {
+      let pText = currentParagraphLines.join(' ').trim();
+      pText = pText
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+        .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800">$1</a>');
+      if (pText) {
+        blocks.push(`<p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans">${pText}</p>`);
+      }
+      currentParagraphLines = [];
+    }
+  };
+
+  const flushList = () => {
+    if (currentListLines.length > 0) {
+      const tag = currentListIsOrdered ? 'ol' : 'ul';
+      const listClass = currentListIsOrdered 
+        ? 'list-decimal list-outside space-y-2.5 my-6 text-slate-700 pl-7 font-sans' 
+        : 'list-disc list-outside space-y-2.5 my-6 text-slate-700 pl-7 font-sans';
+      
+      const items = currentListLines.map(item => {
+        let cleanItem = item
           .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*([^*]+)\*/g, '<em>$1</em>');
-        return `<li class="leading-relaxed text-slate-700 text-base md:text-lg font-sans my-1.5">${itemContent}</li>`;
-      }).filter(Boolean).join('\n');
-      formattedBlocks.push(`<${tag} class="${listClass}">\n${items}\n</${tag}>`);
+          .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+          .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800">$1</a>');
+        return `<li class="leading-relaxed text-slate-700 text-base md:text-lg font-sans my-1.5">${cleanItem}</li>`;
+      }).join('\n');
+
+      blocks.push(`<${tag} class="${listClass}">\n${items}\n</${tag}>`);
+      currentListLines = [];
+    }
+  };
+
+  const flushQuote = () => {
+    if (currentQuoteLines.length > 0) {
+      let quoteText = currentQuoteLines.join(' ').trim();
+      quoteText = quoteText
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+        .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+      blocks.push(`<blockquote class="border-l-4 border-brand-gold bg-amber-50/70 p-5 my-6 rounded-r-2xl italic text-slate-800 text-base leading-relaxed">${quoteText}</blockquote>`);
+      currentQuoteLines = [];
+    }
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const line = rawLine.trim();
+
+    // Empty line
+    if (!line) {
+      flushParagraph();
+      flushList();
+      flushQuote();
       continue;
     }
 
-    // Standard Paragraph - join lines with a space to prevent chopped sentences, then parse markdown formatting
-    let paragraphText = lines.map(l => l.trim()).filter(Boolean).join(' ')
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    // Heading 3: ###
+    if (line.startsWith('### ')) {
+      flushParagraph();
+      flushList();
+      flushQuote();
+      const hText = line.replace(/^###\s+/, '').replace(/[\*\_`]/g, '').trim();
+      blocks.push(`<h3 class="font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight">${hText}</h3>`);
+      continue;
+    }
 
-    formattedBlocks.push(`<p class="article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans">${paragraphText}</p>`);
+    // Heading 2 or 1: ## or #
+    if (line.startsWith('## ') || line.startsWith('# ')) {
+      flushParagraph();
+      flushList();
+      flushQuote();
+      const hText = line.replace(/^#{1,2}\s+/, '').replace(/[\*\_`]/g, '').trim();
+      blocks.push(`<h2 class="font-serif text-2xl font-bold text-[#0a1c3e] mt-10 mb-4 tracking-tight">${hText}</h2>`);
+      continue;
+    }
+
+    // Blockquote: >
+    if (line.startsWith('> ')) {
+      flushParagraph();
+      flushList();
+      currentQuoteLines.push(line.replace(/^>\s*/, ''));
+      continue;
+    }
+
+    // Unordered List item: * or -
+    if (line.startsWith('* ') || line.startsWith('- ')) {
+      flushParagraph();
+      flushQuote();
+      currentListIsOrdered = false;
+      currentListLines.push(line.replace(/^[\*\-]\s+/, ''));
+      continue;
+    }
+
+    // Ordered List item: 1. or 2.
+    if (/^\d+\.\s+/.test(line)) {
+      flushParagraph();
+      flushQuote();
+      currentListIsOrdered = true;
+      currentListLines.push(line.replace(/^\d+\.\s+/, ''));
+      continue;
+    }
+
+    // Standard text line
+    if (currentQuoteLines.length > 0) {
+      currentQuoteLines.push(line);
+    } else if (currentListLines.length > 0) {
+      currentListLines[currentListLines.length - 1] += ' ' + line;
+    } else {
+      currentParagraphLines.push(line);
+    }
   }
 
-  return formattedBlocks.join('\n\n');
+  flushParagraph();
+  flushList();
+  flushQuote();
+
+  return blocks.join('\n\n');
 }
 
 /**

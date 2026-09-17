@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { safeFetch } from '../../services/api';
 import {
   Users,
   Eye,
@@ -103,19 +104,19 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/analytics/overview?range=${timeRange}`, {
+      const res = await safeFetch(`/api/admin/analytics/overview?range=${timeRange}`, {
         headers: {
           'x-admin-password': adminPasswordValue
         }
       });
       const json = await res.json();
-      if (json.success) {
+      if (json && json.success) {
         setData(json);
       } else {
-        showAlert('error', json.message || 'Errore nel caricamento delle statistiche.');
+        showAlert('error', json?.message || 'Errore nel caricamento delle statistiche.');
       }
     } catch (err: any) {
-      showAlert('error', 'Impossibile connettersi al server per recuperare le statistiche.');
+      showAlert('error', 'Impossibile connettersi al server per recuperare le statistiche: ' + (err.message || 'Errore di rete'));
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,7 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
 
   const handleExportData = async () => {
     try {
-      const res = await fetch(`/api/admin/analytics/export`, {
+      const res = await safeFetch(`/api/admin/analytics/export`, {
         headers: {
           'x-admin-password': adminPasswordValue
         }
@@ -141,8 +142,8 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
       a.click();
       document.body.removeChild(a);
       showAlert('success', 'Report analitico esportato con successo in formato JSON.');
-    } catch (e) {
-      showAlert('error', 'Errore durante il download del report.');
+    } catch (e: any) {
+      showAlert('error', 'Errore durante il download del report: ' + (e.message || ''));
     }
   };
 

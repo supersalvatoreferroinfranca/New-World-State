@@ -2,6 +2,7 @@ import { NewsArticle, NewsCategory, NewsMedia, ArticleStatus, ArticleTranslation
 import { Language } from '../constants/translations';
 import { triggerNotification } from './notifications';
 import { safeFetch } from './api';
+import { FULL_ARTICLE_TRANSLATIONS } from '../data/fullArticleContentTranslations';
 
 const ARTICLES_STORAGE_KEY = 'nws_news_articles_v1';
 const CATEGORIES_STORAGE_KEY = 'nws_news_categories_v1';
@@ -1255,16 +1256,68 @@ export function sanitizeMediaPlatform(item: MediaSearchResult): MediaSearchResul
   };
 }
 
+export function getPexelsApiKey(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('nws_pexels_api_key') || '';
+}
+
+export function setPexelsApiKey(key: string): void {
+  if (typeof window === 'undefined') return;
+  const clean = key.trim();
+  if (clean) {
+    localStorage.setItem('nws_pexels_api_key', clean);
+  } else {
+    localStorage.removeItem('nws_pexels_api_key');
+  }
+}
+
+export async function testPexelsApiKey(keyToTest?: string): Promise<{ success: boolean; message: string; photoCount?: number }> {
+  const key = (keyToTest !== undefined ? keyToTest : getPexelsApiKey()).trim();
+  if (!key) {
+    return { success: false, message: 'Nessuna chiave API Pexels inserita.' };
+  }
+
+  try {
+    const res = await safeFetch('/api/news/pexels-config/test', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-pexels-key': key
+      },
+      body: JSON.stringify({ pexelsApiKey: key })
+    });
+    const data = await res.json();
+    return {
+      success: !!data.success,
+      message: data.message || (data.success ? 'Chiave API Pexels convalidata con successo!' : 'Chiave API Pexels non valida.'),
+      photoCount: data.photoCount
+    };
+  } catch (err: any) {
+    return { success: false, message: 'Impossibile verificare la chiave Pexels: ' + err.message };
+  }
+}
+
 export async function searchArticleMedia(
   query: string,
-  platform: string = 'all'
+  platform: string = 'all',
+  customPexelsKey?: string
 ): Promise<{ results: MediaSearchResult[]; debug?: MediaSearchDebugInfo }> {
+  const effectivePexelsKey = customPexelsKey || getPexelsApiKey();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  };
+  if (effectivePexelsKey) {
+    headers['x-pexels-key'] = effectivePexelsKey;
+  }
+
   const response = await safeFetch('/api/news/search-media', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ query, platform })
+    headers,
+    body: JSON.stringify({
+      query,
+      platform,
+      pexelsApiKey: effectivePexelsKey || undefined
+    })
   });
 
   const resData = await response.json();
@@ -1385,6 +1438,23 @@ export function getLocalizedArticle(
       tags: translation.tags && translation.tags.length > 0 ? translation.tags : (article.tags || []),
       isTranslated: true,
       hasTranslation: isFullyTranslated
+    };
+  }
+
+  // Check fallback pre-translated dictionary
+  const slug = (article.slug || '').trim().toLowerCase();
+  const id = (article.id || '').trim().toLowerCase();
+  const fallbackTrans = (slug && FULL_ARTICLE_TRANSLATIONS[slug]?.[lang as NewsLanguage]) ||
+                        (id && FULL_ARTICLE_TRANSLATIONS[id]?.[lang as NewsLanguage]);
+
+  if (fallbackTrans && (fallbackTrans.title || fallbackTrans.content || fallbackTrans.intro)) {
+    return {
+      title: fallbackTrans.title || article.title,
+      intro: fallbackTrans.intro || article.intro,
+      content: fallbackTrans.content || article.content,
+      tags: fallbackTrans.tags && fallbackTrans.tags.length > 0 ? fallbackTrans.tags : (article.tags || []),
+      isTranslated: true,
+      hasTranslation: true
     };
   }
 
