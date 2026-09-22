@@ -190,7 +190,7 @@ export default function ArticleDetailModal({
   useEffect(() => {
     if (!activeArticle || activeLang === 'it' || !isOpen) return;
 
-    const hasTrans = activeArticle.translations?.[activeLang]?.title && activeArticle.translations?.[activeLang]?.content;
+    const hasTrans = (activeArticle.translations?.[activeLang]?.title && activeArticle.translations?.[activeLang]?.content) || localizedData.hasTranslation;
     if (hasTrans) return;
 
     // Trigger AI translation

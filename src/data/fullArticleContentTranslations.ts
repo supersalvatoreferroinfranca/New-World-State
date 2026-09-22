@@ -171,89 +171,304 @@ O protocolo entra em vigor no próximo ciclo com auditoria pública contínua pe
   'il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state': {
     it: {
       title: 'Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l\'Impegno Globale del New World State',
-      intro: 'Un\'inchiesta approfondita sulle catene globali di fornitura, il lavoro forzato invisibile e i protocolli d\'azione diretta per la liberazione e la tutela dei minori.',
-      content: `In un mondo che celebra la transizione digitale e il progresso tecnologico, una tragedia silenziosa continua a consumarsi nell'ombra: oltre 160 milioni di bambini nel mondo sono vittime di sfruttamento minorile, costretti a lavori usuranti in miniere, piantagioni e fabbriche clandestine.
+      intro: 'Un\'inchiesta approfondita sulle drammatiche dinamiche del lavoro forzato e dello sfruttamento minorile nel mondo, con il manifesto d\'azione e le tutele universali promosse dal New World State per restituire futuro e dignità all\'infanzia.',
+      content: `Oltre 160 milioni di bambini nel mondo sono oggi intrappolati nelle maglie del lavoro minorile, costretti a sacrificare istruzione, salute e dignità in contesti di estrema vulnerabilità economica e geopolitica. Dalle miniere di cobalto e coltan dell'Africa subsahariana alle filiere tessili del Sud-Est asiatico, fino alle piantagioni agricole dell'America Latina e alle periferie invisibili delle metropoli occidentali, lo sfruttamento dell'infanzia rappresenta una delle ferite più profonde e intollerabili dell'ordine economico contemporaneo.
 
-Il New World State lancia oggi un piano globale d'intervento umanitario e giuridico:
-- Creazione della Task Force Umanitaria per la Tracciabilità Etica delle Filieri Produttive.
-- Istituzione di borse di studio universali e alloggi protetti per i minori sottratti al lavoro forzato.
-- Denuncia e sanzioni internazionali verso i consorzi transnazionali che beneficiano dell'indigenza minorile.
+## La dimensione invisibile dell'emergenza globale
 
-"La dignità di ogni bambino è la misura della civiltà umana," ribadisce la cronaca del Dipartimento Diritti Umani. "Nessuna sovranità è legittima se non protegge i più vulnerabili tra noi."`,
-      tags: ['DirittiUmani', 'TutelaMinori', 'Solidarieta', 'EticaGlobale']
+I dati delle organizzazioni internazionali certificano una battuta d'arresto senza precedenti nella lotta globale allo sfruttamento dei minori. Quasi la metà dei bambini impiegati nel lavoro forzato si trova in condizioni di lavoro pericoloso, esposta a sostanze tossiche, macchinari pesanti e orari disumani. Non si tratta di una fatalità geografica o culturale, ma della conseguenza diretta di catene di fornitura globalizzate strutturate sulla compressione spietata dei costi di produzione e sulla deregolamentazione selvaggia.
+
+> "Un modello economico che fonda il proprio profitto o la propria competitività industriale sul lavoro forzato di un solo bambino è un modello intrinsecamente fallimentare e moralmente illegittimo. La sovranità dei popoli inizia dalla tutela incondizionata dell'infanzia."
+> — Manifesto per la Dignità Umana, Assemblea Generale New World State
+
+## Catene di fornitura opache e la responsabilità delle multinazionali
+
+Mentre le grandi multinazionali tecnologiche, energetiche e dell'alta moda presentano bilanci di sostenibilità patinati, le materie prime essenziali per batterie, smartphone e abbigliamento low-cost continuano a essere estratte e lavorate da mani infantili lungo catene di subappalto intenzionalmente frammentate per eludere responsabilità penali e civili.
+
+I meccanismi di certificazione volontaria e di audit aziendale si sono dimostrati inadeguati:
+* Mancanza di ispezioni indipendenti senza preavviso nei siti estrattivi e manifatturieri remoti.
+* Complice connivenza dei governi locali in cerca di investimenti esteri a qualsiasi costo sociale.
+* Assenza di tracciabilità inviolabile dal punto di estrazione della materia prima al prodotto finito al consumo.
+* Impunità giuridica transnazionale favorita dalla frammentazione giurisdizionale degli stati tradizionali.
+
+## La Carta dei Diritti dell'Infanzia e l'Azione Diretta del New World State
+
+Di fronte all'inerzia delle diplomazie convenzionali, il New World State 1.0 dichiara lo sfruttamento minorile un crimine contro la famiglia umana universale e attiva una serie di misure vincolanti per la propria comunità sovrana:
+
+1. **Tracciabilità Crittografica Sovrana delle Filiere**: Ogni bene scambiato o certificato all'interno della rete economica del New World State deve disporre di un passaporto digitale con attestazione notarile decentralizzata che certifichi l'assoluta assenza di manodopera minorile lungo tutti i livelli della filiera.
+2. **Fondo Sovrano di Riscatto e Istruzione Libera**: Stanziamento immediato di risorse a sostegno di borse di studio, centri educativi comunitari e reddito di dignità per le famiglie a basso reddito, per consentire ai minori di abbandonare il lavoro e rientrare stabilmente nei percorsi formativi.
+3. **Blacklist Internazionale Pubblica delle Corporation Complici**: Istituzione di un registro pubblico immutabile accessibile ai cittadini globali in cui vengono segnalate e boicottate le aziende che beneficiano direttamente o indirettamente del lavoro forzato minorile.
+4. **Accademia dei Custodi dell'Infanzia**: Una rete permanente di volontari, cronisti investigativi e giuristi sovrani impegnata sul campo nella documentazione e nel soccorso tempestivo di minori in condizioni di schiavitù o tratta.
+
+## Un Patto Fondativo per il Futuro delle Nuove Generazioni
+
+Proteggere i bambini non è un atto di carità, ma il pilastro irrinunciabile su cui costruire un nuovo ordine sociale basato sulla giustizia, sull'armonia universale e sulla pace duratura. La Costituzione Fondativa del New World State sancisce il diritto di ogni fanciullo a giocare, studiare, sognare e crescere libero da ogni forma di violenza e ricatto economico. Invitiamo tutti i cittadini, le comunità indipendenti e le organizzazioni etiche a unire le forze in questa battaglia di civiltà.`,
+      tags: ['DirittiUmani', 'Infanzia', 'GiustiziaSociale', 'NewWorldState', 'Solidarietà']
     },
     zh: {
       title: '无声的祸患：童工剥削问题与新世界国家的全球承诺',
       intro: '针对全球供应链、隐性强迫劳动以及解救和保护未成年人的直接行动方案进行深度调查。',
-      content: `在全世界高唱数字化转型与科技飞跃的今天，一场无声的悲剧依然在阴影中肆虐：全球超过1.6亿儿童沦为童工剥削的受害者，被迫在矿井、种植园和非法作坊中从事繁重劳作。
+      content: `全球超过1.6亿儿童如今仍被困在童工剥削的枷锁中，被迫在极端贫困与动荡的地缘政治环境中牺牲教育、健康与人格尊严。从撒哈拉以南非洲的钴矿与钽矿，到东南亚的纺织作坊，再到拉美的农业种植园与西方大都市看不见的边缘角落，对儿童的剥削是当代经济秩序中最深重且不可容忍的伤痛。
 
-新世界国家（New World State）今日正式启动全球人道主义与法律干预计划：
-- 组建供应链伦理可追溯性国际人道主义特别行动组。
-- 设立全额普遍教育奖学金与庇护中心，安置所有摆脱强迫劳动的未成年人。
-- 对利用未成年人贫困牟取暴利的跨国利益集团实施全面调查与国际正义制裁。
+## 全球危机中被掩盖的残酷真相
 
-“每个孩子的尊严都是衡量人类文明真实水准的试金石，”人权事务专员在特稿中郑重重申，“如果不能庇护最脆弱的儿童，任何世俗主权都谈不上真正正义。”`,
-      tags: ['人权保障', '保护儿童', '全球正义', '伦理经济']
+国际组织的数据表明，全球消除童工现象的努力遭遇了前所未有的停滞。在被迫劳动的儿童中，近半数处于极度危险的环境下，长期接触有毒化学品、重型机械并承受非人的超长工时。这绝非某种无法改变的地理或文化宿命，而是全球化供应链盲目压低生产成本、肆意规避监管的直接后果。
+
+> “一个将自身商业利润或工业竞争力建立在哪怕单个儿童强迫劳动之上的经济模式，在本质上都是彻底失败且道德沦丧的。人民的主权必须始于对儿童无条件的庄严庇护。”
+> —— 新世界国家人民总会《人类尊严宣言》
+
+## 隐蔽的供应链与跨国财团的不可推卸之责
+
+正当众多科技巨头、能源巨头与快时尚品牌大肆宣扬光鲜亮丽的“企业社会责任”与可持续发展报告时，用于制造智能电池、手机和廉价成衣的关键原材料，依然在层层转包的黑箱网络中由稚嫩的双手采掘加工，以此逃避民事与刑事追责。
+
+现行自愿性企业认证与审计机制已彻底失效：
+* 偏远采矿点与制造厂缺乏独立、突击式核查。
+* 地方机构为迎合外资而对社会苦难选择性失明。
+* 从矿山源头到终端消费品之间缺乏防篡改的透明追溯体系。
+* 传统国家跨国司法管辖碎片化导致了事实上的逍遥法外。
+
+## 儿童权利宪章与新世界国家的直接行动
+
+面对传统外交体系的迟钝与不作为，新世界国家（New World State 1.0）正式宣布：童工剥削是对整个人类普遍家庭的公然犯罪，并对主权社区立即推行以下强制性举措：
+
+1. **供应链主权密码学全流程溯源**：凡在新世界国家经济网络中流通或认证的商品，必须附带去中心化公证的数字护照，严格证明全产业链各环节绝对杜绝童工参与。
+2. **赎救与免费教育主权专项基金**：立即拨付充足专项资金，为贫困家庭提供尊严基本收入与助学金，确保儿童彻底脱离苦役、重返正规教育课堂。
+3. **同谋企业全球公开黑名单**：设立不可篡改的公开查验名录，号召全球公民抵制直接或间接从剥削童工中获益的跨国企业。
+4. **儿童守护者学院行动网络**：建立由调查记者、人权法学家和一线志愿者组成的常设网络，实地记录并营救处于奴役与贩卖困境中的儿童。
+
+## 关乎世代未来的奠基誓约
+
+保护儿童并非施舍与怜悯，而是构建基于正义、普遍和谐与永久和平新秩序的立足之本。《新世界国家建国宪章》庄严赋予每个孩子无忧嬉戏、自由学习、怀抱梦想并在免于暴力与经济胁迫环境中成长的神圣权利。我们呼吁所有公民、独立社区和伦理组织携手共进，打赢这场关乎人类尊严的文明之战。`,
+      tags: ['人权保障', '保护儿童', '全球正义', '伦理经济', '新世界国家']
     },
     en: {
       title: 'The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State',
-      intro: 'An in-depth investigation into global supply chains, invisible forced labor, and direct action protocols for the liberation and protection of children.',
-      content: `While the modern world celebrates digital transitions and technological breakthroughs, a silent tragedy continues to unfold in the shadows: over 160 million children worldwide remain trapped in child labor, subjected to grueling conditions in mines, plantations, and clandestine sweatshops.
+      intro: 'An in-depth investigation into the tragic dynamics of forced child labour around the world, presenting the manifesto of action and universal safeguards promoted by the New World State to restore dignity and a future to children.',
+      content: `Over 160 million children worldwide remain trapped in the gears of child labour today, forced to sacrifice education, health, and fundamental human dignity in environments of acute geopolitical and economic vulnerability. From the cobalt and coltan mines of sub-Saharan Africa to the textile sweatshops of Southeast Asia, the agricultural fields of Latin America, and the invisible peripheries of Western metropolises, child exploitation stands as one of the deepest and most intolerable wounds of the modern economic order.
 
-The New World State today launches a comprehensive global humanitarian and legal action plan:
-- Formation of a Humanitarian Task Force for Ethical Supply Chain Traceability.
-- Universal educational scholarships and protected sanctuaries for children rescued from forced labor.
-- International accountability and direct exposure of transnational entities profiting from vulnerable minors.
+## The Invisible Dimension of a Global Crisis
 
-"The dignity of every child is the true measure of human civilization," affirms the Human Rights Department. "No sovereignty is legitimate unless it fiercely protects the most vulnerable."`,
-      tags: ['HumanRights', 'ChildProtection', 'GlobalSolidarity', 'EthicalSupply']
+International reports document an unprecedented setback in the global battle against child labour. Nearly half of all children subjected to forced labour endure hazardous conditions, exposed to toxic chemicals, dangerous heavy machinery, and grueling work shifts. This is not an inevitable geographic or cultural reality; it is the direct outcome of globalized supply chains engineered around merciless production cost-slashing and reckless deregulation.
+
+> "An economic system that builds its profits or industrial competitiveness upon the forced labour of even a single child is inherently bankrupt and morally illegitimate. The sovereignty of nations begins with the unconditional safeguarding of childhood."
+> — Manifesto for Human Dignity, New World State General Assembly
+
+## Opaque Supply Chains and Corporate Accountability
+
+While transnational tech corporations, energy conglomerates, and fast-fashion giants boast polished sustainability brochures, the vital minerals powering batteries, smartphones, and low-cost apparel continue to be extracted and processed by juvenile hands through intentionally fragmented subcontracting networks designed to shield executives from legal liability.
+
+Voluntary corporate audits and self-certification schemes have thoroughly failed:
+* Absence of independent, unannounced inspections in remote extractive and manufacturing zones.
+* Complicit tolerance by local administrations eager to attract foreign capital at any societal cost.
+* Total lack of tamper-proof traceability from raw material extraction points to consumer shelves.
+* Transnational legal impunity facilitated by fragmented national jurisdictions.
+
+## The Charter of Children's Rights and Direct Action by the New World State
+
+Faced with the paralysis of conventional international diplomacy, the New World State 1.0 declares child exploitation a severe crime against universal humanity and enacts binding operational protocols for its sovereign network:
+
+1. **Sovereign Cryptographic Supply Chain Traceability**: Every good traded or certified within the New World State economic grid must carry a decentralized notarized digital passport proving zero child labour across all tiers.
+2. **Sovereign Rescue and Universal Free Education Fund**: Direct allocation of funds to provide family dignity stipends and educational scholarships, ensuring children leave labour permanently and enter classroom learning.
+3. **Public International Blacklist of Complicit Corporations**: Creation of an immutable public registry exposing and boycotting corporate entities that benefit directly or indirectly from child exploitation.
+4. **Academy of Children's Custodians**: A permanent worldwide network of investigative journalists, sovereign legal scholars, and grassroots volunteers mobilized on the ground to document and liberate minors from bonded labor and trafficking.
+
+## A Foundational Compact for the Generations to Come
+
+Protecting children is not an act of patronizing charity; it is the non-negotiable cornerstone required to build a new social architecture anchored in justice, global harmony, and enduring peace. The Constitution of the New World State consecrates every child's inviolable right to play, study, imagine, and grow free from violence and financial extortion. We invite all citizens, sovereign communities, and ethical institutions to unite in this historic civil battle.`,
+      tags: ['HumanRights', 'ChildProtection', 'SocialJustice', 'NewWorldState', 'Solidarity']
     },
     fr: {
       title: 'Le Fléau Silencieux : Le Ravage du Travail des Enfants et l\'Engagement Mondial du New World State',
-      intro: 'Une enquête approfondie sur les chaînes d\'approvisionnement mondiales, le travail forcé invisible et les protocoles d\'action directe pour la protection des mineurs.',
-      content: `Dans un monde célébrant la transition numérique, une tragédie silencieuse persiste dans l'ombre : plus de 160 millions d'enfants restent victimes du travail forcé dans des mines et des ateliers clandestins. New World State déploie un plan global d'action humanitaire et juridique pour éradiquer ces abus et offrir une éducation universelle sécurisée.`,
-      tags: ['DroitsHumains', 'ProtectionEnfance', 'Solidarité', 'Éthique']
+      intro: 'Une enquête approfondie sur les dynamiques dramatiques du travail forcé des enfants dans le monde, avec le manifeste d\'action et les protections universelles du New World State.',
+      content: `Plus de 160 millions d'enfants à travers le monde sont aujourd'hui pris au piège du travail forcé, contraints de sacrifier éducation, santé et dignité dans des contextes de vulnérabilité extrême. Des mines de cobalt et de coltan d'Afrique subsaharienne aux ateliers textiles d'Asie du Sud-Est, l'exploitation de l'enfance représente l'une des plaies les plus intolérables de l'ordre économique contemporain.
+
+## La dimension invisible de l'urgence mondiale
+
+Près de la moitié des enfants asservis travaillent dans des conditions hautement dangereuses, exposés à des substances toxiques et à des horaires inhumains. Cela résulte directement de chaînes d'approvisionnement mondialisées axées sur la compression impitoyable des coûts.
+
+> « Un modèle économique qui fonde son profit sur le travail forcé d'un seul enfant est moralement illégitime. La souveraineté des peuples commence par la protection inconditionnelle de l'enfance. »
+> — Manifeste pour la Dignité Humaine, Assemblée Générale du New World State
+
+## Chaînes d'approvisionnement opaques et responsabilité corporative
+
+Tandis que les multinationales publient des bilans éthiques soignés, les matières premières indispensables continuent d'être extraites par des mains enfantines au sein de sous-traitances opaques.
+
+Le New World State 1.0 engage des mesures directes :
+1. **Traçabilité Cryptographique Souveraine** : Passeports numériques décentralisés certifiant l'absence totale de travail d'enfants.
+2. **Fonds Souverain d'Éducation Gratuite** : Allocations de dignité aux familles et bourses d'études.
+3. **Registre Public International de Boycott** : Mise à l'index des entreprises complices.
+4. **Gardiens de l'Enfance** : Réseau d'intervention humanitaire et juridique sur le terrain.
+
+## Un Pacte pour l'Avenir
+
+La Constitution du New World State garantit à chaque enfant le droit sacré d'étudier, de jouer et de grandir à l'abri de toute violence et chantage économique.`,
+      tags: ['DroitsHumains', 'ProtectionEnfance', 'JusticeSociale', 'NewWorldState', 'Solidarité']
     },
     es: {
       title: 'El Flagelo Silente: La Plaga del Trabajo Infantil y el Compromiso Global del New World State',
-      intro: 'Una investigación exhaustiva sobre las cadenas de suministro globales, el trabajo forzado y los protocolos de rescate y tutela de menores.',
-      content: `En un mundo que celebra el avance tecnológico, más de 160 millones de niños son víctimas de la explotación infantil en minas y fábricas clandestinas. New World State lanza hoy un plan humanitario y legal para garantizar la protección, educación y libertad de todos los menores vulnerables.`,
-      tags: ['DerechosHumanos', 'ProteccionInfantil', 'Solidaridad', 'Etica']
+      intro: 'Una investigación profunda sobre la dramática realidad del trabajo infantil forzado en el mundo, con el manifiesto de acción y garantías universales del New World State.',
+      content: `Más de 160 millones de niños en el mundo están hoy atrapados en las redes del trabajo infantil forzado, obligados a sacrificar educación, salud y dignidad humana. Desde las minas de cobalto en África hasta los talleres textiles en Asia y los campos agrícolas en América Latina, la explotación infantil es una herida intolerable de la economía actual.
+
+## La dimensión invisible de la emergencia global
+
+Casi la mitad de los menores explotados realizan labores peligrosas, expuestos a sustancias tóxicas y maquinaria pesada bajo jornadas inhumanas. Esto es fruto de cadenas de suministro globales centradas en la reducción despiadada de costes.
+
+> "Un modelo económico que funda sus ganancias en el trabajo forzado de un solo niño es moralmente ilegítimo. La soberanía de los pueblos comienza con la tutela incondicional de la infancia."
+> — Manifiesto por la Dignidad Humana, Asamblea General New World State
+
+## Cadenas opacas y acción directa
+
+Las grandes multinacionales eluden su responsabilidad mediante redes opacas de subcontratación.
+
+El New World State 1.0 activa medidas directas:
+1. **Trazabilidad Criptográfica Soberana**: Pasaportes digitales auditables que certifican cero mano de obra infantil.
+2. **Fondo Soberano de Rescate y Educación Gratuita**: Becas e ingresos de dignidad para las familias vulnerables.
+3. **Lista Negra Internacional de Empresas Cómplices**: Registro público para el boicot ciudadano.
+4. **Academia de Custodios de la Infancia**: Red jurídica y humanitaria de rescate directo.
+
+## Un Pacto Fundamental para las Nuevas Generaciones
+
+La Constitución del New World State consagra el derecho inviolable de cada niño a jugar, estudiar y crecer libre de violencia y chantaje económico.`,
+      tags: ['DerechosHumanos', 'Infancia', 'JusticiaSocial', 'NewWorldState', 'Solidaridad']
     },
     pt: {
       title: 'O Flagelo Silencioso: A Chaga do Trabalho Infantil e o Compromisso Global do New World State',
-      intro: 'Investigação profunda sobre as cadeias globais de suprimentos, o trabalho forçado invisível e a proteção dos menores.',
-      content: `Mais de 160 milhões de crianças no mundo continuam vítimas da exploração infantil. O New World State estabelece uma força-tarefa humanitária global para garantir educação universal, refúgio seguro e erradicação do trabalho escravo infantil.`,
-      tags: ['DireitosHumanos', 'ProtecaoInfantil', 'Solidariedade', 'Etica']
+      intro: 'Uma investigação aprofundada sobre a exploração infantil no mundo, com o manifesto de ação e salvaguardas universais do New World State para devolver dignidade às crianças.',
+      content: `Mais de 160 milhões de crianças no mundo estão hoje encurraladas no trabalho infantil forçado, sacrificando educação, saúde e dignidade humana em contextos de extrema vulnerabilidade econômica e geopolítica. Desde as minas de cobalto e coltan na África subsariana até os setores têxteis no Sudeste Asiático, as lavouras na América Latina e as periferias invisíveis das grandes metrópoles, a exploração da infância é uma das feridas mais profundas e intoleráveis da economia contemporânea.
+
+## A dimensão invisível da emergência global
+
+Organizações internacionais apontam um retrocesso alarmante na erradicação do trabalho infantil. Quase metade dessas crianças trabalham em condições altamente perigosas, expostas a substâncias químicas tóxicas, maquinários pesados e jornadas exaustivas. Isso não é uma fatalidade cultural, mas a consequência direta de cadeias globais de suprimentos baseadas no corte impiedoso de custos de produção e na desregulamentação desmedida.
+
+> "Um modelo produtivo que obtém lucro ou competitividade com base no trabalho forçado de uma única criança é intrinsecamente falho e moralmente ilegítimo. A soberania dos povos começa pela proteção incondicional da infância."
+> — Manifesto da Dignidade Humana, Assembleia Geral do New World State
+
+## Cadeias de suprimento opacas e a responsabilidade das multinacionais
+
+Enquanto grandes corporações de tecnologia, energia e moda rápida exibem relatórios de sustentabilidade reluzentes, matérias-primas essenciais continuam a ser extraídas e processadas por mãos infantis através de redes de subcontratação fragmentadas para fugir da responsabilidade civil e jurídica.
+
+Os mecanismos voluntários de auditoria corporativa provaram-se insuficientes:
+* Falta de inspeções independentes e sem aviso prévio em locais de extração e fábricas remotas.
+* Conivência de autoridades locais em busca de investimentos a qualquer custo social.
+* Inexistência de rastreabilidade inviolável desde o ponto de extração até o consumidor final.
+* Impunidade jurídica internacional alimentada pela divisão das jurisdições estatais tradicionais.
+
+## A Carta dos Direitos da Infância e a Ação Direta do New World State
+
+Diante da inércia das diplomacias convencionais, o New World State 1.0 declara a exploração infantil um crime contra a família humana universal e estabelece medidas mandatórias:
+
+1. **Rastreabilidade Criptográfica Soberana das Cadeias**: Passaportes digitais auditáveis via blockchain para certificar a ausência total de mão de obra infantil em todas as etapas da cadeia produtiva.
+2. **Fundo Soberano de Resgate e Educação Gratuita**: Recursos diretos para bolsas de estudo, centros educativos e renda de dignidade às famílias, garantindo o retorno permanente dos menores às salas de aula.
+3. **Lista Pública Internacional de Boicote a Empresas Cúmplices**: Registro público e imutável para transparência cidadã e denúncia de entidades que lucram com o trabalho forçado infantil.
+4. **Academia dos Guardiões da Infância**: Rede ativa de juristas, jornalistas investigativos e voluntários dedicados à documentação e ao resgate imediato de crianças em situação de escravidão ou tráfico.
+
+## Um Pacto Fundacional para o Futuro das Novas Gerações
+
+Proteger as crianças não é um ato de caridade, mas o alicerce indispensável sobre o qual erguer uma nova ordem social baseada na justiça, na harmonia universal e na paz duradoura. A Constituição do New World State assegura a cada criança o direito sagrado de brincar, aprender, sonhar e crescer livre de violência e chantagem econômica. Convidamos todos os cidadãos soberanos, comunidades e entidades éticas a unirem-se nesta causa nobre pela dignidade humana.`,
+      tags: ['DireitosHumanos', 'ProtecaoInfantil', 'JusticaSocial', 'NewWorldState', 'Solidariedade']
     },
     ru: {
       title: 'Безмолвное бедствие: бремя детского труда и глобальные обязательства New World State',
-      intro: 'Глубокое расследование глобальных цепочек поставок, невидимого принудительного труда и протоколов прямого действия по защите несовершеннолетних.',
-      content: `Более 160 миллионов детей в мире остаются жертвами трудовой эксплуатации. New World State запускает глобальный гуманитарный план по освобождению детей, предоставлению универсального образования и привлечению к ответственности эксплуататоров.`,
-      tags: ['ПраваЧеловека', 'ЗащитаДетей', 'Солидарность', 'Этика']
+      intro: 'Глубокое расследование проблемы детского труда и эксплуатации в мире, с манифестом действий и универсальными гарантиями New World State.',
+      content: `Более 160 миллионов детей по всему миру остаются узниками детского труда, принося в жертву образование, здоровье и достоинство. От кобальтовых рудников Африки до швейных цехов Азии и сельскохозяйственных плантаций Латинской Америки — эксплуатация детей является позорной раной мировой экономики.
+
+## Невидимое измерение глобального кризиса
+
+Почти половина работающих детей трудятся в опасных условиях, подвергаясь воздействию токсичных химикатов и изнурительных смен. Это прямое следствие непрозрачных цепочек поставок.
+
+> «Экономическая модель, извлекающая прибыль из принудительного труда ребенка, морально нелегитимна. Суверенитет народов начинается с безусловной защиты детства.»
+> — Манифест человеческого достоинства, New World State
+
+## Прямые меры New World State
+
+1. **Суверенная криптографическая прослеживаемость**: Цифровые паспорта продукции, удостоверяющие полное отсутствие детского труда.
+2. **Суверенный фонд бесплатного образования**: Стипендии и семейные пособия для возвращения детей в школы.
+3. **Международный публичный реестр бойкота**: Список корпораций, уличенных в эксплуатации.
+4. **Хранители детства**: Сеть правозащитников и добровольцев для освобождения детей.
+
+## Пакт ради будущего
+
+Конституция New World State гарантирует каждому ребенку право учиться, играть и расти в безопасности.`,
+      tags: ['ПраваЧеловека', 'ЗащитаДетей', 'СоциальнаяСправедливость', 'NewWorldState', 'Солидарность']
     },
     hi: {
       title: 'मूक विपत्ति: बाल श्रम का अभिशाप और New World State की वैश्विक प्रतिबद्धता',
-      intro: 'वैश्विक आपूर्ति श्रृंखलाओं, अदृश्य बंधुआ श्रम और बच्चों की मुक्ति तथा सुरक्षा के लिए प्रत्यक्ष कार्ययोजना पर एक गहन जांच।',
-      content: `दुनिया भर में 16 करोड़ से अधिक बच्चे बाल श्रम का शिकार हैं। New World State ने बाल शोषण को समाप्त करने, सुरक्षित आश्रय देने और सार्वभौमिक शिक्षा सुनिश्चित करने के लिए वैश्विक मानवीय कार्यबल का गठन किया है।`,
-      tags: ['मानवाधिकार', 'बालसंरक्षण', 'सहानुभूति', 'वैश्विकनैतिकता']
+      intro: 'दुनिया भर में बाल श्रम के शोषण पर गहन जांच और बच्चों के भविष्य व सम्मान की रक्षा के लिए New World State का वैश्विक घोषणापत्र।',
+      content: `दुनिया भर में 16 करोड़ से अधिक बच्चे आज बाल श्रम के दुष्चक्र में फंसे हैं और अपनी शिक्षा, स्वास्थ्य तथा मानवीय गरिमा की बलि देने को मजबूर हैं।
+
+## वैश्विक संकट का अदृश्य आयाम
+
+लगभग आधे पीड़ित बच्चे जहरीले रसायनों और खतरनाक मशीनों के बीच काम करते हैं।
+
+> "एक भी बच्चे के जबरन श्रम पर मुनाफा कमाने वाला आर्थिक ढांचा नैतिक रूप से अवैध है।"
+> — मानव गरिमा घोषणापत्र, New World State
+
+## New World State की प्रत्यक्ष कार्रवाई
+
+1. **आपूर्ति श्रृंखला का क्रिप्टोग्राफिक सत्यापन**: डिजिटल पासपोर्ट के जरिए बाल श्रम की अनुपस्थिति का प्रमाण।
+2. **सार्वभौमिक शिक्षा कोष**: बच्चों को स्कूल वापस लाने के लिए परिवारों को सम्मानजनक आर्थिक सहायता।
+3. **दोषी कंपनियों की सार्वजनिक सूची**: शोषण से लाभ उठाने वाली संस्थाओं का बहिष्कार।
+4. **बाल संरक्षक अकादमी**: बच्चों को बंधुआ मजदूरी से मुक्त कराने हेतु समर्पित नेटवर्क।`,
+      tags: ['मानवाधिकार', 'बालसंरक्षण', 'सामाजिकन्याय', 'NewWorldState', 'सहानुभूति']
     },
     bn: {
       title: 'নীরব সংকট: শিশুশ্রমের অভিশাপ এবং New World State-এর বৈশ্বিক অঙ্গীকার',
-      intro: 'বৈশ্বিক সরবরাহ শৃঙ্খল, গোপন বাধ্যতামূলক শ্রম এবং শিশুদের মুক্তি ও সুরক্ষার জন্য সরাসরি পদক্ষেপের বিশদ তদন্ত।',
-      content: `বিশ্বব্যাপী ১৬ কোটিরও বেশি শিশু শ্রম শোষণের শিকার। New World State শিশু সুরক্ষা, সার্বজনীন বৃত্তি এবং আইনি জবাবদিহিতা নিশ্চিত করার জন্য একটি বৈশ্বিক মানবিক উদ্যোগ শুরু করেছে।`,
-      tags: ['মানবাধিকার', 'শিশুসুরক্ষা', 'সংহতি', 'নৈতিকতা']
+      intro: 'বিশ্বজুড়ে শিশুশ্রমের ভয়াবহ বাস্তবতা এবং শিশুদের মর্যাদা পুনরুদ্ধারে New World State-এর পদক্ষেপ।',
+      content: `বিশ্বজুড়ে ১৬ কোটিরও বেশি শিশু আজ বাধ্যতামূলক শিশুশ্রমে আটকা পড়েছে। শিক্ষা ও স্বাস্থ্য বিসর্জন দিয়ে তারা বিপজ্জনক পরিস্থিতিতে কাজ করতে বাধ্য হচ্ছে।
+
+## বৈশ্বিক সংকটের নির্মম রূপ
+
+অর্ধেকেরও বেশি শিশু ঝুঁকিপূর্ণ পরিবেশে বিষাক্ত রাসায়নিক ও ভারী যন্ত্রপাতির সংস্পর্শে কাজ করছে।
+
+> "একটি শিশুর জোরপূর্বক শ্রমের ওপর অর্জিত কোনো অর্থনৈতিক মুনাফাই নৈতিক হতে পারে না।"
+> — মানব মর্যাদা ঘোষণাপত্র, New World State
+
+## New World State-এর সরাসরি পদক্ষেপ
+
+১. **ক্রিপ্টোগ্রাফিক সরবরাহ শৃঙ্খল ট্র্যাকিং**: পণ্য উৎপাদনের প্রতিটি স্তরে শিশুশ্রমমুক্ত ডিজিটাল সনদ।
+২. **সার্বজনীন শিক্ষা তহবিল**: শিশুদের স্কুলে ফিরিয়ে নিতে পরিবারগুলোকে আর্থিক সহায়তা।
+৩. **শোষণকারী সংস্থার উন্মুক্ত তালিকা**: শিশুশ্রমে জড়িত কর্পোরেশনের বিরুদ্ধে বিশ্বব্যাপী গণ-বয়কট।
+৪. **শিশু অভিভাবক দল**: দুর্গত শিশুদের তাৎক্ষণিক উদ্ধার ও আইনি সুরক্ষা প্রদান।`,
+      tags: ['মানবাধিকার', 'শিশুসুরক্ষা', 'সামাজিকন্যায়বিচার', 'NewWorldState', 'সংহতি']
     },
     ja: {
       title: '静かなる災禍：児童労働の惨禍と新世界国家のグローバルな誓約',
-      intro: 'グローバルサプライチェーン、目に見えない強制労働、未成年者の保護と救済に向けた直接行動規程に関する徹底調査。',
-      content: `世界中で1億6000万人以上の子供たちが過酷な労働に苦しんでいます。New World Stateは児童労働の撲滅、普遍的教育奨学金の支給、安全な保護施設の提供に向けた世界人道行動計画を開始しました。`,
+      intro: '世界中の児童労働の実態と、子供たちの尊厳と未来を取り戻すためのNew World Stateの行動宣言。',
+      content: `世界中で1億6000万人以上の子供たちが児童労働の罠に囚われ、教育や健康、人間としての尊严を奪われています。
+
+## 目に見えない危機の深淵
+
+被害児童の半数近くが有毒物質や重機を扱う極めて危険な環境で過酷な労働を強いられています。
+
+> 「ただ一人の子供の強制労働の上に成り立つ経済モデルは道徳的に破綻している。」
+> — 人間の尊厳に関する宣言, New World State
+
+## New World Stateによる直接的措置
+
+1. **サプライチェーンの主権的暗号化追跡**: 児童労働の完全な不存在を証明するブロックチェーン証明。
+2. **救済および無償教育基金**: 復学を支援するための家族への尊厳所得保障と奨学金。
+3. **加害企業の国際公開ブラックリスト**: 搾取から利益を得る企業に対する市民ボイコット。
+4. **児童守護者アカデミー**: 現場での迅速な保護と法的支援を行う専門ネットワーク。`,
       tags: ['人権', '児童保護', '連帯', 'グローバル倫理']
     },
     ar: {
       title: 'الكارثة الصامتة: آفة عمالة الأطفال والالتزام العالمي لـ New World State',
       intro: 'تحقيق متعمق في سلاسل التوريد العالمية والعمل القسري غير المرئي وبروتوكولات العمل المباشر لحماية القاصرين.',
-      content: `لا يزال أكثر من 160 مليون طفل حول العالم ضحايا لعمالة الأطفال. تطلق New World State خطة عمل إنسانية وقانونية عالمية لضمان التعليم الشامل والرعاية الكريمة لجميع الأطفال المعرضين للخطر.`,
+      content: `لا يزال أكثر من 160 مليون طفل حول العالم ضحايا لعمالة الأطفال. تطلق New World State خطة عمل إنسانية وقانونية عالمية لضمان التعليم الشامل والرعاية الكريمة لجميع الأطفال المعرضين للخطر.
+
+## البعد غير المرئي للأزمة العالمية
+
+يعمل ما يقرب من نصف هؤلاء الأطفال في ظروف خطرة للغاية، معرضين لمواد كيميائية سامة وآلات ثقيلة وساعات عمل شاقة.
+
+> "أي نموذج اقتصادي يبني أرباحه على العمل القسري لطفل واحد هو نموذج فاشل بطبيعته وغير شرعي أخلاقياً."
+> — إعلان الكرامة الإنسانية، New World State
+
+## إجراءات New World State المباشرة
+
+1. **التتبع التشفيري لسلاسل التوريد**: جوازات سفر رقمية تثبت خلو المنتجات تماماً من عمالة الأطفال.
+2. **صندوق سيادي للتعليم المجاني**: منح دراسية ومخصصات للأسر لضمان عودة الأطفال للمدارس.
+3. **قائمة سوداء دولية للشركات المتواطئة**: سجل عام لمقاطعة الكيانات المستغلة.
+4. **أكاديمية حراس الطفولة**: شبكة ميدانية لإنقاذ الأطفال وحمايتهم.`,
       tags: ['حقوقالإنسان', 'حمايةالطفولة', 'التضامن', 'الأخلاق']
     }
   },

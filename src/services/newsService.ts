@@ -1519,33 +1519,41 @@ export function getLocalizedArticle(
     };
   }
 
-  const translation = article.translations?.[lang as NewsLanguage];
-  if (translation && (translation.title || translation.content || translation.intro)) {
-    const isFullyTranslated = !!(translation.title && translation.content);
-    return {
-      title: translation.title || article.title,
-      intro: translation.intro || article.intro,
-      content: translation.content || article.content,
-      tags: translation.tags && translation.tags.length > 0 ? translation.tags : (article.tags || []),
-      isTranslated: true,
-      hasTranslation: isFullyTranslated
-    };
-  }
-
   // Check fallback pre-translated dictionary
   const slug = (article.slug || '').trim().toLowerCase();
   const id = (article.id || '').trim().toLowerCase();
   const fallbackTrans = (slug && FULL_ARTICLE_TRANSLATIONS[slug]?.[lang as NewsLanguage]) ||
                         (id && FULL_ARTICLE_TRANSLATIONS[id]?.[lang as NewsLanguage]);
 
-  if (fallbackTrans && (fallbackTrans.title || fallbackTrans.content || fallbackTrans.intro)) {
+  const translation = article.translations?.[lang as NewsLanguage];
+
+  const title = translation?.title || fallbackTrans?.title || article.title;
+  const intro = translation?.intro || fallbackTrans?.intro || article.intro;
+  const content = translation?.content || fallbackTrans?.content || article.content;
+  const tags = (translation?.tags && translation.tags.length > 0)
+    ? translation.tags
+    : (fallbackTrans?.tags && fallbackTrans.tags.length > 0)
+      ? fallbackTrans.tags
+      : (article.tags || []);
+
+  const hasAnyTranslation = !!(
+    (translation && (translation.title || translation.content || translation.intro)) ||
+    (fallbackTrans && (fallbackTrans.title || fallbackTrans.content || fallbackTrans.intro))
+  );
+
+  const isFullyTranslated = !!(
+    (translation?.title || fallbackTrans?.title) &&
+    (translation?.content || fallbackTrans?.content)
+  );
+
+  if (hasAnyTranslation) {
     return {
-      title: fallbackTrans.title || article.title,
-      intro: fallbackTrans.intro || article.intro,
-      content: fallbackTrans.content || article.content,
-      tags: fallbackTrans.tags && fallbackTrans.tags.length > 0 ? fallbackTrans.tags : (article.tags || []),
+      title,
+      intro,
+      content,
+      tags,
       isTranslated: true,
-      hasTranslation: true
+      hasTranslation: isFullyTranslated
     };
   }
 
