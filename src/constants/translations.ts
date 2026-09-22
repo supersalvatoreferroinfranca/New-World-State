@@ -50,6 +50,7 @@ export const TRANSLATIONS = {
     federalChat: 'Federal Chat',
     news: 'News',
     newsAndChronicle: 'News & Chronicle',
+    aboutUs: 'About Us',
   },
   it: {
     title: 'Stato Mondiale dei Cittadini',
@@ -100,6 +101,7 @@ export const TRANSLATIONS = {
     federalChat: 'Chat Federale',
     news: 'Notizie',
     newsAndChronicle: 'Notizie & Cronaca',
+    aboutUs: 'Chi Siamo',
   },
   fr: {
     title: 'État Citoyen Global',
@@ -150,6 +152,7 @@ export const TRANSLATIONS = {
     federalChat: 'Chat Fédéral',
     news: 'Actualités',
     newsAndChronicle: 'Actualités & Chronique',
+    aboutUs: 'Qui Sommes-Nous',
   },
   es: {
     title: 'Estado Ciudadano Global',
@@ -200,6 +203,7 @@ export const TRANSLATIONS = {
     federalChat: 'Chat Federal',
     news: 'Noticias',
     newsAndChronicle: 'Noticias y Crónica',
+    aboutUs: 'Quiénes Somos',
   },
   pt: {
     title: 'Estado Cidadão Global',
@@ -250,6 +254,7 @@ export const TRANSLATIONS = {
     federalChat: 'Chat Federal',
     news: 'Notícias',
     newsAndChronicle: 'Notícias e Crônica',
+    aboutUs: 'Quem Somos',
   },
   ru: {
     title: 'Всемирное Государство Граждан',
@@ -300,6 +305,7 @@ export const TRANSLATIONS = {
     federalChat: 'Федеральный чат',
     news: 'Новости',
     newsAndChronicle: 'Новости и хроника',
+    aboutUs: 'О Нас',
   },
   hi: {
     title: 'वैश्विक नागरिक राज्य',
@@ -350,6 +356,7 @@ export const TRANSLATIONS = {
     federalChat: 'संघीय चैट',
     news: 'समाचार',
     newsAndChronicle: 'समाचार और इतिहास',
+    aboutUs: 'हमारे बारे में',
   },
   bn: {
     title: 'বিশ্ব নাগরিক রাষ্ট্র',
@@ -400,6 +407,7 @@ export const TRANSLATIONS = {
     federalChat: 'ফেডারেল চ্যাট',
     news: 'সংবাদ',
     newsAndChronicle: 'সংবাদ ও ইতিহাস',
+    aboutUs: 'আমাদের সম্পর্কে',
   },
   zh: {
     title: '全球公民国家',
@@ -450,6 +458,7 @@ export const TRANSLATIONS = {
     federalChat: '联邦聊天室',
     news: '新闻',
     newsAndChronicle: '新闻与简报',
+    aboutUs: '关于我们',
   },
   ja: {
     title: '世界市民国家',
@@ -500,6 +509,7 @@ export const TRANSLATIONS = {
     federalChat: '連邦チャット',
     news: 'ニュース',
     newsAndChronicle: 'ニュース＆クロニクル',
+    aboutUs: '私たちについて',
   },
   ar: {
     title: 'دولة المواطن العالمي',
@@ -550,5 +560,6 @@ export const TRANSLATIONS = {
     federalChat: 'الدردشة الفيدرالية',
     news: 'الأخبار',
     newsAndChronicle: 'الأخبار والسجل',
+    aboutUs: 'من نحن',
   },
 } as const;

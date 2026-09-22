@@ -668,5 +668,57 @@ export const UI_LOCALIZATIONS: Record<string, Record<NewsLanguage, string>> = {
     zh: '主权公报 • 官方权威新闻',
     ja: '主権報道 • 公式ニュース機関',
     ar: 'الصحافة السيادية • هيئة الأخبار'
+  },
+  sourcesAndReferences: {
+    it: 'Note, Riferimenti & Fonti Consultate',
+    en: 'Notes, References & Consulted Sources',
+    fr: 'Notes, Références & Sources Consultées',
+    es: 'Notas, Referencias y Fuentes Consultadas',
+    pt: 'Notas, Referências e Fontes Consultadas',
+    ru: 'Примечания, ссылки и проверенные источники',
+    hi: 'टिप्पणियाँ, संदर्भ और परामर्शित स्रोत',
+    bn: 'টীকা, তথ্যসূত্র এবং পর্যালোচনা করা উৎসসমূহ',
+    zh: '注释、参考文献与查阅来源',
+    ja: '注記・参考文献・参照報道機関',
+    ar: 'الملاحظات والمراجع والمصادر المعتمدة'
+  },
+  sourcesAndReferencesSubtitle: {
+    it: 'Documenti ufficiali, agenzie stampa e articoli di approfondimento consultati per la redazione',
+    en: 'Official documents, press agencies, and in-depth articles consulted for editorial reporting',
+    fr: 'Documents officiels, agences de presse et articles de fond consultés pour la rédaction',
+    es: 'Documentos oficiales, agencias de prensa y artículos de investigación consultados',
+    pt: 'Documentos oficiais, agências de notícias e artigos aprofundados consultados',
+    ru: 'Официальные документы, информационные агентства и статьи, использованные при подготовке материала',
+    hi: 'संपादकीय रिपोर्टिंग के लिए परामर्शित आधिकारिक दस्तावेज, समाचार एजेंसियां ​​और विस्तृत लेख',
+    bn: 'সম্পাদকীয় প্রতিবেদনের জন্য পরামর্শকৃত সরকারি নথি, সংবাদ সংস্থা ও তথ্যমূলক প্রতিবেদন',
+    zh: '采编过程中查阅并严格核实的官方文件、新闻通讯社及深度报道',
+    ja: '執筆にあたり参照・検証された公式文書、通信社および調査報道記事',
+    ar: 'الوثائق الرسمية ووكالات الأنباء والمقالات المعتمدة في الصياغة الصحفية'
+  },
+  consultSourceLink: {
+    it: 'Consulta documento / fonte originale',
+    en: 'Consult original source / document',
+    fr: 'Consulter le document / la source originale',
+    es: 'Consultar fuente original / documento',
+    pt: 'Consultar fonte original / documento',
+    ru: 'Перейти к первоисточнику / документу',
+    hi: 'मूल स्रोत / दस्तावेज़ देखें',
+    bn: 'মূল উৎস বা নথি দেখুন',
+    zh: '查阅原始来源 / 官方文件',
+    ja: '原典・公式文書を確認する',
+    ar: 'الاطلاع على المصدر الأصلي / الوثيقة'
+  },
+  photoCreditsTitle: {
+    it: 'Crediti Fotografici & Iconografia',
+    en: 'Photo Credits & Iconography',
+    fr: 'Crédits Photographiques & Iconographie',
+    es: 'Créditos Fotográficos e Iconografía',
+    pt: 'Créditos Fotográficos e Iconografia',
+    ru: 'Фотокредиты и авторские права',
+    hi: 'फोटो क्रेडिट और छायांकन अधिकार',
+    bn: 'ছবির কপিরাইট ও ক্রেডিট',
+    zh: '图片来源与摄影署名',
+    ja: '写真クレジット・撮影著作権',
+    ar: 'حقوق الصور والتوثيق الفوتوغرافي'
   }
 };

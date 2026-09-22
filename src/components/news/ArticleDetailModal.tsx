@@ -33,7 +33,13 @@ import {
   RotateCcw,
   Sparkles,
   Loader2,
-  Languages
+  Languages,
+  BookOpen,
+  FileText,
+  Camera,
+  ExternalLink,
+  BookmarkCheck,
+  Info
 } from 'lucide-react';
 
 interface ArticleDetailModalProps {
@@ -1137,10 +1143,20 @@ export default function ArticleDetailModal({
                     alt={img.caption || localizedData.title || activeArticle.title}
                     className="w-full max-h-[480px] object-cover"
                   />
-                  {img.caption && (
-                    <p className="bg-slate-900 text-slate-300 text-sm p-3.5 font-sans italic text-center">
-                      📷 {img.caption}
-                    </p>
+                  {(img.caption || img.credit) && (
+                    <div className="bg-slate-900 text-slate-300 text-xs p-3.5 font-sans space-y-1">
+                      {img.caption && (
+                        <p className="italic text-slate-200">
+                          📷 {img.caption}
+                        </p>
+                      )}
+                      {img.credit && (
+                        <p className="text-[11px] text-amber-300/80 flex items-center gap-1.5 font-mono">
+                          <Camera className="w-3 h-3 text-brand-gold shrink-0" />
+                          <span>{tLang('photoCreditsLabel', 'Crediti:')} {img.credit}</span>
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
@@ -1152,6 +1168,122 @@ export default function ArticleDetailModal({
             className="article-body-content max-w-3xl mx-auto border-t border-slate-200/80 pt-8 mt-6"
             dangerouslySetInnerHTML={{ __html: formatArticleContentToHtml(localizedData.content || activeArticle.content) }}
           />
+
+          {/* Calce dell'articolo: Note di redazione, Fonti consultate e Crediti fotografici */}
+          <div className="my-8 pt-6 border-t-2 border-slate-200/90 space-y-5">
+            {/* Sezione Note e Fonti Consultate */}
+            {((activeArticle.sources && activeArticle.sources.length > 0) || activeArticle.referenceNotes) && (
+              <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 rounded-2xl p-5 md:p-6 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap border-b border-slate-200/80 pb-3">
+                  <h3 className="font-serif text-base md:text-lg font-bold text-[#0a1c3e] flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-brand-gold shrink-0" />
+                    <span>{tLang('sourcesAndReferencesTitle', 'Fonti Consultate & Note di Riferimento')}</span>
+                  </h3>
+                  <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>{tLang('sourcesFactChecked', 'Dati Verificati & Fonti Autentiche')}</span>
+                  </span>
+                </div>
+
+                {/* Nota redazionale in calce */}
+                {activeArticle.referenceNotes && (
+                  <div className="text-xs md:text-sm text-slate-700 bg-white/80 p-3.5 rounded-xl border border-slate-200/70 leading-relaxed">
+                    <div className="flex items-start gap-2">
+                      <BookmarkCheck className="w-4 h-4 text-brand-gold shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold text-[#0a1c3e]">{tLang('editorialNotesHeading', 'Nota della Redazione:')} </span>
+                        <span>{activeArticle.referenceNotes}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Lista puntuale delle fonti consultate */}
+                {activeArticle.sources && activeArticle.sources.length > 0 && (
+                  <div className="space-y-2.5 pt-1">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{tLang('consultedSourcesList', 'Riferimenti bibliografici e dossier consultati:')}</span>
+                    </p>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {activeArticle.sources.map((rawSource, sIdx) => {
+                        const source = typeof rawSource === 'string' 
+                          ? { title: rawSource, url: rawSource.startsWith('http') ? rawSource : undefined }
+                          : rawSource;
+                        return (
+                          <div 
+                            key={sIdx} 
+                            className="bg-white p-3.5 rounded-xl border border-slate-200/90 hover:border-brand-gold/50 transition shadow-xs text-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5"
+                          >
+                            <div className="space-y-1 flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-[#0a1c3e] text-xs md:text-sm">
+                                  [{sIdx + 1}] {source.title}
+                                </span>
+                                {source.publisher && (
+                                  <span className="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-slate-200">
+                                    {source.publisher}
+                                  </span>
+                                )}
+                                {source.date && (
+                                  <span className="text-slate-400 text-[11px] font-mono">
+                                    ({source.date})
+                                  </span>
+                                )}
+                              </div>
+                              {source.notes && (
+                                <p className="text-slate-600 text-[11px] italic">
+                                  {source.notes}
+                                </p>
+                              )}
+                            </div>
+
+                            {source.url && (
+                              <a
+                                href={source.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="self-start md:self-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-[#0a1c3e] hover:bg-brand-gold hover:text-[#0a1c3e] font-bold text-[11px] border border-blue-200/80 transition shrink-0"
+                              >
+                                <span>{tLang('openSourceLink', 'Consulta Fonte')}</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sezione Crediti Fotografici & Iconografici */}
+            {(activeArticle.photoCredits || (activeArticle.images && activeArticle.images.some(img => img.credit))) && (
+              <div className="bg-amber-50/50 rounded-2xl p-4 md:p-5 border border-amber-200/80 shadow-xs flex items-start gap-3 text-xs text-slate-700">
+                <Camera className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
+                <div className="space-y-1 flex-1 min-w-0">
+                  <h4 className="font-serif font-bold text-[#0a1c3e] text-xs uppercase tracking-wider">
+                    {tLang('photoCreditsTitle', 'Crediti Fotografici & Iconografia')}
+                  </h4>
+                  {activeArticle.photoCredits && (
+                    <p className="leading-relaxed">
+                      {activeArticle.photoCredits}
+                    </p>
+                  )}
+                  {activeArticle.images && activeArticle.images.some(img => img.credit) && (
+                    <ul className="list-disc list-inside space-y-0.5 text-[11px] text-slate-600 pt-1 font-mono">
+                      {activeArticle.images.filter(img => img.credit).map((img, i) => (
+                        <li key={i}>
+                          {img.caption ? `"${img.caption}": ` : ''}{img.credit}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Featured Videos */}
           {activeArticle.videos && activeArticle.videos.length > 0 && (

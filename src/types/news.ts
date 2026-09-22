@@ -16,9 +16,19 @@ export interface NewsMedia {
   url: string; // Data URL or external link
   fileName?: string;
   caption?: string;
+  credit?: string; // Crediti fotografici/autore (es. "Foto: Reuters / ANSA", "Unsplash / John Doe")
+  sourceUrl?: string;
 }
 
 export type NewsLanguage = 'it' | 'en' | 'fr' | 'es' | 'pt' | 'ru' | 'hi' | 'bn' | 'zh' | 'ja' | 'ar';
+
+export interface ArticleSourceReference {
+  title: string;
+  url?: string;
+  publisher?: string;
+  date?: string;
+  notes?: string;
+}
 
 export interface ArticleTranslation {
   title: string;
@@ -41,6 +51,9 @@ export interface NewsArticle {
   videos: NewsMedia[]; // Multi o singolo video
   tags: string[]; // Lista di tag
   relatedArticleIds: string[]; // Collegamento ad altri articoli
+  sources?: (ArticleSourceReference | string)[]; // Riferimenti e note alle fonti e articoli consultati
+  referenceNotes?: string; // Note di approfondimento e riferimenti bibliografici/giornalistici in calce
+  photoCredits?: string; // Crediti fotografici generali dell'articolo
   authorId: number | string;
   authorName: string;
   authorEmail?: string;

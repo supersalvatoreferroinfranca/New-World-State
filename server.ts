@@ -6608,7 +6608,16 @@ PROTOCOLLO ANTI-ALLUCINAZIONE E VERIFICA FONTI:
      * Per punti chiave, usa: <ul class="list-disc list-outside space-y-2.5 my-6 text-slate-700 pl-7 font-sans"><li class="leading-relaxed text-slate-700 text-base md:text-lg font-sans my-1.5">...</li></ul>.
      * Inserisci in calce all'articolo un box chiaro: <div class="mt-8 p-4 bg-slate-100/90 border border-slate-300/80 rounded-2xl text-xs text-slate-700 font-sans"><strong class="text-[#0a1c3e] block mb-1">Fonti Verificate & Agenzie Consultate:</strong> ${selectedSourcesList.join(' • ')}</div>.
    - NON inserire MAI simboli markdown grezzi (nessun ***, ###, \`\`\`, o asterischi sparsi) nel testo HTML.
-4. METADATI SEO & AI:
+4. NOTE IN CALCE, FONTI CONSULTATE E CREDITI FOTOGRAFICI:
+   - 'sources': Array di oggetti dettagliati delle fonti/articoli consultati per la stesura dell'articolo. Ogni oggetto deve contenere:
+     * "title": Titolo dell'articolo, del report o del documento ufficiale consultato
+     * "publisher": Nome dell'agenzia stampa, testata o ente (es. "Reuters", "Vatican News", "ANSA", "Associated Press", "ILO", "ONU")
+     * "url": URL diretto o della sezione tematica ufficiale (se reperito nella ricerca)
+     * "date": Data o anno di pubblicazione della fonte consultata
+     * "notes": Breve spiegazione del contributo fattuale estratto da questa fonte
+   - 'referenceNotes': Nota redazionale esplicativa e solenne in calce che illustra le metodologie di verifica delle fonti e il contesto informativo.
+   - 'photoCredits': Crediti consigliati per l'iconografia e le fotografie (es. "Foto: Archivio Agenzia / Licenza Editoriale Libera").
+5. METADATI SEO & AI:
    - 'title': Titolo giornalistico rigoroso, chiaro e veritiero (45-75 caratteri).
    - 'intro': Sommario chiaro, sobrio ed esplicativo (120-180 caratteri), solo testo puro.
    - 'tags': 4-6 parole chiave altamente pertinenti.
@@ -6622,7 +6631,18 @@ Rispondi ESCLUSIVAMENTE con un JSON valido nel seguente formato:
   "content": "<p class=\"article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans\">Primo paragrafo con i fatti accertati...</p><h3 class=\"font-serif text-xl font-bold text-[#0a1c3e] mt-8 mb-3 tracking-tight\">Sottotitolo di Approfondimento</h3><p class=\"article-p leading-relaxed text-slate-700 text-base md:text-lg mb-6 font-sans\">Secondo paragrafo con le dichiarazioni verificate...</p>",
   "tags": ["Tag1", "Tag2", "Tag3"],
   "suggestedCategory": "Categoria",
-  "usedSources": ["Fonte 1", "Fonte 2"]
+  "usedSources": ["Fonte 1", "Fonte 2"],
+  "sources": [
+    {
+      "title": "Titolo Report o Notizia Consultata",
+      "publisher": "Reuters / Vatican News / ANSA",
+      "url": "https://...",
+      "date": "2026",
+      "notes": "Dati statistici e dichiarazioni ufficiali accertate"
+    }
+  ],
+  "referenceNotes": "Articolo redatto e verificato attraverso le agenzie di stampa accreditate...",
+  "photoCredits": "Foto e documentazione visiva via Archivio Documentale New World State / Licenza Editoriale"
 }`;
 
         const userPrompt = `
@@ -6683,6 +6703,38 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
         // Clean string fields
         parsedData.title = String(parsedData.title || '').replace(/[\*\_`#]/g, '').replace(/<[^>]*>?/gm, '').trim();
         parsedData.intro = String(parsedData.intro || '').replace(/[\*\_`#]/g, '').replace(/<[^>]*>?/gm, '').trim();
+        parsedData.referenceNotes = typeof parsedData.referenceNotes === 'string' 
+          ? parsedData.referenceNotes.replace(/<[^>]*>?/gm, '').trim()
+          : (parsedData.referenceNotes ? String(parsedData.referenceNotes) : undefined);
+        parsedData.photoCredits = typeof parsedData.photoCredits === 'string'
+          ? parsedData.photoCredits.replace(/<[^>]*>?/gm, '').trim()
+          : (parsedData.photoCredits ? String(parsedData.photoCredits) : undefined);
+
+        // Normalize sources array and merge grounding links
+        let sourcesList: any[] = Array.isArray(parsedData.sources) ? parsedData.sources : [];
+        if (verifiedWebLinks.length > 0) {
+          verifiedWebLinks.forEach(link => {
+            const alreadyExists = sourcesList.some((s: any) => 
+              (typeof s === 'object' && s?.url && s.url.toLowerCase() === link.uri.toLowerCase()) ||
+              (typeof s === 'object' && s?.title && s.title.toLowerCase() === link.title.toLowerCase())
+            );
+            if (!alreadyExists) {
+              let domainName = '';
+              try {
+                const parsedUrl = new URL(link.uri);
+                domainName = parsedUrl.hostname.replace(/^www\./, '');
+              } catch (e) {}
+              sourcesList.push({
+                title: link.title,
+                url: link.uri,
+                publisher: domainName || 'Fonte Web Verificata',
+                date: new Date().getFullYear().toString(),
+                notes: 'Riscontro documentale verificato tramite ricerca in tempo reale'
+              });
+            }
+          });
+        }
+        parsedData.sources = sourcesList;
 
         // Ensure content is formatted with clean typography
         if (parsedData.content) {

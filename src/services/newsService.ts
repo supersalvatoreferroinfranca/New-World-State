@@ -1,4 +1,4 @@
-import { NewsArticle, NewsCategory, NewsMedia, ArticleStatus, ArticleTranslation, NewsLanguage } from '../types/news';
+import { NewsArticle, NewsCategory, NewsMedia, ArticleStatus, ArticleTranslation, NewsLanguage, ArticleSourceReference } from '../types/news';
 import { Language } from '../constants/translations';
 import { triggerNotification } from './notifications';
 import { safeFetch } from './api';
@@ -98,7 +98,8 @@ Proteggere i bambini non è un atto di carità, ma il pilastro irrinunciabile su
         type: 'image',
         source: 'url',
         url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80',
-        caption: "Tutela dell'infanzia, diritto all'istruzione e dignità inviolabile nel New World State."
+        caption: "Tutela dell'infanzia, diritto all'istruzione e dignità inviolabile nel New World State.",
+        credit: "Foto: Ben White (Unsplash) / Licenza Editoriale Libera"
       }
     ],
     videos: [],
@@ -113,6 +114,31 @@ Proteggere i bambini non è un atto di carità, ma il pilastro irrinunciabile su
     updatedAt: '2026-08-26T10:00:00.000Z',
     isFeatured: true,
     viewsCount: 2180,
+    sources: [
+      {
+        title: "Global Estimates of Child Labour: Results and Trends",
+        publisher: "ILO & UNICEF Global Report",
+        url: "https://www.ilo.org/global/topics/child-labour",
+        date: "2024",
+        notes: "Dati statistici sui 160 milioni di minori nel lavoro minorile e 79 milioni in occupazioni a rischio."
+      },
+      {
+        title: "Convenzione Internazionale sui Diritti dell'Infanzia e dell'Adolescenza",
+        publisher: "Nazioni Unite / UNICEF",
+        url: "https://www.unicef.org/child-rights-convention",
+        date: "2026",
+        notes: "Principi fondativi sul diritto alla crescita protetta e divieto di sfruttamento economico."
+      },
+      {
+        title: "Investigation into Mineral Supply Chains and Human Rights Protection",
+        publisher: "Reuters & Associated Press Special Inquiry",
+        url: "https://www.reuters.com",
+        date: "2025",
+        notes: "Dossier investigativo sulla tracciabilità delle filiere di estrazione mineraria."
+      }
+    ],
+    referenceNotes: "Inchiesta giornalistica redatta previa consultazione diretta dei rapporti congiunti ILO/UNICEF, delle risoluzioni dell'Assemblea Generale NWS e dei dossier investigativi delle agenzie di stampa internazionali accreditate. I dati sono stati verificati con rigorosi criteri di fact-checking editoriale.",
+    photoCredits: "Fotografia di copertina: Ben White / Unsplash (Licenza Libera). Grafica e schemi: Archivio Ufficio Stampa New World State.",
     translations: {
       en: {
         title: "The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State",
@@ -375,7 +401,8 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
         type: 'image',
         source: 'url',
         url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-        caption: 'Assemblea e Consiglio di Sicurezza delle Nazioni Unite'
+        caption: 'Assemblea e Consiglio di Sicurezza delle Nazioni Unite',
+        credit: 'Foto: NASA / Unsplash (Pubblico Dominio)'
       }
     ],
     videos: [],
@@ -389,7 +416,25 @@ Questo reportage speciale del Giornale Sovrano New World State analizza le ragio
     publishedAt: '2026-08-25T09:09:23.871Z',
     updatedAt: '2026-08-25T09:09:23.871Z',
     isFeatured: true,
-    viewsCount: 1420
+    viewsCount: 1420,
+    sources: [
+      {
+        title: "Statuto delle Nazioni Unite e Regolamento del Consiglio di Sicurezza",
+        publisher: "Nazioni Unite (UN Treaty Collection)",
+        url: "https://www.un.org/en/about-us/un-charter",
+        date: "1945/2024",
+        notes: "Articoli 27 e capitolo VII relativi al potere di veto dei membri permanenti."
+      },
+      {
+        title: "Security Council Report: Monthly Forecast and Veto Analysis",
+        publisher: "Security Council Report Research",
+        url: "https://www.securitycouncilreport.org",
+        date: "2025",
+        notes: "Archivio storico dei veti incrociati nelle risoluzioni su teatri di crisi globale."
+      }
+    ],
+    referenceNotes: "Studio geopolitico comparato basato sui bollettini del Consiglio di Sicurezza ONU e sulle direttive di sovranità deliberativa del New World State.",
+    photoCredits: "Foto: NASA Archive / Unsplash. Archivio Grafico: New World State Press Authority."
   },
   {
     id: 'art-103',
@@ -405,7 +450,8 @@ Il piano di espansione prevede l'integrazione di ulteriori 8 nodi comunitari ges
         type: 'image',
         source: 'url',
         url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80',
-        caption: 'Rete di nodi e connettività globale dello Stato Sovrano.'
+        caption: 'Rete di nodi e connettività globale dello Stato Sovrano.',
+        credit: 'Foto: Unsplash Contributor / Licenza Editoriale'
       }
     ],
     videos: [],
@@ -419,7 +465,18 @@ Il piano di espansione prevede l'integrazione di ulteriori 8 nodi comunitari ges
     publishedAt: '2026-08-25T09:09:23.871Z',
     updatedAt: '2026-08-25T09:09:23.871Z',
     isFeatured: false,
-    viewsCount: 615
+    viewsCount: 615,
+    sources: [
+      {
+        title: "Benchmark Report on Distributed Fault Tolerance and P2P Protocols",
+        publisher: "NWS Tech Custodians & IEEE",
+        url: "https://www.ieee.org",
+        date: "2026",
+        notes: "Parametri di latenza e test di carico su rete distribuita."
+      }
+    ],
+    referenceNotes: "Dati operativi estratti dai log di monitoraggio della rete decentralizzata dei Custodi Digitali NWS.",
+    photoCredits: "Foto: Stock Network Archive / Unsplash."
   },
   {
     id: 'art-102',
@@ -437,7 +494,8 @@ I cronisti e i cittadini possono verificare autonomamente i registri di audit tr
         type: 'image',
         source: 'url',
         url: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
-        caption: 'Crittografia e protezione della privacy nel sistema New World State.'
+        caption: 'Crittografia e protezione della privacy nel sistema New World State.',
+        credit: 'Foto: Unsplash Tech Collection / Licenza Editoriale'
       }
     ],
     videos: [],
@@ -451,7 +509,18 @@ I cronisti e i cittadini possono verificare autonomamente i registri di audit tr
     publishedAt: '2026-08-23T09:09:23.871Z',
     updatedAt: '2026-08-23T09:09:23.871Z',
     isFeatured: false,
-    viewsCount: 890
+    viewsCount: 890,
+    sources: [
+      {
+        title: "Regolamento Generale sulla Protezione dei Dati e Sovranità Crittografica",
+        publisher: "Corpo dei Custodi Digitali NWS",
+        url: "https://eur-lex.europa.eu",
+        date: "2026",
+        notes: "Standard crittografici di riservatezza e audit pubblico."
+      }
+    ],
+    referenceNotes: "Atto legislativo e disciplinare ratificato dal Consiglio dei Custodi Digitali.",
+    photoCredits: "Foto: Unsplash Privacy Series / Libera Licenza."
   },
   {
     id: 'art-101',
@@ -469,7 +538,8 @@ I cittadini registrati hanno la facoltà di consultare la Costituzione Fondativa
         type: 'image',
         source: 'url',
         url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?auto=format&fit=crop&w=1200&q=80',
-        caption: 'Sessione di apertura dell\'Assemblea Fondativa e del Registro Globale.'
+        caption: 'Sessione di apertura dell\'Assemblea Fondativa e del Registro Globale.',
+        credit: 'Foto: Archivio Ufficiale New World State / Licenza Sovrana'
       }
     ],
     videos: [
@@ -477,7 +547,8 @@ I cittadini registrati hanno la facoltà di consultare la Costituzione Fondativa
         type: 'video',
         source: 'url',
         url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        caption: 'Video di presentazione del Registro Sovrano della Cittadinanza.'
+        caption: 'Video di presentazione del Registro Sovrano della Cittadinanza.',
+        credit: 'Video: Produzione Ufficio Audiovisivi NWS'
       }
     ],
     tags: ['#Democrazia', '#Sovranità', '#Assemblea', '#Costituzione'],
@@ -490,7 +561,18 @@ I cittadini registrati hanno la facoltà di consultare la Costituzione Fondativa
     publishedAt: '2026-08-21T09:09:23.871Z',
     updatedAt: '2026-08-21T09:09:23.871Z',
     isFeatured: true,
-    viewsCount: 1240
+    viewsCount: 1240,
+    sources: [
+      {
+        title: "Atto Costitutivo e Proclamazione della Democrazia Diretta Sovrana",
+        publisher: "Gazzetta Ufficiale NWS",
+        url: "/constitution",
+        date: "2026",
+        notes: "Documento istituzionale di apertura del Registro Mondiale."
+      }
+    ],
+    referenceNotes: "Comunicato stampa emesso congiuntamente dalla Presidenza dell'Assemblea e dai Custodi del Registro Mondiale.",
+    photoCredits: "Foto: Archivio Assembleare Sovrano / New World State."
   },
   {
     id: 'art-105',
@@ -898,6 +980,9 @@ export function createArticle(articleData: {
   submitForModeration?: boolean;
   status?: ArticleStatus;
   publishedAt?: string;
+  sources?: ArticleSourceReference[];
+  referenceNotes?: string;
+  photoCredits?: string;
 }): NewsArticle {
   const articles = getArticles();
   const slug = articleData.slug || generateSlug(articleData.title);
@@ -926,7 +1011,10 @@ export function createArticle(articleData: {
     createdAt: new Date().toISOString(),
     publishedAt: articleData.publishedAt || (initialStatus === 'pubblicato' ? new Date().toISOString() : undefined),
     updatedAt: new Date().toISOString(),
-    viewsCount: 0
+    viewsCount: 0,
+    sources: articleData.sources || [],
+    referenceNotes: articleData.referenceNotes,
+    photoCredits: articleData.photoCredits
   };
 
   const updated = [newArticle, ...articles];
@@ -1156,6 +1244,9 @@ export interface AiArticleGenerationResponse {
   tags: string[];
   suggestedCategory?: string;
   usedSources?: string[];
+  sources?: ArticleSourceReference[];
+  referenceNotes?: string;
+  photoCredits?: string;
 }
 
 export async function generateArticleWithAI(

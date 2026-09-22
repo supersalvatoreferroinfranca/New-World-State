@@ -19,6 +19,7 @@ import DemocracyPortal from './components/democracy/DemocracyPortal';
 import WelcomePage from './components/home/WelcomePage';
 import FederalChat from './components/chat/FederalChat';
 import NewsPortal from './components/news/NewsPortal';
+import AboutUsPage from './components/about/AboutUsPage';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp, Cookie, MessageSquare, ArrowRight } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
@@ -30,7 +31,7 @@ import SovereignCustodeDebugWidget from './components/pwa/SovereignCustodeDebugW
 import { initAnalyticsTracking, trackPageView } from './services/analyticsTracker';
 
 function AppContent() {
-  const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news'>(() => {
+  const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about'>(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
@@ -38,19 +39,22 @@ function AppContent() {
       if (tabParam === 'news' || hasArticleParam || window.location.pathname === '/news' || window.location.pathname === '/notizie' || window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
         return 'news';
       }
+      if (tabParam === 'about' || tabParam === 'chi-siamo' || window.location.pathname === '/about' || window.location.pathname === '/chi-siamo') {
+        return 'about';
+      }
       if (tabParam === 'chat' || tabParam === 'democracy') {
         return 'democracy';
       }
       if (window.location.pathname === '/chat' || window.location.pathname === '/democracy') {
         return 'democracy';
       }
-      if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network'].includes(tabParam)) {
+      if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about'].includes(tabParam)) {
         return tabParam as any;
       }
       // Check last visited tab in localStorage
       try {
         const lastTab = localStorage.getItem('nws_last_active_tab');
-        if (lastTab && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'democracy', 'news'].includes(lastTab)) {
+        if (lastTab && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'democracy', 'news', 'about'].includes(lastTab)) {
           return lastTab as any;
         }
       } catch (e) {}
@@ -69,7 +73,7 @@ function AppContent() {
     return 'welcome';
   });
 
-  const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news') => {
+  const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about') => {
     setActiveTabState(tab);
     trackPageView(tab);
     try {
@@ -85,6 +89,14 @@ function AppContent() {
           if (!url.pathname.startsWith('/notizie/') && !url.pathname.startsWith('/news/')) {
             url.searchParams.set('tab', 'news');
           }
+        } else if (tab === 'about') {
+          url.searchParams.set('tab', 'about');
+          if (url.pathname.startsWith('/notizie/') || url.pathname.startsWith('/news/')) {
+            url.pathname = '/';
+          }
+          url.searchParams.delete('notizia');
+          url.searchParams.delete('article');
+          url.searchParams.delete('slug');
         } else {
           url.searchParams.set('tab', tab);
           if (url.pathname.startsWith('/notizie/') || url.pathname.startsWith('/news/')) {
@@ -113,9 +125,11 @@ function AppContent() {
       let newTab: any = 'welcome';
       if (tabParam === 'news' || hasArticleParam || window.location.pathname === '/news' || window.location.pathname === '/notizie' || window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
         newTab = 'news';
+      } else if (tabParam === 'about' || tabParam === 'chi-siamo' || window.location.pathname === '/about' || window.location.pathname === '/chi-siamo') {
+        newTab = 'about';
       } else if (tabParam === 'democracy' || tabParam === 'chat' || window.location.pathname === '/democracy' || window.location.pathname === '/chat') {
         newTab = 'democracy';
-      } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network'].includes(tabParam)) {
+      } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about'].includes(tabParam)) {
         newTab = tabParam;
       }
       setActiveTabState(newTab);
@@ -364,6 +378,12 @@ function AppContent() {
                 onGoToDemocracy={() => setActiveTab('democracy')} 
                 onGoToNews={() => setActiveTab('news')}
               />
+            ) : activeTab === 'about' ? (
+              <AboutUsPage 
+                onGoToConstitution={() => setActiveTab('constitution')}
+                onGoToCharter={() => setActiveTab('charter')}
+                onGoToDemocracy={() => setActiveTab('democracy')}
+              />
             ) : activeTab === 'news' ? (
               <NewsPortal onGoToHome={() => setActiveTab('welcome')} />
             ) : activeTab === 'register' ? (
@@ -411,79 +431,167 @@ function AppContent() {
         </div>
       </main>
 
-      <footer className="py-20 border-t border-brand-blue/10 bg-white/30 backdrop-blur-sm text-center text-sm text-slate-600">
-        <div className="max-w-xl mx-auto space-y-6">
-          <p className="font-tech text-xs uppercase tracking-[0.1em]">© 2025 New World State Authority. Established MMXIV.</p>
-          <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 uppercase tracking-[0.3em] text-[9px] font-bold">
+      <footer className="pt-20 pb-24 border-t border-brand-blue/10 bg-white/50 backdrop-blur-md text-center text-sm text-slate-600">
+        <div className="max-w-5xl mx-auto px-6 space-y-10">
+          
+          {/* Header Brand & Motto */}
+          <div className="space-y-2">
+            <p className="font-tech text-xs uppercase tracking-[0.2em] text-[#0a1c3e] font-bold">
+              New World State Authority
+            </p>
+            <p className="text-[11px] text-slate-500 font-mono tracking-wider">
+              {tText('Established MMXIV • Sovereign Digital Republic & Universal Civic Order', 'Fondata MMXIV • Repubblica Digitale Sovrana & Ordine Civico Universale')}
+            </p>
+          </div>
+
+          {/* Primary Sovereign Navigation Links with generous spacing */}
+          <nav aria-label="Sovereign Navigation" className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-xs font-tech uppercase tracking-wider font-semibold">
             <button 
-              onClick={() => setActiveTab('constitution')} 
-              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'constitution' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+              onClick={() => { setActiveTab('about'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              id="footer-about-nav-link"
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'about' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-[#0a1c3e] hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
+            >
+              {t('aboutUs')}
+            </button>
+            
+            <button 
+              onClick={() => { setActiveTab('news'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+              id="footer-news-nav-link"
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'news' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-slate-700 hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
+            >
+              {t('news')}
+            </button>
+
+            <button 
+              onClick={() => { setActiveTab('democracy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+              id="footer-democracy-nav-link"
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'democracy' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-slate-700 hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
+            >
+              {t('directDemocracy')}
+            </button>
+
+            <button 
+              onClick={() => { setActiveTab('constitution'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'constitution' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-slate-700 hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
             >
               {t('constitution')}
             </button>
+
             <button 
-              onClick={() => setActiveTab('charter')} 
-              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'charter' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+              onClick={() => { setActiveTab('charter'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'charter' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-slate-700 hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
             >
               {t('charterOfRights')}
             </button>
+
             <button 
-              onClick={() => setActiveTab('privacy')} 
-              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'privacy' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+              onClick={() => { setActiveTab('governance'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'governance' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-slate-700 hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
+            >
+              {t('governance')}
+            </button>
+
+            <button 
+              onClick={() => { setActiveTab('privacy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'privacy' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-slate-700 hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
             >
               {t('privacyProtocol')}
             </button>
+
             <button 
-              onClick={() => setActiveTab('network')} 
-              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'network' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+              onClick={() => { setActiveTab('network'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'network' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-slate-700 hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
             >
               {t('networkStatus')}
             </button>
+
             <button 
-              onClick={() => setActiveTab('admin')} 
+              onClick={() => { setActiveTab('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
               id="footer-admin-btn"
-              className={`hover:text-brand-gold transition-colors border-b hover:border-brand-gold cursor-pointer ${activeTab === 'admin' ? 'border-brand-gold text-brand-gold font-bold' : 'border-transparent'}`}
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'admin' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-slate-700 hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
             >
               {t('adminConsole')}
             </button>
-          </div>
+          </nav>
 
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 uppercase tracking-[0.25em] text-[8px] font-semibold text-slate-600 mt-6 border-t border-[#0a1c3e]/5 pt-4">
+          {/* Secondary Legal & Compliance Links with clear separators and comfortable spacing */}
+          <div className="pt-6 border-t border-slate-200/70 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[11px] font-medium text-slate-500">
             <button 
               onClick={() => openCompliance('privacy')} 
-              className="hover:text-brand-gold transition-colors cursor-pointer"
+              className="hover:text-[#0a1c3e] hover:underline underline-offset-4 transition cursor-pointer"
             >
               {tText('Privacy Policy', 'Informativa Privacy')}
             </button>
-            <span className="text-slate-300">•</span>
+            <span className="text-slate-300 select-none">•</span>
             <button 
               onClick={() => openCompliance('cookies')} 
-              className="hover:text-brand-gold transition-colors cursor-pointer"
+              className="hover:text-[#0a1c3e] hover:underline underline-offset-4 transition cursor-pointer"
             >
               {tText('Cookie Policy', 'Informativa Cookie')}
             </button>
-            <span className="text-slate-300">•</span>
+            <span className="text-slate-300 select-none">•</span>
             <button 
               onClick={() => openCompliance('terms')} 
-              className="hover:text-brand-gold transition-colors cursor-pointer"
+              className="hover:text-[#0a1c3e] hover:underline underline-offset-4 transition cursor-pointer"
             >
               {tText('Terms & Conditions', 'Termini e Condizioni')}
             </button>
-            <span className="text-slate-300">•</span>
+            <span className="text-slate-300 select-none">•</span>
             <button 
               onClick={() => openCompliance('accessibility')} 
-              className="hover:text-brand-gold transition-colors cursor-pointer"
+              className="hover:text-[#0a1c3e] hover:underline underline-offset-4 transition cursor-pointer"
             >
               {language === 'en' ? 'Accessibility' : 'Accessibilità'}
             </button>
-            <span className="text-slate-300">•</span>
+            <span className="text-slate-300 select-none">•</span>
             <button 
               onClick={() => openCompliance('ccpa')} 
-              className="hover:text-brand-gold transition-colors cursor-pointer text-[#0a1c3e] font-bold"
+              className="hover:text-[#0a1c3e] hover:underline underline-offset-4 transition cursor-pointer text-slate-700 font-semibold"
               id="footer-ccpa-link"
             >
               {language === 'en' ? 'Do Not Sell or Share My Personal Information' : 'Non Vendere i Miei Dati (CCPA)'}
             </button>
+          </div>
+
+          {/* Copyright line */}
+          <div className="text-[10px] text-slate-400 font-mono tracking-wider">
+            © {new Date().getFullYear()} New World State Authority. All rights reserved.
           </div>
         </div>
       </footer>
