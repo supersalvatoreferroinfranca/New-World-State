@@ -6782,9 +6782,116 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
 
 
 
+    // =========================================================================
+    // TRANSPARENCY & AUDIT FINANCIAL DOCUMENTS
+    // =========================================================================
+    const SERVER_TRANSPARENCY_FILE = path.join(process.cwd(), 'data', 'transparency_documents.json');
+
+    function getServerTransparencyDocuments(): any[] {
+      try {
+        if (fs.existsSync(SERVER_TRANSPARENCY_FILE)) {
+          const raw = fs.readFileSync(SERVER_TRANSPARENCY_FILE, 'utf-8');
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        }
+      } catch (e: any) {
+        console.error('[SERVER-TRANSPARENCY] Read error:', e.message);
+      }
+      return [];
+    }
+
+    function saveServerTransparencyDocuments(docs: any[]): void {
+      try {
+        const parentDir = path.dirname(SERVER_TRANSPARENCY_FILE);
+        if (!fs.existsSync(parentDir)) {
+          fs.mkdirSync(parentDir, { recursive: true });
+        }
+        fs.writeFileSync(SERVER_TRANSPARENCY_FILE, JSON.stringify(docs, null, 2), 'utf-8');
+      } catch (e: any) {
+        console.error('[SERVER-TRANSPARENCY] Save error:', e.message);
+      }
+    }
+
+    apiRouter.get('/transparency/documents', (req, res) => {
+      try {
+        const documents = getServerTransparencyDocuments();
+        return res.json({ success: true, documents });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/transparency/sync', (req, res) => {
+      try {
+        const { documents } = req.body;
+        if (!documents || !Array.isArray(documents)) {
+          return res.status(400).json({ success: false, message: 'Elenco documenti non valido.' });
+        }
+        saveServerTransparencyDocuments(documents);
+        return res.json({ success: true, count: documents.length, documents });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/transparency/toggle', (req, res) => {
+      try {
+        const { id, published } = req.body;
+        if (!id) {
+          return res.status(400).json({ success: false, message: 'ID documento mancante.' });
+        }
+        const current = getServerTransparencyDocuments();
+        const index = current.findIndex((d: any) => String(d.id) === String(id));
+        if (index === -1) {
+          return res.status(404).json({ success: false, message: 'Documento non trovato.' });
+        }
+        const newStatus = published !== undefined ? Boolean(published) : !current[index].published;
+        current[index] = { ...current[index], published: newStatus };
+        saveServerTransparencyDocuments(current);
+        return res.json({ success: true, document: current[index], documents: current });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.delete(['/transparency/documents/:id', '/transparency/delete/:id'], (req, res) => {
+      try {
+        const docId = req.params.id;
+        if (!docId) {
+          return res.status(400).json({ success: false, message: 'ID documento obbligatorio.' });
+        }
+        const current = getServerTransparencyDocuments();
+        const updated = current.filter((d: any) => String(d.id) !== String(docId));
+        saveServerTransparencyDocuments(updated);
+        return res.json({ success: true, message: 'Documento eliminato con successo.', remainingCount: updated.length, documents: updated });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/transparency/delete', (req, res) => {
+      try {
+        const { id } = req.body;
+        if (!id) {
+          return res.status(400).json({ success: false, message: 'ID documento obbligatorio.' });
+        }
+        const current = getServerTransparencyDocuments();
+        const updated = current.filter((d: any) => String(d.id) !== String(id));
+        saveServerTransparencyDocuments(updated);
+        return res.json({ success: true, message: 'Documento eliminato con successo.', remainingCount: updated.length, documents: updated });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // =========================================================================
+    // NEWS API ENDPOINTS
+    // =========================================================================
     apiRouter.get('/news/articles', (req, res) => {
       try {
-        res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=180');
+        res.setHeader('Cache-Control', 'public, max-age=15, s-maxage=30, stale-while-revalidate=60');
         const articles = getServerArticles();
         return res.json({ success: true, articles });
       } catch (err: any) {
@@ -6794,22 +6901,130 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
 
     apiRouter.post('/news/sync', (req, res) => {
       try {
-        const { articles } = req.body;
-        if (Array.isArray(articles)) {
-          const existing = getServerArticles();
-          const map = new Map<string, any>();
-          existing.forEach(a => { if (a && a.id) map.set(a.id, a); });
-          articles.forEach(a => { if (a && a.id) map.set(a.id, a); });
-          const merged = Array.from(map.values()).sort((a, b) =>
-            new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-          );
-          saveServerArticles(merged);
-          return res.json({ success: true, count: merged.length });
+        const { articles, replaceAll } = req.body;
+        if (!articles || !Array.isArray(articles)) {
+          return res.status(400).json({ success: false, message: 'Elenco articoli non fornito o formato non valido.' });
         }
-        return res.status(400).json({ success: false, message: 'Elenco articoli non fornito.' });
+
+        let finalList: any[] = [];
+        if (replaceAll) {
+          const seen = new Set<string>();
+          for (const a of articles) {
+            if (a && a.id && !seen.has(String(a.id))) {
+              seen.add(String(a.id));
+              finalList.push(a);
+            }
+          }
+        } else {
+          const current = getServerArticles();
+          const map = new Map<string, any>();
+          current.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
+          articles.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
+          finalList = Array.from(map.values());
+        }
+
+        finalList.sort((a, b) =>
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+
+        saveServerArticles(finalList);
+        return res.json({ success: true, count: finalList.length });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: 'Errore sincronizzazione articoli: ' + err.message });
       }
+    });
+
+    apiRouter.delete(['/news/articles/:id', '/news/delete/:id'], (req, res) => {
+      try {
+        const articleId = req.params.id;
+        if (!articleId) {
+          return res.status(400).json({ success: false, message: 'ID articolo obbligatorio.' });
+        }
+        const current = getServerArticles();
+        const updated = current.filter(a => a && String(a.id) !== String(articleId) && String(a.slug) !== String(articleId));
+        saveServerArticles(updated);
+        return res.json({ success: true, message: 'Articolo rimosso con successo.', remainingCount: updated.length });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/news/delete', (req, res) => {
+      try {
+        const { id } = req.body;
+        if (!id) {
+          return res.status(400).json({ success: false, message: 'ID articolo obbligatorio.' });
+        }
+        const current = getServerArticles();
+        const updated = current.filter(a => a && String(a.id) !== String(id) && String(a.slug) !== String(id));
+        saveServerArticles(updated);
+        return res.json({ success: true, message: 'Articolo rimosso con successo.', remainingCount: updated.length });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/news/moderate', (req, res) => {
+      try {
+        const { id, action, moderatorNotes } = req.body;
+        if (!id || !action) {
+          return res.status(400).json({ success: false, message: 'ID e azione richiesti.' });
+        }
+        const current = getServerArticles();
+        let target: any = null;
+        const updated = current.map(art => {
+          if (art && (String(art.id) === String(id) || String(art.slug) === String(id))) {
+            let status = art.status;
+            let publishedAt = art.publishedAt;
+            let isFeatured = art.isFeatured;
+            if (action === 'approve') {
+              status = 'pubblicato';
+              if (!publishedAt) publishedAt = new Date().toISOString();
+            } else if (action === 'reject') {
+              status = 'respinto';
+              isFeatured = false;
+            } else if (action === 'hide') {
+              status = 'bozza';
+              isFeatured = false;
+            }
+            target = {
+              ...art,
+              status,
+              publishedAt,
+              isFeatured,
+              moderatorNotes: moderatorNotes || art.moderatorNotes || '',
+              updatedAt: new Date().toISOString()
+            };
+            return target;
+          }
+          return art;
+        });
+
+        if (!target) {
+          return res.status(404).json({ success: false, message: 'Articolo non trovato.' });
+        }
+
+        saveServerArticles(updated);
+
+        if (action === 'approve') {
+          const baseUrl = getCanonicalBaseUrl(req);
+          runBackgroundAutoTranslationAndIndexing(target, baseUrl).catch(console.error);
+        }
+
+        return res.json({ success: true, article: target, articles: updated });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.all(['/news/audit-translations', '/news/audit'], (req, res) => {
+      const baseUrl = getCanonicalBaseUrl(req);
+      auditAndTranslateAllServerArticles(baseUrl).catch(console.error);
+      return res.json({
+        success: true,
+        message: 'Scansione automatica e traduzione degli articoli pregressi avviata in background.',
+        isAuditRunning
+      });
     });
 
     // Catch-all for unknown API routes
@@ -8433,6 +8648,35 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
         .replace(/^-+|-+$/g, '');
     }
 
+    const CORE_PAGE_LOCALIZATIONS: Record<string, Record<string, { title: string; caption: string }>> = {
+      home: {
+        it: { title: 'New World State 1.0 - Stemma Ufficiale', caption: 'New World State 1.0 - Registro Mondiale e Sovranità Popolare' },
+        en: { title: 'New World State 1.0 - Official Emblem', caption: 'New World State 1.0 - Global Citizenship Registry & Popular Sovereignty' },
+        fr: { title: 'New World State 1.0 - Emblème Officiel', caption: 'New World State 1.0 - Registre Mondial et Souveraineté Populaire' },
+        es: { title: 'New World State 1.0 - Emblema Oficial', caption: 'New World State 1.0 - Registro Mundial y Soberanía Popular' },
+        pt: { title: 'New World State 1.0 - Emblema Oficial', caption: 'New World State 1.0 - Registro Mundial e Soberania Popular' },
+        ru: { title: 'New World State 1.0 - Официальная эмблема', caption: 'New World State 1.0 - Всемирный реестр и народный суверенитет' },
+        hi: { title: 'New World State 1.0 - आधिकारिक प्रतीक', caption: 'New World State 1.0 - वैश्विक नागरिकता रजिस्टर और लोकप्रिय संप्रभुता' },
+        bn: { title: 'New World State 1.0 - অফিসিয়াল প্রতীক', caption: 'New World State 1.0 - বৈশ্বিক নাগরিকত্ব রেজিস্ট্রি এবং জনগণের সার্বভৌমত্ব' },
+        zh: { title: 'New World State 1.0 - 官方徽章', caption: 'New World State 1.0 - 全球公民登记处与人民主权' },
+        ja: { title: 'New World State 1.0 - 公式エンブレム', caption: 'New World State 1.0 - グローバル市民登録と国民主権' },
+        ar: { title: 'New World State 1.0 - الشعار الرسمي', caption: 'New World State 1.0 - السجل العالمي والسيادة الشعبية' }
+      },
+      news: {
+        it: { title: 'New World State News Authority', caption: 'Giornale Sovrano di Informazione e Geopolitica Indipendente' },
+        en: { title: 'New World State News Authority', caption: 'Sovereign Journal of Independent Information & Geopolitics' },
+        fr: { title: 'New World State News Authority', caption: "Journal Souverain d'Information Indépendante et de Géopolitique" },
+        es: { title: 'New World State News Authority', caption: 'Diario Soberano de Información Independiente y Geopolítica' },
+        pt: { title: 'New World State News Authority', caption: 'Jornal Soberano de Informação Independente e Geopolítica' },
+        ru: { title: 'New World State News Authority', caption: 'Суверенное издание независимой информации и геополитики' },
+        hi: { title: 'New World State News Authority', caption: 'स्वतंत्र सूचना और भू-राजनीति का संप्रभु समाचार पत्र' },
+        bn: { title: 'New World State News Authority', caption: 'স্বাধীন তথ্য ও ভূ-রাজনীতির সার্বভৌম সংবাদপত্র' },
+        zh: { title: 'New World State News Authority', caption: '独立资讯与地缘政治主权报刊' },
+        ja: { title: 'New World State News Authority', caption: '独立情報および地政学の主権新聞' },
+        ar: { title: 'New World State News Authority', caption: 'الصحيفة السيادية للإعلام المستقل والجيوسياسة' }
+      }
+    };
+
     function generateComprehensiveSitemapXml(baseUrl: string, rawArticles: any[]): string {
       const today = new Date().toISOString().split('T')[0];
       const articles = getDeduplicatedArticles(rawArticles);
@@ -8455,16 +8699,6 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
 
         const defaultUrl = getUrl('it');
         const hreflangs = page.path === 'sitemap.html' ? '' : buildMultilingualHreflangs(getUrl, defaultUrl);
-        let imageXml = '';
-        if (page.image) {
-          const imgLoc = page.image.startsWith('http') ? page.image : `${baseUrl}${page.image}`;
-          imageXml = `
-          <image:image>
-            <image:loc>${escapeHtml(imgLoc)}</image:loc>
-            <image:title>${escapeHtml(page.imageTitle || page.title)}</image:title>
-            <image:caption>${escapeHtml(page.imageCaption || page.title)}</image:caption>
-          </image:image>`;
-        }
 
         if (page.path === 'sitemap.html') {
           return `
@@ -8473,12 +8707,27 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
           <lastmod>${today}</lastmod>
           <changefreq>${page.changefreq}</changefreq>
           <priority>${page.priority}</priority>
-${imageXml}
         </url>`;
         }
 
         return SITE_SUPPORTED_LANGUAGES.map(lang => {
           const url = getUrl(lang);
+          let imageXml = '';
+          if (page.image) {
+            const imgLoc = page.image.startsWith('http') ? page.image : `${baseUrl}${page.image}`;
+            const key = !page.path ? 'home' : (page.path.includes('news') ? 'news' : '');
+            const locInfo = key && CORE_PAGE_LOCALIZATIONS[key]?.[lang];
+            const imgTitle = locInfo ? locInfo.title : (page.imageTitle || page.title);
+            const imgCaption = locInfo ? locInfo.caption : (page.imageCaption || page.title);
+
+            imageXml = `
+          <image:image>
+            <image:loc>${escapeHtml(imgLoc)}</image:loc>
+            <image:title>${escapeHtml(imgTitle)}</image:title>
+            <image:caption>${escapeHtml(imgCaption)}</image:caption>
+          </image:image>`;
+          }
+
           return `
         <url>
           <loc>${escapeHtml(url)}</loc>
@@ -8517,26 +8766,33 @@ ${hreflangs ? hreflangs + '\n' : ''}${imageXml}
         imgUrl = formatOgImageUrl(imgUrl);
 
         const getArticleUrl = (lang: string) => {
-          let langTitle = cleanTitle;
-          if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
-            langTitle = cleanMetaText(a.translations[lang].title);
-          }
-          const translatedSlug = slug; // Mantieni lo slug originale affinché la SPA possa trovare l'articolo
+          const translatedSlug = slug;
           const encoded = encodeURIComponent(translatedSlug);
           return lang === 'it' ? `${baseUrl}/notizie/${encoded}` : `${baseUrl}/notizie/${encoded}?lang=${lang}`;
         };
 
         const defaultUrl = getArticleUrl('it');
         const hreflangs = buildMultilingualHreflangs(getArticleUrl, defaultUrl);
-        const imageXml = imgUrl ? `
-          <image:image>
-            <image:loc>${escapeHtml(imgUrl)}</image:loc>
-            <image:title>${escapeHtml(cleanTitle)}</image:title>
-            <image:caption>${escapeHtml(cleanTitle)}</image:caption>
-          </image:image>` : '';
 
         return SITE_SUPPORTED_LANGUAGES.map(lang => {
           const url = getArticleUrl(lang);
+          let langTitle = cleanTitle;
+          if (lang !== 'it' && a.translations && a.translations[lang] && a.translations[lang].title) {
+            langTitle = cleanMetaText(a.translations[lang].title);
+          } else if (lang !== 'it') {
+            const dict = (FULL_ARTICLE_TRANSLATIONS as any)[slug]?.[lang] || (FULL_ARTICLE_TRANSLATIONS as any)[a.id]?.[lang];
+            if (dict?.title) {
+              langTitle = cleanMetaText(dict.title);
+            }
+          }
+
+          const imageXml = imgUrl ? `
+          <image:image>
+            <image:loc>${escapeHtml(imgUrl)}</image:loc>
+            <image:title>${escapeHtml(langTitle)}</image:title>
+            <image:caption>${escapeHtml(langTitle)}</image:caption>
+          </image:image>` : '';
+
           return `
         <url>
           <loc>${escapeHtml(url)}</loc>
@@ -10507,260 +10763,240 @@ ${articleFull}
       return res.send(content);
     });
 
-    // News API Endpoints for Local Storage Sync & Dynamic Real-time Management
-    app.get('/api/news/articles', (req, res) => {
-      try {
-        const articles = getServerArticles();
-        return res.json({ success: true, articles });
-      } catch (err: any) {
-        return res.status(500).json({ success: false, message: err.message });
+    // Helper per la traduzione di singoli articoli o gruppi di lingue con Gemini AI
+    async function translateArticleBackend(articleData: {
+      articleId?: string;
+      title: string;
+      intro?: string;
+      content: string;
+      tags?: string[];
+      targetLangs?: string[];
+    }): Promise<Record<string, any>> {
+      const allOfficialLangs = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+      const targetLangs = (articleData.targetLangs && articleData.targetLangs.length > 0)
+        ? articleData.targetLangs.filter(l => l !== 'it' && allOfficialLangs.includes(l))
+        : allOfficialLangs;
+
+      if (targetLangs.length === 0) {
+        return {};
       }
-    });
 
-    // Authoritative Sync Endpoint - immediately updates sitemaps
-    app.post('/api/news/sync', (req, res) => {
-      try {
-        const { articles, replaceAll } = req.body;
-        if (!articles || !Array.isArray(articles)) {
-          return res.status(400).json({ success: false, message: 'Elenco articoli non fornito o formato non valido.' });
-        }
+      const langMap: Record<string, string> = {
+        en: 'English (Inglese)', fr: 'Français (Francese)', es: 'Español (Spagnolo)',
+        pt: 'Português (Portoghese)', ru: 'Русский (Russo)', hi: 'हिन्दी (Hindi)',
+        bn: 'বাংলা (Bengalese)', zh: '中文 (Cinese Semplificato)', ja: '日本語 (Giapponese)', ar: 'العربية (Arabo)'
+      };
+      const langListStr = targetLangs.map(l => `- "${l}": ${langMap[l] || l}`).join('\n');
 
-        let finalList: any[] = [];
-        if (replaceAll) {
-          // Authoritative save from client state (respects deletions, edits, status changes)
-          const seen = new Set<string>();
-          for (const a of articles) {
-            if (a && a.id && !seen.has(String(a.id))) {
-              seen.add(String(a.id));
-              finalList.push(a);
-            }
-          }
-        } else {
-          const current = getServerArticles();
-          const map = new Map<string, any>();
-          current.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
-          articles.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
-          finalList = Array.from(map.values());
-        }
-
-        finalList.sort((a, b) =>
-          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-        );
-
-        saveServerArticles(finalList);
-        return res.json({ success: true, count: finalList.length });
-      } catch (err: any) {
-        return res.status(500).json({ success: false, message: err.message });
-      }
-    });
-
-    // Direct Delete Endpoint - immediately removes article from server and all sitemaps
-    app.delete(['/api/news/articles/:id', '/api/news/delete/:id'], (req, res) => {
-      try {
-        const articleId = req.params.id;
-        if (!articleId) {
-          return res.status(400).json({ success: false, message: 'ID articolo obbligatorio.' });
-        }
-
-        const current = getServerArticles();
-        const updated = current.filter(a => a && String(a.id) !== String(articleId) && String(a.slug) !== String(articleId));
-        saveServerArticles(updated);
-
-        return res.json({ 
-          success: true, 
-          message: 'Articolo rimosso con successo da database e sitemap.',
-          remainingCount: updated.length 
-        });
-      } catch (err: any) {
-        return res.status(500).json({ success: false, message: err.message });
-      }
-    });
-
-    app.post('/api/news/delete', (req, res) => {
-      try {
-        const { id } = req.body;
-        if (!id) {
-          return res.status(400).json({ success: false, message: 'ID articolo obbligatorio.' });
-        }
-
-        const current = getServerArticles();
-        const updated = current.filter(a => a && String(a.id) !== String(id) && String(a.slug) !== String(id));
-        saveServerArticles(updated);
-
-        return res.json({ 
-          success: true, 
-          message: 'Articolo eliminato e rimosso istantaneamente da tutte le sitemap.',
-          remainingCount: updated.length 
-        });
-      } catch (err: any) {
-        return res.status(500).json({ success: false, message: err.message });
-      }
-    });
-
-    // Funzione asincrona per traduzione in background e indicizzazione
-    async function runBackgroundAutoTranslationAndIndexing(article: any, baseUrl: string) {
-      if (!article || !article.title || !article.content) return;
-      
-      console.log(`[NEWS-I18N] Avvio traduzione automatica background e indicizzazione per: ${article.title}`);
-      
-      try {
-        // 1. Traduzione automatica con Gemini AI
-        const requestedLangs = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
-        const langMap: Record<string, string> = {
-          en: 'English (Inglese)', fr: 'Français (Francese)', es: 'Español (Spagnolo)',
-          pt: 'Português (Portoghese)', ru: 'Русский (Russo)', hi: 'हिन्दी (Hindi)',
-          bn: 'বাংলা (Bengalese)', zh: '中文 (Cinese Semplificato)', ja: '日本語 (Giapponese)', ar: 'العربية (Arabo)'
-        };
-        const langListStr = requestedLangs.map(l => `- "${l}": ${langMap[l]}`).join('\n');
-        
-        const prompt = `Sei l'Ufficio Traduzioni e Relazioni Internazionali dell'Organo di Stampa Ufficiale di "New World State".
+      const prompt = `Sei l'Ufficio Traduzioni e Relazioni Internazionali dell'Organo di Stampa Ufficiale di "New World State".
 Traduci con la massima fedeltà giornalistica, solennità, eleganza e precisione l'articolo fornito nelle seguenti lingue:
 ${langListStr}
 
 ARTICOLO DA TRADURRE:
 TITOLO:
-${article.title}
+${articleData.title}
 
 ABSTRACT / INTRODUZIONE:
-${article.intro || ''}
+${articleData.intro || ''}
 
 TESTO COMPLETO IN FORMATO MARKDOWN:
-${article.content}
+${articleData.content}
 
 TAG ORIGINALI:
-${JSON.stringify(article.tags || [])}
+${JSON.stringify(articleData.tags || [])}
 
 REGOLE DI TRADUZIONE:
-1. Mantieni rigorosamente tutte le intestazioni Markdown, formattazione, ecc.
-2. Non alterare nomi come "New World State" o "NWS".
-3. Adatta gli hashtag/tag.
-4. Genera traduzioni eleganti.
+1. Mantieni rigorosamente tutte le intestazioni Markdown (##, ###), elenchi puntati, citazioni e formattazione.
+2. Non alterare nomi propri e istituzionali come "New World State", "NWS" o nomi di autori.
+3. Adatta e localizza coerentemente gli hashtag e i tag per ciascuna lingua.
+4. Genera traduzioni autorevoli, accurate e complete (senza omettere paragrafi del testo).
 
-Genera un JSON con chiave "translations" contenente le lingue.`;
+Genera un JSON con chiave "translations" contenente un oggetto per ciascuna delle lingue richieste ("${targetLangs.join('", "')}"), ciascuno con le proprietà "title", "intro", "content" e "tags".`;
 
-        const response = await generateGeminiContentWithFallback(
-          prompt,
-          {
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                translations: {
-                  type: Type.OBJECT,
-                  properties: requestedLangs.reduce((acc, lang) => ({
-                    ...acc,
-                    [lang]: {
-                      type: Type.OBJECT,
-                      properties: { title: { type: Type.STRING }, intro: { type: Type.STRING }, content: { type: Type.STRING }, tags: { type: Type.ARRAY, items: { type: Type.STRING } } },
-                      required: ['title', 'intro', 'content']
-                    }
-                  }), {})
-                }
-              },
-              required: ['translations']
-            }
-          },
-          'gemini-2.5-flash'
-        );
+      const response = await generateGeminiContentWithFallback(
+        prompt,
+        {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              translations: {
+                type: Type.OBJECT,
+                properties: targetLangs.reduce((acc, lang) => ({
+                  ...acc,
+                  [lang]: {
+                    type: Type.OBJECT,
+                    properties: { 
+                      title: { type: Type.STRING }, 
+                      intro: { type: Type.STRING }, 
+                      content: { type: Type.STRING }, 
+                      tags: { type: Type.ARRAY, items: { type: Type.STRING } } 
+                    },
+                    required: ['title', 'intro', 'content']
+                  }
+                }), {})
+              }
+            },
+            required: ['translations']
+          }
+        },
+        'gemini-2.5-flash'
+      );
 
-        if (response.text) {
+      let generatedTranslations: Record<string, any> = {};
+      if (response.text) {
+        try {
           const parsed = JSON.parse(response.text.trim());
-          const translations = parsed.translations || {};
-          
-          // Salva le traduzioni
-          const currentArticles = getServerArticles();
-          const updated = currentArticles.map(a => {
-            if (a && String(a.id) === String(article.id)) {
-              return {
-                ...a,
-                translations: { ...(a.translations || {}), ...translations },
-                updatedAt: new Date().toISOString()
-              };
-            }
-            return a;
-          });
+          generatedTranslations = parsed.translations || {};
+        } catch (parseErr: any) {
+          console.error('[NEWS-I18N] JSON parse error in AI translation:', parseErr.message);
+        }
+      }
+
+      // Se specificato l'ID articolo, salva immediatamente le traduzioni nel JSON persistente
+      if (articleData.articleId && Object.keys(generatedTranslations).length > 0) {
+        const currentArticles = getServerArticles();
+        let found = false;
+        const updated = currentArticles.map(a => {
+          if (a && (String(a.id) === String(articleData.articleId) || String(a.slug) === String(articleData.articleId))) {
+            found = true;
+            return {
+              ...a,
+              translations: { ...(a.translations || {}), ...generatedTranslations },
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return a;
+        });
+
+        if (found) {
           saveServerArticles(updated);
-          console.log(`[NEWS-I18N] Traduzione background completata per: ${article.title}`);
+          console.log(`[NEWS-I18N] Salvate traduzioni per ${articleData.articleId} nelle lingue: ${Object.keys(generatedTranslations).join(', ')}`);
+        }
+      }
+
+      return generatedTranslations;
+    }
+
+    // Funzione asincrona per traduzione in background e indicizzazione
+    async function runBackgroundAutoTranslationAndIndexing(article: any, baseUrl: string) {
+      if (!article || !article.title || !article.content) return;
+      
+      console.log(`[NEWS-I18N] Avvio traduzione automatica background e indicizzazione per: "${article.title}"`);
+      
+      try {
+        const requestedLangs = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+        // Verifica quali lingue mancano o sono incomplete
+        const missingLangs = requestedLangs.filter(l => {
+          const t = article.translations?.[l];
+          return !t || !t.title || !t.content;
+        });
+
+        if (missingLangs.length > 0) {
+          await translateArticleBackend({
+            articleId: article.id,
+            title: article.title,
+            intro: article.intro || '',
+            content: article.content,
+            tags: article.tags || [],
+            targetLangs: missingLangs
+          });
         }
         
-        // 2. Proposta per l'indicizzazione (Ping ai motori di ricerca)
+        // Indicizzazione e Ping ai motori di ricerca
         const sitemapUrl = `${baseUrl}/sitemap.xml`;
         const newsSitemapUrl = `${baseUrl}/sitemap-news.xml`;
-        console.log(`[SEO] Invio ping ai motori di ricerca per le sitemap: ${sitemapUrl}`);
         
-        // Ping Google
         fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`).catch(() => {});
         fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(newsSitemapUrl)}`).catch(() => {});
-        // Ping Bing
         fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`).catch(() => {});
         fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(newsSitemapUrl)}`).catch(() => {});
-        
       } catch (err: any) {
         console.error(`[NEWS-I18N] Errore in background task: ${err.message}`);
       }
     }
 
-    // Direct Moderation Endpoint - immediately approves/rejects and updates sitemaps
-    app.post('/api/news/moderate', (req, res) => {
+    // Scansione automatica e traduzione degli articoli pregressi mancanti
+    let isAuditRunning = false;
+    async function auditAndTranslateAllServerArticles(baseUrl = 'https://newworldstate.cloud') {
+      if (isAuditRunning) return;
+      isAuditRunning = true;
+      console.log('[NEWS-I18N-AUDIT] Avvio scansione automatica per il controllo traduzioni di tutti gli articoli...');
+
       try {
-        const { id, action, moderatorNotes } = req.body;
-        if (!id || !action) {
-          return res.status(400).json({ success: false, message: 'ID e azione richiesti.' });
+        const allOfficialLangs = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+        const articles = getServerArticles();
+        let translatedCount = 0;
+
+        for (const article of articles) {
+          if (!article || !article.title || !article.content) continue;
+
+          // Trova le lingue per cui manca titolo o contenuto
+          const missingLangs = allOfficialLangs.filter(l => {
+            const t = article.translations?.[l];
+            return !t || !t.title || !t.content;
+          });
+
+          if (missingLangs.length > 0) {
+            console.log(`[NEWS-I18N-AUDIT] Articolo "${article.title}" (${article.id}): mancano traduzioni per [${missingLangs.join(', ')}]. Avvio traduzione automatica...`);
+            try {
+              await translateArticleBackend({
+                articleId: article.id,
+                title: article.title,
+                intro: article.intro || '',
+                content: article.content,
+                tags: article.tags || [],
+                targetLangs: missingLangs
+              });
+              translatedCount++;
+              // Pausa di 1 secondo tra articoli per evitare rate-limit
+              await new Promise(r => setTimeout(r, 1200));
+            } catch (itemErr: any) {
+              console.warn(`[NEWS-I18N-AUDIT] Errore durante la traduzione di "${article.title}":`, itemErr.message);
+            }
+          }
         }
 
-        const current = getServerArticles();
-        let target: any = null;
-        const updated = current.map(art => {
-          if (art && (String(art.id) === String(id) || String(art.slug) === String(id))) {
-            let status = art.status;
-            let publishedAt = art.publishedAt;
-            let isFeatured = art.isFeatured;
+        console.log(`[NEWS-I18N-AUDIT] Controllo e traduzione automatica completati con successo. Articoli elaborati: ${translatedCount}`);
+      } catch (auditErr: any) {
+        console.error('[NEWS-I18N-AUDIT] Errore durante audit traduzioni:', auditErr.message);
+      } finally {
+        isAuditRunning = false;
+      }
+    }
 
-            if (action === 'approve') {
-              status = 'pubblicato';
-              publishedAt = publishedAt || new Date().toISOString();
-            } else if (action === 'reject') {
-              status = 'rifiutato';
-            } else if (action === 'request_changes') {
-              status = 'in_revisione';
-            } else if (action === 'toggle_featured') {
-              isFeatured = !isFeatured;
-            }
+    // Endpoint API per la traduzione on-demand o background da client
+    app.post(['/api/news/translate-article', '/api/news/translate'], async (req, res) => {
+      try {
+        const { articleId, title, intro, content, tags, targetLangs } = req.body;
+        if (!title || !content) {
+          return res.status(400).json({ success: false, message: 'Titolo e contenuto articolo obbligatori per la traduzione.' });
+        }
 
-            target = {
-              ...art,
-              status,
-              publishedAt,
-              isFeatured,
-              moderatorNotes: moderatorNotes !== undefined ? moderatorNotes : art.moderatorNotes,
-              updatedAt: new Date().toISOString()
-            };
-            return target;
-          }
-          return art;
+        const translations = await translateArticleBackend({
+          articleId,
+          title,
+          intro: intro || '',
+          content,
+          tags: tags || [],
+          targetLangs
         });
 
-        if (!target) {
-          return res.status(404).json({ success: false, message: 'Articolo non trovato.' });
-        }
-
-        saveServerArticles(updated);
-        
-        if (action === 'approve') {
-          const baseUrl = getCanonicalBaseUrl(req);
-          // Avvia la traduzione e l'indicizzazione in background per l'articolo appena pubblicato
-          runBackgroundAutoTranslationAndIndexing(target, baseUrl).catch(console.error);
-        }
-
-        return res.json({ 
-          success: true, 
-          message: `Articolo aggiornato con successo (${action}) e sitemap sincronizzate.`,
-          article: target 
+        return res.json({
+          success: true,
+          translations,
+          articleId
         });
       } catch (err: any) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[API-TRANSLATE-ERR]', err.message);
+        return res.status(500).json({ success: false, message: 'Errore durante la traduzione automatica: ' + err.message });
       }
     });
+
+    // Avvio automatico dell'audit delle traduzioni su server boot dopo 5 secondi
+    setTimeout(() => {
+      auditAndTranslateAllServerArticles().catch(console.error);
+    }, 5000);
 
     // Explicit PWA Endpoints for Chromium / Brave / iOS Manifest and Service Worker Delivery
     app.get(['/manifest.json', '/site.webmanifest', '/manifest.webmanifest'], (req, res) => {

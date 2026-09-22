@@ -845,7 +845,6 @@ export function getArticles(): NewsArticle[] {
   } catch (e) {
     console.error('[NEWS-SERVICE] Error reading articles:', e);
   }
-  saveArticles(INITIAL_ARTICLES);
   return INITIAL_ARTICLES;
 }
 
@@ -870,7 +869,7 @@ let lastSyncTimestamp = 0;
 
 export async function syncArticlesWithServer(force = false): Promise<NewsArticle[]> {
   const now = Date.now();
-  if (!force && now - lastSyncTimestamp < 30000) {
+  if (!force && now - lastSyncTimestamp < 15000) {
     return getArticles();
   }
 
@@ -885,43 +884,23 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.articles) && data.articles.length > 0) {
-          const local = getArticles();
-          const localJson = JSON.stringify(local);
-          const map = new Map<string, NewsArticle>();
-          
-          // Add server articles first
-          data.articles.forEach((a: NewsArticle) => {
-            if (a && a.id) map.set(a.id, a);
-          });
-          
-          // Add or update with local articles if local exists and is newer
-          local.forEach((a: NewsArticle) => {
-            if (a && a.id) {
-              const existing = map.get(a.id);
-              if (!existing || new Date(a.updatedAt || 0).getTime() >= new Date(existing.updatedAt || 0).getTime()) {
-                map.set(a.id, a);
-              }
-            }
-          });
+          // The server is authoritative for state and published status
+          const serverArticles: NewsArticle[] = data.articles;
+          const currentLocal = getArticles();
+          const serverJson = JSON.stringify(serverArticles);
+          const localJson = JSON.stringify(currentLocal);
 
-          const merged = Array.from(map.values()).sort((a, b) => 
-            new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-          );
-
-          const mergedJson = JSON.stringify(merged);
-          if (mergedJson !== localJson) {
-            localStorage.setItem(ARTICLES_STORAGE_KEY, mergedJson);
+          if (serverJson !== localJson) {
+            localStorage.setItem(ARTICLES_STORAGE_KEY, serverJson);
             window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
 
-            // Push back merged state to server
-            safeFetch('/api/news/sync', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ articles: merged })
-            }).catch(() => {});
+            // Check and trigger background translation for missing languages
+            setTimeout(() => {
+              auditAndTranslateMissingArticles();
+            }, 1000);
           }
 
-          return merged;
+          return serverArticles;
         }
       }
     } catch (err) {
@@ -1029,8 +1008,10 @@ export function createArticle(articleData: {
     );
   }
 
-  // Se l'articolo è pubblicato direttamente e non ha ancora traduzioni, avvia la traduzione automatica in background
-  if (newArticle.status === 'pubblicato' && (!newArticle.translations || Object.keys(newArticle.translations).length === 0)) {
+  // Se l'articolo è creato (salvato come bozza, in moderazione o pubblicato), avvia sempre la traduzione automatica in background per tutte le lingue mancanti
+  const officialLangs: NewsLanguage[] = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+  const hasMissingLangs = officialLangs.some(l => !newArticle.translations?.[l]?.title || !newArticle.translations?.[l]?.content);
+  if (hasMissingLangs) {
     triggerBackgroundTranslation(newArticle.id);
   }
 
@@ -1060,6 +1041,8 @@ export function updateArticle(id: string, articleData: Partial<NewsArticle>): Ne
 
   if (updatedArticle) {
     saveArticles(updatedList);
+    // Quando un articolo viene modificato/aggiornato, riavvia la traduzione automatica in background per mantenere allineate tutte le lingue
+    triggerBackgroundTranslation((updatedArticle as NewsArticle).id);
   }
 
   return updatedArticle;
@@ -1647,4 +1630,56 @@ export function triggerBackgroundTranslation(articleId: string): void {
       console.warn(`[NEWS-I18N] Errore traduzione automatica background per ${articleId}:`, err);
     }
   }, 500);
+}
+
+/**
+ * Funzione automatica di controllo della presenza delle traduzioni per tutti gli articoli pregressi e pubblicati.
+ * Traduce in background qualsiasi lingua mancante senza richiedere alcun intervento manuale da parte dell'operatore.
+ */
+let isClientAuditRunning = false;
+export async function auditAndTranslateMissingArticles(): Promise<void> {
+  if (isClientAuditRunning) return;
+  isClientAuditRunning = true;
+
+  try {
+    const allOfficialLangs: NewsLanguage[] = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+    const articles = getArticles();
+
+    // Filtra gli articoli con traduzioni mancanti o incomplete
+    const articlesNeedingTranslation = articles.filter(art => {
+      if (!art || !art.title || !art.content) return false;
+      return allOfficialLangs.some(lang => {
+        const t = art.translations?.[lang];
+        return !t || !t.title || !t.content;
+      });
+    });
+
+    if (articlesNeedingTranslation.length > 0) {
+      console.log(`[NEWS-AUDIT] Trovati ${articlesNeedingTranslation.length} articoli con traduzioni mancanti. Avvio traduzione automatica fluida...`);
+      
+      // Invia anche un trigger rapido all'audit server-side
+      safeFetch('/api/news/audit-translations', { method: 'POST' }).catch(() => {});
+
+      // Elabora ciascun articolo in sequenza con leggero delay
+      for (let i = 0; i < articlesNeedingTranslation.length; i++) {
+        const art = articlesNeedingTranslation[i];
+        setTimeout(() => {
+          triggerBackgroundTranslation(art.id);
+        }, i * 2000);
+      }
+    }
+  } catch (err) {
+    console.warn('[NEWS-AUDIT] Controllo automatico traduzioni completato con avviso:', err);
+  } finally {
+    setTimeout(() => {
+      isClientAuditRunning = false;
+    }, 10000);
+  }
+}
+
+// Avvio automatico in background del controllo traduzioni al caricamento
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    auditAndTranslateMissingArticles();
+  }, 2500);
 }

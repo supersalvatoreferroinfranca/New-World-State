@@ -730,7 +730,7 @@ export default function ArticleDetailModal({
 
   const relatedArticles = (activeArticle.relatedArticleIds || [])
     .map(id => allArticles.find(a => a.id === id))
-    .filter((a): a is NewsArticle => !!a);
+    .filter((a): a is NewsArticle => !!a && a.status === 'pubblicato');
 
   const handleShare = async () => {
     const slug = activeArticle.slug || activeArticle.id;

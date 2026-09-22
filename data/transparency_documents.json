@@ -1,0 +1,54 @@
+[
+  {
+    "id": "doc-nws-bs-2025-q4",
+    "title": "Estratto Conto Bancario Ufficiale - IV Trimestre 2025",
+    "category": "bank_statement",
+    "period": "IV Trimestre (Ott - Dic 2025)",
+    "year": 2025,
+    "fileName": "EstrattoConto_NWS_2025_Q4.pdf",
+    "fileSize": "418 KB",
+    "totalAmount": "Saldo attivo: € 28.450,00",
+    "uploadDate": "2026-01-10T10:00:00.000Z",
+    "notes": "Estratto conto bancario ufficiale del Conto Corrente IBAN IT70F0326816900052535344000 con riepilogo delle entrate da donazioni e uscite per servizi telematici.",
+    "published": false
+  },
+  {
+    "id": "doc-nws-exp-2025-infra",
+    "title": "Rendiconto Spese Infrastruttura Digitale, Server & Crittografia",
+    "category": "expense_report",
+    "period": "Anno 2025",
+    "year": 2025,
+    "fileName": "Rendiconto_Spese_Server_Infrastruttura_2025.pdf",
+    "fileSize": "624 KB",
+    "totalAmount": "Totale Spese: € 8.920,00",
+    "uploadDate": "2026-01-15T14:30:00.000Z",
+    "notes": "Dettaglio analitico delle spese sostenute per hosting Cloud Run, cluster PostgreSQL, certificati SSL, domini di stato e sicurezza dei dati anagrafici dei cittadini.",
+    "published": false
+  },
+  {
+    "id": "doc-nws-bal-2025",
+    "title": "Bilancio Consuntivo & Rendiconto Istituzionale d'Esercizio 2025",
+    "category": "balance_sheet",
+    "period": "Esercizio 2025",
+    "year": 2025,
+    "fileName": "Bilancio_Consuntivo_NWS_2025.pdf",
+    "fileSize": "890 KB",
+    "totalAmount": "Avanzo di gestione: € 19.530,00",
+    "uploadDate": "2026-02-01T09:00:00.000Z",
+    "notes": "Rendiconto economico e gestionale approvato dal Consiglio di Garanzia Istituzionale New World State Organization ai sensi della trasparenza per gli iscritti.",
+    "published": false
+  },
+  {
+    "id": "doc-nws-exp-peace-2025",
+    "title": "Giustificativi & Documenti di Spesa: Programma Peacekeeper & Aiuti Civici",
+    "category": "receipt_invoice",
+    "period": "Secondo Semestre 2025",
+    "year": 2025,
+    "fileName": "Giustificativi_Missioni_Civiche_2025_H2.pdf",
+    "fileSize": "1.4 MB",
+    "totalAmount": "Totale erogazioni: € 4.300,00",
+    "uploadDate": "2026-02-18T16:00:00.000Z",
+    "notes": "Raccolta delle ricevute, rimborsi e fatture per missioni civiche internazionali e supporto a cittadini in aree di crisi umanitaria.",
+    "published": false
+  }
+]

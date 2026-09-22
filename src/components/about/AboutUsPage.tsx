@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { 
   getFinancialDocuments, 
+  fetchFinancialDocumentsFromServer,
   downloadFinancialDocument, 
   FinancialDocument, 
   getCategoryLabel 
@@ -52,11 +53,17 @@ export default function AboutUsPage({ onGoToConstitution, onGoToCharter, onGoToD
 
   const loadDocs = () => {
     const all = getFinancialDocuments();
-    setDocuments(all.filter(d => d.published));
+    setDocuments(all.filter(d => d.published === true));
   };
 
   useEffect(() => {
     loadDocs();
+    fetchFinancialDocumentsFromServer().then(serverDocs => {
+      if (Array.isArray(serverDocs)) {
+        setDocuments(serverDocs.filter(d => d.published === true));
+      }
+    }).catch(() => {});
+
     const handleUpdate = () => loadDocs();
     window.addEventListener('nws_transparency_updated', handleUpdate);
     return () => window.removeEventListener('nws_transparency_updated', handleUpdate);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   getFinancialDocuments, 
+  fetchFinancialDocumentsFromServer,
   addFinancialDocument, 
   updateFinancialDocument, 
   deleteFinancialDocument, 
@@ -62,6 +63,11 @@ export default function AdminTransparencyTab() {
     const docs = getFinancialDocuments();
     setDocuments(docs);
     setLoading(false);
+    fetchFinancialDocumentsFromServer().then(serverDocs => {
+      if (Array.isArray(serverDocs) && serverDocs.length > 0) {
+        setDocuments(serverDocs);
+      }
+    }).catch(() => {});
   };
 
   useEffect(() => {

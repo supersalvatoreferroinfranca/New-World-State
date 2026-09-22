@@ -24,7 +24,7 @@ export interface FinancialDocument {
 
 const STORAGE_KEY = 'nws_transparency_documents_v1';
 
-// Seed initial authentic transparency documents
+// Seed initial authentic transparency documents (defaulting to hidden/draft until verified/approved)
 const INITIAL_DOCUMENTS: FinancialDocument[] = [
   {
     id: 'doc-nws-bs-2025-q4',
@@ -37,7 +37,7 @@ const INITIAL_DOCUMENTS: FinancialDocument[] = [
     totalAmount: 'Saldo attivo: € 28.450,00',
     uploadDate: '2026-01-10T10:00:00.000Z',
     notes: 'Estratto conto bancario ufficiale del Conto Corrente IBAN IT70F0326816900052535344000 con riepilogo delle entrate da donazioni e uscite per servizi telematici.',
-    published: true,
+    published: false,
   },
   {
     id: 'doc-nws-exp-2025-infra',
@@ -50,7 +50,7 @@ const INITIAL_DOCUMENTS: FinancialDocument[] = [
     totalAmount: 'Totale Spese: € 8.920,00',
     uploadDate: '2026-01-15T14:30:00.000Z',
     notes: 'Dettaglio analitico delle spese sostenute per hosting Cloud Run, cluster PostgreSQL, certificati SSL, domini di stato e sicurezza dei dati anagrafici dei cittadini.',
-    published: true,
+    published: false,
   },
   {
     id: 'doc-nws-bal-2025',
@@ -63,7 +63,7 @@ const INITIAL_DOCUMENTS: FinancialDocument[] = [
     totalAmount: 'Avanzo di gestione: € 19.530,00',
     uploadDate: '2026-02-01T09:00:00.000Z',
     notes: 'Rendiconto economico e gestionale approvato dal Consiglio di Garanzia Istituzionale New World State Organization ai sensi della trasparenza per gli iscritti.',
-    published: true,
+    published: false,
   },
   {
     id: 'doc-nws-exp-peace-2025',
@@ -76,28 +76,57 @@ const INITIAL_DOCUMENTS: FinancialDocument[] = [
     totalAmount: 'Totale erogazioni: € 4.300,00',
     uploadDate: '2026-02-18T16:00:00.000Z',
     notes: 'Raccolta delle ricevute, rimborsi e fatture per missioni civiche internazionali e supporto a cittadini in aree di crisi umanitaria.',
-    published: true,
+    published: false,
   }
 ];
+
+let inFlightTransparencyFetch: Promise<FinancialDocument[]> | null = null;
+
+export async function fetchFinancialDocumentsFromServer(): Promise<FinancialDocument[]> {
+  if (inFlightTransparencyFetch) return inFlightTransparencyFetch;
+
+  inFlightTransparencyFetch = (async () => {
+    try {
+      const res = await fetch('/api/transparency/documents');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && Array.isArray(data.documents)) {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.documents));
+            window.dispatchEvent(new CustomEvent('nws_transparency_updated', { detail: data.documents }));
+          }
+          return data.documents;
+        }
+      }
+    } catch (e) {
+      console.warn('[TRANSPARENCY-SYNC] Network or server unreachable, using cache:', e);
+    } finally {
+      inFlightTransparencyFetch = null;
+    }
+    return getFinancialDocuments();
+  })();
+
+  return inFlightTransparencyFetch;
+}
 
 export function getFinancialDocuments(): FinancialDocument[] {
   if (typeof window === 'undefined') return INITIAL_DOCUMENTS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_DOCUMENTS));
-      return INITIAL_DOCUMENTS;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
     }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_DOCUMENTS));
-    return INITIAL_DOCUMENTS;
   } catch (err) {
     console.error('[TRANSPARENCY-GET-ERR]', err);
-    return INITIAL_DOCUMENTS;
   }
+  return INITIAL_DOCUMENTS;
+}
+
+export function getPublicFinancialDocuments(): FinancialDocument[] {
+  return getFinancialDocuments().filter(d => d.published === true);
 }
 
 export function saveFinancialDocuments(docs: FinancialDocument[]): void {
@@ -105,6 +134,13 @@ export function saveFinancialDocuments(docs: FinancialDocument[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
     window.dispatchEvent(new CustomEvent('nws_transparency_updated', { detail: docs }));
+
+    // Authoritatively synchronize with server database
+    fetch('/api/transparency/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ documents: docs })
+    }).catch(err => console.warn('[TRANSPARENCY-SERVER-SYNC-ERR]', err));
   } catch (err) {
     console.error('[TRANSPARENCY-SAVE-ERR]', err);
   }
@@ -128,6 +164,16 @@ export function updateFinancialDocument(id: string, updates: Partial<FinancialDo
   if (index === -1) return false;
   current[index] = { ...current[index], ...updates };
   saveFinancialDocuments(current);
+
+  // If published status was toggled, also send direct targeted toggle request to ensure immediate server update
+  if (updates.published !== undefined) {
+    fetch('/api/transparency/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, published: updates.published })
+    }).catch(() => {});
+  }
+
   return true;
 }
 
@@ -136,6 +182,12 @@ export function deleteFinancialDocument(id: string): boolean {
   const filtered = current.filter(d => d.id !== id);
   if (filtered.length === current.length) return false;
   saveFinancialDocuments(filtered);
+
+  // Directly call server delete endpoint
+  fetch(`/api/transparency/documents/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  }).catch(() => {});
+
   return true;
 }
 

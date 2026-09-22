@@ -129,6 +129,30 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     };
   }, []);
 
+  // Role Checks
+  const isLoggedIn = !!citizen && (!!citizen.id || !!citizen.citizenCode || !!citizen.email || !!citizen.firstName);
+
+  const checkIsCronista = () => {
+    if (!isLoggedIn) return false;
+    if (isSimulatedCronista) return true;
+    if (citizen?.isAdmin || citizen?.isCronista) return true;
+    
+    const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || citizen?.roles || citizen?.qualification || '').toLowerCase();
+    return roleStr.includes('cronista') || roleStr.includes('journalist') || roleStr.includes('reporter') || roleStr.includes('stampa');
+  };
+
+  const checkIsCustode = () => {
+    if (!isLoggedIn) return false;
+    if (isSimulatedCustode) return true;
+    if (citizen?.isAdmin || citizen?.isCustodian || citizen?.isCustode) return true;
+    
+    const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || citizen?.roles || citizen?.qualification || '').toLowerCase();
+    return roleStr.includes('custode') || roleStr.includes('custodian') || roleStr.includes('moderator') || roleStr.includes('admin');
+  };
+
+  const isCronista = checkIsCronista();
+  const isCustode = checkIsCustode();
+
   // Auto-open article if URL parameter or route specifies a noticia/article slug
   useEffect(() => {
     if (!selectedDetailArticle) {
@@ -136,10 +160,14 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
       if (typeof window !== 'undefined' && (window as any).__NWS_INITIAL_ARTICLE__) {
         const initialArt = (window as any).__NWS_INITIAL_ARTICLE__ as NewsArticle;
         if (initialArt && initialArt.id) {
-          setSelectedDetailArticle(initialArt);
-          setIsDetailModalOpen(true);
-          incrementArticleViews(initialArt.id);
-          return;
+          const isOwner = citizen && (String(initialArt.authorId) === String(citizen.id));
+          const canViewUnpublished = isLoggedIn && (isCustode || isOwner);
+          if (initialArt.status === 'pubblicato' || canViewUnpublished) {
+            setSelectedDetailArticle(initialArt);
+            setIsDetailModalOpen(true);
+            incrementArticleViews(initialArt.id);
+            return;
+          }
         }
       }
 
@@ -173,37 +201,17 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         }
 
         if (foundArticle) {
-          setSelectedDetailArticle(foundArticle);
-          setIsDetailModalOpen(true);
-          incrementArticleViews(foundArticle.id);
+          const isOwner = citizen && (String(foundArticle.authorId) === String(citizen.id));
+          const canViewUnpublished = isLoggedIn && (isCustode || isOwner);
+          if (foundArticle.status === 'pubblicato' || canViewUnpublished) {
+            setSelectedDetailArticle(foundArticle);
+            setIsDetailModalOpen(true);
+            incrementArticleViews(foundArticle.id);
+          }
         }
       }
     }
-  }, [articles]);
-
-  // Role Checks
-  const isLoggedIn = !!citizen && (!!citizen.id || !!citizen.citizenCode || !!citizen.email || !!citizen.firstName);
-
-  const checkIsCronista = () => {
-    if (!isLoggedIn) return false;
-    if (isSimulatedCronista) return true;
-    if (citizen?.isAdmin || citizen?.isCronista) return true;
-    
-    const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || citizen?.roles || citizen?.qualification || '').toLowerCase();
-    return roleStr.includes('cronista') || roleStr.includes('journalist') || roleStr.includes('reporter') || roleStr.includes('stampa');
-  };
-
-  const checkIsCustode = () => {
-    if (!isLoggedIn) return false;
-    if (isSimulatedCustode) return true;
-    if (citizen?.isAdmin || citizen?.isCustodian || citizen?.isCustode) return true;
-    
-    const roleStr = JSON.stringify(citizen?.operationalRole || citizen?.role || citizen?.roles || citizen?.qualification || '').toLowerCase();
-    return roleStr.includes('custode') || roleStr.includes('custodian') || roleStr.includes('moderator') || roleStr.includes('admin');
-  };
-
-  const isCronista = checkIsCronista();
-  const isCustode = checkIsCustode();
+  }, [articles, isLoggedIn, isCustode, citizen]);
 
   const canEditArticle = (art: NewsArticle) => {
     if (!isLoggedIn) return false;
@@ -250,6 +258,13 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
   // Filter Logic
   const filteredArticles = articles.filter((art) => {
+    // CRITICAL: Anonymous/Public viewers MUST NEVER see any article that is not published
+    if (!isLoggedIn) {
+      if (art.status !== 'pubblicato') {
+        return false;
+      }
+    }
+
     // Search query filter
     const q = searchQuery.toLowerCase().trim();
     if (q) {
@@ -268,7 +283,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     }
 
     // Tab view filter
-    if (viewTab === 'published') {
+    if (!isLoggedIn || viewTab === 'published') {
       return art.status === 'pubblicato';
     } else if (viewTab === 'my_drafts') {
       // If Digital Custodian / Admin chose to view all reporters' articles & drafts:
@@ -293,7 +308,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
       return art.status === 'in_moderazione';
     }
 
-    return true;
+    return isLoggedIn ? true : art.status === 'pubblicato';
   }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const featuredArticles = articles.filter(a => a.status === 'pubblicato' && a.isFeatured);
