@@ -1,9 +1,18 @@
-# Guida alla Distribuzione su Cloudflare Pages
+# Guida alla Distribuzione su Cloudflare (Workers & Pages) - Tutto Automatico
 
-Questa applicazione è configurata per funzionare sia su un server Express tradizionale che su **Cloudflare Pages** tramite le **Pages Functions**.
+Il Worker di backend è ora **completamente integrato nel repository** e viene distribuito automaticamente senza bisogno di copiare o aggiornare file manualmente.
 
-## Come funziona
-Le API sono state duplicate nella cartella `functions/api/`. Quando carichi il codice su Cloudflare Pages, queste verranno automaticamente distribuite come Workers "edge".
+## Come Funziona l'Automazione
+1. **Repository Unificato**: Il file `worker.js` vive direttamente nella radice del repository Git.
+2. **Build Integrata**: Il comando `npm run build` compila il frontend React e in automatico genera:
+   - I file statici in `dist/`
+   - Il worker edge in `dist/_worker.js` (per Cloudflare Pages - Advanced Mode)
+   - I file sincronizzati `worker.js` e `temp_worker.js` per Wrangler
+3. **Distribuzione Continua (CI/CD)**:
+   - **Metodo A (Cloudflare Git Integration nativa)**: Connetti il repository da Cloudflare Dashboard (Workers o Pages). A ogni `git push`, Cloudflare esegue `npm run build` e pubblica automaticamente frontend e worker.
+   - **Metodo B (GitHub Actions)**: È stato aggiunto il workflow `.github/workflows/deploy-cloudflare.yml` che esegue la build e il deploy automatico su ogni push su `main`/`master` se configurati i secrets `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID`.
+
+---
 
 ## Passaggi per la Configurazione su Cloudflare
 

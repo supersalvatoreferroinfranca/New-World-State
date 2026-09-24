@@ -1,0 +1,379 @@
+{
+  "totalPageViews": 1434,
+  "uniqueVisitors": 412,
+  "totalSessions": 530,
+  "totalTimeSpentSeconds": 128902,
+  "bounceSessions": 102,
+  "visitors": {},
+  "pageViewsByTab": {
+    "welcome": {
+      "views": 480,
+      "timeSpent": 43200,
+      "uniqueVisitors": 360,
+      "label": "Benvenuto & Portale Principale"
+    },
+    "news": {
+      "views": 420,
+      "timeSpent": 48000,
+      "uniqueVisitors": 290,
+      "label": "Quotidiano Sovrano New World State"
+    },
+    "democracy": {
+      "views": 210,
+      "timeSpent": 21000,
+      "uniqueVisitors": 160,
+      "label": "Democrazia Diretta & Votazioni"
+    },
+    "constitution": {
+      "views": 110,
+      "timeSpent": 9900,
+      "uniqueVisitors": 85,
+      "label": "Costituzione & Ordinamento"
+    },
+    "register": {
+      "views": 95,
+      "timeSpent": 9500,
+      "uniqueVisitors": 75,
+      "label": "Richiesta Cittadinanza"
+    },
+    "charter": {
+      "views": 45,
+      "timeSpent": 3600,
+      "uniqueVisitors": 35,
+      "label": "Carta dei Valori Sovrani"
+    },
+    "governance": {
+      "views": 35,
+      "timeSpent": 2800,
+      "uniqueVisitors": 30,
+      "label": "Ministeri & Struttura"
+    },
+    "privacy": {
+      "views": 25,
+      "timeSpent": 1800,
+      "uniqueVisitors": 22,
+      "label": "Privacy Protocol & Crittografia"
+    },
+    "about": {
+      "views": 14,
+      "timeSpent": 4102,
+      "uniqueVisitors": 0,
+      "label": "about"
+    }
+  },
+  "articles": {
+    "costituzione-new-world-state-sovranita-digitale": {
+      "title": "La Sovranità Digitale del New World State: Una Nuova Era Costituzionale",
+      "views": 185,
+      "uniqueVisitors": 130,
+      "totalTimeSpent": 24500,
+      "completedReads": 88
+    },
+    "democrazia-digitale-partecipativa-referendum": {
+      "title": "Democrazia Diretta: Istanze Parlamentari e Referendum Convalidati per i Cittadini",
+      "views": 140,
+      "uniqueVisitors": 98,
+      "totalTimeSpent": 17200,
+      "completedReads": 62
+    },
+    "identita-digitale-aruba-crittografia-stato": {
+      "title": "Protocollo di Riconoscimento Anagrafico e Rilascio Tessere di Cittadinanza",
+      "views": 95,
+      "uniqueVisitors": 72,
+      "totalTimeSpent": 11400,
+      "completedReads": 44
+    }
+  },
+  "geoCountries": {
+    "IT": {
+      "name": "Italia",
+      "views": 1134,
+      "visitors": 330,
+      "code": "IT"
+    },
+    "CH": {
+      "name": "Svizzera",
+      "views": 115,
+      "visitors": 32,
+      "code": "CH"
+    },
+    "FR": {
+      "name": "Francia",
+      "views": 65,
+      "visitors": 18,
+      "code": "FR"
+    },
+    "DE": {
+      "name": "Germania",
+      "views": 45,
+      "visitors": 14,
+      "code": "DE"
+    },
+    "US": {
+      "name": "Stati Uniti",
+      "views": 35,
+      "visitors": 10,
+      "code": "US"
+    },
+    "ES": {
+      "name": "Spagna",
+      "views": 25,
+      "visitors": 8,
+      "code": "ES"
+    }
+  },
+  "geoCities": {
+    "Roma": 285,
+    "Milano": 220,
+    "Napoli": 130,
+    "Torino": 95,
+    "Firenze": 80,
+    "Bologna": 65,
+    "Lugano": 45,
+    "Ginevra": 35,
+    "Parigi": 28,
+    "Altre Località": 137
+  },
+  "sources": {
+    "direct": 634,
+    "google": 490,
+    "social_telegram": 120,
+    "social_x": 85,
+    "social_whatsapp": 45,
+    "bing": 35,
+    "duckduckgo": 25
+  },
+  "devices": {
+    "mobile": 746,
+    "desktop": 618,
+    "tablet": 70
+  },
+  "browsers": {
+    "Chrome": 760,
+    "Safari": 390,
+    "Firefox": 159,
+    "Edge": 95,
+    "Samsung Internet": 30
+  },
+  "operatingSystems": {
+    "Android": 540,
+    "Windows": 494,
+    "iOS": 290,
+    "macOS": 90,
+    "Linux": 20
+  },
+  "hourlyDistribution": [
+    {
+      "hour": "00:00",
+      "views": 15,
+      "visitors": 11
+    },
+    {
+      "hour": "01:00",
+      "views": 11,
+      "visitors": 8
+    },
+    {
+      "hour": "02:00",
+      "views": 11,
+      "visitors": 8
+    },
+    {
+      "hour": "03:00",
+      "views": 9,
+      "visitors": 6
+    },
+    {
+      "hour": "04:00",
+      "views": 15,
+      "visitors": 11
+    },
+    {
+      "hour": "05:00",
+      "views": 11,
+      "visitors": 8
+    },
+    {
+      "hour": "06:00",
+      "views": 11,
+      "visitors": 8
+    },
+    {
+      "hour": "07:00",
+      "views": 8,
+      "visitors": 6
+    },
+    {
+      "hour": "08:00",
+      "views": 59,
+      "visitors": 41
+    },
+    {
+      "hour": "09:00",
+      "views": 51,
+      "visitors": 36
+    },
+    {
+      "hour": "10:00",
+      "views": 36,
+      "visitors": 25
+    },
+    {
+      "hour": "11:00",
+      "views": 30,
+      "visitors": 21
+    },
+    {
+      "hour": "12:00",
+      "views": 36,
+      "visitors": 25
+    },
+    {
+      "hour": "13:00",
+      "views": 51,
+      "visitors": 36
+    },
+    {
+      "hour": "14:00",
+      "views": 62,
+      "visitors": 43
+    },
+    {
+      "hour": "15:00",
+      "views": 58,
+      "visitors": 31
+    },
+    {
+      "hour": "16:00",
+      "views": 40,
+      "visitors": 28
+    },
+    {
+      "hour": "17:00",
+      "views": 54,
+      "visitors": 38
+    },
+    {
+      "hour": "18:00",
+      "views": 73,
+      "visitors": 51
+    },
+    {
+      "hour": "19:00",
+      "views": 79,
+      "visitors": 55
+    },
+    {
+      "hour": "20:00",
+      "views": 68,
+      "visitors": 48
+    },
+    {
+      "hour": "21:00",
+      "views": 49,
+      "visitors": 34
+    },
+    {
+      "hour": "22:00",
+      "views": 40,
+      "visitors": 28
+    },
+    {
+      "hour": "23:00",
+      "views": 11,
+      "visitors": 8
+    }
+  ],
+  "dailyHistory": [
+    {
+      "date": "2026-09-11",
+      "views": 65,
+      "visitors": 42,
+      "avgDuration": 188
+    },
+    {
+      "date": "2026-09-12",
+      "views": 90,
+      "visitors": 59,
+      "avgDuration": 263
+    },
+    {
+      "date": "2026-09-13",
+      "views": 95,
+      "visitors": 62,
+      "avgDuration": 266
+    },
+    {
+      "date": "2026-09-14",
+      "views": 80,
+      "visitors": 52,
+      "avgDuration": 201
+    },
+    {
+      "date": "2026-09-15",
+      "views": 62,
+      "visitors": 40,
+      "avgDuration": 185
+    },
+    {
+      "date": "2026-09-16",
+      "views": 61,
+      "visitors": 40,
+      "avgDuration": 267
+    },
+    {
+      "date": "2026-09-17",
+      "views": 82,
+      "visitors": 53,
+      "avgDuration": 219
+    },
+    {
+      "date": "2026-09-18",
+      "views": 109,
+      "visitors": 71,
+      "avgDuration": 246
+    },
+    {
+      "date": "2026-09-19",
+      "views": 121,
+      "visitors": 79,
+      "avgDuration": 204
+    },
+    {
+      "date": "2026-09-20",
+      "views": 111,
+      "visitors": 72,
+      "avgDuration": 233
+    },
+    {
+      "date": "2026-09-21",
+      "views": 91,
+      "visitors": 59,
+      "avgDuration": 222
+    },
+    {
+      "date": "2026-09-22",
+      "views": 84,
+      "visitors": 55,
+      "avgDuration": 218
+    },
+    {
+      "date": "2026-09-23",
+      "views": 99,
+      "visitors": 64,
+      "avgDuration": 197
+    },
+    {
+      "date": "2026-09-24",
+      "views": 141,
+      "visitors": 83,
+      "avgDuration": 235
+    }
+  ],
+  "communityEvents": {
+    "vote_cast": 158,
+    "registration_submit": 44,
+    "article_shared": 38,
+    "id_card_download": 42
+  }
+}

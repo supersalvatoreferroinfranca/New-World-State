@@ -6,9 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs && node -e \"const fs=require('fs'); if(fs.existsSync('worker.js')){ fs.copyFileSync('worker.js','dist/_worker.js'); fs.copyFileSync('worker.js','temp_worker.js'); console.log('✓ Cloudflare Worker synced to dist/_worker.js and temp_worker.js'); }\"",
     "start": "node dist/server.cjs",
     "preview": "vite preview",
+    "deploy:worker": "wrangler deploy",
+    "deploy:pages": "wrangler pages deploy dist",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },
