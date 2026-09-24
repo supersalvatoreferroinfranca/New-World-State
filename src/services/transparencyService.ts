@@ -7,6 +7,8 @@
  * and financial balance sheets for public inspection by citizens and supporters.
  */
 
+import { safeFetch } from './api';
+
 export interface FinancialDocument {
   id: string;
   title: string;
@@ -87,7 +89,7 @@ export async function fetchFinancialDocumentsFromServer(): Promise<FinancialDocu
 
   inFlightTransparencyFetch = (async () => {
     try {
-      const res = await fetch('/api/transparency/documents');
+      const res = await safeFetch('/api/transparency/documents');
       if (res.ok) {
         const data = await res.json();
         if (data && data.success && Array.isArray(data.documents)) {
@@ -129,14 +131,14 @@ export function getPublicFinancialDocuments(): FinancialDocument[] {
   return getFinancialDocuments().filter(d => d.published === true);
 }
 
-export function saveFinancialDocuments(docs: FinancialDocument[]): void {
+export async function saveFinancialDocuments(docs: FinancialDocument[]): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
     window.dispatchEvent(new CustomEvent('nws_transparency_updated', { detail: docs }));
 
     // Authoritatively synchronize with server database
-    fetch('/api/transparency/sync', {
+    await safeFetch('/api/transparency/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ documents: docs })
@@ -146,7 +148,7 @@ export function saveFinancialDocuments(docs: FinancialDocument[]): void {
   }
 }
 
-export function addFinancialDocument(doc: Omit<FinancialDocument, 'id' | 'uploadDate'>): FinancialDocument {
+export async function addFinancialDocument(doc: Omit<FinancialDocument, 'id' | 'uploadDate'>): Promise<FinancialDocument> {
   const current = getFinancialDocuments();
   const newDoc: FinancialDocument = {
     ...doc,
@@ -154,20 +156,20 @@ export function addFinancialDocument(doc: Omit<FinancialDocument, 'id' | 'upload
     uploadDate: new Date().toISOString()
   };
   const updated = [newDoc, ...current];
-  saveFinancialDocuments(updated);
+  await saveFinancialDocuments(updated);
   return newDoc;
 }
 
-export function updateFinancialDocument(id: string, updates: Partial<FinancialDocument>): boolean {
+export async function updateFinancialDocument(id: string, updates: Partial<FinancialDocument>): Promise<boolean> {
   const current = getFinancialDocuments();
   const index = current.findIndex(d => d.id === id);
   if (index === -1) return false;
   current[index] = { ...current[index], ...updates };
-  saveFinancialDocuments(current);
+  await saveFinancialDocuments(current);
 
   // If published status was toggled, also send direct targeted toggle request to ensure immediate server update
   if (updates.published !== undefined) {
-    fetch('/api/transparency/toggle', {
+    await safeFetch('/api/transparency/toggle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, published: updates.published })
@@ -177,14 +179,14 @@ export function updateFinancialDocument(id: string, updates: Partial<FinancialDo
   return true;
 }
 
-export function deleteFinancialDocument(id: string): boolean {
+export async function deleteFinancialDocument(id: string): Promise<boolean> {
   const current = getFinancialDocuments();
   const filtered = current.filter(d => d.id !== id);
   if (filtered.length === current.length) return false;
-  saveFinancialDocuments(filtered);
+  await saveFinancialDocuments(filtered);
 
   // Directly call server delete endpoint
-  fetch(`/api/transparency/documents/${encodeURIComponent(id)}`, {
+  await safeFetch(`/api/transparency/documents/${encodeURIComponent(id)}`, {
     method: 'DELETE'
   }).catch(() => {});
 

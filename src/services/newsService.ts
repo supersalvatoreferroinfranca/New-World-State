@@ -884,18 +884,67 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.articles) && data.articles.length > 0) {
-          // The server is authoritative for state and published status
           const serverArticles: NewsArticle[] = data.articles;
           const currentLocal = getArticles();
-          const serverJson = JSON.stringify(serverArticles);
-          const localJson = JSON.stringify(currentLocal);
 
-          if (serverJson !== localJson) {
-            localStorage.setItem(ARTICLES_STORAGE_KEY, serverJson);
+          // Strategia di merge intelligente:
+          // Se l'utente ha modificato un articolo localmente, la versione locale (con updatedAt più recente)
+          // non deve essere sovrascritta alla cieca dalla versione statica del server.
+          const localMap = new Map<string, NewsArticle>();
+          currentLocal.forEach(a => { if (a && a.id) localMap.set(a.id, a); });
+
+          let hasLocalNewerChanges = false;
+          const merged: NewsArticle[] = [];
+
+          for (const sArt of serverArticles) {
+            if (!sArt || !sArt.id) continue;
+            const lArt = localMap.get(sArt.id);
+            if (!lArt) {
+              merged.push(sArt);
+            } else {
+              localMap.delete(sArt.id);
+              const serverTime = new Date(sArt.updatedAt || sArt.publishedAt || sArt.createdAt || 0).getTime();
+              const localTime = new Date(lArt.updatedAt || lArt.publishedAt || lArt.createdAt || 0).getTime();
+
+              // Se la modifica locale è più recente di oltre 2 secondi rispetto al server, preserva la modifica locale!
+              if (localTime > serverTime + 2000) {
+                merged.push(lArt);
+                hasLocalNewerChanges = true;
+              } else {
+                merged.push(sArt);
+              }
+            }
+          }
+
+          // Includi eventuali nuovi articoli creati localmente che non sono ancora sul server
+          for (const remainingLocal of localMap.values()) {
+            merged.push(remainingLocal);
+            hasLocalNewerChanges = true;
+          }
+
+          // Ordina per data di pubblicazione o creazione decrescente
+          merged.sort((a, b) =>
+            new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime()
+          );
+
+          const mergedJson = JSON.stringify(merged);
+          const currentLocalJson = JSON.stringify(currentLocal);
+
+          if (mergedJson !== currentLocalJson) {
+            localStorage.setItem(ARTICLES_STORAGE_KEY, mergedJson);
             window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
           }
 
-          return serverArticles;
+          // Se sono state preservate modifiche locali più recenti, sincronizzale sul server/database
+          if (hasLocalNewerChanges) {
+            safeFetch('/api/news/sync', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ articles: merged, replaceAll: true })
+            }).catch(err => console.warn('[NEWS-SERVICE] Background sync error:', err));
+          }
+
+          return merged;
         }
       }
     } catch (err) {

@@ -1316,6 +1316,228 @@ CREATE TABLE citizens (
         }
       }
 
+      // Rotte Notizie & Articoli (PostgreSQL / Neon)
+      if (url.pathname === '/api/news/articles' && request.method === 'GET') {
+        try {
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_news_articles (
+              id VARCHAR(255) PRIMARY KEY,
+              data JSONB NOT NULL,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+
+          const rows = await queryDb("SELECT data FROM nws_news_articles ORDER BY (data->>'publishedAt') DESC NULLS LAST, updated_at DESC");
+          if (rows && rows.length > 0) {
+            const articles = rows.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data);
+            return new Response(JSON.stringify({ success: true, articles }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          // Se la tabella è ancora vuota, restituisce array vuoto
+          return new Response(JSON.stringify({ success: true, articles: [] }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/news/sync' && request.method === 'POST') {
+        try {
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_news_articles (
+              id VARCHAR(255) PRIMARY KEY,
+              data JSONB NOT NULL,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+
+          const body = await request.json();
+          const articles = body.articles || [];
+          for (const a of articles) {
+            if (!a || !a.id) continue;
+            await queryDb(`
+              INSERT INTO nws_news_articles (id, data, updated_at)
+              VALUES ($1, $2, NOW())
+              ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+            `, [String(a.id), JSON.stringify(a)]);
+          }
+          return new Response(JSON.stringify({ success: true, count: articles.length }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if ((url.pathname.startsWith('/api/news/articles/') || url.pathname.startsWith('/api/news/delete/')) && request.method === 'DELETE') {
+        try {
+          const id = decodeURIComponent(url.pathname.split('/').pop());
+          await queryDb('DELETE FROM nws_news_articles WHERE id = $1', [String(id)]);
+          return new Response(JSON.stringify({ success: true, id }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      // Rotte Trasparenza Finanziaria & Bilanci (PostgreSQL)
+      if (url.pathname === '/api/transparency/documents' && request.method === 'GET') {
+        try {
+          // Assicura che la tabella esista in PostgreSQL
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_transparency_documents (
+              id VARCHAR(255) PRIMARY KEY,
+              title TEXT NOT NULL,
+              category VARCHAR(100) NOT NULL,
+              period VARCHAR(255),
+              year INT,
+              file_name TEXT,
+              file_size VARCHAR(100),
+              file_data TEXT,
+              total_amount VARCHAR(255),
+              upload_date TEXT,
+              notes TEXT,
+              published BOOLEAN DEFAULT false,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+
+          let rows = await queryDb('SELECT * FROM nws_transparency_documents ORDER BY year DESC, upload_date DESC');
+          
+          // Se la tabella è vuota, effettua il seed iniziale con i documenti ufficiali
+          if (!rows || rows.length === 0) {
+            const seed = [
+              ['doc-nws-bs-2025-q4', 'Estratto Conto Bancario Ufficiale - IV Trimestre 2025', 'bank_statement', 'IV Trimestre (Ott - Dic 2025)', 2025, 'EstrattoConto_NWS_2025_Q4.pdf', '418 KB', 'Saldo attivo: € 28.450,00', '2026-01-10T10:00:00.000Z', 'Estratto conto bancario ufficiale del Conto Corrente IBAN IT70F0326816900052535344000 con riepilogo delle entrate da donazioni e uscite per servizi telematici.', false],
+              ['doc-nws-exp-2025-infra', 'Rendiconto Spese Infrastruttura Digitale, Server & Crittografia', 'expense_report', 'Anno 2025', 2025, 'Rendiconto_Spese_Server_Infrastruttura_2025.pdf', '624 KB', 'Totale Spese: € 8.920,00', '2026-01-15T14:30:00.000Z', 'Dettaglio analitico delle spese sostenute per hosting Cloud Run, cluster PostgreSQL, certificati SSL, domini di stato e sicurezza dei dati anagrafici dei cittadini.', false],
+              ['doc-nws-bal-2025', 'Bilancio Consuntivo & Rendiconto Istituzionale d\'Esercizio 2025', 'balance_sheet', 'Esercizio 2025', 2025, 'Bilancio_Consuntivo_NWS_2025.pdf', '890 KB', 'Avanzo di gestione: € 19.530,00', '2026-02-01T09:00:00.000Z', 'Rendiconto economico e gestionale approvato dal Consiglio di Garanzia Istituzionale New World State Organization ai sensi della trasparenza per gli iscritti.', false],
+              ['doc-nws-exp-peace-2025', 'Giustificativi & Documenti di Spesa: Programma Peacekeeper & Aiuti Civici', 'receipt_invoice', 'Secondo Semestre 2025', 2025, 'Giustificativi_Missioni_Civiche_2025_H2.pdf', '1.4 MB', 'Totale erogazioni: € 4.300,00', '2026-02-18T16:00:00.000Z', 'Raccolta delle ricevute, rimborsi e fatture per missioni civiche internazionali e supporto a cittadini in aree di crisi umanitaria.', false]
+            ];
+            for (const s of seed) {
+              await queryDb(`
+                INSERT INTO nws_transparency_documents (id, title, category, period, year, file_name, file_size, total_amount, upload_date, notes, published)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                ON CONFLICT (id) DO NOTHING
+              `, s);
+            }
+            rows = await queryDb('SELECT * FROM nws_transparency_documents ORDER BY year DESC, upload_date DESC');
+          }
+
+          const documents = (rows || []).map(r => ({
+            id: r.id,
+            title: r.title,
+            category: r.category,
+            period: r.period,
+            year: r.year,
+            fileName: r.file_name,
+            fileSize: r.file_size,
+            fileData: r.file_data,
+            totalAmount: r.total_amount,
+            uploadDate: r.upload_date,
+            notes: r.notes,
+            published: Boolean(r.published)
+          }));
+
+          return new Response(JSON.stringify({ success: true, documents }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/transparency/sync' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          const docs = body.documents || [];
+          for (const doc of docs) {
+            if (!doc || !doc.id) continue;
+            await queryDb(`
+              INSERT INTO nws_transparency_documents (
+                id, title, category, period, year, file_name, file_size, file_data, total_amount, upload_date, notes, published, updated_at
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+              ON CONFLICT (id) DO UPDATE SET
+                title = EXCLUDED.title,
+                category = EXCLUDED.category,
+                period = EXCLUDED.period,
+                year = EXCLUDED.year,
+                file_name = EXCLUDED.file_name,
+                file_size = EXCLUDED.file_size,
+                file_data = COALESCE(EXCLUDED.file_data, nws_transparency_documents.file_data),
+                total_amount = EXCLUDED.total_amount,
+                notes = EXCLUDED.notes,
+                published = EXCLUDED.published,
+                updated_at = NOW()
+            `, [
+              doc.id,
+              doc.title || 'Documento',
+              doc.category || 'bank_statement',
+              doc.period || '',
+              doc.year || 2025,
+              doc.fileName || 'doc.pdf',
+              doc.fileSize || 'N/A',
+              doc.fileData || null,
+              doc.totalAmount || null,
+              doc.uploadDate || new Date().toISOString(),
+              doc.notes || '',
+              Boolean(doc.published)
+            ]);
+          }
+          return new Response(JSON.stringify({ success: true, count: docs.length }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/transparency/toggle' && request.method === 'POST') {
+        try {
+          const { id, published } = await request.json();
+          await queryDb('UPDATE nws_transparency_documents SET published = $1, updated_at = NOW() WHERE id = $2', [Boolean(published), String(id)]);
+          return new Response(JSON.stringify({ success: true, id, published }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if ((url.pathname.startsWith('/api/transparency/documents/') || url.pathname.startsWith('/api/transparency/delete/')) && request.method === 'DELETE') {
+        try {
+          const id = decodeURIComponent(url.pathname.split('/').pop());
+          await queryDb('DELETE FROM nws_transparency_documents WHERE id = $1', [String(id)]);
+          return new Response(JSON.stringify({ success: true, id }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
       // Rotta: Test Aruba PHP Bridge
       if (url.pathname === '/api/test-aruba') {
         const uploaderUrl = env.ARUBA_UPLOADER_URL ? env.ARUBA_UPLOADER_URL.trim() : '';

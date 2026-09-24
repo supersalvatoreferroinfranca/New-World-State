@@ -125,7 +125,7 @@ export default function AdminTransparencyTab() {
     else return (bytes / 1048576).toFixed(1) + ' MB';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle.trim()) {
       setFeedbackMessage({ type: 'error', text: 'Inserisci un titolo per il documento.' });
@@ -135,7 +135,7 @@ export default function AdminTransparencyTab() {
     const fileSizeStr = selectedFile ? formatFileSize(selectedFile.size) : 'PDF Ufficiale (350 KB)';
     const fileNameStr = selectedFile ? selectedFile.name : `${formTitle.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
 
-    addFinancialDocument({
+    await addFinancialDocument({
       title: formTitle.trim(),
       category: formCategory,
       period: formPeriod.trim() || `Esercizio ${formYear}`,
@@ -161,17 +161,17 @@ export default function AdminTransparencyTab() {
     loadDocs();
   };
 
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = async (id: string, title: string) => {
     if (window.confirm(`Sei sicuro di voler eliminare "${title}" dall'archivio trasparenza?`)) {
-      deleteFinancialDocument(id);
+      await deleteFinancialDocument(id);
       loadDocs();
       setFeedbackMessage({ type: 'success', text: 'Documento rimosso correttamente.' });
     }
   };
 
-  const handleTogglePublish = (doc: FinancialDocument) => {
+  const handleTogglePublish = async (doc: FinancialDocument) => {
     const nextState = !doc.published;
-    const success = updateFinancialDocument(doc.id, { published: nextState });
+    const success = await updateFinancialDocument(doc.id, { published: nextState });
     if (success) {
       loadDocs();
       setFeedbackMessage({ 
@@ -183,11 +183,11 @@ export default function AdminTransparencyTab() {
     }
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingDoc) return;
 
-    updateFinancialDocument(editingDoc.id, {
+    await updateFinancialDocument(editingDoc.id, {
       title: editingDoc.title,
       category: editingDoc.category,
       period: editingDoc.period,
