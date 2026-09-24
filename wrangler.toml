@@ -1,0 +1,17 @@
+name = "newworldstate"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist"
+
+[vars]
+DATABASE_URL = "postgresql://neondb_owner:npg_wBMp0yNKrTe8@ep-cold-feather-abag43nr.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+ADMIN_EMAIL = "supersalvatoreferroinfranca@gmail.com"
+ARUBA_UPLOADER_URL = "https://www.newworldstate.org/nws-uploader.php"
+SMTP_FROM = "noreply@newworldstate.org"
+SMTP_FROM_NAME = "Anagrafe New World State"
+SMTP_HOST = "smtps.aruba.it"
+SMTP_PORT = "465"
+SMTP_USER = "noreply@newworldstate.org"
