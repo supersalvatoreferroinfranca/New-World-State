@@ -893,11 +893,6 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
           if (serverJson !== localJson) {
             localStorage.setItem(ARTICLES_STORAGE_KEY, serverJson);
             window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
-
-            // Check and trigger background translation for missing languages
-            setTimeout(() => {
-              auditAndTranslateMissingArticles();
-            }, 1000);
           }
 
           return serverArticles;
@@ -1633,53 +1628,15 @@ export function triggerBackgroundTranslation(articleId: string): void {
 }
 
 /**
- * Funzione automatica di controllo della presenza delle traduzioni per tutti gli articoli pregressi e pubblicati.
- * Traduce in background qualsiasi lingua mancante senza richiedere alcun intervento manuale da parte dell'operatore.
+ * Funzione di controllo della presenza delle traduzioni per gli articoli.
+ * Le traduzioni automatiche vengono eseguite su richiesta specifica dell'utente o in fase di redazione
+ * per prevenire sovraccarichi e quote exhaustion su Gemini API.
  */
-let isClientAuditRunning = false;
 export async function auditAndTranslateMissingArticles(): Promise<void> {
-  if (isClientAuditRunning) return;
-  isClientAuditRunning = true;
-
-  try {
-    const allOfficialLangs: NewsLanguage[] = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
-    const articles = getArticles();
-
-    // Filtra gli articoli con traduzioni mancanti o incomplete
-    const articlesNeedingTranslation = articles.filter(art => {
-      if (!art || !art.title || !art.content) return false;
-      return allOfficialLangs.some(lang => {
-        const t = art.translations?.[lang];
-        return !t || !t.title || !t.content;
-      });
-    });
-
-    if (articlesNeedingTranslation.length > 0) {
-      console.log(`[NEWS-AUDIT] Trovati ${articlesNeedingTranslation.length} articoli con traduzioni mancanti. Avvio traduzione automatica fluida...`);
-      
-      // Invia anche un trigger rapido all'audit server-side
-      safeFetch('/api/news/audit-translations', { method: 'POST' }).catch(() => {});
-
-      // Elabora ciascun articolo in sequenza con leggero delay
-      for (let i = 0; i < articlesNeedingTranslation.length; i++) {
-        const art = articlesNeedingTranslation[i];
-        setTimeout(() => {
-          triggerBackgroundTranslation(art.id);
-        }, i * 2000);
-      }
-    }
-  } catch (err) {
-    console.warn('[NEWS-AUDIT] Controllo automatico traduzioni completato con avviso:', err);
-  } finally {
-    setTimeout(() => {
-      isClientAuditRunning = false;
-    }, 10000);
-  }
+  // L'audit automatico di massa in background è disattivato per proteggere la disponibilità del servizio.
+  // Le traduzioni avvengono on-demand alla visualizzazione o modifica da parte dell'utente.
+  return;
 }
 
-// Avvio automatico in background del controllo traduzioni al caricamento
-if (typeof window !== 'undefined') {
-  setTimeout(() => {
-    auditAndTranslateMissingArticles();
-  }, 2500);
-}
+// Le traduzioni automatiche vengono eseguite in modo reattivo alla creazione/modifica degli articoli
+// o su richiesta specifica per evitare saturazione delle quote API Gemini.

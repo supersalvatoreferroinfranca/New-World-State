@@ -16,7 +16,7 @@ export async function enhanceLocationDescription(description: string, address: s
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       contents: prompt,
     });
     return response.text?.trim() || description;
@@ -45,7 +45,7 @@ export async function getFormAssistantTips(currentStep: number, formData: any) {
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       contents: prompt,
     });
     return response.text?.trim() || null;

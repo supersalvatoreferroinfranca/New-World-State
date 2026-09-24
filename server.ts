@@ -49,17 +49,16 @@ async function generateGeminiContentWithFallback(
     preferredModel,
     'gemini-3.8-flash',
     'gemini-flash-latest',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
+    'gemini-3.1-flash-lite',
     'gemini-3.1-pro-preview'
   ];
   // Deduplicate list preserving order
-  const modelsToTry = Array.from(new Set(candidateModels));
+  const modelsToTry = Array.from(new Set(candidateModels.filter(Boolean)));
 
   let lastError: any = null;
 
   for (const model of modelsToTry) {
-    const maxRetries = 1;
+    const maxRetries = 2;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const response = await ai.models.generateContent({
@@ -75,40 +74,46 @@ async function generateGeminiContentWithFallback(
         const isQuotaExhausted =
           errMsg.includes('resource_exhausted') ||
           errMsg.includes('quota exceeded') ||
-          errMsg.includes('limit: 25000000');
+          errMsg.includes('quota') ||
+          errMsg.includes('rate-limit') ||
+          errMsg.includes('rate limit') ||
+          errMsg.includes('limit: 0') ||
+          errMsg.includes('limit: 25000000') ||
+          errStatus === 'RESOURCE_EXHAUSTED' ||
+          errStatus === 429;
         const isTransient =
           errMsg.includes('503') ||
           errMsg.includes('high demand') ||
           errMsg.includes('unavailable') ||
-          errMsg.includes('429') ||
+          errMsg.includes('spikes in demand') ||
           errStatus === 'UNAVAILABLE' ||
-          errStatus === 503 ||
-          errStatus === 429;
+          errStatus === 503;
 
         if (isQuotaExhausted) {
-          console.warn(`[GEMINI-QUOTA] Quota reached for "${model}". Immediately falling back to next available model...`);
+          console.warn(`[GEMINI-QUOTA] Quota o rate-limit raggiunto per "${model}". Passaggio al modello successivo...`);
           // Don't retry the same exhausted model, immediately break to try next model in loop
           break;
         }
 
         if (isTransient) {
-          console.warn(`[GEMINI-RETRY] Model "${model}" temporarily busy (attempt ${attempt + 1}/${maxRetries + 1}): ${err?.message}`);
+          const delay = (attempt + 1) * 1200;
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 800));
+            console.warn(`[GEMINI-RETRY] Modello "${model}" momentaneamente occupato (tentativo ${attempt + 1}/${maxRetries + 1}). Attesa di ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
-          console.warn(`[GEMINI-FALLBACK] Falling back from "${model}" to next model...`);
+          console.warn(`[GEMINI-FALLBACK] Modello "${model}" non disponibile al momento, passaggio al modello successivo...`);
           break;
         } else {
-          // If search tool or other parameter is incompatible with specific model, try next
-          console.warn(`[GEMINI-FALLBACK] Model "${model}" encountered error: ${err?.message}. Trying next model...`);
+          // If model is unsupported, deprecated or incompatible, try next
+          console.warn(`[GEMINI-FALLBACK] Modello "${model}" ha restituito un errore: ${err?.message}. Passaggio al modello successivo...`);
           break;
         }
       }
     }
   }
 
-  throw lastError || new Error('Tutti i tentativi di generazione con i modelli AI sono falliti.');
+  throw lastError || new Error('I modelli di intelligenza artificiale sono temporaneamente non disponibili.');
 }
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -4615,7 +4620,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
               required: ['title', 'description', 'content']
             }
           },
-          'gemini-2.5-flash'
+          'gemini-3.8-flash'
         );
 
         const jsonText = response.text;
@@ -4782,7 +4787,7 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
               required: ['translations']
             }
           },
-          'gemini-2.5-flash'
+          'gemini-3.8-flash'
         );
 
         const jsonText = response.text;
@@ -4811,13 +4816,22 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
 
         return res.json({ success: true, translations });
       } catch (err: any) {
-        console.error('[NEWS-AI-TRANSLATE-ERR]', err);
-        const isKeyError = err.message && (err.message.includes('GEMINI_API_KEY') || err.message.includes('API key'));
-        return res.status(500).json({
+        console.warn('[NEWS-AI-TRANSLATE-WARN] Servizio traduzione AI:', err?.message || err);
+        const isKeyError = err?.message && (err.message.includes('GEMINI_API_KEY') || err.message.includes('API key'));
+        const isBusy = err?.message && (
+          err.message.includes('503') ||
+          err.message.includes('high demand') ||
+          err.message.includes('temporaneamente') ||
+          err.message.includes('UNAVAILABLE')
+        );
+        return res.status(isBusy ? 503 : 500).json({
           success: false,
+          busy: !!isBusy,
           message: isKeyError
             ? 'La chiave API di Gemini ("GEMINI_API_KEY") non è configurata nei segreti del portale.'
-            : 'Impossibile tradurre l\'articolo con l\'AI: ' + err.message
+            : isBusy
+              ? 'I modelli di traduzione AI sono temporaneamente ad alta richiesta. I contenuti rimangono disponibili nella lingua principale.'
+              : 'Impossibile tradurre l\'articolo con l\'AI: ' + (err?.message || 'errore imprevisto')
         });
       }
     });
@@ -5238,7 +5252,7 @@ Formato: {"enQuery": "...", "itQuery": "..."}`;
           const expPromise = generateGeminiContentWithFallback(
             expandPrompt,
             { responseMimeType: 'application/json' },
-            'gemini-2.5-flash'
+            'gemini-3.8-flash'
           );
           const timeoutPromise = new Promise<any>((_, reject) => setTimeout(() => reject(new Error('AI expand timeout')), 2500));
           const expRes = await Promise.race([expPromise, timeoutPromise]);
@@ -5628,7 +5642,7 @@ REGOLE TASSATIVE:
           const aiPromise = generateGeminiContentWithFallback(
             prompt,
             { responseMimeType: 'application/json' },
-            'gemini-2.5-flash'
+            'gemini-3.8-flash'
           );
           const aiTimeoutPromise = new Promise<any>((_, reject) => setTimeout(() => reject(new Error('AI polish timeout')), 2500));
           const response = await Promise.race([aiPromise, aiTimeoutPromise]);
@@ -10813,35 +10827,41 @@ REGOLE DI TRADUZIONE:
 
 Genera un JSON con chiave "translations" contenente un oggetto per ciascuna delle lingue richieste ("${targetLangs.join('", "')}"), ciascuno con le proprietà "title", "intro", "content" e "tags".`;
 
-      const response = await generateGeminiContentWithFallback(
-        prompt,
-        {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              translations: {
-                type: Type.OBJECT,
-                properties: targetLangs.reduce((acc, lang) => ({
-                  ...acc,
-                  [lang]: {
-                    type: Type.OBJECT,
-                    properties: { 
-                      title: { type: Type.STRING }, 
-                      intro: { type: Type.STRING }, 
-                      content: { type: Type.STRING }, 
-                      tags: { type: Type.ARRAY, items: { type: Type.STRING } } 
-                    },
-                    required: ['title', 'intro', 'content']
-                  }
-                }), {})
-              }
-            },
-            required: ['translations']
-          }
-        },
-        'gemini-2.5-flash'
-      );
+      let response: any = null;
+      try {
+        response = await generateGeminiContentWithFallback(
+          prompt,
+          {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                translations: {
+                  type: Type.OBJECT,
+                  properties: targetLangs.reduce((acc, lang) => ({
+                    ...acc,
+                    [lang]: {
+                      type: Type.OBJECT,
+                      properties: { 
+                        title: { type: Type.STRING }, 
+                        intro: { type: Type.STRING }, 
+                        content: { type: Type.STRING }, 
+                        tags: { type: Type.ARRAY, items: { type: Type.STRING } } 
+                      },
+                      required: ['title', 'intro', 'content']
+                    }
+                  }), {})
+                }
+              },
+              required: ['translations']
+            }
+          },
+          'gemini-3.8-flash'
+        );
+      } catch (genErr: any) {
+        console.warn('[NEWS-I18N-WARN] Generazione traduzione AI non riuscita:', genErr?.message || genErr);
+        return {};
+      }
 
       let generatedTranslations: Record<string, any> = {};
       if (response.text) {
@@ -10912,7 +10932,7 @@ Genera un JSON con chiave "translations" contenente un oggetto per ciascuna dell
         fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`).catch(() => {});
         fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(newsSitemapUrl)}`).catch(() => {});
       } catch (err: any) {
-        console.error(`[NEWS-I18N] Errore in background task: ${err.message}`);
+        console.warn(`[NEWS-I18N] Avviso in background task: ${err?.message || err}`);
       }
     }
 
@@ -10953,13 +10973,24 @@ Genera un JSON con chiave "translations" contenente un oggetto per ciascuna dell
               await new Promise(r => setTimeout(r, 1200));
             } catch (itemErr: any) {
               console.warn(`[NEWS-I18N-AUDIT] Errore durante la traduzione di "${article.title}":`, itemErr.message);
+              const errMsg = (itemErr?.message || '').toLowerCase();
+              const isQuota =
+                errMsg.includes('quota') ||
+                errMsg.includes('resource_exhausted') ||
+                errMsg.includes('rate-limit') ||
+                itemErr?.status === 'RESOURCE_EXHAUSTED' ||
+                itemErr?.code === 429;
+              if (isQuota) {
+                console.warn('[NEWS-I18N-AUDIT] Quota o rate-limit API raggiunto. Sospensione ordinata del processo di audit.');
+                break;
+              }
             }
           }
         }
 
-        console.log(`[NEWS-I18N-AUDIT] Controllo e traduzione automatica completati con successo. Articoli elaborati: ${translatedCount}`);
+        console.log(`[NEWS-I18N-AUDIT] Controllo e traduzione automatica completati. Articoli elaborati: ${translatedCount}`);
       } catch (auditErr: any) {
-        console.error('[NEWS-I18N-AUDIT] Errore durante audit traduzioni:', auditErr.message);
+        console.warn('[NEWS-I18N-AUDIT] Avviso durante audit traduzioni:', auditErr?.message || auditErr);
       } finally {
         isAuditRunning = false;
       }
@@ -10988,15 +11019,13 @@ Genera un JSON con chiave "translations" contenente un oggetto per ciascuna dell
           articleId
         });
       } catch (err: any) {
-        console.error('[API-TRANSLATE-ERR]', err.message);
-        return res.status(500).json({ success: false, message: 'Errore durante la traduzione automatica: ' + err.message });
+        console.warn('[API-TRANSLATE-WARN]', err?.message || err);
+        return res.status(503).json({ success: false, busy: true, message: 'Servizio traduzione momentaneamente sovraccarico. I contenuti rimangono disponibili nella lingua principale.' });
       }
     });
 
-    // Avvio automatico dell'audit delle traduzioni su server boot dopo 5 secondi
-    setTimeout(() => {
-      auditAndTranslateAllServerArticles().catch(console.error);
-    }, 5000);
+    // L'audit delle traduzioni viene gestito on-demand tramite /api/news/audit-translations o al salvataggio degli articoli
+    // per non saturare la quota API Gemini su ogni riavvio del server.
 
     // Explicit PWA Endpoints for Chromium / Brave / iOS Manifest and Service Worker Delivery
     app.get(['/manifest.json', '/site.webmanifest', '/manifest.webmanifest'], (req, res) => {
