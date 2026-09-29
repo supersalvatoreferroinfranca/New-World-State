@@ -866,29 +866,40 @@ async function startServer() {
           ar: 'ar'
         };
 
-        const targetLang = googleLangMap[lang] || 'it';
+        const targetLang = googleLangMap[lang] || lang || 'it';
         const cleanChunk = text.replace(/https?:\/\/\S+/g, '').substring(0, 200).trim();
         
         if (!cleanChunk) {
           return res.status(400).json({ error: 'Cleaned text chunk is empty' });
         }
 
-        const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanChunk)}&tl=${targetLang}&client=tw-ob`;
+        const endpoints = [
+          `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanChunk)}&tl=${encodeURIComponent(targetLang)}&client=tw-ob`,
+          `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanChunk)}&tl=${encodeURIComponent(targetLang)}&client=gtx`
+        ];
 
-        const ttsResponse = await fetch(googleTtsUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': 'https://translate.google.com/'
+        let buffer: Buffer | null = null;
+        for (const ep of endpoints) {
+          try {
+            const ttsResponse = await fetch(ep, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Referer': 'https://translate.google.com/'
+              }
+            });
+            if (ttsResponse.ok) {
+              const arrayBuffer = await ttsResponse.arrayBuffer();
+              buffer = Buffer.from(arrayBuffer);
+              break;
+            }
+          } catch (e) {
+            console.warn('[TTS Proxy] Fetch failed for', ep, e);
           }
-        });
-
-        if (!ttsResponse.ok) {
-          console.error(`[TTS Proxy] Google TTS API returned status ${ttsResponse.status}`);
-          return res.status(502).json({ error: 'Failed to fetch TTS audio stream' });
         }
 
-        const arrayBuffer = await ttsResponse.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
+        if (!buffer || buffer.length === 0) {
+          return res.status(502).json({ error: 'Failed to fetch TTS audio stream' });
+        }
 
         res.set({
           'Content-Type': 'audio/mpeg',

@@ -81,7 +81,6 @@ class TtsAudioPlayer {
       this.nextAudioPreload = null;
     } else {
       audio = new Audio();
-      audio.src = audioUrl;
     }
 
     this.activeAudio = audio;
@@ -108,6 +107,38 @@ class TtsAudioPlayer {
       if (this.playSessionId !== sessionId || !this.isPlaying) return;
 
       console.warn(`[Fallback Audio TTS] Chunk ${this.currentChunkIndex} stream error:`, e);
+
+      // Attempt native speech synthesis fallback for this chunk
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          const utt = new SpeechSynthesisUtterance(chunkText);
+          utt.lang = this.currentLang;
+          utt.rate = this.playbackRate;
+          utt.onend = () => {
+            this.currentChunkIndex++;
+            if (this.currentChunkIndex < this.chunks.length && this.isPlaying) {
+              this.playNextChunk();
+            } else {
+              this.isPlaying = false;
+              this.onEndCallback?.();
+            }
+          };
+          utt.onerror = () => {
+            this.currentChunkIndex++;
+            if (this.currentChunkIndex < this.chunks.length && this.isPlaying) {
+              this.playNextChunk();
+            } else {
+              this.isPlaying = false;
+              this.onErrorCallback?.(e);
+            }
+          };
+          window.speechSynthesis.speak(utt);
+          return;
+        } catch (synthErr) {
+          // Continue with standard skip
+        }
+      }
+
       // Skip problematic chunk and continue
       this.currentChunkIndex++;
       if (this.currentChunkIndex < this.chunks.length) {
@@ -141,6 +172,38 @@ class TtsAudioPlayer {
 
           console.warn(`[Fallback Audio TTS] Play exception for chunk ${this.currentChunkIndex}:`, err);
           cleanup();
+
+          // Native fallback for rejected audio element play
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            try {
+              const utt = new SpeechSynthesisUtterance(chunkText);
+              utt.lang = this.currentLang;
+              utt.rate = this.playbackRate;
+              utt.onend = () => {
+                this.currentChunkIndex++;
+                if (this.currentChunkIndex < this.chunks.length && this.isPlaying) {
+                  this.playNextChunk();
+                } else {
+                  this.isPlaying = false;
+                  this.onEndCallback?.();
+                }
+              };
+              utt.onerror = () => {
+                this.currentChunkIndex++;
+                if (this.currentChunkIndex < this.chunks.length && this.isPlaying) {
+                  this.playNextChunk();
+                } else {
+                  this.isPlaying = false;
+                  this.onErrorCallback?.(err);
+                }
+              };
+              window.speechSynthesis.speak(utt);
+              return;
+            } catch (synthErr) {
+              // Proceed to next chunk
+            }
+          }
+
           this.currentChunkIndex++;
           if (this.currentChunkIndex < this.chunks.length) {
             this.playNextChunk();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { NewsArticle, NewsCategory, NewsLanguage } from '../../types/news';
-import { getCategories, getArticles, incrementArticleViews, getLocalizedArticle, translateArticleWithAI, autoTranslateArticleOnDemand } from '../../services/newsService';
+import { getCategories, getArticles, incrementArticleViews, getLocalizedArticle, translateArticleWithAI, autoTranslateArticleOnDemand, getLocalizedCategoryTitle } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
 import { Language } from '../../constants/translations';
 import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/textFormatter';
@@ -124,17 +124,13 @@ export default function ArticleDetailModal({
       prevArticleIdRef.current = article.id;
       setCurrentArticle(article);
 
-      let initialLang: NewsLanguage = 'it';
+      let initialLang: NewsLanguage = (currentLanguage as NewsLanguage) || 'it';
       if (typeof window !== 'undefined') {
         const searchParams = new URLSearchParams(window.location.search);
         const langParam = (searchParams.get('lang') || searchParams.get('hl'))?.toLowerCase() as NewsLanguage;
         if (langParam && SUPPORTED_LANG_OPTIONS.some(l => l.code === langParam)) {
           initialLang = langParam;
-        } else if (currentLanguage && SUPPORTED_LANG_OPTIONS.some(l => l.code === currentLanguage)) {
-          initialLang = currentLanguage as NewsLanguage;
         }
-      } else if (currentLanguage && SUPPORTED_LANG_OPTIONS.some(l => l.code === currentLanguage)) {
-        initialLang = currentLanguage as NewsLanguage;
       }
       setActiveLang(initialLang);
     } else {
@@ -149,6 +145,10 @@ export default function ArticleDetailModal({
           }
         };
       });
+      // Also update activeLang if visitor switched currentLanguage
+      if (currentLanguage && SUPPORTED_LANG_OPTIONS.some(l => l.code === currentLanguage)) {
+        setActiveLang(currentLanguage as NewsLanguage);
+      }
     }
   }, [article?.id, currentLanguage]);
 
@@ -701,7 +701,10 @@ export default function ArticleDetailModal({
   const category = categories.find(c => c.id === activeArticle.categoryId);
   const allArticles = getArticles();
 
-  const localizedCategoryName = (activeArticle.categoryId && CATEGORY_LOCALIZATIONS[activeArticle.categoryId]?.[activeLang]) || category?.name || tLang('sovereignNews', 'Notizia Sovrana');
+  const localizedCategoryName = (activeArticle.categoryId && CATEGORY_LOCALIZATIONS[activeArticle.categoryId]?.[activeLang]) ||
+    getLocalizedCategoryTitle(category, activeLang) ||
+    category?.name ||
+    tLang('sovereignNews', 'Notizia Sovrana');
 
   const localizedAuthorRole = (activeArticle.authorRole && AUTHOR_ROLE_LOCALIZATIONS[activeArticle.authorRole]?.[activeLang]) || activeArticle.authorRole || tLang('officialReporter', 'Cronista Ufficiale');
 

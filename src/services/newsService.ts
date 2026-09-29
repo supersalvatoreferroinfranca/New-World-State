@@ -388,7 +388,7 @@ O New World State 1.0 estabelece medidas diretas e irrevogáveis:
   {
     id: 'art-104',
     title: 'L\'Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali',
-    slug: 'limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali',
+    slug: 'limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali',
     categoryId: 'cat-politica',
     intro: 'Analisi di approfondimento geopolitico sulla paralisi del Consiglio di Sicurezza ONU nei conflitti contemporanei e sulla necessità di nuove strutture di governance globale decentralizzata.',
     content: `Il sistema di sicurezza collettiva nato nel 1945 mostra crepe strutturali non più rinviabili. Di fronte all'escalation delle crisi internazionali e al ricorso sistematico al diritto di veto da parte dei membri permanenti del Consiglio di Sicurezza, le Nazioni Unite si trovano in uno stato di sostanziale paralisi operativa.
@@ -1549,7 +1549,24 @@ export function getLocalizedArticle(
   // Check fallback pre-translated dictionary
   const slug = (article.slug || '').trim().toLowerCase();
   const id = (article.id || '').trim().toLowerCase();
+
+  const idToSlugMap: Record<string, string> = {
+    'art-111': 'il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state',
+    'art-104': 'limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali',
+    'art-103': 'infrastrutture-decentralizzate-test-nodo-rete-ridondanza',
+    'art-101': 'protocollo-trasparenza-finanziaria-tutela-privacy',
+    'art-102': 'inaugurazione-registro-globale-democrazia-diretta-10',
+    'art-105': 'fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita',
+    'art-106': 'accademia-dei-custodi-diritto-naturale-programma-educativo-universale',
+    'art-107': 'carta-diritti-digitali-inviolabilita-sovranita-individuale',
+    'art-108': 'economia-circolare-moneta-comunita-superare-usura-bancaria',
+    'art-109': 'intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale',
+    'art-110': 'patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte'
+  };
+
+  const mappedSlug = idToSlugMap[id] || (slug ? slug.replace('conflictti', 'conflitti') : '');
   const fallbackTrans = (slug && FULL_ARTICLE_TRANSLATIONS[slug]?.[lang as NewsLanguage]) ||
+                        (mappedSlug && FULL_ARTICLE_TRANSLATIONS[mappedSlug]?.[lang as NewsLanguage]) ||
                         (id && FULL_ARTICLE_TRANSLATIONS[id]?.[lang as NewsLanguage]);
 
   const translation = article.translations?.[lang as NewsLanguage];
@@ -1689,3 +1706,35 @@ export async function auditAndTranslateMissingArticles(): Promise<void> {
 
 // Le traduzioni automatiche vengono eseguite in modo reattivo alla creazione/modifica degli articoli
 // o su richiesta specifica per evitare saturazione delle quote API Gemini.
+
+/**
+ * Restituisce l'etichetta localizzata della categoria nella lingua del visitatore
+ */
+export function getLocalizedCategoryTitle(
+  cat: { id?: string; name?: string; slug?: string } | null | undefined,
+  lang: string
+): string {
+  if (!cat || !cat.name) return 'Notizia';
+  const targetLang = (lang || 'it').toLowerCase();
+  
+  if (cat.id && CATEGORY_LOCALIZATIONS[cat.id]?.[targetLang as NewsLanguage]) {
+    return CATEGORY_LOCALIZATIONS[cat.id][targetLang as NewsLanguage];
+  }
+  
+  // Try matching by slug or known Italian name
+  const catSlug = (cat.slug || '').toLowerCase();
+  for (const [key, item] of Object.entries(CATEGORY_LOCALIZATIONS)) {
+    if (
+      item.it === cat.name || 
+      item.en === cat.name || 
+      (catSlug && catSlug.includes(key.replace('cat-', '')))
+    ) {
+      if (item[targetLang as NewsLanguage]) {
+        return item[targetLang as NewsLanguage];
+      }
+    }
+  }
+  
+  return cat.name;
+}
+

@@ -1316,6 +1316,93 @@ CREATE TABLE citizens (
         }
       }
 
+      // Rotta: Text-to-Speech Proxy (per fallback vocale TTS quando l'OS non dispone di voci native)
+      if (url.pathname === '/api/tts' && request.method === 'GET') {
+        try {
+          const text = (url.searchParams.get('text') || '').trim();
+          const lang = (url.searchParams.get('lang') || 'it').toLowerCase().trim();
+
+          if (!text) {
+            return new Response(JSON.stringify({ error: 'Text parameter is required' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const googleLangMap = {
+            it: 'it',
+            en: 'en',
+            fr: 'fr',
+            es: 'es',
+            pt: 'pt',
+            ru: 'ru',
+            hi: 'hi',
+            bn: 'bn',
+            zh: 'zh-CN',
+            ja: 'ja',
+            ar: 'ar',
+            de: 'de'
+          };
+
+          const targetLang = googleLangMap[lang] || lang || 'it';
+          const cleanChunk = text.replace(/https?:\/\/\S+/g, '').substring(0, 200).trim();
+
+          if (!cleanChunk) {
+            return new Response(JSON.stringify({ error: 'Cleaned text chunk is empty' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          // Try primary and secondary Google TTS endpoints
+          const endpoints = [
+            `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanChunk)}&tl=${encodeURIComponent(targetLang)}&client=tw-ob`,
+            `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanChunk)}&tl=${encodeURIComponent(targetLang)}&client=gtx`
+          ];
+
+          let audioBuffer = null;
+          for (const ep of endpoints) {
+            try {
+              const res = await fetch(ep, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Referer': 'https://translate.google.com/'
+                }
+              });
+              if (res.ok) {
+                audioBuffer = await res.arrayBuffer();
+                break;
+              }
+            } catch (fetchErr) {
+              console.warn('[TTS Proxy] Fetch failed for endpoint', ep, fetchErr);
+            }
+          }
+
+          if (!audioBuffer || audioBuffer.byteLength === 0) {
+            return new Response(JSON.stringify({ error: 'Failed to fetch TTS audio stream from upstream providers' }), {
+              status: 502,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          return new Response(audioBuffer, {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'audio/mpeg',
+              'Content-Length': audioBuffer.byteLength.toString(),
+              'Cache-Control': 'public, max-age=86400',
+              'Accept-Ranges': 'bytes'
+            }
+          });
+        } catch (err) {
+          console.error('[TTS Proxy Error]:', err?.message || err);
+          return new Response(JSON.stringify({ error: 'Internal TTS Server Error' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
       // Rotte Notizie & Articoli (PostgreSQL / Neon)
       if (url.pathname === '/api/news/articles' && request.method === 'GET') {
         try {

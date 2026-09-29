@@ -10,7 +10,8 @@ import {
   syncArticlesWithServer,
   deleteArticle,
   getLocalizedArticle,
-  generateSlug
+  generateSlug,
+  getLocalizedCategoryTitle
 } from '../../services/newsService';
 import ArticleFormModal from './ArticleFormModal';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -566,7 +567,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   className="w-2.5 h-2.5 rounded-full"
                   style={{ backgroundColor: cat.color || '#0a1c3e' }}
                 />
-                <span>{cat.name}</span>
+                <span>{getLocalizedCategoryTitle(cat, currentLanguage)}</span>
                 <span className="text-[10px] opacity-70">({count})</span>
               </button>
             );
@@ -611,7 +612,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                   <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-[10px] font-tech text-brand-gold">
-                        <span>{cat?.name || 'Notizia'}</span>
+                        <span>{getLocalizedCategoryTitle(cat, currentLanguage)}</span>
                         <span>•</span>
                         <span>{art.publishedAt ? new Date(art.publishedAt).toLocaleDateString() : 'Data'}</span>
                       </div>
@@ -761,7 +762,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                               className="text-[9px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full text-white shadow-md border border-white/20"
                               style={{ backgroundColor: cat?.color || '#0a1c3e' }}
                             >
-                              {cat?.name || 'Notizia'}
+                              {getLocalizedCategoryTitle(cat, currentLanguage)}
                             </span>
                             {renderStatusBadge(art.status)}
                           </div>

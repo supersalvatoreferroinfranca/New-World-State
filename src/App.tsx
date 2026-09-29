@@ -617,7 +617,7 @@ function AppContent() {
               onClick={() => openCompliance('accessibility')} 
               className="hover:text-[#0a1c3e] hover:underline underline-offset-4 transition cursor-pointer"
             >
-              {language === 'en' ? 'Accessibility' : 'Accessibilità'}
+              {tText('Accessibility', 'Accessibilità')}
             </button>
             <span className="text-slate-300 select-none">•</span>
             <button 
@@ -625,7 +625,7 @@ function AppContent() {
               className="hover:text-[#0a1c3e] hover:underline underline-offset-4 transition cursor-pointer text-slate-700 font-semibold"
               id="footer-ccpa-link"
             >
-              {language === 'en' ? 'Do Not Sell or Share My Personal Information' : 'Non Vendere i Miei Dati (CCPA)'}
+              {tText('Do Not Sell or Share My Personal Information', 'Non Vendere i Miei Dati (CCPA)')}
             </button>
           </div>
 
