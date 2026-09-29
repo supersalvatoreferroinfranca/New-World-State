@@ -74,7 +74,7 @@ export interface CommunityProject {
   updatedAt: string;
 }
 
-const STORAGE_KEY = 'nws_community_projects_v1';
+const STORAGE_KEY = 'nws_community_projects_v2';
 
 export const INITIAL_PROJECTS: CommunityProject[] = [
   {
@@ -84,10 +84,10 @@ export const INITIAL_PROJECTS: CommunityProject[] = [
     category: 'water_wells',
     location: 'Regione del Turkana, Kenya (Africa Orientale)',
     description: 'Realizzazione di un pozzo artesiano a profondità geologica con pompa sommersa a energia solare, cisterna di stoccaggio da 10.000 litri e 4 fontanelle pubbliche protette. Garantisce acqua pura e sicura per oltre 2.500 abitanti, eliminando malattie trasmesse dall\'acqua stagnante e consentendo ai bambini di frequentare la scuola invece di percorrere chilometri per il rifornimento idrico.',
-    detailedPlan: 'Il progetto si articola in 4 fasi: 1) Rilievo idrogeologico e carotaggio del terreno (completato); 2) Perforazione a 110 metri e tubaggio in acciaio inox alimentare; 3) Installazione dell\'impianto fotovoltaico da 3.2 kW con inverter solare e pompa Grundfos; 4) Costruzione della torre piezometrica e delle fontanelle con abbeveratoio per animali.',
+    detailedPlan: 'Il progetto si articola in 4 fasi: 1) Rilievo idrogeologico e carotaggio del terreno; 2) Perforazione a 110 metri e tubaggio in acciaio inox alimentare; 3) Installazione dell\'impianto fotovoltaico da 3.2 kW con inverter solare e pompa Grundfos; 4) Costruzione della torre piezometrica e delle fontanelle con abbeveratoio per animali.',
     impactSummary: '2.500 persone servite ogni giorno con acqua potabile certificata a costo zero e zero emissioni di CO2.',
     targetAmount: 14500,
-    raisedAmount: 9850,
+    raisedAmount: 0,
     beneficiariesCount: 2500,
     status: 'active',
     coverImage: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=1200&q=80',
@@ -105,66 +105,8 @@ export const INITIAL_PROJECTS: CommunityProject[] = [
     startDate: '2025-11-01',
     expectedCompletionDate: '2026-06-30',
     published: true,
-    statementReports: [
-      {
-        id: 'rep-water-01',
-        title: 'Estratto Conto Ufficiale Donazioni Ricevute - Q4 2025 / Gen 2026',
-        date: '2026-02-05',
-        amount: '+ € 9.850,00',
-        type: 'statement_in',
-        fileName: 'EstrattoConto_Donazioni_Pozzo_Africa_Q4_2025.pdf',
-        fileSize: '380 KB',
-        notes: 'Estratto conto bancario certificato attestante i bonifici con causale DONAZIONE-NWS-POZZO-AFRICA accreditati sul c/c dell\'associazione.'
-      },
-      {
-        id: 'rep-water-02',
-        title: 'Giustificativo Spesa: Rilievo Idrogeologico & Permessi di Perforazione',
-        date: '2026-02-12',
-        amount: '- € 2.100,00',
-        type: 'expense_out',
-        fileName: 'Fattura_Geologia_Permessi_Turkana.pdf',
-        fileSize: '295 KB',
-        notes: 'Pagamento bonifico estero per perizia tecnica idrogeologica e concessione governativa di attingimento idrico.'
-      }
-    ],
-    donorLedger: [
-      {
-        id: 'd-1',
-        donorName: 'Cittadino Sovrano NWS #0042',
-        amount: 2500,
-        date: '2025-12-10',
-        publicNote: 'Per i bambini dell\'Africa e il diritto inalienabile all\'acqua potabile.',
-        verifiedOnStatement: true,
-        transferReference: 'TRN-20251210-9921'
-      },
-      {
-        id: 'd-2',
-        donorName: 'Comunità NWS Lombardia',
-        amount: 3200,
-        date: '2026-01-08',
-        publicNote: 'Frutto della colletta fraterna dei cittadini e simpatizzanti.',
-        verifiedOnStatement: true,
-        transferReference: 'TRN-20260108-1144'
-      },
-      {
-        id: 'd-3',
-        donorName: 'Anonimo Sostenitore',
-        amount: 1500,
-        date: '2026-01-22',
-        publicNote: 'Un piccolo gesto per un mondo più giusto e fraterno.',
-        verifiedOnStatement: true,
-        transferReference: 'TRN-20260122-8321'
-      },
-      {
-        id: 'd-4',
-        donorName: 'Cittadina NWS #0188',
-        amount: 500,
-        date: '2026-02-02',
-        publicNote: 'Acqua viva e pura per la vita.',
-        verifiedOnStatement: true,
-        transferReference: 'TRN-20260202-4029'
-      }
-    ],
+    statementReports: [],
+    donorLedger: [],
     createdAt: '2025-11-01T10:00:00.000Z',
     updatedAt: '2026-02-15T16:00:00.000Z'
   },
@@ -178,7 +120,7 @@ export const INITIAL_PROJECTS: CommunityProject[] = [
     detailedPlan: 'Fornitura e installazione di 8 pannelli solari monocristallini da 450W, inverter 5kVA, 2 batterie al litio da 5.12kWh e due frigoriferi medicali Dometic conformi agli standard OMS.',
     impactSummary: 'Copertura vaccinale garantita per oltre 3.800 neonati e illuminazione notturna sicura per i parti in clinica.',
     targetAmount: 9800,
-    raisedAmount: 6400,
+    raisedAmount: 0,
     beneficiariesCount: 3800,
     status: 'active',
     coverImage: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80',
@@ -195,38 +137,8 @@ export const INITIAL_PROJECTS: CommunityProject[] = [
     startDate: '2026-01-10',
     expectedCompletionDate: '2026-08-31',
     published: true,
-    statementReports: [
-      {
-        id: 'rep-clinic-01',
-        title: 'Estratto Conto Bonifici Donazioni Clinica - Gennaio 2026',
-        date: '2026-02-01',
-        amount: '+ € 6.400,00',
-        type: 'statement_in',
-        fileName: 'EstrattoConto_Donazioni_Clinica_Gennaio2026.pdf',
-        fileSize: '342 KB',
-        notes: 'Riepilogo donazioni tracciate sul conto corrente intestato all\'associazione.'
-      }
-    ],
-    donorLedger: [
-      {
-        id: 'dc-1',
-        donorName: 'Gruppo Medici per la Pace NWS',
-        amount: 4000,
-        date: '2026-01-15',
-        publicNote: 'Diritto universale alla salute e ai medicinali essenziali salvavita.',
-        verifiedOnStatement: true,
-        transferReference: 'TRN-20260115-0012'
-      },
-      {
-        id: 'dc-2',
-        donorName: 'Cittadino NWS #0821',
-        amount: 1400,
-        date: '2026-01-28',
-        publicNote: 'Per la clinica e le nuove vite.',
-        verifiedOnStatement: true,
-        transferReference: 'TRN-20260128-5519'
-      }
-    ],
+    statementReports: [],
+    donorLedger: [],
     createdAt: '2026-01-10T09:00:00.000Z',
     updatedAt: '2026-02-18T11:00:00.000Z'
   },
@@ -236,13 +148,13 @@ export const INITIAL_PROJECTS: CommunityProject[] = [
     subtitle: 'Fornitura di tablet solari, kit didattici e antenna internet per studenti vulnerabili',
     category: 'education',
     location: 'Comunità di Kasese, Uganda',
-    description: 'Progetto completato e pienamente operativo: allestimento di un\'aula didattica aperta con 25 tablet a ricarica solare, libri di testo digitalizzati in lingua locale e connettività internet satellitare gratuita per l\'istruzione di base di 180 bambini.',
-    detailedPlan: 'Tutte le voci di spesa e le donazioni sono state interamente raccolte e rendicontate al centesimo con la pubblicazione dell\'estratto conto bancario consuntivo.',
+    description: 'Allestimento di un\'aula didattica aperta con tablet a ricarica solare, libri di testo digitalizzati in lingua locale e connettività internet satellitare gratuita per l\'istruzione di base di 180 bambini.',
+    detailedPlan: 'Tutte le voci di spesa e le donazioni vengono rendicontate manualmente e verificate con la pubblicazione degli estratti conto bancari.',
     impactSummary: '180 studenti con accesso garantito all\'enciclopedia globale e alfabetizzazione digitale.',
     targetAmount: 6500,
-    raisedAmount: 6500,
+    raisedAmount: 0,
     beneficiariesCount: 180,
-    status: 'completed',
+    status: 'active',
     coverImage: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80',
     bankDetails: {
       accountHolder: 'New World State Organization',
@@ -254,43 +166,52 @@ export const INITIAL_PROJECTS: CommunityProject[] = [
     startDate: '2025-06-01',
     expectedCompletionDate: '2025-12-15',
     published: true,
-    statementReports: [
-      {
-        id: 'rep-school-01',
-        title: 'Estratto Conto Consuntivo e Chiusura Raccolta Fondi Scuola',
-        date: '2025-12-20',
-        amount: 'Totale Raccolto: € 6.500,00',
-        type: 'audit_report',
-        fileName: 'EstrattoConto_Consuntivo_Scuola_Uganda.pdf',
-        fileSize: '512 KB',
-        notes: 'Documento contabile finale di chiusura progetto con lista bonifici pervenuti e fatture di acquisto tablet e kit educativi.'
-      },
-      {
-        id: 'rep-school-02',
-        title: 'Fattura Ufficiale Acquisto Terminali & Materiali Didattici',
-        date: '2025-12-02',
-        amount: '- € 6.480,00',
-        type: 'expense_out',
-        fileName: 'Fattura_Tablet_Materiali_Educativi.pdf',
-        fileSize: '410 KB',
-        notes: 'Pezze giustificative delle apparecchiature consegnate e collaudate presso la scuola.'
-      }
-    ],
-    donorLedger: [
-      {
-        id: 'ds-1',
-        donorName: 'Sostenitori Uniti NWS Europa',
-        amount: 6500,
-        date: '2025-11-20',
-        publicNote: 'L\'istruzione è la madre di tutte le libertà civiche.',
-        verifiedOnStatement: true,
-        transferReference: 'TRN-20251120-7711'
-      }
-    ],
+    statementReports: [],
+    donorLedger: [],
     createdAt: '2025-06-01T08:00:00.000Z',
     updatedAt: '2025-12-22T14:00:00.000Z'
   }
 ];
+
+// Helper to remove any old mock statements/donors from a project list
+function sanitizeProjectStatements(projects: CommunityProject[]): CommunityProject[] {
+  return projects.map(p => {
+    // Check if contains default mock entries
+    const hasMockStatements = (p.statementReports || []).some(r => 
+      r.id.startsWith('rep-water-') || r.id.startsWith('rep-clinic-') || r.id.startsWith('rep-school-')
+    );
+    const hasMockDonors = (p.donorLedger || []).some(d => 
+      d.id === 'd-1' || d.id === 'd-2' || d.id === 'd-3' || d.id === 'd-4' || 
+      d.id === 'dc-1' || d.id === 'dc-2' || d.id === 'ds-1'
+    );
+
+    let statements = p.statementReports || [];
+    let donors = p.donorLedger || [];
+    let raised = p.raisedAmount || 0;
+
+    if (hasMockStatements) {
+      statements = statements.filter(r => 
+        !r.id.startsWith('rep-water-') && !r.id.startsWith('rep-clinic-') && !r.id.startsWith('rep-school-')
+      );
+    }
+
+    if (hasMockDonors) {
+      donors = donors.filter(d => 
+        d.id !== 'd-1' && d.id !== 'd-2' && d.id !== 'd-3' && d.id !== 'd-4' && 
+        d.id !== 'dc-1' && d.id !== 'dc-2' && d.id !== 'ds-1'
+      );
+      // Recalculate raisedAmount based on remaining verified donors
+      raised = donors.filter(d => d.verifiedOnStatement).reduce((sum, d) => sum + Number(d.amount), 0);
+    }
+
+    return {
+      ...p,
+      statementReports: statements,
+      donorLedger: donors,
+      raisedAmount: raised
+    };
+  });
+}
 
 let inFlightProjectsFetch: Promise<CommunityProject[]> | null = null;
 
@@ -303,11 +224,12 @@ export async function fetchProjectsFromServer(): Promise<CommunityProject[]> {
       if (res.ok) {
         const data = await res.json();
         if (data && data.success && Array.isArray(data.projects) && data.projects.length > 0) {
+          const sanitized = sanitizeProjectStatements(data.projects);
           if (typeof window !== 'undefined') {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.projects));
-            window.dispatchEvent(new CustomEvent('nws_projects_updated', { detail: data.projects }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+            window.dispatchEvent(new CustomEvent('nws_projects_updated', { detail: sanitized }));
           }
-          return data.projects;
+          return sanitized;
         }
       }
     } catch (e) {
@@ -328,7 +250,19 @@ export function getProjects(): CommunityProject[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        const sanitized = sanitizeProjectStatements(parsed);
+        return sanitized;
+      }
+    }
+    // Also check older storage key and sanitize
+    const oldRaw = localStorage.getItem('nws_community_projects_v1');
+    if (oldRaw) {
+      const oldParsed = JSON.parse(oldRaw);
+      if (Array.isArray(oldParsed) && oldParsed.length > 0) {
+        const sanitized = sanitizeProjectStatements(oldParsed);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+        localStorage.removeItem('nws_community_projects_v1');
+        return sanitized;
       }
     }
   } catch (err) {
@@ -466,6 +400,58 @@ export async function addDonationRecord(
   current[projectIndex].updatedAt = new Date().toISOString();
   await saveProjects(current);
   return newDonor;
+}
+
+export async function deleteDonationRecord(projectId: string, donorId: string): Promise<boolean> {
+  const current = getProjects();
+  const projectIndex = current.findIndex(p => p.id === projectId);
+  if (projectIndex === -1) return false;
+
+  const donorToDelete = (current[projectIndex].donorLedger || []).find(d => d.id === donorId);
+  current[projectIndex].donorLedger = (current[projectIndex].donorLedger || []).filter(d => d.id !== donorId);
+
+  // If the deleted donor was verified on statement, subtract from raised amount
+  if (donorToDelete && donorToDelete.verifiedOnStatement) {
+    current[projectIndex].raisedAmount = Math.max(0, (current[projectIndex].raisedAmount || 0) - Number(donorToDelete.amount));
+    if (current[projectIndex].raisedAmount < current[projectIndex].targetAmount && current[projectIndex].status === 'funded') {
+      current[projectIndex].status = 'active';
+    }
+  }
+
+  current[projectIndex].updatedAt = new Date().toISOString();
+  await saveProjects(current);
+  return true;
+}
+
+export async function clearProjectStatementsAndDonations(projectId: string): Promise<boolean> {
+  const current = getProjects();
+  const projectIndex = current.findIndex(p => p.id === projectId);
+  if (projectIndex === -1) return false;
+
+  current[projectIndex].statementReports = [];
+  current[projectIndex].donorLedger = [];
+  current[projectIndex].raisedAmount = 0;
+  if (current[projectIndex].status === 'funded') {
+    current[projectIndex].status = 'active';
+  }
+  current[projectIndex].updatedAt = new Date().toISOString();
+  await saveProjects(current);
+  return true;
+}
+
+export async function clearAllProjectsStatementsAndDonations(): Promise<boolean> {
+  const current = getProjects();
+  for (const p of current) {
+    p.statementReports = [];
+    p.donorLedger = [];
+    p.raisedAmount = 0;
+    if (p.status === 'funded') {
+      p.status = 'active';
+    }
+    p.updatedAt = new Date().toISOString();
+  }
+  await saveProjects(current);
+  return true;
 }
 
 export async function submitPublicDonationPledge(

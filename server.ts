@@ -1142,9 +1142,11 @@ async function startServer() {
       }
     });
 
-    apiRouter.get('/verify', async (req, res) => {
-      const { id, code } = req.query;
-      const key = ((id || code || '') as string).trim();
+    apiRouter.get(['/verify', '/verify/:id', '/verify/*'], async (req, res) => {
+      const queryKey = ((req.query.id || req.query.code || req.query.c || '') as string).trim();
+      let pathKey = (req.params.id || (req.params as any)[0] || '') as string;
+      if (pathKey && pathKey.startsWith('/')) pathKey = pathKey.substring(1);
+      const key = (queryKey || pathKey || '').trim();
       console.log(`[API] Processing /api/verify for key: ${key}`);
       if (!key) {
         return res.status(400).json({ success: false, error: 'Parametro id o code mancante.' });
@@ -1730,7 +1732,7 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
 
     // Helper search function by Citizen Code or ID (for verification / QR code validation)
     async function findCitizenByCodeOrId(key: string) {
-      const cleanKey = String(key).trim().toUpperCase();
+      const cleanKey = String(key).trim();
       if (!cleanKey) return null;
       
       // Try searching by ID if it's a numeric digit
@@ -1742,21 +1744,33 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
       if (dbPool) {
         try {
           const qRes = await dbPool.query(
-            'SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR id::text = $1', 
-            [cleanKey]
+            'SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR id::text = $2 OR "documentHash" = $2', 
+            [cleanKey.toUpperCase(), cleanKey]
           );
           if (qRes.rows.length > 0) {
             return getCitizenWithArubaUrls(qRes.rows[0]);
           }
         } catch (e: any) {
-          console.error('[DB-LOCAL-GET-BY-CODE-ERR] Fallback to memory search:', e.message);
+          try {
+            const qRes2 = await dbPool.query(
+              'SELECT * FROM citizens WHERE id::text = $1 OR UPPER(email) = $2 OR UPPER(username) = $2',
+              [cleanKey, cleanKey.toUpperCase()]
+            );
+            if (qRes2.rows.length > 0) {
+              return getCitizenWithArubaUrls(qRes2.rows[0]);
+            }
+          } catch (e2: any) {
+            console.error('[DB-LOCAL-GET-BY-CODE-ERR] Fallback to memory search:', e.message);
+          }
         }
       }
 
       // Fallback memory search
       const found = memoryCitizens.find(c => {
         const cCode = c.citizenCode || c.citizencode || c.citizen_code;
-        return (cCode && String(cCode).trim().toUpperCase() === cleanKey) || String(c.id) === cleanKey;
+        return (cCode && String(cCode).trim().toUpperCase() === cleanKey.toUpperCase()) || 
+               String(c.id) === cleanKey || 
+               (c.documentHash && String(c.documentHash).trim().toUpperCase() === cleanKey.toUpperCase());
       });
       return found ? getCitizenWithArubaUrls(found) : null;
     }
@@ -7154,8 +7168,8 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
               startDate: r.start_date || '',
               expectedCompletionDate: r.expected_completion_date || '',
               published: Boolean(r.published),
-              statementReports: typeof r.statement_reports === 'string' ? JSON.parse(r.statement_reports) : (r.statement_reports || []),
-              donorLedger: typeof r.donor_ledger === 'string' ? JSON.parse(r.donor_ledger) : (r.donor_ledger || []),
+              statementReports: (typeof r.statement_reports === 'string' ? JSON.parse(r.statement_reports) : (r.statement_reports || [])).filter((rep: any) => !rep.id?.startsWith('rep-water-') && !rep.id?.startsWith('rep-clinic-') && !rep.id?.startsWith('rep-school-')),
+              donorLedger: (typeof r.donor_ledger === 'string' ? JSON.parse(r.donor_ledger) : (r.donor_ledger || [])).filter((d: any) => d.id !== 'd-1' && d.id !== 'd-2' && d.id !== 'd-3' && d.id !== 'd-4' && d.id !== 'dc-1' && d.id !== 'dc-2' && d.id !== 'ds-1'),
               createdAt: r.created_at,
               updatedAt: r.updated_at
             }));
@@ -7170,7 +7184,13 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
         if (fs.existsSync(SERVER_PROJECTS_FILE)) {
           const data = fs.readFileSync(SERVER_PROJECTS_FILE, 'utf-8');
           const parsed = JSON.parse(data);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((p: any) => ({
+              ...p,
+              statementReports: (p.statementReports || []).filter((rep: any) => !rep.id?.startsWith('rep-water-') && !rep.id?.startsWith('rep-clinic-') && !rep.id?.startsWith('rep-school-')),
+              donorLedger: (p.donorLedger || []).filter((d: any) => d.id !== 'd-1' && d.id !== 'd-2' && d.id !== 'd-3' && d.id !== 'd-4' && d.id !== 'dc-1' && d.id !== 'dc-2' && d.id !== 'ds-1')
+            }));
+          }
         }
       } catch (fErr) {
         console.warn('[SERVER-PROJECTS] File read error:', fErr);
@@ -7197,7 +7217,7 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
                 impact_summary, target_amount, raised_amount, beneficiaries_count,
                 status, cover_image, bank_details, start_date, expected_completion_date,
                 published, statement_reports, donor_ledger, updated_at
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW())
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15, $16, $17, $18::jsonb, $19::jsonb, NOW())
               ON CONFLICT (id) DO UPDATE SET
                 title = EXCLUDED.title,
                 subtitle = EXCLUDED.subtitle,
@@ -7470,9 +7490,11 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
     app.use('/api', apiRouter);
 
     // Servizio Centrale di Verifica per Carta d'Identità Sovereign NWS (Anti-Counterfeiting System)
-    app.get('/verify', async (req, res) => {
-      const { id, code } = req.query;
-      const key = ((id || code || '') as string).trim();
+    app.get(['/verify', '/verify/:id', '/verify/*'], async (req, res) => {
+      const queryKey = ((req.query.id || req.query.code || req.query.c || '') as string).trim();
+      let pathKey = (req.params.id || (req.params as any)[0] || '') as string;
+      if (pathKey && pathKey.startsWith('/')) pathKey = pathKey.substring(1);
+      const key = (queryKey || pathKey || '').trim();
 
       if (!key) {
         return res.send(`

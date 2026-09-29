@@ -8,6 +8,9 @@ import {
   addStatementToProject, 
   deleteStatementFromProject, 
   addDonationRecord, 
+  deleteDonationRecord,
+  clearProjectStatementsAndDonations,
+  clearAllProjectsStatementsAndDonations,
   downloadProjectStatement, 
   CommunityProject, 
   StatementReport, 
@@ -324,6 +327,68 @@ export default function AdminProjectsTab() {
     const updated = getProjects().find(p => p.id === activeProjectForDonations.id);
     if (updated) setActiveProjectForDonations(updated);
     loadData();
+    setFeedbackMessage({ type: 'success', text: 'Nuova donazione registrata con successo nel libro contabile.' });
+    setTimeout(() => setFeedbackMessage(null), 3500);
+  };
+
+  const handleDeleteDonation = async (donorId: string) => {
+    if (!activeProjectForDonations) return;
+    if (!window.confirm('Sei sicuro di voler eliminare irrevocabilmente questo movimento di donazione?')) {
+      return;
+    }
+
+    await deleteDonationRecord(activeProjectForDonations.id, donorId);
+    const updated = getProjects().find(p => p.id === activeProjectForDonations.id);
+    if (updated) setActiveProjectForDonations(updated);
+    loadData();
+    setFeedbackMessage({ type: 'success', text: 'Movimento di donazione eliminato dal registro contabile.' });
+    setTimeout(() => setFeedbackMessage(null), 3500);
+  };
+
+  const handleClearAllStatementsAndDonations = async () => {
+    if (!window.confirm('Confermi di voler azzerare TUTTI gli estratti conto e TUTTE le donazioni di tutti i progetti? I progetti rimarranno intatti, ma ogni rendicontazione e donazione pregressa verrà azzerata.')) {
+      return;
+    }
+    await clearAllProjectsStatementsAndDonations();
+    loadData();
+    setFeedbackMessage({ type: 'success', text: 'Tutti gli estratti conto ed elenchi donazioni sono stati azzerati con successo.' });
+    setTimeout(() => setFeedbackMessage(null), 4000);
+  };
+
+  const handleClearProjectDonations = async (projectId: string) => {
+    if (!window.confirm('Vuoi azzerare tutte le donazioni per questo progetto?')) return;
+    const current = getProjects();
+    const idx = current.findIndex(p => p.id === projectId);
+    if (idx !== -1) {
+      current[idx].donorLedger = [];
+      current[idx].raisedAmount = 0;
+      if (current[idx].status === 'funded') current[idx].status = 'active';
+      const { saveProjects } = await import('../../services/projectsService');
+      await saveProjects(current);
+      if (activeProjectForDonations && activeProjectForDonations.id === projectId) {
+        setActiveProjectForDonations(current[idx]);
+      }
+      loadData();
+      setFeedbackMessage({ type: 'success', text: 'Tutte le donazioni del progetto sono state azzerate.' });
+      setTimeout(() => setFeedbackMessage(null), 3500);
+    }
+  };
+
+  const handleClearProjectStatements = async (projectId: string) => {
+    if (!window.confirm('Vuoi eliminare tutti gli estratti conto per questo progetto?')) return;
+    const current = getProjects();
+    const idx = current.findIndex(p => p.id === projectId);
+    if (idx !== -1) {
+      current[idx].statementReports = [];
+      const { saveProjects } = await import('../../services/projectsService');
+      await saveProjects(current);
+      if (activeProjectForStatements && activeProjectForStatements.id === projectId) {
+        setActiveProjectForStatements(current[idx]);
+      }
+      loadData();
+      setFeedbackMessage({ type: 'success', text: 'Tutti gli estratti conto del progetto sono stati eliminati.' });
+      setTimeout(() => setFeedbackMessage(null), 3500);
+    }
   };
 
   // Filtering
@@ -359,11 +424,19 @@ export default function AdminProjectsTab() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-stretch md:self-auto">
+          <div className="flex items-center gap-2 self-stretch md:self-auto flex-wrap">
+            <button
+              onClick={handleClearAllStatementsAndDonations}
+              className="px-3 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-400/30 font-mono text-xs transition cursor-pointer flex items-center gap-1.5 shadow"
+              title="Azzera tutti gli estratti conto ed elenchi donazioni lasciando intatti i progetti"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-300" />
+              <span>Azzera Estratti & Donazioni</span>
+            </button>
             <button
               onClick={loadData}
               className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-              title="Ricarica elenco"
+              title="Ricarica elenco dal database"
             >
               <RotateCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -976,7 +1049,19 @@ export default function AdminProjectsTab() {
               <div className="space-y-3">
                 <div className="font-mono font-bold uppercase text-slate-700 flex items-center justify-between">
                   <span>Documenti Contabili Pubblicati ({activeProjectForStatements.statementReports?.length || 0})</span>
-                  <span className="text-[10px] text-slate-400">Tutti scaricabili dai cittadini</span>
+                  <div className="flex items-center gap-2">
+                    {activeProjectForStatements.statementReports && activeProjectForStatements.statementReports.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleClearProjectStatements(activeProjectForStatements.id)}
+                        className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-mono text-[10px] transition cursor-pointer flex items-center gap-1 border border-rose-200"
+                        title="Elimina tutti gli estratti conto di questo progetto"
+                      >
+                        <Trash2 className="w-3 h-3" /> Azzera Estratti Conto
+                      </button>
+                    )}
+                    <span className="text-[10px] text-slate-400 hidden sm:inline">Tutti scaricabili dai cittadini</span>
+                  </div>
                 </div>
 
                 {activeProjectForStatements.statementReports && activeProjectForStatements.statementReports.length > 0 ? (
@@ -1137,8 +1222,20 @@ export default function AdminProjectsTab() {
 
               {/* Elenco Donazioni Registrate */}
               <div className="space-y-3">
-                <div className="font-mono font-bold uppercase text-slate-700">
-                  Donazioni Registrate ({activeProjectForDonations.donorLedger?.length || 0})
+                <div className="flex items-center justify-between">
+                  <div className="font-mono font-bold uppercase text-slate-700">
+                    Donazioni Registrate ({activeProjectForDonations.donorLedger?.length || 0})
+                  </div>
+                  {activeProjectForDonations.donorLedger && activeProjectForDonations.donorLedger.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleClearProjectDonations(activeProjectForDonations.id)}
+                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-mono text-[10px] transition cursor-pointer flex items-center gap-1 border border-rose-200"
+                      title="Azzera tutte le donazioni registrate per questo progetto"
+                    >
+                      <Trash2 className="w-3 h-3" /> Azzera Tutte le Donazioni
+                    </button>
+                  )}
                 </div>
 
                 {activeProjectForDonations.donorLedger && activeProjectForDonations.donorLedger.length > 0 ? (
@@ -1155,7 +1252,7 @@ export default function AdminProjectsTab() {
                           {d.publicNote && <p className="text-[11px] text-slate-400 italic">"{d.publicNote}"</p>}
                         </div>
 
-                        <div>
+                        <div className="flex items-center gap-2">
                           {d.verifiedOnStatement ? (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1">
                               <CheckCircle className="w-3 h-3" /> Verificato c/c
@@ -1165,6 +1262,15 @@ export default function AdminProjectsTab() {
                               <Clock className="w-3 h-3" /> Da verificare
                             </span>
                           )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDonation(d.id)}
+                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition cursor-pointer"
+                            title="Elimina questo movimento di donazione"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     ))}

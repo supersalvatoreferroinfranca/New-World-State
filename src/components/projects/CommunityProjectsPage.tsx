@@ -845,18 +845,18 @@ export default function CommunityProjectsPage({ onGoToAbout, onGoToDemocracy }: 
               </div>
 
               {/* DONOR LEDGER / ALBO TRASPARENZA */}
-              {selectedProject.donorLedger && selectedProject.donorLedger.length > 0 && (
-                <div className="space-y-3 pt-4 border-t border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-serif font-bold text-base text-[#0a1c3e] flex items-center gap-2">
-                      <Heart className="w-4 h-4 text-brand-gold" />
-                      {tText('Albo dei Donatori & Riscontri Contabili', 'Donor Ledger & Verified Deposits')}
-                    </h3>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      {selectedProject.donorLedger.length} {tText('donazioni registrate', 'recorded donations')}
-                    </span>
-                  </div>
+              <div className="space-y-3 pt-4 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif font-bold text-base text-[#0a1c3e] flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-brand-gold" />
+                    {tText('Albo dei Donatori & Riscontri Contabili', 'Donor Ledger & Verified Deposits')}
+                  </h3>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    {selectedProject.donorLedger?.length || 0} {tText('donazioni registrate', 'recorded donations')}
+                  </span>
+                </div>
 
+                {selectedProject.donorLedger && selectedProject.donorLedger.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-56 overflow-y-auto pr-1">
                     {selectedProject.donorLedger.map((donor) => (
                       <div key={donor.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-1">
@@ -886,8 +886,15 @@ export default function CommunityProjectsPage({ onGoToAbout, onGoToDemocracy }: 
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="p-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-center text-xs text-slate-500 space-y-1">
+                    <p>{tText('Nessuna donazione ancora registrata nel libro contabile.', 'No donations recorded in the ledger yet.')}</p>
+                    <p className="text-[11px] text-slate-400">
+                      {tText('I bonifici pervenuti con causale dedicata vengono verificati ed inseriti dall\'amministrazione con il riscontro bancario.', 'Direct bank transfers with dedicated references are audited and recorded manually.')}
+                    </p>
+                  </div>
+                )}
+              </div>
 
             </div>
 

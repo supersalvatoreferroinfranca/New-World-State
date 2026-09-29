@@ -693,8 +693,12 @@ CREATE TABLE citizens (
 
         // 1. Ricerca tramite citizenCode (case-insensitive)
         try {
-          rows = await queryDb('SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR "citizenCode" = $1', [cleanKey.toUpperCase()]);
-        } catch (e) {}
+          rows = await queryDb('SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR UPPER(citizencode) = $1 OR "citizenCode" = $1', [cleanKey.toUpperCase()]);
+        } catch (e) {
+          try {
+            rows = await queryDb('SELECT * FROM citizens WHERE UPPER(citizencode) = $1', [cleanKey.toUpperCase()]);
+          } catch (e2) {}
+        }
 
         // 2. Ricerca tramite ID numerico
         if ((!rows || rows.length === 0) && /^\d+$/.test(cleanKey)) {
@@ -703,10 +707,10 @@ CREATE TABLE citizens (
           } catch (e) {}
         }
 
-        // 3. Ricerca tramite documentHash, username o email
+        // 3. Ricerca tramite documentHash, username o email o id come stringa
         if (!rows || rows.length === 0) {
           try {
-            rows = await queryDb('SELECT * FROM citizens WHERE "documentHash" = $1 OR UPPER(username) = $1 OR UPPER(email) = $1', [cleanKey.toUpperCase()]);
+            rows = await queryDb('SELECT * FROM citizens WHERE "documentHash" = $1 OR id::text = $1 OR UPPER(username) = $2 OR UPPER(email) = $2', [cleanKey, cleanKey.toUpperCase()]);
           } catch (e) {}
         }
 
@@ -1346,7 +1350,10 @@ CREATE TABLE citizens (
 
       // Rotta: Verifica Passaporto & Carta d'Identità (HTML per scansione QR Code da smartphone o browser)
       if (url.pathname === '/verify' || url.pathname === '/verify/' || url.pathname.startsWith('/verify/')) {
-        const id = url.searchParams.get('id') || url.searchParams.get('code') || '';
+        let id = url.searchParams.get('id') || url.searchParams.get('code') || url.searchParams.get('c') || '';
+        if (!id && url.pathname.startsWith('/verify/')) {
+          id = decodeURIComponent(url.pathname.replace(/^\/verify\/?/, '').split('/')[0]).trim();
+        }
         const key = id.trim();
 
         if (!key) {
@@ -1595,8 +1602,11 @@ CREATE TABLE citizens (
       }
 
       // Rotta: API Verifica JSON (usata dall'app frontend SPA o servizi esterni)
-      if (url.pathname === '/api/verify' && request.method === 'GET') {
-        const id = url.searchParams.get('id') || url.searchParams.get('code') || '';
+      if ((url.pathname === '/api/verify' || url.pathname.startsWith('/api/verify/')) && request.method === 'GET') {
+        let id = url.searchParams.get('id') || url.searchParams.get('code') || url.searchParams.get('c') || '';
+        if (!id && url.pathname.startsWith('/api/verify/')) {
+          id = decodeURIComponent(url.pathname.replace(/^\/api\/verify\/?/, '').split('/')[0]).trim();
+        }
         const key = id.trim();
         if (!key) {
           return new Response(JSON.stringify({ success: false, error: 'Parametro id o code mancante.' }), {
@@ -2048,8 +2058,8 @@ CREATE TABLE citizens (
             startDate: r.start_date || '',
             expectedCompletionDate: r.expected_completion_date || '',
             published: Boolean(r.published),
-            statementReports: typeof r.statement_reports === 'string' ? JSON.parse(r.statement_reports) : (r.statement_reports || []),
-            donorLedger: typeof r.donor_ledger === 'string' ? JSON.parse(r.donor_ledger) : (r.donor_ledger || []),
+            statementReports: (typeof r.statement_reports === 'string' ? JSON.parse(r.statement_reports) : (r.statement_reports || [])).filter(rep => !rep.id?.startsWith('rep-water-') && !rep.id?.startsWith('rep-clinic-') && !rep.id?.startsWith('rep-school-')),
+            donorLedger: (typeof r.donor_ledger === 'string' ? JSON.parse(r.donor_ledger) : (r.donor_ledger || [])).filter(d => d.id !== 'd-1' && d.id !== 'd-2' && d.id !== 'd-3' && d.id !== 'd-4' && d.id !== 'dc-1' && d.id !== 'dc-2' && d.id !== 'ds-1'),
             createdAt: r.created_at,
             updatedAt: r.updated_at
           }));
@@ -2076,7 +2086,7 @@ CREATE TABLE citizens (
                 impact_summary, target_amount, raised_amount, beneficiaries_count,
                 status, cover_image, bank_details, start_date, expected_completion_date,
                 published, statement_reports, donor_ledger, updated_at
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW())
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15, $16, $17, $18::jsonb, $19::jsonb, NOW())
               ON CONFLICT (id) DO UPDATE SET
                 title = EXCLUDED.title,
                 subtitle = EXCLUDED.subtitle,

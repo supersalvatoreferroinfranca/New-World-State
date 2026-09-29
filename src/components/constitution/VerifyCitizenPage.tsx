@@ -27,9 +27,12 @@ export default function VerifyCitizenPage() {
   const [citizen, setCitizen] = useState<CitizenData | null>(null);
 
   useEffect(() => {
-    // Parse ID or Code from search parameters
+    // Parse ID or Code from search parameters or pathname
     const params = new URLSearchParams(window.location.search);
-    const idParam = params.get('id') || params.get('code') || '';
+    let idParam = params.get('id') || params.get('code') || params.get('c') || '';
+    if (!idParam && window.location.pathname.startsWith('/verify/')) {
+      idParam = decodeURIComponent(window.location.pathname.replace(/^\/verify\/?/, '').split('/')[0]).trim();
+    }
     setId(idParam);
 
     if (!idParam) {
