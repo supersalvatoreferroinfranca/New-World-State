@@ -20,6 +20,7 @@ import WelcomePage from './components/home/WelcomePage';
 import FederalChat from './components/chat/FederalChat';
 import NewsPortal from './components/news/NewsPortal';
 import AboutUsPage from './components/about/AboutUsPage';
+import CommunityProjectsPage from './components/projects/CommunityProjectsPage';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp, Cookie, MessageSquare, ArrowRight } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
@@ -31,7 +32,7 @@ import SovereignCustodeDebugWidget from './components/pwa/SovereignCustodeDebugW
 import { initAnalyticsTracking, trackPageView } from './services/analyticsTracker';
 
 function AppContent() {
-  const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about'>(() => {
+  const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects'>(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
@@ -42,19 +43,22 @@ function AppContent() {
       if (tabParam === 'about' || tabParam === 'chi-siamo' || window.location.pathname === '/about' || window.location.pathname === '/chi-siamo') {
         return 'about';
       }
+      if (tabParam === 'projects' || tabParam === 'progetti' || window.location.pathname === '/projects' || window.location.pathname === '/progetti') {
+        return 'projects';
+      }
       if (tabParam === 'chat' || tabParam === 'democracy') {
         return 'democracy';
       }
       if (window.location.pathname === '/chat' || window.location.pathname === '/democracy') {
         return 'democracy';
       }
-      if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about'].includes(tabParam)) {
+      if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects'].includes(tabParam)) {
         return tabParam as any;
       }
       // Check last visited tab in localStorage
       try {
         const lastTab = localStorage.getItem('nws_last_active_tab');
-        if (lastTab && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'democracy', 'news', 'about'].includes(lastTab)) {
+        if (lastTab && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'democracy', 'news', 'about', 'projects'].includes(lastTab)) {
           return lastTab as any;
         }
       } catch (e) {}
@@ -73,7 +77,7 @@ function AppContent() {
     return 'welcome';
   });
 
-  const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about') => {
+  const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects') => {
     setActiveTabState(tab);
     trackPageView(tab);
     try {
@@ -91,6 +95,14 @@ function AppContent() {
           }
         } else if (tab === 'about') {
           url.searchParams.set('tab', 'about');
+          if (url.pathname.startsWith('/notizie/') || url.pathname.startsWith('/news/')) {
+            url.pathname = '/';
+          }
+          url.searchParams.delete('notizia');
+          url.searchParams.delete('article');
+          url.searchParams.delete('slug');
+        } else if (tab === 'projects') {
+          url.searchParams.set('tab', 'projects');
           if (url.pathname.startsWith('/notizie/') || url.pathname.startsWith('/news/')) {
             url.pathname = '/';
           }
@@ -127,9 +139,11 @@ function AppContent() {
         newTab = 'news';
       } else if (tabParam === 'about' || tabParam === 'chi-siamo' || window.location.pathname === '/about' || window.location.pathname === '/chi-siamo') {
         newTab = 'about';
+      } else if (tabParam === 'projects' || tabParam === 'progetti' || window.location.pathname === '/projects' || window.location.pathname === '/progetti') {
+        newTab = 'projects';
       } else if (tabParam === 'democracy' || tabParam === 'chat' || window.location.pathname === '/democracy' || window.location.pathname === '/chat') {
         newTab = 'democracy';
-      } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about'].includes(tabParam)) {
+      } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects'].includes(tabParam)) {
         newTab = tabParam;
       }
       setActiveTabState(newTab);
@@ -333,6 +347,13 @@ function AppContent() {
                   📰 {t('news')}
                 </button>
                 <button 
+                  onClick={() => setActiveTab('projects')}
+                  id="tab-projects-btn"
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'projects' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow font-bold' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
+                >
+                  💧 {tText('Works & Fundraisers', 'Opere & Raccolte Fondi')}
+                </button>
+                <button 
                   onClick={() => setActiveTab('register')}
                   id="tab-register-btn"
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'register' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
@@ -377,12 +398,19 @@ function AppContent() {
                 onStartRegistration={() => setActiveTab('register')} 
                 onGoToDemocracy={() => setActiveTab('democracy')} 
                 onGoToNews={() => setActiveTab('news')}
+                onGoToProjects={() => setActiveTab('projects')}
+              />
+            ) : activeTab === 'projects' ? (
+              <CommunityProjectsPage 
+                onGoToAbout={() => setActiveTab('about')}
+                onGoToDemocracy={() => setActiveTab('democracy')}
               />
             ) : activeTab === 'about' ? (
               <AboutUsPage 
                 onGoToConstitution={() => setActiveTab('constitution')}
                 onGoToCharter={() => setActiveTab('charter')}
                 onGoToDemocracy={() => setActiveTab('democracy')}
+                onGoToProjects={() => setActiveTab('projects')}
               />
             ) : activeTab === 'news' ? (
               <NewsPortal onGoToHome={() => setActiveTab('welcome')} />
@@ -456,6 +484,18 @@ function AppContent() {
               }`}
             >
               {t('aboutUs')}
+            </button>
+
+            <button 
+              onClick={() => { setActiveTab('projects'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              id="footer-projects-nav-link"
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'projects' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-emerald-700 font-bold hover:text-brand-gold hover:bg-[#0a1c3e]/5'
+              }`}
+            >
+              💧 {tText('Works & Fundraisers', 'Opere & Raccolte Fondi')}
             </button>
             
             <button 

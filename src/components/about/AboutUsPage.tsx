@@ -25,7 +25,8 @@ import {
   Calendar, 
   Filter,
   Eye,
-  CheckCircle2
+  CheckCircle2,
+  Droplets
 } from 'lucide-react';
 import { 
   getFinancialDocuments, 
@@ -39,9 +40,10 @@ interface AboutPageProps {
   onGoToConstitution?: () => void;
   onGoToCharter?: () => void;
   onGoToDemocracy?: () => void;
+  onGoToProjects?: () => void;
 }
 
-export default function AboutUsPage({ onGoToConstitution, onGoToCharter, onGoToDemocracy }: AboutPageProps) {
+export default function AboutUsPage({ onGoToConstitution, onGoToCharter, onGoToDemocracy, onGoToProjects }: AboutPageProps) {
   const { language, tText } = useI18n();
   const [copiedIban, setCopiedIban] = useState(false);
   const [copiedCf, setCopiedCf] = useState(false);
@@ -750,15 +752,38 @@ export default function AboutUsPage({ onGoToConstitution, onGoToCharter, onGoToD
                 {curr.transparencyNoteText}
               </p>
             </div>
+
+            {/* Link to Community Projects & Fundraisers */}
+            {onGoToProjects && (
+              <div className="bg-[#0a1c3e] rounded-2xl p-4 md:p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg border border-brand-gold/30">
+                <div className="space-y-1">
+                  <div className="text-brand-gold font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                    <Droplets className="w-4 h-4 fill-brand-gold" />
+                    <span>{tText('Opere Comunitarie & Raccolte Fondi', 'Community Works & Fundraisers')}</span>
+                  </div>
+                  <p className="text-slate-300 text-xs font-light leading-relaxed">
+                    {tText('Costruzione di pozzi d\'acqua potabile in Africa, cliniche e scuole: ogni versamento sul conto corrente è interamente rendicontato con la pubblicazione degli estratti conto bancari.', 'Construction of drinking water wells in Africa, solar health clinics, and schools: fully accounted for with published bank statements.')}
+                  </p>
+                </div>
+                <button
+                  onClick={onGoToProjects}
+                  className="px-5 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d8bd94] text-[#0a1c3e] font-bold text-xs uppercase tracking-wider transition shrink-0 cursor-pointer shadow border-b-2 border-amber-600 flex items-center gap-1.5"
+                >
+                  <span>{tText('Consulta le Opere', 'Explore Projects')}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* FINANCIAL TRANSPARENCY & STATEMENTS DOWNLOAD SECTION (REQUESTED BY USER) */}
-      <section 
-        id="financial-transparency-downloads-section"
-        className="bg-white rounded-3xl border-2 border-[#0a1c3e]/15 shadow-xl overflow-hidden space-y-8 p-6 md:p-10"
-      >
+      {/* FINANCIAL TRANSPARENCY & STATEMENTS DOWNLOAD SECTION (DISPLAYED ONLY WHEN DOCUMENTS ARE UPLOADED IN BACKEND) */}
+      {documents.length > 0 && (
+        <section 
+          id="financial-transparency-downloads-section"
+          className="bg-white rounded-3xl border-2 border-[#0a1c3e]/15 shadow-xl overflow-hidden space-y-8 p-6 md:p-10"
+        >
         {/* TOP BALANCED BENTO HEADER */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch border-b border-slate-100 pb-8">
           {/* Left Column: Heading, Description, Guarantees */}
@@ -973,6 +998,7 @@ export default function AboutUsPage({ onGoToConstitution, onGoToCharter, onGoToD
           </div>
         )}
       </section>
+      )}
 
       {/* FOUNDING MISSION & PHILOSOPHY */}
       <section className="bg-white rounded-3xl p-8 md:p-12 border border-slate-200/90 shadow-sm space-y-8">

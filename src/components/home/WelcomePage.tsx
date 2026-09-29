@@ -12,7 +12,11 @@ import {
   Pause,
   RotateCcw,
   Newspaper,
-  UserCheck
+  UserCheck,
+  Droplets,
+  Receipt,
+  Heart,
+  Landmark
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 import { Language } from '../../constants/translations';
@@ -43,6 +47,7 @@ interface WelcomePageProps {
   onStartRegistration: () => void;
   onGoToDemocracy: () => void;
   onGoToNews?: () => void;
+  onGoToProjects?: () => void;
 }
 
 const BCP47_TAGS: Record<Language, string> = {
@@ -59,7 +64,7 @@ const BCP47_TAGS: Record<Language, string> = {
   ar: 'ar-SA'
 };
 
-export default function WelcomePage({ onStartRegistration, onGoToDemocracy, onGoToNews }: WelcomePageProps) {
+export default function WelcomePage({ onStartRegistration, onGoToDemocracy, onGoToNews, onGoToProjects }: WelcomePageProps) {
   const { language } = useI18n();
   const currentLang: Language = language in FAQS_DATA ? language : 'en';
 
@@ -746,6 +751,106 @@ export default function WelcomePage({ onStartRegistration, onGoToDemocracy, onGo
 
       {/* ULTIME NOTIZIE DELLO STATO (3 ARTICOLI CRONACHE SOVRANE) */}
       <HomepageNewsSection onGoToNews={onGoToNews} />
+
+      {/* OPERE COMUNITARIE & RACCOLTE FONDI TRASPARENTI (POZZI AFRICA, SANITÀ, SCUOLE) */}
+      <div className="bg-gradient-to-br from-[#0a1c3e] via-[#0f2857] to-[#0a1c3e] rounded-3xl p-8 md:p-12 text-white shadow-xl border border-brand-gold/30 relative overflow-hidden space-y-8">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/20 text-brand-gold text-xs font-mono uppercase tracking-wider border border-brand-gold/30">
+              <Droplets className="w-3.5 h-3.5 fill-brand-gold" />
+              <span>Opere Comunitarie & Raccolte Fondi Trasparenti</span>
+            </div>
+            
+            <h3 className="text-2xl md:text-4xl font-serif font-bold text-white tracking-tight leading-tight">
+              Costruiamo Pozzi d'Acqua Potabile in Africa & Opere di Bene Comune
+            </h3>
+
+            <p className="text-slate-300 text-xs md:text-sm font-light leading-relaxed">
+              Il New World State promuove progetti concreti di emancipazione e sviluppo umano: pozzi artesiani a energia solare nei villaggi, presidi medici rurali per madri e bambini, e scuole aperte. Tutte le donazioni avvengono tramite versamento sul conto corrente dell'associazione e sono <strong>interamente rendicontate con la pubblicazione periodica degli estratti conto bancari ufficiali</strong> scaricabili in PDF.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 w-full sm:w-auto shrink-0">
+            <button
+              onClick={onGoToProjects}
+              className="px-6 py-3.5 rounded-xl bg-brand-gold hover:bg-[#d8bd94] text-[#0a1c3e] font-mono font-bold text-xs uppercase tracking-wider transition shadow-lg flex items-center justify-center gap-2 cursor-pointer border-b-2 border-amber-600"
+            >
+              <span>Vedi le Opere & Fai una Donazione</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center justify-center gap-3 text-[11px] font-mono text-slate-300 bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+              <Receipt className="w-4 h-4 text-emerald-400" />
+              <span>Estratti Conto Pubblici</span>
+              <span>•</span>
+              <ShieldCheck className="w-4 h-4 text-brand-gold" />
+              <span>100% Trasparenza</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3 PREVIEW CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          <div 
+            onClick={onGoToProjects}
+            className="bg-white/10 hover:bg-white/15 backdrop-blur-sm p-5 rounded-2xl border border-white/10 transition cursor-pointer space-y-3 group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-mono text-[10px] text-cyan-300 uppercase tracking-wider font-bold">Pozzi d'Acqua Potabile</span>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">In Corso</span>
+            </div>
+            <h4 className="font-serif font-bold text-white text-base group-hover:text-brand-gold transition leading-snug">
+              Pozzi Solari in Africa Sub-Sahariana (Kenya)
+            </h4>
+            <p className="text-slate-300 text-xs line-clamp-2">
+              Acqua pura per 2.500 abitanti con pozzo artesiano a 110m e pompa fotovoltaica.
+            </p>
+            <div className="text-xs font-mono font-bold text-brand-gold pt-1">
+              € 9.850 raccolti / € 14.500
+            </div>
+          </div>
+
+          <div 
+            onClick={onGoToProjects}
+            className="bg-white/10 hover:bg-white/15 backdrop-blur-sm p-5 rounded-2xl border border-white/10 transition cursor-pointer space-y-3 group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-mono text-[10px] text-rose-300 uppercase tracking-wider font-bold">Sanità Rurale</span>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">In Corso</span>
+            </div>
+            <h4 className="font-serif font-bold text-white text-base group-hover:text-brand-gold transition leading-snug">
+              Presidio Medico Solare & Frigoriferi Vaccini
+            </h4>
+            <p className="text-slate-300 text-xs line-clamp-2">
+              Catena del freddo 24/7 per 3.800 neonati e illuminazione per i parti notturni.
+            </p>
+            <div className="text-xs font-mono font-bold text-brand-gold pt-1">
+              € 6.400 raccolti / € 9.800
+            </div>
+          </div>
+
+          <div 
+            onClick={onGoToProjects}
+            className="bg-white/10 hover:bg-white/15 backdrop-blur-sm p-5 rounded-2xl border border-white/10 transition cursor-pointer space-y-3 group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-mono text-[10px] text-amber-300 uppercase tracking-wider font-bold">Istruzione</span>
+              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30">Completato</span>
+            </div>
+            <h4 className="font-serif font-bold text-white text-base group-hover:text-brand-gold transition leading-snug">
+              Scuola Aperta & Connettività Satellitare
+            </h4>
+            <p className="text-slate-300 text-xs line-clamp-2">
+              Tablet solari e rete internet per 180 studenti. Interamente rendicontato con estratti conto.
+            </p>
+            <div className="text-xs font-mono font-bold text-indigo-300 pt-1">
+              € 6.500 / € 6.500 (100% Rendicontato)
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* COSA PUOI TROVARE SUL SITO: GUIDA CON INTERFACCIA COMPLETA */}
       <div className="space-y-6">

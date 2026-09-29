@@ -470,6 +470,33 @@ async function runMigrations() {
         console.warn('[DB] Seed warning per trasparenza:', seedErr.message);
       }
 
+      // Create nws_community_projects table for humanitarian works & transparent fundraisers
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_community_projects (
+          id VARCHAR(255) PRIMARY KEY,
+          title TEXT NOT NULL,
+          subtitle TEXT,
+          category VARCHAR(100) NOT NULL,
+          location TEXT,
+          description TEXT,
+          detailed_plan TEXT,
+          impact_summary TEXT,
+          target_amount NUMERIC(12,2) DEFAULT 0,
+          raised_amount NUMERIC(12,2) DEFAULT 0,
+          beneficiaries_count INT DEFAULT 0,
+          status VARCHAR(50) DEFAULT 'active',
+          cover_image TEXT,
+          bank_details JSONB,
+          start_date TEXT,
+          expected_completion_date TEXT,
+          published BOOLEAN DEFAULT true,
+          statement_reports JSONB DEFAULT '[]'::jsonb,
+          donor_ledger JSONB DEFAULT '[]'::jsonb,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       console.log('[MIGRATION] PostgreSQL Table checked and updated successfully.');
     } finally {
       client.release();
@@ -7082,6 +7109,200 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
         const updated = current.filter((d: any) => String(d.id) !== String(id));
         await saveServerTransparencyDocuments(updated);
         return res.json({ success: true, message: 'Documento eliminato con successo.', remainingCount: updated.length, documents: updated });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // =========================================================================
+    // COMMUNITY PROJECTS & HUMANITARIAN FUNDRAISERS (WATER WELLS, CLINICS, SCHOOLS)
+    // =========================================================================
+    const SERVER_PROJECTS_FILE = path.join(process.cwd(), 'data', 'community_projects.json');
+
+    async function getServerProjects(): Promise<any[]> {
+      // 1. Try PostgreSQL table nws_community_projects
+      if (dbPool) {
+        try {
+          const dbRes = await dbPool.query('SELECT * FROM nws_community_projects ORDER BY created_at DESC');
+          if (dbRes && dbRes.rows && dbRes.rows.length > 0) {
+            return dbRes.rows.map((r: any) => ({
+              id: r.id,
+              title: r.title,
+              subtitle: r.subtitle || '',
+              category: r.category,
+              location: r.location || '',
+              description: r.description || '',
+              detailedPlan: r.detailed_plan || '',
+              impactSummary: r.impact_summary || '',
+              targetAmount: Number(r.target_amount || 0),
+              raisedAmount: Number(r.raised_amount || 0),
+              beneficiariesCount: Number(r.beneficiaries_count || 0),
+              status: r.status || 'active',
+              coverImage: r.cover_image || '',
+              bankDetails: typeof r.bank_details === 'string' ? JSON.parse(r.bank_details) : (r.bank_details || {}),
+              startDate: r.start_date || '',
+              expectedCompletionDate: r.expected_completion_date || '',
+              published: Boolean(r.published),
+              statementReports: typeof r.statement_reports === 'string' ? JSON.parse(r.statement_reports) : (r.statement_reports || []),
+              donorLedger: typeof r.donor_ledger === 'string' ? JSON.parse(r.donor_ledger) : (r.donor_ledger || []),
+              createdAt: r.created_at,
+              updatedAt: r.updated_at
+            }));
+          }
+        } catch (dbErr: any) {
+          console.warn('[SERVER-PROJECTS] DB fetch fallback to file:', dbErr.message);
+        }
+      }
+
+      // 2. Fallback to local JSON file
+      try {
+        if (fs.existsSync(SERVER_PROJECTS_FILE)) {
+          const data = fs.readFileSync(SERVER_PROJECTS_FILE, 'utf-8');
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (fErr) {
+        console.warn('[SERVER-PROJECTS] File read error:', fErr);
+      }
+
+      return [];
+    }
+
+    async function saveServerProjects(projects: any[]): Promise<void> {
+      try {
+        const dir = path.dirname(SERVER_PROJECTS_FILE);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(SERVER_PROJECTS_FILE, JSON.stringify(projects, null, 2), 'utf-8');
+      } catch (fErr) {
+        console.warn('[SERVER-PROJECTS] File write error:', fErr);
+      }
+
+      if (dbPool && Array.isArray(projects)) {
+        try {
+          for (const p of projects) {
+            await dbPool.query(`
+              INSERT INTO nws_community_projects (
+                id, title, subtitle, category, location, description, detailed_plan,
+                impact_summary, target_amount, raised_amount, beneficiaries_count,
+                status, cover_image, bank_details, start_date, expected_completion_date,
+                published, statement_reports, donor_ledger, updated_at
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW())
+              ON CONFLICT (id) DO UPDATE SET
+                title = EXCLUDED.title,
+                subtitle = EXCLUDED.subtitle,
+                category = EXCLUDED.category,
+                location = EXCLUDED.location,
+                description = EXCLUDED.description,
+                detailed_plan = EXCLUDED.detailed_plan,
+                impact_summary = EXCLUDED.impact_summary,
+                target_amount = EXCLUDED.target_amount,
+                raised_amount = EXCLUDED.raised_amount,
+                beneficiaries_count = EXCLUDED.beneficiaries_count,
+                status = EXCLUDED.status,
+                cover_image = EXCLUDED.cover_image,
+                bank_details = EXCLUDED.bank_details,
+                start_date = EXCLUDED.start_date,
+                expected_completion_date = EXCLUDED.expected_completion_date,
+                published = EXCLUDED.published,
+                statement_reports = EXCLUDED.statement_reports,
+                donor_ledger = EXCLUDED.donor_ledger,
+                updated_at = NOW()
+            `, [
+              String(p.id),
+              p.title,
+              p.subtitle || '',
+              p.category,
+              p.location || '',
+              p.description || '',
+              p.detailedPlan || '',
+              p.impactSummary || '',
+              p.targetAmount || 0,
+              p.raisedAmount || 0,
+              p.beneficiariesCount || 0,
+              p.status || 'active',
+              p.coverImage || '',
+              JSON.stringify(p.bankDetails || {}),
+              p.startDate || '',
+              p.expectedCompletionDate || null,
+              Boolean(p.published),
+              JSON.stringify(p.statementReports || []),
+              JSON.stringify(p.donorLedger || [])
+            ]);
+          }
+        } catch (dbErr: any) {
+          console.error('[SERVER-PROJECTS] DB save error:', dbErr.message);
+        }
+      }
+    }
+
+    apiRouter.get('/projects', async (req, res) => {
+      try {
+        const projects = await getServerProjects();
+        return res.json({ success: true, projects });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/projects/sync', async (req, res) => {
+      try {
+        const { projects } = req.body;
+        if (!projects || !Array.isArray(projects)) {
+          return res.status(400).json({ success: false, message: 'Array progetti non valido.' });
+        }
+        await saveServerProjects(projects);
+        const updated = await getServerProjects();
+        return res.json({ success: true, count: updated.length, projects: updated });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/projects/pledge', async (req, res) => {
+      try {
+        const { projectId, donorName, amount, email, transferDate, transferReference, publicNote } = req.body;
+        if (!projectId || !amount) {
+          return res.status(400).json({ success: false, message: 'Dati donazione incompleti.' });
+        }
+        const projects = await getServerProjects();
+        const pIndex = projects.findIndex((p: any) => String(p.id) === String(projectId));
+        if (pIndex !== -1) {
+          const newDonor = {
+            id: 'donor-' + Date.now(),
+            donorName: donorName || 'Anonimo',
+            amount: Number(amount),
+            date: transferDate || new Date().toISOString().split('T')[0],
+            transferReference: transferReference || undefined,
+            publicNote: publicNote || undefined,
+            verifiedOnStatement: false
+          };
+          projects[pIndex].donorLedger = [newDonor, ...(projects[pIndex].donorLedger || [])];
+          await saveServerProjects(projects);
+        }
+        return res.json({ 
+          success: true, 
+          message: 'Segnalazione di bonifico registrata con successo. Verrà riscontrata con l\'estratto conto bancario.' 
+        });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.delete(['/projects/:id', '/projects/delete/:id'], async (req, res) => {
+      try {
+        const projId = req.params.id;
+        if (!projId) return res.status(400).json({ success: false, message: 'ID progetto obbligatorio.' });
+        if (dbPool) {
+          try {
+            await dbPool.query('DELETE FROM nws_community_projects WHERE id = $1', [String(projId)]);
+          } catch (dbErr: any) {
+            console.warn('[SERVER-PROJECTS] DB delete warning:', dbErr.message);
+          }
+        }
+        const current = await getServerProjects();
+        const updated = current.filter((p: any) => String(p.id) !== String(projId));
+        await saveServerProjects(updated);
+        return res.json({ success: true, message: 'Progetto eliminato con successo.' });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message });
       }

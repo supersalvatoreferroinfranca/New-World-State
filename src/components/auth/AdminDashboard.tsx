@@ -4,6 +4,7 @@ import { useBranding } from '../../hooks/useBranding';
 import AdminLegalTab from './AdminLegalTab';
 import AdminAnalyticsTab from './AdminAnalyticsTab';
 import AdminTransparencyTab from './AdminTransparencyTab';
+import AdminProjectsTab from './AdminProjectsTab';
 import { 
   Users, 
   CheckCircle, 
@@ -33,7 +34,8 @@ import {
   TrendingUp,
   Activity,
   Receipt,
-  CreditCard
+  CreditCard,
+  Droplets
 } from 'lucide-react';
 
 interface Citizen {
@@ -86,7 +88,7 @@ export default function AdminDashboard() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Core navigation state
-  const [activeTab, setActiveTab] = useState<'citizens' | 'analytics' | 'proposals' | 'roles' | 'candidacies' | 'broadcasts' | 'branding' | 'legal' | 'transparency'>('citizens');
+  const [activeTab, setActiveTab] = useState<'citizens' | 'analytics' | 'proposals' | 'roles' | 'candidacies' | 'broadcasts' | 'branding' | 'legal' | 'transparency' | 'projects'>('citizens');
 
   // Role Applications Candidacies State
   const [roleApplications, setRoleApplications] = useState<any[]>([]);
@@ -1216,6 +1218,13 @@ export default function AdminDashboard() {
           <Image className="w-4 h-4 text-brand-gold" /> Logo & Favicon
         </button>
         <button
+          onClick={() => { setActiveTab('projects'); }}
+          id="admin-tab-projects"
+          className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'projects' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <Droplets className="w-4 h-4 text-brand-gold" /> Opere & Raccolte Fondi
+        </button>
+        <button
           onClick={() => { setActiveTab('transparency'); }}
           id="admin-tab-transparency"
           className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'transparency' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
@@ -1232,7 +1241,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12">
         {/* LATERALE CONTENUTO TAB (SINISTRA) */}
-        <div className={`${(activeTab === 'legal' || activeTab === 'analytics' || activeTab === 'transparency') ? 'lg:col-span-12 xl:col-span-12' : 'lg:col-span-12 xl:col-span-8'} p-6 md:p-8 space-y-6 border-r border-slate-100`}>
+        <div className={`${(activeTab === 'legal' || activeTab === 'analytics' || activeTab === 'transparency' || activeTab === 'projects') ? 'lg:col-span-12 xl:col-span-12' : 'lg:col-span-12 xl:col-span-8'} p-6 md:p-8 space-y-6 border-r border-slate-100`}>
           
           {/* TAB 1: GESTIONE CITTADINI */}
           {activeTab === 'citizens' && (
@@ -2009,6 +2018,10 @@ export default function AdminDashboard() {
             />
           )}
 
+          {activeTab === 'projects' && (
+            <AdminProjectsTab />
+          )}
+
           {activeTab === 'transparency' && (
             <AdminTransparencyTab />
           )}
@@ -2016,7 +2029,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* LATERALE DETTAGLIO / WORKSPACE (DESTRA) */}
-        {activeTab !== 'legal' && activeTab !== 'analytics' && activeTab !== 'transparency' && (
+        {activeTab !== 'legal' && activeTab !== 'analytics' && activeTab !== 'transparency' && activeTab !== 'projects' && (
           <div className="lg:col-span-12 xl:col-span-4 p-6 bg-slate-50/70 border-t xl:border-t-0 border-slate-100 flex flex-col justify-between min-h-[500px]">
           
           {/* RENDER DETTAGLIO CITTADINO */}
