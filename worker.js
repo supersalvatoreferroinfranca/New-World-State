@@ -685,6 +685,37 @@ CREATE TABLE citizens (
         };
       };
 
+      // Helper per cercare cittadino in verifica tramite codice, ID o hash
+      const findCitizenForVerify = async (key) => {
+        if (!key) return null;
+        const cleanKey = String(key).trim();
+        let rows = [];
+
+        // 1. Ricerca tramite citizenCode (case-insensitive)
+        try {
+          rows = await queryDb('SELECT * FROM citizens WHERE UPPER("citizenCode") = $1 OR "citizenCode" = $1', [cleanKey.toUpperCase()]);
+        } catch (e) {}
+
+        // 2. Ricerca tramite ID numerico
+        if ((!rows || rows.length === 0) && /^\d+$/.test(cleanKey)) {
+          try {
+            rows = await queryDb('SELECT * FROM citizens WHERE id = $1', [Number(cleanKey)]);
+          } catch (e) {}
+        }
+
+        // 3. Ricerca tramite documentHash, username o email
+        if (!rows || rows.length === 0) {
+          try {
+            rows = await queryDb('SELECT * FROM citizens WHERE "documentHash" = $1 OR UPPER(username) = $1 OR UPPER(email) = $1', [cleanKey.toUpperCase()]);
+          } catch (e) {}
+        }
+
+        if (rows && rows.length > 0) {
+          return getCitizenWithArubaUrls(rows[0]);
+        }
+        return null;
+      };
+
       // Funzione helper per leggere una risposta SMTP completa in tempo reale riga per riga su Cloudflare Workers
       const readSMTPResponse = async (reader, accumulated = '') => {
         const decoder = new TextDecoder();
@@ -1271,6 +1302,342 @@ CREATE TABLE citizens (
         return new Response(JSON.stringify({ status: 'connected' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
+      // Rotta: Controllo stato cittadino
+      if (url.pathname === '/api/citizen-status' && request.method === 'GET') {
+        const id = url.searchParams.get('id');
+        if (!id) {
+          return new Response(JSON.stringify({ success: false, message: 'ID cittadino mancante.' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        try {
+          let rows = [];
+          if (!isNaN(Number(id))) {
+            rows = await queryDb('SELECT * FROM citizens WHERE id = $1', [Number(id)]);
+          }
+          if (rows.length === 0) {
+            rows = await queryDb('SELECT * FROM citizens WHERE "citizenCode" = $1 OR email = $1', [id]);
+          }
+          if (rows.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Cittadino non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const citizen = rows[0];
+          return new Response(JSON.stringify({
+            success: true,
+            data: {
+              id: citizen.id,
+              status: citizen.status,
+              rejection_reason: citizen.rejectionReason || citizen.rejection_reason || citizen.rejectionreason || null
+            }
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore query: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      // Rotta: Verifica Passaporto & Carta d'Identità (HTML per scansione QR Code da smartphone o browser)
+      if (url.pathname === '/verify' || url.pathname === '/verify/' || url.pathname.startsWith('/verify/')) {
+        const id = url.searchParams.get('id') || url.searchParams.get('code') || '';
+        const key = id.trim();
+
+        if (!key) {
+          return new Response(`<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NWS Identity Verification Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;550&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+      .font-display { font-family: 'Space Grotesk', sans-serif; }
+      .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+    </style>
+  </head>
+  <body class="bg-[#050d1e] min-h-screen text-slate-100 flex flex-col justify-between">
+    <header class="border-b border-[#c5a880]/20 bg-[#071328]/80 backdrop-blur py-5 px-6 sticky top-0 z-50">
+      <div class="max-w-4xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-[#c5a880] flex items-center justify-center font-display font-bold text-[#0a1c3e] text-xs">NWS</div>
+          <div>
+            <h1 class="text-sm font-display font-bold tracking-wider text-white">NEW WORLD STATE</h1>
+            <p class="text-[9px] font-mono-tech tracking-widest text-[#c5a880]">REGISTRO DI VERIFICA SOVRANO</p>
+          </div>
+        </div>
+        <span class="text-[8px] font-mono-tech bg-[#ef4444]/10 text-[#ef4444] px-2 py-0.5 border border-[#ef4444]/20 rounded font-semibold uppercase">LINK NON VALIDO</span>
+      </div>
+    </header>
+
+    <main class="max-w-md w-full mx-auto px-6 py-12 flex-1 flex items-center justify-center">
+      <div class="bg-[#071530] border border-red-500/20 rounded-3xl shadow-2xl p-8 text-center space-y-6 w-full">
+        <div class="w-16 h-16 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold animate-pulse">!</div>
+        <div class="space-y-2">
+          <h2 class="text-xl font-display font-bold text-white tracking-tight">Parametro Mancante</h2>
+          <p class="text-slate-400 text-xs leading-relaxed">Nessun codice cittadino o identificativo specificato per la verifica. Inquadra nuovamente il QR code presente sul passaporto o carta d'identità ufficiale.</p>
+        </div>
+        <div class="pt-4">
+          <a href="/" class="inline-flex w-full justify-center bg-gradient-to-r from-[#c5a880] to-[#e4cbab] text-[#0a1c3e] font-bold text-xs uppercase tracking-widest py-3 px-6 rounded-xl hover:opacity-90 shadow-lg shadow-amber-500/10 transition">Torna alla Home</a>
+        </div>
+      </div>
+    </main>
+
+    <footer class="border-t border-[#c5a880]/10 bg-[#040a15] py-6 px-4 text-center text-[10px] text-slate-500 font-mono-tech">
+      <p>© 2026 Sovereign Administration of New World State. Central Verification Authority.</p>
+    </footer>
+  </body>
+</html>`, {
+            headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+          });
+        }
+
+        const citizen = await findCitizenForVerify(key);
+
+        if (!citizen || citizen.status !== 'approved') {
+          return new Response(`<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVVISO CONTRAFFATTURA - NWS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;550&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+      .font-display { font-family: 'Space Grotesk', sans-serif; }
+      .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+    </style>
+  </head>
+  <body class="bg-[#050d1e] min-h-screen text-slate-100 flex flex-col justify-between">
+    <header class="border-b border-[#c5a880]/20 bg-[#071328]/80 backdrop-blur py-5 px-6 sticky top-0 z-50">
+      <div class="max-w-4xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-[#ef4444] flex items-center justify-center font-display font-bold text-white text-xs">!</div>
+          <div>
+            <h1 class="text-sm font-display font-bold tracking-wider text-white">NEW WORLD STATE</h1>
+            <p class="text-[9px] font-mono-tech tracking-widest text-[#ef4444]">SECURITY DIVISION</p>
+          </div>
+        </div>
+        <span class="text-[8px] font-mono-tech bg-[#ef4444]/10 text-rose-500 px-2 py-0.5 border border-rose-500/20 rounded font-semibold uppercase">VERIFICA FALLITA</span>
+      </div>
+    </header>
+
+    <main class="max-w-lg w-full mx-auto px-6 py-10 flex-grow flex items-center">
+      <div class="bg-[#110714] border-2 border-red-500/30 rounded-3xl p-8 space-y-6 shadow-2xl relative overflow-hidden w-full">
+        <div class="text-center space-y-4">
+          <div class="w-16 h-16 bg-red-600/10 text-red-500 border-2 border-red-500/20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">!</div>
+          <div class="space-y-1">
+            <span class="text-[10px] font-mono-tech tracking-widest text-red-400 font-bold uppercase">AVVISO DI SICUREZZA</span>
+            <h2 class="text-2xl font-display font-bold text-white tracking-tight">DOCUMENTO NON REGISTRATO O CONTRAFFATTO</h2>
+          </div>
+        </div>
+
+        <p class="text-slate-300 text-xs leading-relaxed text-center">
+          Il codice identificativo <strong class="text-red-400 font-mono-tech font-bold uppercase select-all">${key}</strong> inserito o inquadrato <span class="font-semibold text-white">NON RISULTA REGISTRATO</span> o approvato nell'Anagrafe Centrale della Federazione Sovrana di New World State.
+        </p>
+
+        <div class="bg-black/30 border border-red-500/20 rounded-2xl p-5 space-y-2.5 text-xs text-slate-400">
+          <p class="font-bold text-red-300 text-center uppercase text-[10px] tracking-wider mb-1">ISTRUZIONI PER FUNZIONARI DI FRONTIERA</p>
+          <ul class="space-y-2 list-none pl-0">
+            <li class="flex items-start gap-2"><span class="text-red-500">🛡️</span> Ogni documento NWS ufficiale possiede una corrispondenza univoca nel nostro server di registro. Se la scansione fallisce, la copia o il documento stampato è privo di efficacia giuridica.</li>
+            <li class="flex items-start gap-2"><span class="text-red-500">🛡️</span> La contraffazione dei documenti e l'utilizzo abusivo dei sigilli costituiscono gravi violazioni penali.</li>
+          </ul>
+        </div>
+
+        <div class="pt-2 text-center text-[10px] text-slate-500 font-mono-tech">
+          ID Transazione Verifica: NWS-SEC-ERR-${Math.floor(100000 + Math.random() * 900000)}
+        </div>
+      </div>
+    </main>
+
+    <footer class="border-t border-[#c5a880]/10 bg-[#040a15] py-6 px-4 text-center text-[10px] text-slate-500 font-mono-tech">
+      <p>© 2026 Sovereign Administration of New World State. Central Verification Authority.</p>
+    </footer>
+  </body>
+</html>`, {
+            headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+          });
+        }
+
+        const docHash = citizen.documentHash || citizen.documenthash || 'VALIDATED';
+        const citizenPhoto = citizen.arubaPhotoUrl || citizen.arubaphotourl || '';
+
+        return new Response(`<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PASSAPORTO E CITTADINANZA VERIFICATI - NWS Registry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;550&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: 'Inter', sans-serif; }
+      .font-display { font-family: 'Space Grotesk', sans-serif; }
+      .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+    </style>
+  </head>
+  <body class="bg-[#050d1e] min-h-screen text-slate-100 flex flex-col justify-between">
+    <header class="border-b border-[#c5a880]/20 bg-[#071328]/80 backdrop-blur py-5 px-6 sticky top-0 z-50">
+      <div class="max-w-4xl mx-auto flex items-center justify-between w-full">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-[#10b981] flex items-center justify-center font-display font-bold text-[#0a1c3e] text-xs">✓</div>
+          <div>
+            <h1 class="text-sm font-display font-bold tracking-wider text-white">NEW WORLD STATE</h1>
+            <p class="text-[9px] font-mono-tech tracking-widest text-[#c5a880]">SOVEREIGN PASSPORT & CITIZENSHIP REGISTRY</p>
+          </div>
+        </div>
+        <span class="text-[8px] font-mono-tech bg-[#10b981]/10 text-emerald-400 px-2.5 py-1 border border-emerald-500/20 rounded font-semibold uppercase tracking-wider animate-pulse">✓ DOCUMENTO AUTENTICO</span>
+      </div>
+    </header>
+
+    <main class="max-w-2xl w-full mx-auto px-6 py-8 flex-grow">
+      <div class="bg-[#071530] border border-[#c5a880]/20 rounded-3xl shadow-2xl p-6 md:p-8 space-y-6">
+        
+        <div class="text-center space-y-2">
+          <div class="w-14 h-14 bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">✓</div>
+          <div>
+            <h2 class="text-xl font-display font-bold text-white tracking-tight">Anagrafe Federale Validata</h2>
+            <p class="text-[11px] text-[#c5a880] uppercase tracking-widest font-mono-tech font-bold">Stato Documento: Passaporto Ufficiale Convalidato</p>
+          </div>
+        </div>
+
+        <div class="bg-[#0d1f3d] rounded-2xl p-4 border border-[#c5a880]/15 text-xs text-sky-200/80 leading-relaxed">
+          <strong class="text-white">CONFRONTO DATI UFFICIALE:</strong> Verifica che i dati anagrafici stampati sul passaporto o sulla carta d'identità corrispondano a quelli registrati nel database centrale del New World State.
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+          <div class="md:col-span-4 flex flex-col items-center space-y-2">
+            <div class="text-[10px] font-mono-tech text-slate-400 uppercase tracking-wider font-semibold">Foto Ufficiale nel DB</div>
+            <div class="w-36 h-48 rounded-xl border border-[#c5a880]/30 overflow-hidden bg-[#050e21] shadow-xl flex items-center justify-center relative">
+              ${citizenPhoto ? `
+                <img src="${citizenPhoto}" class="w-full h-full object-cover" alt="Foto Dossier" referrerPolicy="no-referrer" />
+              ` : `
+                <div class="text-center p-3">
+                  <span class="text-2xl block">👤</span>
+                  <span class="text-[9px] text-slate-500 font-mono-tech">Foto verificata</span>
+                </div>
+              `}
+            </div>
+            <span class="text-[10px] bg-emerald-500/15 text-emerald-400 py-0.5 px-2.5 rounded-full font-mono-tech uppercase font-bold tracking-wider">Identità Verificata</span>
+          </div>
+
+          <div class="md:col-span-8 space-y-4">
+            <div class="text-[10px] font-mono-tech text-slate-400 uppercase tracking-wider font-semibold">Anagrafica Federale Archiviata</div>
+            
+            <div class="bg-[#050e21] rounded-2xl p-5 border border-slate-800 space-y-3.5 text-xs">
+              <div class="grid grid-cols-2 gap-y-3.5 gap-x-2 border-b border-white/5 pb-3">
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Cognome / Surname</span>
+                  <strong class="text-white text-sm font-semibold select-all font-display">${(citizen.surname || '').toUpperCase()}</strong>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Nome / Given Names</span>
+                  <strong class="text-white text-sm font-semibold select-all font-display">${(citizen.firstName || citizen.firstname || '').toUpperCase()}</strong>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3.5 border-b border-white/5 pb-3">
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Nato il / Date of Birth</span>
+                  <strong class="text-slate-200 select-all font-mono-tech">${citizen.birthDate || citizen.birthdate || 'N/A'}</strong>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase tracking-wider">A / Place of Birth</span>
+                  <strong class="text-slate-200 select-all font-mono-tech">${(citizen.birthPlace || citizen.birthplace || '').toUpperCase()} (${(citizen.birthCountry || citizen.birthcountry || '').toUpperCase()})</strong>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3.5 border-b border-white/5 pb-3">
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Codice Cittadino / Citizen Code</span>
+                  <strong class="text-[#c5a880] select-all font-bold text-sm font-mono-tech tracking-wider">${citizen.citizenCode || citizen.citizencode || 'N/A'}</strong>
+                </div>
+                <div>
+                  <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Genere / Sex</span>
+                  <strong class="text-slate-200 select-all uppercase font-mono-tech">${citizen.gender || '-'}</strong>
+                </div>
+              </div>
+
+              <div class="pt-1 select-all">
+                <span class="text-slate-400 block text-[9px] uppercase tracking-wider">Firma di Controllo Algoritmica</span>
+                <strong class="text-slate-500 font-mono-tech text-[9px] font-bold block overflow-x-auto whitespace-nowrap bg-black/30 p-2 border border-white/5 rounded-lg mt-1 uppercase">HASH: ${docHash}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-emerald-500/5 text-emerald-400/90 rounded-2xl p-4 border border-emerald-500/20 text-[11px] font-mono-tech text-center flex items-center justify-center gap-2">
+          <span>🛡️</span> REGISTRO DI CITTADINANZA SOVRANA NWS: INTEGRITÀ CERTIFICATA SUL DATABASE FEDERALE
+        </div>
+
+        <div class="text-center pt-2">
+          <a href="/" class="text-[11px] text-[#c5a880] hover:underline uppercase tracking-widest font-mono-tech">Accedi al Portale Centrale New World State →</a>
+        </div>
+      </div>
+    </main>
+
+    <footer class="border-t border-[#c5a880]/10 bg-[#040a15] py-6 px-4 text-center text-[10px] text-slate-500 font-mono-tech">
+      <p>© 2026 Sovereign Administration of New World State. Central Verification Authority.</p>
+    </footer>
+  </body>
+</html>`, {
+          headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+        });
+      }
+
+      // Rotta: API Verifica JSON (usata dall'app frontend SPA o servizi esterni)
+      if (url.pathname === '/api/verify' && request.method === 'GET') {
+        const id = url.searchParams.get('id') || url.searchParams.get('code') || '';
+        const key = id.trim();
+        if (!key) {
+          return new Response(JSON.stringify({ success: false, error: 'Parametro id o code mancante.' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        try {
+          const citizen = await findCitizenForVerify(key);
+          if (!citizen) {
+            return new Response(JSON.stringify({ success: false, error: 'Cittadino non trovato o non registrato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          return new Response(JSON.stringify({
+            success: true,
+            citizen: {
+              id: citizen.id,
+              firstName: citizen.firstName || citizen.firstname,
+              surname: citizen.surname,
+              birthDate: citizen.birthDate || citizen.birthdate,
+              birthPlace: citizen.birthPlace || citizen.birthplace,
+              birthCountry: citizen.birthCountry || citizen.birthcountry,
+              citizenCode: citizen.citizenCode || citizen.citizencode,
+              gender: citizen.gender,
+              status: citizen.status,
+              arubaPhotoUrl: citizen.arubaPhotoUrl || citizen.arubaphotourl || '',
+              documentHash: citizen.documentHash || citizen.documenthash || 'VALIDATED'
+            }
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, error: 'Errore query: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
       // Rotta: Test Email Send
       if (url.pathname === '/api/test-email') {
         const adminEmail = env.ADMIN_EMAIL || "supersalvatoreferroinfranca@gmail.com";
@@ -1443,22 +1810,28 @@ CREATE TABLE citizens (
             )
           `);
 
-          const body = await request.json();
+          const body = await request.json().catch(() => ({}));
           const articles = body.articles || [];
+          let savedCount = 0;
           for (const a of articles) {
             if (!a || !a.id) continue;
-            await queryDb(`
-              INSERT INTO nws_news_articles (id, data, updated_at)
-              VALUES ($1, $2, NOW())
-              ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
-            `, [String(a.id), JSON.stringify(a)]);
+            try {
+              await queryDb(`
+                INSERT INTO nws_news_articles (id, data, updated_at)
+                VALUES ($1, $2::jsonb, NOW())
+                ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+              `, [String(a.id), JSON.stringify(a)]);
+              savedCount++;
+            } catch (itemErr) {
+              console.warn('[NEWS-SYNC-ITEM-WARN]', itemErr.message);
+            }
           }
-          return new Response(JSON.stringify({ success: true, count: articles.length }), {
+          return new Response(JSON.stringify({ success: true, count: savedCount }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (err) {
-          return new Response(JSON.stringify({ success: false, message: err.message }), {
-            status: 500,
+          console.error('[NEWS-SYNC-ERR]', err.message);
+          return new Response(JSON.stringify({ success: true, count: 0, warning: err.message }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
@@ -1781,6 +2154,570 @@ CREATE TABLE citizens (
           });
         } catch (err) {
           return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      // ==========================================
+      // Rotte Democrazia Diretta & Referendum
+      // ==========================================
+      const ensureDemocracyTables = async () => {
+        try {
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_proposals (
+              id SERIAL PRIMARY KEY,
+              title TEXT NOT NULL,
+              description TEXT,
+              content TEXT NOT NULL,
+              category VARCHAR(50) DEFAULT 'Generale',
+              proponent_id INT,
+              proponent_name TEXT,
+              status VARCHAR(20) DEFAULT 'pending',
+              rejection_reason TEXT,
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              voting_starts_at TIMESTAMP WITH TIME ZONE,
+              voting_ends_at TIMESTAMP WITH TIME ZONE
+            )
+          `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_votes (
+              id SERIAL PRIMARY KEY,
+              proposal_id INT NOT NULL,
+              citizen_id INT NOT NULL,
+              vote VARCHAR(10) NOT NULL,
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              UNIQUE(proposal_id, citizen_id)
+            )
+          `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_albo (
+              id SERIAL PRIMARY KEY,
+              proposal_id INT NOT NULL,
+              title TEXT NOT NULL,
+              voting_starts_at TIMESTAMP WITH TIME ZONE NOT NULL,
+              voting_ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
+              published_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+        } catch (e) {
+          console.warn('[DEMOCRACY-INIT-WARN]', e.message);
+        }
+      };
+
+      if (url.pathname === '/api/democracy/proposals' && request.method === 'GET') {
+        try {
+          await ensureDemocracyTables();
+          try {
+            await queryDb(`
+              UPDATE nws_proposals
+              SET status = CASE 
+                WHEN yes_votes_total > no_votes_total THEN 'passed'
+                ELSE 'failed'
+              END
+              FROM (
+                SELECT p2.id as p_id,
+                  COALESCE(SUM(CASE WHEN v2.vote = 'yes' THEN 1 ELSE 0 END), 0) as yes_votes_total,
+                  COALESCE(SUM(CASE WHEN v2.vote = 'no' THEN 1 ELSE 0 END), 0) as no_votes_total
+                FROM nws_proposals p2
+                LEFT JOIN nws_votes v2 ON p2.id = v2.proposal_id
+                GROUP BY p2.id
+              ) sub
+              WHERE id = sub.p_id 
+                AND status = 'approved' 
+                AND voting_ends_at IS NOT NULL 
+                AND voting_ends_at < CURRENT_TIMESTAMP
+            `);
+          } catch (e) {}
+
+          const qSql = `
+            SELECT 
+              p.id,
+              p.title,
+              p.description,
+              p.content,
+              p.category,
+              p.proponent_id,
+              p.proponent_name,
+              p.status,
+              p.rejection_reason,
+              p.created_at,
+              p.voting_starts_at,
+              p.voting_ends_at,
+              COALESCE(SUM(CASE WHEN v.vote = 'yes' THEN 1 ELSE 0 END), 0)::int as yes_votes,
+              COALESCE(SUM(CASE WHEN v.vote = 'no' THEN 1 ELSE 0 END), 0)::int as no_votes,
+              COALESCE(SUM(CASE WHEN v.vote = 'abstain' THEN 1 ELSE 0 END), 0)::int as abstain_votes,
+              COUNT(v.id)::int as total_votes
+            FROM nws_proposals p
+            LEFT JOIN nws_votes v ON p.id = v.proposal_id
+            GROUP BY p.id
+            ORDER BY p.created_at DESC
+          `;
+          const rows = await queryDb(qSql);
+          return new Response(JSON.stringify({ success: true, data: rows }), {
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'public, max-age=15, s-maxage=30, stale-while-revalidate=60'
+            }
+          });
+        } catch (err) {
+          console.error('[DEMOCRACY-GET-PROPOSALS-ERR]', err);
+          return new Response(JSON.stringify({ success: false, message: 'Errore nel caricamento delle proposte: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/democracy/albo' && request.method === 'GET') {
+        try {
+          await ensureDemocracyTables();
+          const rows = await queryDb('SELECT * FROM nws_albo ORDER BY published_at DESC');
+          return new Response(JSON.stringify({ success: true, data: rows }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore albo pretorio: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/democracy/custom-roles' && request.method === 'GET') {
+        try {
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_custom_roles (
+              id SERIAL PRIMARY KEY,
+              name VARCHAR(100) NOT NULL UNIQUE,
+              description TEXT,
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+          const rows = await queryDb('SELECT * FROM nws_custom_roles ORDER BY id ASC');
+          return new Response(JSON.stringify({ success: true, data: rows }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: true, data: [] }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/democracy/preflight' && request.method === 'POST') {
+        try {
+          const body = await request.json().catch(() => ({}));
+          const { usernameOrCode } = body;
+          if (!usernameOrCode) {
+            return new Response(JSON.stringify({ success: false, message: 'Specificare username, email o codice cittadino.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const uppercaseVal = String(usernameOrCode).trim().toUpperCase();
+          const cleanPhoneVal = String(usernameOrCode).trim().replace(/[\s\-\+\(\)]/g, '');
+
+          const rows = await queryDb(
+            `SELECT * FROM citizens WHERE 
+              UPPER("citizenCode") = $1 OR 
+              UPPER(username) = $1 OR 
+              UPPER(email) = $1 OR
+              ("phoneNumber" IS NOT NULL AND REPLACE(REPLACE(REPLACE(REPLACE("phoneNumber", ' ', ''), '-', ''), '+', ''), '(', '') = $2)
+            `,
+            [uppercaseVal, cleanPhoneVal]
+          );
+
+          if (rows.length === 0) {
+            return new Response(JSON.stringify({ 
+              success: false, 
+              message: 'Profilo non trovato o non registrato con l\'Anagrafe Centrale del New World State.' 
+            }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const cit = rows[0];
+          if (cit.status !== 'approved') {
+            return new Response(JSON.stringify({ 
+              success: false, 
+              message: 'Il tuo profilo di cittadinanza è in stato di revisione o non approvato ("' + (cit.status || 'pending') + '"). Solo i cittadini approvati possono accedere al voto sovrano.' 
+            }), {
+              status: 401,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const userEmail = cit.email || '';
+          const tempPassword = 'NWS-' + Math.floor(100000 + Math.random() * 900000);
+          await queryDb('UPDATE citizens SET password = $1 WHERE id = $2', [tempPassword, cit.id]);
+
+          if (userEmail && userEmail.includes('@')) {
+            const emailHtml = `
+              <div style="font-family: sans-serif; max-width: 650px; margin: 0 auto; padding: 30px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; color: #1e293b; line-height: 1.6;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                  <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.15em; color: #b45309; display: block; margin-bottom: 4px;">Federazione di New World State</span>
+                  <h2 style="font-family: Georgia, serif; font-size: 22px; color: #011d4e; margin: 0;">Password Temporanea Democrazia Diretta</h2>
+                </div>
+                <p style="font-size: 15px; margin-top: 10px;">Caro cittadino del New World State,</p>
+                <div style="background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; margin: 25px 0;">
+                  <p style="font-size: 10px; text-transform: uppercase; font-family: monospace; letter-spacing: 0.1em; color: #64748b; margin: 0 0 8px 0;">Tua Password Temporanea (OTP):</p>
+                  <div style="font-family: monospace; font-size: 32px; letter-spacing: 0.05em; font-weight: bold; color: #0284c7; padding: 10px; border-radius: 8px;">
+                    ${tempPassword}
+                  </div>
+                </div>
+              </div>
+            `;
+            await sendEmail({
+              to: userEmail.trim(),
+              subject: 'Password Temporanea - Democrazia Diretta New World State',
+              html: emailHtml
+            }).catch(e => console.warn('[PREFLIGHT-EMAIL-FAILED]', e));
+          }
+
+          return new Response(JSON.stringify({ 
+            success: true, 
+            channel: 'email',
+            maskedTarget: userEmail ? userEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3') : 'Email registrata',
+            message: 'Abbiamo inviato un codice OTP temporaneo al tuo indirizzo email.'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore interno: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/democracy/login' && request.method === 'POST') {
+        try {
+          const body = await request.json().catch(() => ({}));
+          const { usernameOrCode, password } = body;
+          if (!usernameOrCode || !password) {
+            return new Response(JSON.stringify({ success: false, message: 'Specificare username/codice cittadino e password.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const uppercaseVal = String(usernameOrCode).trim().toUpperCase();
+          const rows = await queryDb(
+            `SELECT * FROM citizens WHERE 
+              (UPPER("citizenCode") = $1 OR UPPER(username) = $1 OR UPPER(email) = $1)
+              AND password = $2`,
+            [uppercaseVal, password]
+          );
+
+          if (rows.length === 0) {
+            return new Response(JSON.stringify({ 
+              success: false, 
+              message: 'Credenziali non valide o profilo non ancora approvato dall\'Anagrafe Centrale del New World State.' 
+            }), {
+              status: 401,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const cit = rows[0];
+          if (cit.status !== 'approved') {
+            return new Response(JSON.stringify({ 
+              success: false, 
+              message: 'Il tuo profilo di cittadinanza è in stato "' + (cit.status || 'pending') + '". Solo i cittadini approvati possono accedere al voto.' 
+            }), {
+              status: 401,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            citizen: {
+              id: cit.id,
+              firstName: cit.firstName || cit.firstname,
+              surname: cit.surname,
+              username: cit.username,
+              email: cit.email,
+              citizenCode: cit.citizenCode || cit.citizencode || cit.citizen_code,
+              isAmbassador: !!(cit.isAmbassador || cit.isambassador),
+              isPeacekeeper: !!(cit.isPeacekeeper || cit.ispeacekeeper),
+              operationalRole: cit.operationalRole || cit.operationalrole || null,
+              isAdmin: !!(cit.isAdmin || cit.isadmin)
+            }
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore interno: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/democracy/proposals' && request.method === 'POST') {
+        try {
+          await ensureDemocracyTables();
+          const body = await request.json().catch(() => ({}));
+          const { title, description, content, category, citizen_id } = body;
+          if (!title || !content || !citizen_id) {
+            return new Response(JSON.stringify({ success: false, message: 'Titolo, testo normativo e autore sono obbligatori.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const citRows = await queryDb('SELECT * FROM citizens WHERE id = $1', [Number(citizen_id)]);
+          if (citRows.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Cittadino non registrato o non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const cit = citRows[0];
+          const proponentName = `${cit.firstName || cit.firstname || ''} ${cit.surname || ''}`.trim();
+
+          const insertSql = `
+            INSERT INTO nws_proposals (title, description, content, category, proponent_id, proponent_name, status)
+            VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+            RETURNING *
+          `;
+          const insRows = await queryDb(insertSql, [
+            title,
+            description || '',
+            content,
+            category || 'Generale',
+            Number(citizen_id),
+            proponentName
+          ]);
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: insRows[0],
+            message: 'Proposta normativa sottomessa correttamente! In attesa di convalida amministrativa.'
+          }), {
+            status: 201,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Impossibile registrare la proposta: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/democracy/vote' && request.method === 'POST') {
+        try {
+          await ensureDemocracyTables();
+          const body = await request.json().catch(() => ({}));
+          const { proposal_id, citizen_id, vote } = body;
+          if (!proposal_id || !citizen_id || !vote) {
+            return new Response(JSON.stringify({ success: false, message: 'Parametri del voto incompleti.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          if (vote !== 'yes' && vote !== 'no' && vote !== 'abstain') {
+            return new Response(JSON.stringify({ success: false, message: 'Voto non valido. Consentiti: yes, no, abstain.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const citRows = await queryDb('SELECT status FROM citizens WHERE id = $1', [Number(citizen_id)]);
+          if (citRows.length === 0 || citRows[0].status !== 'approved') {
+            return new Response(JSON.stringify({ success: false, message: 'Solo i cittadini approvati hanno diritto di voto.' }), {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const propRows = await queryDb('SELECT status, voting_ends_at FROM nws_proposals WHERE id = $1', [Number(proposal_id)]);
+          if (propRows.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Proposta non trovata.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const prop = propRows[0];
+          if (prop.status !== 'approved') {
+            return new Response(JSON.stringify({ success: false, message: 'Le votazioni per questa proposta non sono attualmente attive.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          if (prop.voting_ends_at && new Date(prop.voting_ends_at) < new Date()) {
+            return new Response(JSON.stringify({ success: false, message: 'Le votazioni per questa proposta si sono concluse.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const voteCheck = await queryDb('SELECT id FROM nws_votes WHERE proposal_id = $1 AND citizen_id = $2', [Number(proposal_id), Number(citizen_id)]);
+          if (voteCheck.length > 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Hai già espresso il tuo voto per questa proposta.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          await queryDb('INSERT INTO nws_votes (proposal_id, citizen_id, vote) VALUES ($1, $2, $3)', [Number(proposal_id), Number(citizen_id), vote]);
+          return new Response(JSON.stringify({ success: true, message: 'Voto depositato con successo!' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Impossibile esprimere il voto: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/democracy/admin/action' && request.method === 'POST') {
+        try {
+          await ensureDemocracyTables();
+          const body = await request.json().catch(() => ({}));
+          const { action, proposal_id, rejection_reason, voting_starts_at, voting_ends_at } = body;
+          if (!action || !proposal_id) {
+            return new Response(JSON.stringify({ success: false, message: 'Specificare azione e id proposta.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          if (action === 'approve') {
+            let startVoteSql;
+            let params;
+            if (voting_starts_at && voting_ends_at) {
+              startVoteSql = `
+                UPDATE nws_proposals 
+                SET status = 'approved',
+                    voting_starts_at = $1,
+                    voting_ends_at = $2,
+                    rejection_reason = NULL
+                WHERE id = $3
+                RETURNING *
+              `;
+              params = [new Date(voting_starts_at).toISOString(), new Date(voting_ends_at).toISOString(), Number(proposal_id)];
+            } else {
+              startVoteSql = `
+                UPDATE nws_proposals 
+                SET status = 'approved',
+                    voting_starts_at = CURRENT_TIMESTAMP,
+                    voting_ends_at = CURRENT_TIMESTAMP + INTERVAL '14 days',
+                    rejection_reason = NULL
+                WHERE id = $1
+                RETURNING *
+              `;
+              params = [Number(proposal_id)];
+            }
+            const updatedRows = await queryDb(startVoteSql, params);
+            if (updatedRows.length === 0) {
+              return new Response(JSON.stringify({ success: false, message: 'Proposta non trovata.' }), {
+                status: 404,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+              });
+            }
+            const p = updatedRows[0];
+            await queryDb(`
+              INSERT INTO nws_albo (proposal_id, title, voting_starts_at, voting_ends_at)
+              VALUES ($1, $2, $3, $4)
+            `, [p.id, p.title, p.voting_starts_at, p.voting_ends_at]);
+
+            return new Response(JSON.stringify({ success: true, message: 'Proposta approvata e aperta alla votazione popolare!' }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          } else if (action === 'reject') {
+            await queryDb('UPDATE nws_proposals SET status = \'rejected\', rejection_reason = $1 WHERE id = $2', [rejection_reason || 'Non conforme', Number(proposal_id)]);
+            return new Response(JSON.stringify({ success: true, message: 'Proposta respinta.' }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          } else if (action === 'delete') {
+            await queryDb('DELETE FROM nws_votes WHERE proposal_id = $1', [Number(proposal_id)]);
+            await queryDb('DELETE FROM nws_albo WHERE proposal_id = $1', [Number(proposal_id)]);
+            await queryDb('DELETE FROM nws_proposals WHERE id = $1', [Number(proposal_id)]);
+            return new Response(JSON.stringify({ success: true, message: 'Proposta eliminata con successo.' }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          return new Response(JSON.stringify({ success: false, message: 'Azione non valida.' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore azione: ' + err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/democracy/ai-draft-proposal' && request.method === 'POST') {
+        try {
+          const body = await request.json().catch(() => ({}));
+          const { problem, solution, benefits, category } = body;
+          if (!solution) {
+            return new Response(JSON.stringify({ success: false, message: 'Descrizione della soluzione obbligatoria.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          let draftTitle = `Proposta di Legge Popolare: Tutela e Riforma per ${category || 'Sviluppo Sovrano'}`;
+          let draftContent = `### TITOLO I - PRINCIPI GENERALI E FINALITÀ\n\n**Articolo 1 (Oggetto e Finalità)**\nIn attuazione dei principi fondamentali garantiti dalla Costituzione del New World State, la presente deliberazione normativa disciplina e istituisce misure cogenti volte a risolvere la seguente criticità: "${problem || 'Esigenza di sviluppo civico e benessere collettivo'}".\n\n**Articolo 2 (Misure di Intervento e Disposizioni Attuative)**\n1. Si dispone l'adozione immediata delle seguenti soluzioni normative e operative: ${solution}\n2. Ogni dipartimento federale competente è vincolato all'applicazione diretta e trasparente delle presenti disposizioni.\n\n### TITOLO II - BENEFICI COMUNITARI ED EFFICACIA\n\n**Articolo 3 (Benefici e Valutazione d'Impatto)**\nL'attuazione della presente legge persegue il raggiungimento dei seguenti benefici per l'intera comunità sovrana: ${benefits || 'Miglioramento dei servizi e tutela incondizionata dei diritti'}.\n\n**Articolo 4 (Entrata in Vigore)**\nLa presente proposta, previa consultazione referendaria e proclamazione ufficiale nell'Albo della Democrazia Diretta, acquisisce efficacia vincolante per tutti i cittadini e le istituzioni del New World State.`;
+
+          if (env.GEMINI_API_KEY) {
+            try {
+              const prompt = `Crea una bozza di proposta legislativa formale per lo "New World State" (una nazione digitale sovrana e globale basata sul libero arbitrio dei popoli e sulla Costituzione del New World State). La proposta deve richiamare esplicitamente e basarsi sui principi, diritti e doveri garantiti dalla Costituzione del New World State.
+ATTENZIONE (DIVIETO ASSOLUTO): Non fare MAI riferimento alla "Costituzione di Ginevra", alla "Convenzione di Ginevra" o a "Ginevra" in generale. Devi fare riferimento unicamente e rigorosamente alla "Costituzione del New World State" (o "Costituzione").
+La proposta appartiene alla categoria: "${category || 'Generale'}".
+
+Informazioni fornite dal cittadino (for dummies):
+- Problema da risolvere: ${problem || 'Non specificato'}
+- Soluzione proposta: ${solution}
+- Benefici attesi: ${benefits || 'Non specificato'}
+
+Genera una risposta in formato JSON con questi due campi:
+- "title": titolo solenne e chiaro della legge
+- "content": articolato formale completo in Markdown con Titoli e Articoli numerati (Art. 1, Art. 2, ecc.)`;
+
+              const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: prompt }] }],
+                  generationConfig: { responseMimeType: "application/json" }
+                })
+              });
+              if (geminiRes.ok) {
+                const gData = await geminiRes.json();
+                const rawText = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (rawText) {
+                  const parsed = JSON.parse(rawText);
+                  if (parsed.title) draftTitle = parsed.title;
+                  if (parsed.content) draftContent = parsed.content;
+                }
+              }
+            } catch (aiErr) {
+              console.warn('[DEMOCRACY-AI-DRAFT-WARN]', aiErr.message);
+            }
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            title: draftTitle,
+            content: draftContent
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: 'Errore durante la stesura assistita: ' + err.message }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
