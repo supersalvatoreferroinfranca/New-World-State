@@ -1550,19 +1550,6 @@ const COMMON_PHRASES: Record<string, Record<Language, string>> = {
     ja: "地域貢献事業と募金活動",
     ar: "الأعمال المجتمعية وحملات التبرع"
   },
-  "Sovereign Navigation": {
-    it: "Navigazione Sovrana",
-    en: "Sovereign Navigation",
-    fr: "Navigation Souveraine",
-    es: "Navegación Soberana",
-    pt: "Navegação Soberana",
-    ru: "Суверенная навигация",
-    hi: "संप्रभु नेविगेशन",
-    bn: "সার্বভৌম নেভিগেশন",
-    zh: "主权导航体系",
-    ja: "主権ナビゲーション",
-    ar: "التنقل السيادي"
-  },
   "Privacy Policy": {
     it: "Informativa Privacy",
     en: "Privacy Policy",
@@ -1627,45 +1614,6 @@ const COMMON_PHRASES: Record<string, Record<Language, string>> = {
     zh: "请勿出售或共享我的个人信息",
     ja: "個人情報の販売または共有を拒否",
     ar: "عدم بيع أو مشاركة معلوماتي الشخصية"
-  },
-  "All Categories": {
-    it: "Tutte le Categorie",
-    en: "All Categories",
-    fr: "Toutes les Catégories",
-    es: "Todas las Categorías",
-    pt: "Todas as Categorias",
-    ru: "Все категории",
-    hi: "सभी श्रेणियां",
-    bn: "সমস্ত বিভাগ",
-    zh: "所有分类",
-    ja: "すべてのカテゴリー",
-    ar: "جميع الفئات"
-  },
-  "Featured on Cover": {
-    it: "In Evidenza in Copertina",
-    en: "Featured on Cover",
-    fr: "À la Une",
-    es: "En Portada",
-    pt: "Em Destaque na Capa",
-    ru: "На главной обложке",
-    hi: "मुखपृष्ठ पर विशेष",
-    bn: "প্রচ্ছদে বিশিষ্ট",
-    zh: "封面要闻",
-    ja: "トップ特集",
-    ar: "في الصدارة على الغلاف"
-  },
-  "Sovereign Cover": {
-    it: "Copertina Sovrana",
-    en: "Sovereign Cover",
-    fr: "Couverture Souveraine",
-    es: "Portada Soberana",
-    pt: "Capa Soberana",
-    ru: "Суверенная обложка",
-    hi: "संप्रभु कवर",
-    bn: "সার্বভৌম প্রচ্ছদ",
-    zh: "主权特辑封面",
-    ja: "主権カバー",
-    ar: "غلاف سيادي"
   },
   "Politics & Sovereignty": {
     it: "Politica & Sovranità",

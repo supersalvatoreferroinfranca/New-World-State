@@ -1707,6 +1707,74 @@ export async function auditAndTranslateMissingArticles(): Promise<void> {
 // Le traduzioni automatiche vengono eseguite in modo reattivo alla creazione/modifica degli articoli
 // o su richiesta specifica per evitare saturazione delle quote API Gemini.
 
+export const CATEGORY_LOCALIZATIONS: Record<string, Record<NewsLanguage, string>> = {
+  'cat-politica': {
+    it: "Politica & Sovranità",
+    en: "Politics & Sovereignty",
+    fr: "Politique & Souveraineté",
+    es: "Política y Soberanía",
+    pt: "Política e Soberania",
+    ru: "Политика и суверенитет",
+    hi: "राजनीति और संप्रभुता",
+    bn: "রাজনীতি ও সার্বভৌমত্ব",
+    zh: "政治与主权",
+    ja: "政治と主権",
+    ar: "السياسة والسيادة"
+  },
+  'cat-economia': {
+    it: "Economia & Finanza",
+    en: "Economy & Finance",
+    fr: "Économie & Finance",
+    es: "Economía y Finanzas",
+    pt: "Economia e Finanças",
+    ru: "Экономика и финансы",
+    hi: "अर्थव्यवस्था और वित्त",
+    bn: "अर्थনীতি ও অর্থায়ন",
+    zh: "经济与金融",
+    ja: "経済と金融",
+    ar: "الاقتصاد والمالية"
+  },
+  'cat-diritti': {
+    it: "Diritti & Costituzione",
+    en: "Rights & Constitution",
+    fr: "Droits & Constitution",
+    es: "Derechos y Constitución",
+    pt: "Direitos e Constituição",
+    ru: "Права и Конституция",
+    hi: "अधिकार और संविधान",
+    bn: "অধিকার ও সংবিধান",
+    zh: "权利与宪法",
+    ja: "権利と憲法",
+    ar: "الحقوق والدستور"
+  },
+  'cat-tecnologia': {
+    it: "Tecnologia & Innovazione",
+    en: "Technology & Innovation",
+    fr: "Technologie & Innovation",
+    es: "Tecnología e Innovación",
+    pt: "Tecnologia e Inovação",
+    ru: "Технологии и инновации",
+    hi: "प्रौद्योगिकी और नवाचार",
+    bn: "প্রযুক্তি ও উদ্ভাবন",
+    zh: "技术与创新",
+    ja: "テクノロジーと革新",
+    ar: "التكنولوجيا والابتكار"
+  },
+  'cat-cultura': {
+    it: "Cultura & Società",
+    en: "Culture & Society",
+    fr: "Culture & Société",
+    es: "Cultura y Sociedad",
+    pt: "Cultura e Sociedade",
+    ru: "Культура и общество",
+    hi: "संस्कृति और समाज",
+    bn: "সংস্কৃতি ও সমাজ",
+    zh: "文化与社会",
+    ja: "文化と社会",
+    ar: "الثقافة والمجتمع"
+  }
+};
+
 /**
  * Restituisce l'etichetta localizzata della categoria nella lingua del visitatore
  */
@@ -1724,13 +1792,14 @@ export function getLocalizedCategoryTitle(
   // Try matching by slug or known Italian name
   const catSlug = (cat.slug || '').toLowerCase();
   for (const [key, item] of Object.entries(CATEGORY_LOCALIZATIONS)) {
+    const localizedMap = item as Record<NewsLanguage, string>;
     if (
-      item.it === cat.name || 
-      item.en === cat.name || 
+      localizedMap.it === cat.name || 
+      localizedMap.en === cat.name || 
       (catSlug && catSlug.includes(key.replace('cat-', '')))
     ) {
-      if (item[targetLang as NewsLanguage]) {
-        return item[targetLang as NewsLanguage];
+      if (localizedMap[targetLang as NewsLanguage]) {
+        return localizedMap[targetLang as NewsLanguage];
       }
     }
   }
