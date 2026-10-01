@@ -1,14 +1,14 @@
 {
-  "totalPageViews": 1460,
+  "totalPageViews": 1465,
   "uniqueVisitors": 412,
   "totalSessions": 530,
-  "totalTimeSpentSeconds": 174210,
-  "bounceSessions": 114,
+  "totalTimeSpentSeconds": 189794,
+  "bounceSessions": 116,
   "visitors": {},
   "pageViewsByTab": {
     "welcome": {
-      "views": 500,
-      "timeSpent": 81382,
+      "views": 502,
+      "timeSpent": 81507,
       "uniqueVisitors": 360,
       "label": "Benvenuto & Portale Principale"
     },
@@ -19,8 +19,8 @@
       "label": "Quotidiano Sovrano New World State"
     },
     "democracy": {
-      "views": 210,
-      "timeSpent": 21000,
+      "views": 213,
+      "timeSpent": 36459,
       "uniqueVisitors": 160,
       "label": "Democrazia Diretta & Votazioni"
     },
@@ -93,7 +93,7 @@
   "geoCountries": {
     "IT": {
       "name": "Italia",
-      "views": 1160,
+      "views": 1165,
       "visitors": 330,
       "code": "IT"
     },
@@ -141,7 +141,7 @@
     "Altre Località": 137
   },
   "sources": {
-    "direct": 658,
+    "direct": 663,
     "google": 490,
     "social_telegram": 120,
     "social_x": 85,
@@ -152,19 +152,19 @@
   },
   "devices": {
     "mobile": 750,
-    "desktop": 640,
+    "desktop": 645,
     "tablet": 70
   },
   "browsers": {
     "Chrome": 760,
     "Safari": 390,
-    "Firefox": 185,
+    "Firefox": 190,
     "Edge": 95,
     "Samsung Internet": 30
   },
   "operatingSystems": {
     "Android": 540,
-    "Windows": 520,
+    "Windows": 525,
     "iOS": 290,
     "macOS": 90,
     "Linux": 20
@@ -252,12 +252,12 @@
     },
     {
       "hour": "16:00",
-      "views": 59,
+      "views": 62,
       "visitors": 28
     },
     {
       "hour": "17:00",
-      "views": 54,
+      "views": 56,
       "visitors": 38
     },
     {
@@ -378,7 +378,7 @@
     },
     {
       "date": "2026-10-01",
-      "views": 26,
+      "views": 31,
       "visitors": 0,
       "avgDuration": 180
     }

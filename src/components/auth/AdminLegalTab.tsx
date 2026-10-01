@@ -41,6 +41,7 @@ export default function AdminLegalTab({ adminPasswordValue, showAlert }: AdminLe
   const [consentLogs, setConsentLogs] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAction, setFilterAction] = useState<'all' | 'Accept All' | 'Accept Essential Only' | 'Custom Preferences Saved'>('all');
+  const [selectedLog, setSelectedLog] = useState<any | null>(null);
   
   const loadConsentLogs = () => {
     try {
@@ -453,7 +454,6 @@ export default function AdminLegalTab({ adminPasswordValue, showAlert }: AdminLe
     };
   };
 
-  const [selectedLog, setSelectedLog] = useState<any | null>(null);
   const currentPreview = generateDocumentContent();
 
   const filteredLogs = consentLogs.filter(log => {
