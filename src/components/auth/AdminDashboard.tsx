@@ -5,6 +5,7 @@ import AdminLegalTab from './AdminLegalTab';
 import AdminAnalyticsTab from './AdminAnalyticsTab';
 import AdminTransparencyTab from './AdminTransparencyTab';
 import AdminProjectsTab from './AdminProjectsTab';
+import AdminSitemapTab from './AdminSitemapTab';
 import { 
   Users, 
   CheckCircle, 
@@ -35,7 +36,8 @@ import {
   Activity,
   Receipt,
   CreditCard,
-  Droplets
+  Droplets,
+  Compass
 } from 'lucide-react';
 
 interface Citizen {
@@ -88,7 +90,7 @@ export default function AdminDashboard() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Core navigation state
-  const [activeTab, setActiveTab] = useState<'citizens' | 'analytics' | 'proposals' | 'roles' | 'candidacies' | 'broadcasts' | 'branding' | 'legal' | 'transparency' | 'projects'>('citizens');
+  const [activeTab, setActiveTab] = useState<'citizens' | 'analytics' | 'proposals' | 'roles' | 'candidacies' | 'broadcasts' | 'branding' | 'legal' | 'transparency' | 'projects' | 'sitemap'>('citizens');
 
   // Role Applications Candidacies State
   const [roleApplications, setRoleApplications] = useState<any[]>([]);
@@ -1237,11 +1239,18 @@ export default function AdminDashboard() {
         >
           <Shield className="w-4 h-4 text-brand-gold" /> Normativa & Privacy
         </button>
+        <button
+          onClick={() => { setActiveTab('sitemap'); }}
+          id="admin-tab-sitemap"
+          className={`flex-1 min-w-[150px] py-4 px-4 text-center font-serif font-bold text-xs md:text-sm border-b-2 flex items-center justify-center gap-2 transition ${activeTab === 'sitemap' ? 'border-[#0a1c3e] text-[#0a1c3e] bg-white font-black' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <Compass className="w-4 h-4 text-brand-gold" /> Sitemap & SEO
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12">
         {/* LATERALE CONTENUTO TAB (SINISTRA) */}
-        <div className={`${(activeTab === 'legal' || activeTab === 'analytics' || activeTab === 'transparency' || activeTab === 'projects') ? 'lg:col-span-12 xl:col-span-12' : 'lg:col-span-12 xl:col-span-8'} p-6 md:p-8 space-y-6 border-r border-slate-100`}>
+        <div className={`${(activeTab === 'legal' || activeTab === 'analytics' || activeTab === 'transparency' || activeTab === 'projects' || activeTab === 'sitemap') ? 'lg:col-span-12 xl:col-span-12' : 'lg:col-span-12 xl:col-span-8'} p-6 md:p-8 space-y-6 border-r border-slate-100`}>
           
           {/* TAB 1: GESTIONE CITTADINI */}
           {activeTab === 'citizens' && (
@@ -2026,10 +2035,17 @@ export default function AdminDashboard() {
             <AdminTransparencyTab />
           )}
 
+          {activeTab === 'sitemap' && (
+            <AdminSitemapTab 
+              adminPasswordValue={getAdminPassword()} 
+              showAlert={showAlert} 
+            />
+          )}
+
         </div>
 
         {/* LATERALE DETTAGLIO / WORKSPACE (DESTRA) */}
-        {activeTab !== 'legal' && activeTab !== 'analytics' && activeTab !== 'transparency' && activeTab !== 'projects' && (
+        {activeTab !== 'legal' && activeTab !== 'analytics' && activeTab !== 'transparency' && activeTab !== 'projects' && activeTab !== 'sitemap' && (
           <div className="lg:col-span-12 xl:col-span-4 p-6 bg-slate-50/70 border-t xl:border-t-0 border-slate-100 flex flex-col justify-between min-h-[500px]">
           
           {/* RENDER DETTAGLIO CITTADINO */}

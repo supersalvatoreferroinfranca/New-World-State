@@ -1,14 +1,14 @@
 {
-  "totalPageViews": 1434,
+  "totalPageViews": 1460,
   "uniqueVisitors": 412,
   "totalSessions": 530,
-  "totalTimeSpentSeconds": 128902,
-  "bounceSessions": 102,
+  "totalTimeSpentSeconds": 174210,
+  "bounceSessions": 114,
   "visitors": {},
   "pageViewsByTab": {
     "welcome": {
-      "views": 480,
-      "timeSpent": 43200,
+      "views": 500,
+      "timeSpent": 81382,
       "uniqueVisitors": 360,
       "label": "Benvenuto & Portale Principale"
     },
@@ -59,6 +59,12 @@
       "timeSpent": 4102,
       "uniqueVisitors": 0,
       "label": "about"
+    },
+    "projects": {
+      "views": 6,
+      "timeSpent": 7126,
+      "uniqueVisitors": 0,
+      "label": "projects"
     }
   },
   "articles": {
@@ -87,7 +93,7 @@
   "geoCountries": {
     "IT": {
       "name": "Italia",
-      "views": 1134,
+      "views": 1160,
       "visitors": 330,
       "code": "IT"
     },
@@ -135,29 +141,30 @@
     "Altre Località": 137
   },
   "sources": {
-    "direct": 634,
+    "direct": 658,
     "google": 490,
     "social_telegram": 120,
     "social_x": 85,
     "social_whatsapp": 45,
     "bing": 35,
-    "duckduckgo": 25
+    "duckduckgo": 25,
+    "other_referrer": 2
   },
   "devices": {
-    "mobile": 746,
-    "desktop": 618,
+    "mobile": 750,
+    "desktop": 640,
     "tablet": 70
   },
   "browsers": {
     "Chrome": 760,
     "Safari": 390,
-    "Firefox": 159,
+    "Firefox": 185,
     "Edge": 95,
     "Samsung Internet": 30
   },
   "operatingSystems": {
     "Android": 540,
-    "Windows": 494,
+    "Windows": 520,
     "iOS": 290,
     "macOS": 90,
     "Linux": 20
@@ -240,12 +247,12 @@
     },
     {
       "hour": "15:00",
-      "views": 58,
+      "views": 65,
       "visitors": 31
     },
     {
       "hour": "16:00",
-      "views": 40,
+      "views": 59,
       "visitors": 28
     },
     {
@@ -368,6 +375,12 @@
       "views": 141,
       "visitors": 83,
       "avgDuration": 235
+    },
+    {
+      "date": "2026-10-01",
+      "views": 26,
+      "visitors": 0,
+      "avgDuration": 180
     }
   ],
   "communityEvents": {

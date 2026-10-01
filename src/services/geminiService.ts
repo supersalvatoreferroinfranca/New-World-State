@@ -1,10 +1,25 @@
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.GEMINI_API_KEY;
-const ai = new GoogleGenAI({ apiKey: API_KEY || "" });
+const rawKey = typeof process !== 'undefined' && process.env ? process.env.GEMINI_API_KEY : undefined;
+const API_KEY = (typeof rawKey === 'string' && rawKey.trim().length > 10 && rawKey !== 'undefined' && rawKey !== 'null') ? rawKey.trim() : null;
+
+let aiClient: GoogleGenAI | null = null;
+function getAi(): GoogleGenAI | null {
+  if (!API_KEY) return null;
+  if (!aiClient) {
+    try {
+      aiClient = new GoogleGenAI({ apiKey: API_KEY });
+    } catch {
+      return null;
+    }
+  }
+  return aiClient;
+}
 
 export async function enhanceLocationDescription(description: string, address: string) {
   if (!API_KEY) return description;
+  const ai = getAi();
+  if (!ai) return description;
   
   const prompt = `Sei un assistente anagrafico per il New World State. 
   L'utente ha fornito questa descrizione per la sua posizione: "${description}" 
@@ -20,14 +35,15 @@ export async function enhanceLocationDescription(description: string, address: s
       contents: prompt,
     });
     return response.text?.trim() || description;
-  } catch (error) {
-    console.error("Gemini Error:", error);
+  } catch {
     return description;
   }
 }
 
 export async function getFormAssistantTips(currentStep: number, formData: any) {
   if (!API_KEY) return null;
+  const ai = getAi();
+  if (!ai) return null;
 
   const stepContext = [
     "Identità Individuale: assicurati che il nome corrisponda esattamente al documento.",
@@ -49,7 +65,7 @@ export async function getFormAssistantTips(currentStep: number, formData: any) {
       contents: prompt,
     });
     return response.text?.trim() || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

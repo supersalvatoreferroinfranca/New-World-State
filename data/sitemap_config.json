@@ -1,0 +1,50 @@
+{
+  "excludedIds": [],
+  "itemOverrides": {},
+  "customItems": [],
+  "automation": {
+    "autoRegenerateOnNewsPublish": true,
+    "autoIncludeNewArticles": true,
+    "defaultArticlePriority": "0.95",
+    "defaultArticleChangefreq": "daily",
+    "pingGoogle": true,
+    "pingBing": true,
+    "pingIndexNow": true,
+    "autoTranslateBeforeSitemap": true,
+    "notifyWebhookUrl": ""
+  },
+  "lastGeneratedAt": "2026-10-01T16:09:11.329Z",
+  "lastGeneratedStats": {
+    "totalCandidates": 61,
+    "includedCount": 61,
+    "excludedCount": 0,
+    "staticCount": 25,
+    "articlesCount": 25,
+    "pdfCount": 11,
+    "customCount": 0,
+    "durationMs": 217
+  },
+  "eventLogs": [
+    {
+      "id": "log-1790870957813-n8o5",
+      "timestamp": "2026-10-01T16:09:17.813Z",
+      "trigger": "test",
+      "title": "Test Pipeline Automazione Eseguito",
+      "details": "Simulazione completata con successo. Motori contattati: Google Search Console (XML Sitemap), Bing Webmaster Tools (XML & News Sitemap), IndexNow API (Bing / Yandex / Naver instant indexing).",
+      "status": "success",
+      "pings": [
+        "Google Search Console (XML Sitemap)",
+        "Bing Webmaster Tools (XML & News Sitemap)",
+        "IndexNow API (Bing / Yandex / Naver instant indexing)"
+      ]
+    },
+    {
+      "id": "log-init-1790870796538",
+      "timestamp": "2026-10-01T16:06:36.538Z",
+      "trigger": "manual",
+      "title": "Sistema Sitemap Inizializzato",
+      "details": "Configurazione persistente e motore di indicizzazione attivi per New World State.",
+      "status": "success"
+    }
+  ]
+}

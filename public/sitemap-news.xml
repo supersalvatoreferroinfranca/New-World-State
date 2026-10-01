@@ -4,370 +4,1459 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state</loc>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>it</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>L&#039;Ombra del Riarmo Globale: Il New World State e la Visione di Pace Digitale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>The Shadow of Global Rearmament: The New World State and the Vision of Digital Peace</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>L&#039;Ombre du Réarmement Mondial : Le New World State et la Vision de Paix Numérique</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>La Sombra del Rearme Global: El New World State y la Visión de Paz Digital</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>A Sombra do Rearmamento Global: O New World State e a Visão de Paz Digital</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>Тень Глобального Перевооружения: New World State и Видение Цифрового Мира</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>वैश्विक पुनर्शस्त्रीकरण की छाया: न्यू वर्ल्ड स्टेट और डिजिटल शांति की परिकल्पना</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>বৈশ্বিক পুনঃঅস্ত্রসজ্জার ছায়া: নিউ ওয়ার্ল্ড স্টেট এবং ডিজিটাল শান্তির স্বপ্ন</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>全球军备竞赛的阴影：新世界国家与数字和平愿景</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>世界的再軍備の影：ニューワールドステートとデジタル平和のビジョン</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-17T07:57:22.128Z</news:publication_date>
+            <news:title>ظل إعادة التسليح العالمي: دولة العالم الجديد ورؤية السلام الرقمي</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>The New World State: Your Voice, Our Digital Sovereignty</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>Le New World State : Votre Voix, Notre Souveraineté Numérique</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>New World State: Tu Voz, Nuestra Soberanía Digital</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>O New World State: A Sua Voz, A Nossa Soberania Digital</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>New World State: Ваш Голос, Наш Цифровой Суверенитет</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
+            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>Il Costo Nascosto dei Conflitti: L&#039;Impegno Finanziario Europeo nelle Crisi Geopolitiche</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>The Hidden Cost of Conflicts: Europe&#039;s Financial Commitment in Geopolitical Crises</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>Le Coût Caché des Conflits : L&#039;Engagement Financier Européen dans les Crises Géopolitiques</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>El Costo Oculto de los Conflictos: El Compromiso Financiero Europeo en las Crisis Geopolíticas</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>O Custo Oculto dos Conflitos: O Compromisso Financeiro Europeu nas Crises Geopolíticas</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>Скрытая Стоимость Конфликтов: Финансовые Обязательства Европы в Геополитических Кризисах</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>संघर्षों की छिपी लागत: भू-राजनीतिक संकटों में यूरोप की वित्तीय प्रतिबद्धता</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>সংঘাতের লুকানো খরচ: ভূ-রাজনৈতিক সংকটে ইউরোপের আর্থিক প্রতিশ্রুতি</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>冲突的隐藏成本：欧洲在地缘政治危机中的财政投入</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>紛争の隠れたコスト：地政学的危機における欧州の財政的コミットメント</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:28:57.015Z</news:publication_date>
+            <news:title>التكلفة الخفية للصراعات: الالتزام المالي الأوروبي في الأزمات الجيوسياسية</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>Видение мира от New World State: Глобальная армия для всеобщей стабильности</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
+            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>L&#039;Impennata del Costo dei Carburanti: Analisi Profonda tra Geopolitica, Politiche Statali e Sfide per la Sovranità Energetica</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>The Surge in Fuel Costs: A Deep Dive into Geopolitics, State Policies, and Challenges for Energy Sovereignty</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>La Flambée du Coût des Carburants : Une Analyse Approfondie entre Géopolitique, Politiques Étatiques et Défis pour la Souveraineté Énergétique</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>El Alza en el Costo de los Combustibles: Análisis Profundo entre Geopolítica, Políticas Estatales y Desafíos para la Soberanía Energética</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>A Disparada dos Custos dos Combustíveis: Análise Profunda entre Geopolítica, Políticas Estatais e Desafios para a Soberania Energética</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>Рост Цен на Топливо: Глубокий Анализ Геополитики, Государственной Политики и Вызовов для Энергетического Суверенитета</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>ईंधन लागत में उछाल: भू-राजनीति, राज्य नीतियों और ऊर्जा संप्रभुता के लिए चुनौतियों का गहरा विश्लेषण</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>জ্বালানির দাম বৃদ্ধি: ভূ-রাজনীতি, রাষ্ট্রীয় নীতি এবং জ্বালানি সার্বভৌমত্বের চ্যালেঞ্জগুলির গভীর বিশ্লেষণ</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>燃油成本飙升：地缘政治、国家政策与能源主权挑战的深入分析</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>燃料費の高騰：地政学、国家政策、エネルギー主権への課題に関する詳細分析</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-08T09:47:47.883Z</news:publication_date>
+            <news:title>ارتفاع تكلفة الوقود: تحليل معمق بين الجغرافيا السياسية، السياسات الحكومية، وتحديات السيادة الطاقوية</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
             <news:title>Il Flagello Silente: La Piaga dello Sfruttamento Minorile e l&#039;Impegno Globale del New World State</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=en</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
             <news:title>The Silent Scourge: The Plague of Child Labour and the Global Commitment of the New World State</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
             <news:title>Le Fléau Silencieux : Le Ravage du Travail des Enfants et l&#039;Engagement Mondial du New World State</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=es</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
-            <news:title>El Flagelo Silente: La Plaga del Trabajo Infantil y el Compromiso Global del New World State</news:title>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
+            <news:title>El Azote Silente: La Plaga de la Explotación Infantil y el Compromiso Global del New World State</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
             <news:title>O Flagelo Silencioso: A Chaga do Trabalho Infantil e o Compromisso Global do New World State</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
-            <news:title>Безмолвное бедствие: бремя детского труда и глобальные обязательства New World State</news:title>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
+            <news:title>Тихий бич: Бедствие эксплуатации детского труда и глобальные обязательства New World State</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
             <news:title>मूक विपत्ति: बाल श्रम का अभिशाप और New World State की वैश्विक प्रतिबद्धता</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
             <news:title>নীরব সংকট: শিশুশ্রমের অভিশাপ এবং New World State-এর বৈশ্বিক অঙ্গীকার</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
             <news:title>无声的祸患：童工剥削问题与新世界国家的全球承诺</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
             <news:title>静かなる災禍：児童労働の惨禍と新世界国家のグローバルな誓約</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
-            <news:publication_date>2026-08-26T10:00:00.000Z</news:publication_date>
+            <news:publication_date>2026-09-06T09:46:32.880Z</news:publication_date>
             <news:title>الكارثة الصامتة: آفة عمالة الأطفال والالتزام العالمي لـ New World State</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>it</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>Il New World State e l&#039;Alba di una Nuova Diplomazia: Appello per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=en</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>The New World State and the Dawn of a New Diplomacy: An Appeal for Global Peace</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>Le New World State et l&#039;Aube d&#039;une Nouvelle Diplomatie : Appel pour la Paix Mondiale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=es</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>El New World State y el Alba de una Nueva Diplomacia: Un Llamamiento por la Paz Global</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>O New World State e o Alvorecer de uma Nova Diplomacia: Apelo pela Paz Global</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>New World State и Рассвет Новой Дипломатии: Призыв к Глобальному Миру</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>न्यू वर्ल्ड स्टेट और नई कूटनीति का उदय: वैश्विक शांति के लिए एक अपील</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>নিউ ওয়ার্ল্ড স্টেট এবং এক নতুন কূটনীতির উন্মোচন: বিশ্ব শান্তির জন্য একটি আবেদন</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>New World State与新外交的曙光：全球和平呼吁</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>New World Stateと新外交の夜明け：地球平和への訴え</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+            <news:publication_date>2026-09-06T09:38:52.316Z</news:publication_date>
+            <news:title>دولة العالم الجديد وبزوغ دبلوماسية جديدة: نداء من أجل السلام العالمي</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>it</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=en</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=es</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Arquitetos do Futuro: Estados Inovadores para o Bem-Estar Global e a Paz Duradoura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
-            <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
-            <news:publication_date>2026-08-25T09:09:23.871Z</news:publication_date>
+            <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
+            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>The Architecture of Freedom: Peoples&#039; Independence and Global Community in the New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architecture de la Liberté : Indépendance des Peuples et Communauté Mondiale au sein du New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
+            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
+            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>Strategic Impotence: An Analysis of the Root Causes of UN Paralysis in Current Conflicts</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>L&#039;Impuissance Stratégique : Analyse des Causes Profondes de la Paralysie de l&#039;ONU dans les Conflits Actuels</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>La Impotencia Estratégica: Análisis de las Causas Profundas de la Parálisis de la ONU en los Conflictos Actuales</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>A Impotência Estratégica: Análise das Causas Profundas da Paralisia da ONU nos Conflitos Atuais</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>Стратегическое бессилие: глубокий анализ причин паралича ООН в современных конфликтах</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>रणनीतिक विवशता: वर्तमान संघर्षों में संयुक्त राष्ट्र के पक्षाघात के मूल कारणों का गहन विश्लेषण</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>কৌশলগত অক্ষমতা: বর্তমান সংঘাতে জাতিসংঘের অচলবস্থার মূল কারণসমূহের বিশ্লেষণ</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>战略无力感：当前冲突中联合国陷入瘫痪的根本原因深度剖析</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>戦略的無力感：現在の紛争における国連機能不全の根本原因分析</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>العجز الاستراتيجي: تحليل عميق للأسباب الجذرية لشلل الأمم المتحدة في الصراعات الحالية</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
             <news:title>Infrastrutture Decentralizzate: Test del Nodo di Rete e Ridondanza dei Server</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita</loc>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>Decentralized Infrastructure: Node Testing and Global Redundancy Network</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>Infrastructures Décentralisées : Tests de Nœuds et Réseau de Redondance Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>Infraestructuras Descentralizadas: Pruebas de Nodos y Red de Redundancia Global</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>Infraestruturas Descentralizadas: Teste de Nó e Rede de Redundância Global</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>Децентрализованная инфраструктура: тестирование узлов и глобальная сеть резервирования</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>विकेंद्रीकृत बुनियादी ढांचा: नोड परीक्षण और वैश्विक अतिरेक नेटवर्क</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>বিকেন্দ্রীভূত অবকাঠামো: নোড পরীক্ষা এবং বৈশ্বিক রিডানড্যান্সি নেটওয়ার্ক</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>去中心化基础设施：节点测试与全球冗余网络</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>分散型インフラ：ノードテストとグローバル冗長性ネットワーク</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-25T10:41:54.614Z</news:publication_date>
+            <news:title>البنية التحتية اللامركزية: اختبار العقد وشبكة التكرار العالمية</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -378,117 +1467,117 @@
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=en</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>Sovereign Community Support Fund and Distributed Ethical Finance</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>Fonds Souverain de Soutien Communautaire et Finance Éthique Distribuée</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=es</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>Fondo Soberano de Apoyo Comunitario y Finanzas Éticas Distribuidas</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>Fundo Soberano de Apoio Comunitário e Finanças Éticas Distribuídas</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>Суверенный фонд поддержки сообществ и этические распределенные финансы</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>संप्रभु सामुदायिक सहायता कोष और वितरित नैतिक वित्त</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>সার্বভৌম সম্প্রদায় সহায়তা তহবিল এবং নৈতিক ও বিতরণকৃত অর্থায়ন</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>主权社区支持基金与分布式伦理金融</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>主権コミュニティ支援基金と分散型倫理金融</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-08-24T08:00:00.000Z</news:publication_date>
-            <news:title>Fondo Sovrano di Sostegno Comunitario e Finanza Etica Distribuita</news:title>
+            <news:title>صندوق الدعم المجتمعي السيادي والتمويل الأخلاقي الموزع</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -499,238 +1588,238 @@
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=en</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>Academy of Custodians and Natural Law: Universal Educational Program</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>Académie des Gardiens et Droit Naturel : Programme Éducatif Universel</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=es</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>Academia de los Custodios y Derecho Natural: Programa Educativo Universal</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>Academia dos Guardiões e Direito Natural: Programa Educativo Universal</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>Академия хранителей и естественное право: универсальная образовательная программа</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>संरक्षकों की अकादमी और प्राकृतिक कानून: सार्वभौमिक शैक्षिक कार्यक्रम</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>অভিভাবকদের একাডেমি এবং প্রাকৃতিক আইন: সর্বজনীন শিক্ষামূলক কর্মসূচি</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>守护者学院与自然法则：普遍教育课程计划</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>守護者アカデミーと自然法：普遍的教育プログラム</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+            <news:title>أكاديمية الحراس والقانون الطبيعي: برنامج تعليمي شامل</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>it</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
             <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=en</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>Financial Transparency Protocol and Citizens&#039; Privacy Protection</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>Protocole de Transparence Financière et Protection de la Vie Privée des Citoyens</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=es</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>Protocolo de Transparencia Financiera y Protección de la Privacidad Ciudadana</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>Protocolo de Transparência Financeira e Proteção da Privacidade dos Cidadãos</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>Протокол финансовой прозрачности и защита конфиденциальности граждан</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>वित्तीय पारदर्शिता प्रोटोकॉल और नागरिक गोपनीयता संरक्षण</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>আর্থিক স্বচ্ছতা প্রোটোকল এবং নাগরিকদের গোপনীয়তা সুরক্ষা</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>金融透明度协议与公民隐私保护</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>金融透明性プロトコルと市民のプライバシー保護</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
-            <news:publication_date>2026-08-23T09:09:23.871Z</news:publication_date>
-            <news:title>Protocollo di Trasparenza Finanziaria e Tutela della Privacy dei Cittadini</news:title>
+            <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
+            <news:title>بروتوكول الشفافية المالية وحماية خصوصية المواطنين</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -741,117 +1830,117 @@
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=en</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>Digital Rights Charter and Inviolability of Individual Sovereignty</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>Charte des Droits Numériques et Inviolabilité de la Souveraineté Individuelle</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=es</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>Carta de Derechos Digitales e Inviolabilidad de la Soberanía Individual</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>Carta dos Direitos Digitais e Inviolabilidade da Soberania Individual</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>Хартия цифровых прав и неприкосновенность индивидуального суверенитета</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>डिजिटल अधिकार चार्टर और व्यक्तिगत संप्रभुता की अनुल्लंघनीयता</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>ডিজিটাল অধিকার সনদ এবং ব্যক্তিগত সার্বভৌমত্বের অলঙ্ঘনীয়তা</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>数字权利宪章与个人主权的不可侵犯性</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>デジタル権利憲章と個人の主権の不可侵性</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-08-22T08:00:00.000Z</news:publication_date>
-            <news:title>Carta dei Diritti Digitali e Inviolabilità della Sovranità Individuale</news:title>
+            <news:title>ميثاق الحقوق الرقمية وحرمة السيادة الفردية</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -862,238 +1951,359 @@
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=en</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>Circular Economy and Community Currency: Overcoming Traditional Banking Usury</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>Économie Circulaire et Monnaie Communautaire : Surmonter l&#039;Usure Bancaire Traditionnelle</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=es</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>Economía Circular y Moneda Comunitaria: Superar la Usura Bancaria Tradicional</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>Economia Circular e Moeda Comunitária: Superar a Usura Bancária Tradicional</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>Циркулярная экономика и валюта сообщества: преодоление традиционного банковского ростовщичества</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>परिपत्र अर्थव्यवस्था और सामुदायिक मुद्रा: पारंपरिक बैंकिंग सूदखोरी से पार पाना</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>বৃত্তাকার অর্থনীতি এবং কমিউনিটি মুদ্রা: ঐতিহ্যবাহী ব্যাংকিং সুদ থেকে মুক্তি</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>循环经济与社区货币：克服传统银行高利贷</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>循環型経済と地域通貨：従来の銀行による高利貸しの克服</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-08-21T12:00:00.000Z</news:publication_date>
-            <news:title>Economia Circolare e Moneta di Comunità: Superare l&#039;Usura Bancaria Tradizionale</news:title>
+            <news:title>الاقتصاد الدائري وعملة المجتمع: التغلب على الربا المصرفي التقليدي</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>it</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=en</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=es</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
-            <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
-            <news:publication_date>2026-08-21T09:09:23.871Z</news:publication_date>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
             <news:title>Inaugurazione del Registro Globale e del Portale di Democrazia Diretta 1.0</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale</loc>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>Inauguration of the Global Registry for Direct Democracy 1.0</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>Inauguration du Registre Mondial pour la Démocratie Directe 1.0</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>Inauguración del Registro Global para la Democracia Directa 1.0</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>Inauguração do Registo Global e do Portal de Democracia Direta 1.0</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>Открытие Глобального реестра прямой демократии 1.0</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>प्रत्यक्ष लोकतंत्र 1.0 के लिए वैश्विक रजिस्ट्री का उद्घाटन</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>প্রত্যক্ষ গণতন্ত্র ১.০-এর জন্য বৈশ্বিক রেজিস্ট্রির উদ্বোধন</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>直接民主1.0全球注册处启动仪式</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>直接民主主義1.0グローバルレジストリ開設式</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
+            <news:title>تدشين السجل العالمي للديمقراطية المباشرة 1.0</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1104,117 +2314,117 @@
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=en</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>Ethical Artificial Intelligence and Data Sovereignty in the Digital Assembly</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>Intelligence Artificielle Éthique et Souveraineté des Données à l&#039;Assemblée Numérique</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=es</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>Inteligencia Artificial Ética y Soberanía de Datos en la Asamblea Digital</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>Inteligência Artificial Ética e Soberania dos Dados na Assembleia Digital</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>Этичный искусственный интеллект и суверенитет данных в цифровой ассамблее</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>डिजिटल असेंबली में नैतिक कृत्रिम बुद्धिमत्ता और डेटा संप्रभुता</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>ডিজিটাল সমাবেশে নৈতিক কৃত্রিম বুদ্ধিমত্তা এবং ডেটা সার্বভৌমত্ব</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>数字议会中的伦理人工智能与数据主权</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>デジタル議会における倫理的AIとデータ主権</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-08-20T09:00:00.000Z</news:publication_date>
-            <news:title>Intelligenza Artificiale Etica e Sovranità dei Dati nell&#039;Assemblea Digitale</news:title>
+            <news:title>الذكاء الاصطناعي الأخلاقي وسيادة البيانات في الجمعية الرقمية</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1225,113 +2435,476 @@
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=en</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>World Cultural Heritage: Network of Open Sovereign Libraries</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=fr</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>Patrimoine Culturel Mondial : Réseau des Bibliothèques Souveraines Ouvertes</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=es</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>Patrimonio Cultural Mundial y Red de Bibliotecas Soberanas Abiertas</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=pt</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>Patrimônio Cultural Mundial e Rede de Bibliotecas Soberanas Abertas</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ru</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>Всемирное культурное наследие и Сеть Открытых Суверенных Библиотек</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=hi</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>विश्व सांस्कृतिक विरासत और खुली संप्रभु पुस्तकालयों का नेटवर्क</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=bn</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>বিশ্ব সাংস্কৃতিক ঐতিহ্য: উন্মুক্ত সার্বভৌম গ্রন্থাগার নেটওয়ার্ক</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=zh</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>世界文化遗产：开放主权图书馆网络</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ja</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>世界文化遺産と開かれた主権図書館ネットワーク</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ar</loc>
+          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-08-19T08:00:00.000Z</news:publication_date>
-            <news:title>Patrimonio Culturale Mondiale e Rete delle Biblioteche Sovrane Aperte</news:title>
+            <news:title>التراث الثقافي العالمي وشبكة المكتبات السيادية المفتوحة</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>L&#039;Impotenza Strategica: Analisi delle Cause Profonde della Paralisi ONU nei Conflitti Attuali</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>Strategic Impotence: Deep Analysis of the Root Causes of UN Paralysis in Current Conflicts</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>Impuissance Stratégique : Analyse des Causes Profondes de la Paralysie de l&#039;ONU dans les Conflits Actuels</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>Impotencia Estratégica: Análisis de las Causas Profundas de la Parálisis de la ONU en los Conflictos Actuales</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>Impotência Estratégica: Análise das Causas Profundas da Paralisia da ONU nos Conflitos Atuais</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>Стратегическое бессилие: глубокий анализ причин паралича ООН в современных конфликтах</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>रणनीतिक विवशता: वर्तमान संघर्षों में संयुक्त राष्ट्र के पक्षाघात के मूल कारणों का गहन विश्लेषण</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>কৌশলগত অক্ষমতা: বর্তমান সংঘাতে জাতিসংঘের অচলবস্থার মূল কারণসমূহের বিশ্লেষণ</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>战略无力感：当前冲突中联合国陷入瘫痪的根本原因深度剖析</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>戦略的無力感：現在の紛争における国連機能不全の根本原因分析</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
+            <news:title>العجز الاستراتيجي: تحليل عميق للأسباب الجذرية لشلل الأمم المتحدة في الصراعات الحالية</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
           </news:news>
         </url>
 </urlset>
