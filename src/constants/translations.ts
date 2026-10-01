@@ -51,6 +51,7 @@ export const TRANSLATIONS = {
     news: 'News',
     newsAndChronicle: 'News & Chronicle',
     aboutUs: 'About Us',
+    worksAndFundraisers: 'Works & Fundraisers',
   },
   it: {
     title: 'Stato Mondiale dei Cittadini',
@@ -102,6 +103,7 @@ export const TRANSLATIONS = {
     news: 'Notizie',
     newsAndChronicle: 'Notizie & Cronaca',
     aboutUs: 'Chi Siamo',
+    worksAndFundraisers: 'Opere & Raccolte Fondi',
   },
   fr: {
     title: 'État Citoyen Global',
@@ -153,6 +155,7 @@ export const TRANSLATIONS = {
     news: 'Actualités',
     newsAndChronicle: 'Actualités & Chronique',
     aboutUs: 'Qui Sommes-Nous',
+    worksAndFundraisers: 'Œuvres & Levées de Fonds',
   },
   es: {
     title: 'Estado Ciudadano Global',
@@ -204,6 +207,7 @@ export const TRANSLATIONS = {
     news: 'Noticias',
     newsAndChronicle: 'Noticias y Crónica',
     aboutUs: 'Quiénes Somos',
+    worksAndFundraisers: 'Obras y Recaudación de Fondos',
   },
   pt: {
     title: 'Estado Cidadão Global',
@@ -255,6 +259,7 @@ export const TRANSLATIONS = {
     news: 'Notícias',
     newsAndChronicle: 'Notícias e Crônica',
     aboutUs: 'Quem Somos',
+    worksAndFundraisers: 'Obras e Arrecadação de Fundos',
   },
   ru: {
     title: 'Всемирное Государство Граждан',
@@ -306,6 +311,7 @@ export const TRANSLATIONS = {
     news: 'Новости',
     newsAndChronicle: 'Новости и хроника',
     aboutUs: 'О Нас',
+    worksAndFundraisers: 'Общественные проекты и сбор средств',
   },
   hi: {
     title: 'वैश्विक नागरिक राज्य',
@@ -357,6 +363,7 @@ export const TRANSLATIONS = {
     news: 'समाचार',
     newsAndChronicle: 'समाचार और इतिहास',
     aboutUs: 'हमारे बारे में',
+    worksAndFundraisers: 'सामुदायिक कार्य और धन संचय',
   },
   bn: {
     title: 'বিশ্ব নাগরিক রাষ্ট্র',
@@ -408,6 +415,7 @@ export const TRANSLATIONS = {
     news: 'সংবাদ',
     newsAndChronicle: 'সংবাদ ও ইতিহাস',
     aboutUs: 'আমাদের সম্পর্কে',
+    worksAndFundraisers: 'কমিউনিটি প্রকল্প এবং তহবিল সংগ্রহ',
   },
   zh: {
     title: '全球公民国家',
@@ -459,6 +467,7 @@ export const TRANSLATIONS = {
     news: '新闻',
     newsAndChronicle: '新闻与简报',
     aboutUs: '关于我们',
+    worksAndFundraisers: '社区工程与透明募捐',
   },
   ja: {
     title: '世界市民国家',
@@ -510,6 +519,7 @@ export const TRANSLATIONS = {
     news: 'ニュース',
     newsAndChronicle: 'ニュース＆クロニクル',
     aboutUs: '私たちについて',
+    worksAndFundraisers: '地域事業・透明な募金活動',
   },
   ar: {
     title: 'دولة المواطن العالمي',
@@ -561,5 +571,6 @@ export const TRANSLATIONS = {
     news: 'الأخبار',
     newsAndChronicle: 'الأخبار والسجل',
     aboutUs: 'من نحن',
+    worksAndFundraisers: 'المشاريع الإنسانية وجمع التبرعات',
   },
 } as const;

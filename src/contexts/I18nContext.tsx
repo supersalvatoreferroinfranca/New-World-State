@@ -1751,28 +1751,33 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
 
   // Ultra-smart translation engine: Looks up a general string, falls back elegantly
   const tText = (english: string, italian?: string): string => {
-    if (!english) return '';
+    if (!english && !italian) return '';
+    const primary = english || '';
+    const secondary = italian || '';
     
-    // 1. Try to match direct english key in COMMON_PHRASES
-    if (COMMON_PHRASES[english] && COMMON_PHRASES[english][language]) {
-      return COMMON_PHRASES[english][language];
+    // 1. Try to match direct key in COMMON_PHRASES
+    if (primary && COMMON_PHRASES[primary] && COMMON_PHRASES[primary][language]) {
+      return COMMON_PHRASES[primary][language];
+    }
+    if (secondary && COMMON_PHRASES[secondary] && COMMON_PHRASES[secondary][language]) {
+      return COMMON_PHRASES[secondary][language];
     }
 
-    // 2. Try to match italian key if provided
-    if (italian) {
-      // Find inside COMMON_PHRASES by scanning Italian entries
-      const foundEntry = Object.values(COMMON_PHRASES).find(entry => entry.it === italian);
-      if (foundEntry && foundEntry[language]) {
-        return foundEntry[language];
-      }
+    // 2. Scan COMMON_PHRASES for match in it or en
+    const foundEntry = Object.values(COMMON_PHRASES).find(entry => 
+      (primary && (entry.it === primary || entry.en === primary)) ||
+      (secondary && (entry.it === secondary || entry.en === secondary))
+    );
+    if (foundEntry && foundEntry[language]) {
+      return foundEntry[language];
     }
 
-    // 3. Simple fallback logic if not in dictionary
-    if (language === 'en') return english;
-    if (language === 'it') return italian || english;
+    // 3. Fallback logic
+    if (language === 'it') return secondary || primary;
+    if (language === 'en') return primary || secondary;
 
-    // Return the english term as standard fallback for other languages to avoid blank UI
-    return english;
+    // Return primary (or secondary) as standard fallback
+    return primary || secondary;
   };
 
   return (

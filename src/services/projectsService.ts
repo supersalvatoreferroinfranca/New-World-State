@@ -10,6 +10,7 @@
  */
 
 import { safeFetch } from './api';
+import { CATEGORY_LABELS_I18N, STATUS_LABELS_I18N } from '../constants/projectsTranslations';
 
 export type ProjectCategory = 
   | 'water_wells' 
@@ -70,6 +71,14 @@ export interface CommunityProject {
   published: boolean;
   statementReports: StatementReport[];
   donorLedger: ProjectDonor[];
+  translations?: Record<string, {
+    title?: string;
+    subtitle?: string;
+    location?: string;
+    description?: string;
+    detailedPlan?: string;
+    impactSummary?: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -572,84 +581,70 @@ Documento pubblicato ad uso di consultazione pubblica e controllo civico.
 }
 
 export function getCategoryLabel(category: ProjectCategory, lang = 'it'): { label: string; icon: string; color: string } {
-  const map: Record<ProjectCategory, { it: string; en: string; icon: string; color: string }> = {
+  const map: Record<ProjectCategory, { icon: string; color: string }> = {
     water_wells: {
-      it: 'Pozzi d\'Acqua & Risorse Idriche',
-      en: 'Water Wells & Clean Water',
       icon: 'Droplets',
       color: 'bg-cyan-50 text-cyan-800 border-cyan-200'
     },
     health_clinics: {
-      it: 'Salute & Presidi Medici Rurali',
-      en: 'Health & Rural Medical Clinics',
       icon: 'HeartPulse',
       color: 'bg-rose-50 text-rose-800 border-rose-200'
     },
     education: {
-      it: 'Istruzione & Scuole Comunitarie',
-      en: 'Education & Community Schools',
       icon: 'GraduationCap',
       color: 'bg-amber-50 text-amber-800 border-amber-200'
     },
     ecology: {
-      it: 'Riforestazione & Agro-Ecologia',
-      en: 'Reforestation & Agro-Ecology',
       icon: 'Sprout',
       color: 'bg-emerald-50 text-emerald-800 border-emerald-200'
     },
     humanitarian: {
-      it: 'Soccorso Civico & Emergenze',
-      en: 'Humanitarian Relief & Civic Aid',
       icon: 'ShieldAlert',
       color: 'bg-purple-50 text-purple-800 border-purple-200'
     },
     civic_infrastructure: {
-      it: 'Infrastrutture Comunitarie',
-      en: 'Civic Infrastructure',
       icon: 'Building2',
       color: 'bg-blue-50 text-blue-800 border-blue-200'
     }
   };
 
   const item = map[category] || map.civic_infrastructure;
+  const labelMap = CATEGORY_LABELS_I18N[category] || CATEGORY_LABELS_I18N.civic_infrastructure;
+  const localizedLabel = (labelMap as any)?.[lang] || labelMap.it || labelMap.en;
+
   return {
-    label: lang === 'it' ? item.it : item.en,
+    label: localizedLabel,
     icon: item.icon,
     color: item.color
   };
 }
 
 export function getStatusLabel(status: ProjectStatus, lang = 'it'): { label: string; color: string; badge: string } {
-  const map: Record<ProjectStatus, { it: string; en: string; color: string; badge: string }> = {
+  const map: Record<ProjectStatus, { color: string; badge: string }> = {
     active: {
-      it: 'Raccolta Fondi Attiva',
-      en: 'Fundraiser Active',
       color: 'text-emerald-700',
       badge: 'bg-emerald-100 text-emerald-800 border-emerald-300'
     },
     funded: {
-      it: 'Obiettivo Raggiunto (Finanziato)',
-      en: 'Target Reached (Funded)',
       color: 'text-amber-700',
       badge: 'bg-amber-100 text-amber-800 border-amber-300'
     },
     in_progress: {
-      it: 'Opere in Esecuzione',
-      en: 'Works in Progress',
       color: 'text-blue-700',
       badge: 'bg-blue-100 text-blue-800 border-blue-300'
     },
     completed: {
-      it: 'Opera Completata & Rendicontata',
-      en: 'Completed & Fully Audited',
       color: 'text-indigo-700',
       badge: 'bg-indigo-100 text-indigo-800 border-indigo-300'
     }
   };
 
   const item = map[status] || map.active;
+  const labelMap = STATUS_LABELS_I18N[status] || STATUS_LABELS_I18N.active;
+  const localizedLabel = (labelMap as any)?.[lang] || labelMap.it || labelMap.en;
+
   return {
-    label: lang === 'it' ? item.it : item.en,
+    label: localizedLabel,
     color: item.color,
     badge: item.badge
   };

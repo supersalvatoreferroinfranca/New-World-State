@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../../contexts/I18nContext';
+import { useProjectsTranslation } from '../../constants/projectsTranslations';
 import { 
   Building2, 
   MapPin, 
@@ -45,6 +46,7 @@ interface AboutPageProps {
 
 export default function AboutUsPage({ onGoToConstitution, onGoToCharter, onGoToDemocracy, onGoToProjects }: AboutPageProps) {
   const { language, tText } = useI18n();
+  const projTxt = useProjectsTranslation(language);
   const [copiedIban, setCopiedIban] = useState(false);
   const [copiedCf, setCopiedCf] = useState(false);
 
@@ -759,17 +761,17 @@ export default function AboutUsPage({ onGoToConstitution, onGoToCharter, onGoToD
                 <div className="space-y-1">
                   <div className="text-brand-gold font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 font-mono">
                     <Droplets className="w-4 h-4 fill-brand-gold" />
-                    <span>{tText('Opere Comunitarie & Raccolte Fondi', 'Community Works & Fundraisers')}</span>
+                    <span>{projTxt.heroTitle}</span>
                   </div>
                   <p className="text-slate-300 text-xs font-light leading-relaxed">
-                    {tText('Costruzione di pozzi d\'acqua potabile in Africa, cliniche e scuole: ogni versamento sul conto corrente è interamente rendicontato con la pubblicazione degli estratti conto bancari.', 'Construction of drinking water wells in Africa, solar health clinics, and schools: fully accounted for with published bank statements.')}
+                    {projTxt.heroDescription}
                   </p>
                 </div>
                 <button
                   onClick={onGoToProjects}
                   className="px-5 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d8bd94] text-[#0a1c3e] font-bold text-xs uppercase tracking-wider transition shrink-0 cursor-pointer shadow border-b-2 border-amber-600 flex items-center gap-1.5"
                 >
-                  <span>{tText('Consulta le Opere', 'Explore Projects')}</span>
+                  <span>{projTxt.detailsButton}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
