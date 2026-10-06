@@ -5,13 +5,7 @@
  */
 
 export function getPublicCanonicalOrigin(): string {
-  if (typeof window === 'undefined') {
-    return 'https://newworldstate.cloud';
-  }
-  const host = window.location.hostname.toLowerCase();
-  if (host === 'localhost' || host === '127.0.0.1' || host.includes('.local')) {
-    return window.location.origin;
-  }
+  // Dominio canonico ufficiale del New World State per link pubblici, condivisione e sitemap
   return 'https://newworldstate.cloud';
 }
 

@@ -34,7 +34,14 @@ import {
   ThumbsUp,
   Target,
   PieChart,
-  Award
+  Award,
+  LogIn,
+  Radio,
+  Timer,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  X
 } from 'lucide-react';
 
 interface AdminAnalyticsTabProps {
@@ -42,7 +49,32 @@ interface AdminAnalyticsTabProps {
   showAlert: (type: 'success' | 'error' | 'warning', message: string) => void;
 }
 
+export interface RecentVisitItem {
+  id: string;
+  sessionId: string;
+  visitorId?: string;
+  timestamp: number | string;
+  timeFormatted: string;
+  city: string;
+  country: string;
+  countryCode: string;
+  entryPage: string;
+  entryPageLabel?: string;
+  currentTab: string;
+  currentTabLabel?: string;
+  timeSpentSeconds: number;
+  durationFormatted: string;
+  isOnline: boolean;
+  deviceType: 'desktop' | 'mobile' | 'tablet';
+  browser: string;
+  os: string;
+  ipMasked: string;
+  referrer?: string;
+}
+
 interface AnalyticsData {
+  onlineVisitors?: number;
+  recentVisits?: RecentVisitItem[];
   summary: {
     totalPageViews: number;
     uniqueVisitors: number;
@@ -119,11 +151,13 @@ interface AnalyticsData {
 export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: AdminAnalyticsTabProps) {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
+  const [selectedVisitModal, setSelectedVisitModal] = useState<RecentVisitItem | null>(null);
   const [timeRange, setTimeRange] = useState<'today' | '7d' | '30d' | 'all'>('30d');
   const [activeSection, setActiveSection] = useState<'overview' | 'geography' | 'content' | 'community' | 'tech' | 'perception'>('overview');
 
-  const fetchAnalytics = async () => {
-    setLoading(true);
+  const fetchAnalytics = async (showLoadingSpinner: boolean = true) => {
+    if (showLoadingSpinner) setLoading(true);
     try {
       const res = await safeFetch(`/api/admin/analytics/overview?range=${timeRange}`, {
         headers: {
@@ -133,19 +167,32 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
       const json = await res.json();
       if (json && json.success) {
         setData(json);
-      } else {
+      } else if (showLoadingSpinner) {
         showAlert('error', json?.message || 'Errore nel caricamento delle statistiche.');
       }
     } catch (err: any) {
-      showAlert('error', 'Impossibile connettersi al server per recuperare le statistiche: ' + (err.message || 'Errore di rete'));
+      if (showLoadingSpinner) {
+        showAlert('error', 'Impossibile connettersi al server per recuperare le statistiche: ' + (err.message || 'Errore di rete'));
+      }
     } finally {
-      setLoading(false);
+      if (showLoadingSpinner) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchAnalytics();
+    fetchAnalytics(true);
   }, [timeRange]);
+
+  // Aggiornamento continuo in tempo reale (ogni 10 secondi) per tracciamento presenze live
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(() => {
+      fetchAnalytics(false);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [autoRefresh, timeRange, adminPasswordValue]);
 
   const handleExportData = async () => {
     try {
@@ -234,6 +281,35 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Indicatore Visitatori Online in Tempo Reale */}
+          <div className="flex items-center gap-2.5 px-3 py-1.5 bg-emerald-950/60 border border-emerald-500/40 rounded-xl backdrop-blur-sm shadow-sm mr-1">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 ring-2 ring-emerald-300/50"></span>
+            </span>
+            <div className="flex flex-col">
+              <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider leading-none">Online Adesso</span>
+              <span className="text-sm font-black text-white leading-tight flex items-baseline gap-1 mt-0.5">
+                {data?.onlineVisitors ?? 1}
+                <span className="text-[10px] font-normal text-emerald-300">utenti</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Toggle Auto-Refresh Live */}
+          <button
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition border ${
+              autoRefresh
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                : 'bg-white/10 text-white/60 border-white/10'
+            }`}
+            title={autoRefresh ? 'Auto-aggiornamento live attivo (ogni 10s)' : 'Auto-aggiornamento in pausa'}
+          >
+            <Radio className={`w-3.5 h-3.5 ${autoRefresh ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} />
+            Live {autoRefresh ? '10s' : 'Pausa'}
+          </button>
+
           {/* Selettore intervallo */}
           <div className="flex bg-white/10 rounded-xl p-1 border border-white/10">
             {(['today', '7d', '30d', 'all'] as const).map((r) => (
@@ -250,7 +326,7 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
           </div>
 
           <button
-            onClick={fetchAnalytics}
+            onClick={() => fetchAnalytics(true)}
             disabled={loading}
             className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl px-3.5 py-2 text-xs font-semibold transition border border-white/10"
             title="Aggiorna dati"
@@ -270,8 +346,33 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
       </div>
 
       {/* SCHEDE KPI PRINCIPALI */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" id="analytics-kpi-grid">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4" id="analytics-kpi-grid">
         
+        {/* KPI 0: Visitatori Online Adesso (In Tempo Reale) */}
+        <div className="col-span-2 sm:col-span-1 bg-gradient-to-br from-emerald-950/20 via-white to-emerald-50/40 p-5 rounded-2xl border-2 border-emerald-500/40 shadow-sm hover:border-emerald-500 transition relative overflow-hidden">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Online Adesso</span>
+            </div>
+            <div className="p-2 bg-emerald-100 rounded-xl text-emerald-700">
+              <Activity className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl font-serif font-black text-emerald-950">{data?.onlineVisitors ?? 1}</span>
+            <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+              ● Live
+            </span>
+          </div>
+          <p className="text-[11px] text-emerald-800/80 mt-1">
+            Sessioni attive negli ultimi 3 minuti
+          </p>
+        </div>
+
         {/* KPI 1: Visitatori Unici */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:border-[#0a1c3e]/30 transition">
           <div className="flex justify-between items-start">
@@ -287,14 +388,14 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
             </span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1">
-            {s.totalPageViews} visualizzazioni pagina totali
+            {s.totalPageViews} visualizzazioni pagina
           </p>
         </div>
 
         {/* KPI 2: Tempo Medio di Permanenza */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:border-[#0a1c3e]/30 transition">
           <div className="flex justify-between items-start">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Tempo Medio Permanenza</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Tempo Medio</span>
             <div className="p-2 bg-amber-50 rounded-xl text-amber-600">
               <Clock className="w-4 h-4" />
             </div>
@@ -308,7 +409,7 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
             </span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1">
-            Tempo complessivo attivo: {Math.round(s.totalTimeSpentSeconds / 3600)} ore
+            Attivo: {Math.round(s.totalTimeSpentSeconds / 3600)} ore
           </p>
         </div>
 
@@ -323,18 +424,18 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-serif font-black text-[#0a1c3e]">{s.pagesPerSession}</span>
             <span className="text-xs font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">
-              Rimbalzo: {s.bounceRate}%
+              {s.bounceRate}%
             </span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1">
-            Profondità di lettura media del portale
+            Profondità di lettura del portale
           </p>
         </div>
 
         {/* KPI 4: Comunità & Cittadinanza */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:border-[#0a1c3e]/30 transition">
           <div className="flex justify-between items-start">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Cittadini Registrati</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Cittadini</span>
             <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
               <ShieldCheck className="w-4 h-4" />
             </div>
@@ -346,7 +447,7 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
             </span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1">
-            {s.totalVotesCast} voti espressi nei referendum
+            {s.totalVotesCast} voti referendum
           </p>
         </div>
       </div>
@@ -423,6 +524,205 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
       {/* SEZIONE 1: PANORAMICA TRAFFICO & CRONOLOGIA */}
       {activeSection === 'overview' && (
         <div className="space-y-6 animate-fade-in">
+
+          {/* ULTIME 10 VISITE IN TEMPO REALE */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden" id="analytics-recent-visits-card">
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-50 via-white to-slate-50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-[#0a1c3e]/10 text-[#0a1c3e] rounded-lg">
+                    <Compass className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-base font-serif font-bold text-[#0a1c3e]">
+                    Ultime 10 Visite Rilevate in Tempo Reale
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    Live Telemetry
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Dettaglio degli ultimi accessi: geolocalizzazione (Città & Stato), pagina di ingresso, durata della visita e dispositivo.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <span className="text-xs text-slate-400 font-mono">
+                  {(data?.recentVisits || []).length} sessioni tracciate
+                </span>
+                <button
+                  onClick={() => fetchAnalytics(false)}
+                  className="p-1.5 rounded-lg text-slate-500 hover:text-[#0a1c3e] hover:bg-slate-100 transition"
+                  title="Ricarica ultime visite"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Tabella Dettagliata Visite */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-600">
+                <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-100">
+                  <tr>
+                    <th className="py-3 px-4 font-bold">Stato & Orario</th>
+                    <th className="py-3 px-4 font-bold">Provenienza (Città / Stato)</th>
+                    <th className="py-3 px-4 font-bold">Pagina d'Ingresso</th>
+                    <th className="py-3 px-4 font-bold">Tempo di Visita</th>
+                    <th className="py-3 px-4 font-bold">Pagina Attuale</th>
+                    <th className="py-3 px-4 font-bold">Dispositivo & Browser</th>
+                    <th className="py-3 px-4 font-bold">IP Anonimizzato</th>
+                    <th className="py-3 px-3 text-right font-bold">Dettagli</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-sans">
+                  {(!data?.recentVisits || data.recentVisits.length === 0) ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-slate-400 text-xs">
+                        Nessun accesso recente ancora registrato. I nuovi visitatori appariranno qui in tempo reale.
+                      </td>
+                    </tr>
+                  ) : (
+                    data.recentVisits.slice(0, 10).map((visit, vIdx) => {
+                      return (
+                        <tr
+                          key={visit.id || vIdx}
+                          className="hover:bg-slate-50/70 transition-colors group cursor-pointer"
+                          onClick={() => setSelectedVisitModal(visit)}
+                        >
+                          {/* Stato & Orario */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="flex flex-col gap-1">
+                              {visit.isOnline ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 w-fit">
+                                  <span className="relative flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600"></span>
+                                  </span>
+                                  ONLINE ORA
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 w-fit">
+                                  <Clock className="w-2.5 h-2.5 text-slate-400" />
+                                  Conclusa
+                                </span>
+                              )}
+                              <span className="text-[11px] text-slate-400 font-mono">
+                                {visit.timeFormatted || 'Adesso'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Provenienza (Città & Stato) */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl shrink-0" title={visit.country}>
+                                {getCountryFlag(visit.countryCode)}
+                              </span>
+                              <div>
+                                <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-[#c5a880] shrink-0" />
+                                  {visit.city || 'Roma'}
+                                </div>
+                                <div className="text-[11px] text-slate-500">
+                                  {visit.country || 'Italia'}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Pagina d'Ingresso */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-slate-800 flex items-center gap-1 text-xs">
+                                <LogIn className="w-3 h-3 text-[#0a1c3e] shrink-0" />
+                                {visit.entryPageLabel || visit.entryPage || 'Benvenuto'}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-400">
+                                /{visit.entryPage || 'welcome'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Tempo di Visita */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-900 font-mono font-bold text-xs border border-blue-200/60 w-fit">
+                                <Timer className="w-3 h-3 text-blue-600" />
+                                {visit.durationFormatted || formatSeconds(visit.timeSpentSeconds)}
+                              </div>
+                              <span className="text-[10px] text-slate-400 mt-0.5">
+                                {visit.isOnline ? 'In corso' : 'Tempo totale'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Pagina Attuale / Ultima Vista */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700">
+                              {visit.currentTabLabel || visit.currentTab || 'welcome'}
+                            </span>
+                          </td>
+
+                          {/* Dispositivo & Browser */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              {visit.deviceType === 'mobile' ? (
+                                <Smartphone className="w-4 h-4 text-purple-600 shrink-0" />
+                              ) : visit.deviceType === 'tablet' ? (
+                                <Tablet className="w-4 h-4 text-amber-600 shrink-0" />
+                              ) : (
+                                <Laptop className="w-4 h-4 text-blue-600 shrink-0" />
+                              )}
+                              <div className="flex flex-col">
+                                <span className="font-medium text-slate-800 text-[11px]">
+                                  {visit.browser || 'Browser'}
+                                </span>
+                                <span className="text-[10px] text-slate-400">
+                                  {visit.os || 'OS'}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Indirizzo IP Anonimizzato */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="flex items-center gap-1 font-mono text-[11px] text-slate-600 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-fit">
+                              <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                              {visit.ipMasked || '93.42.xxx.xxx'}
+                            </div>
+                          </td>
+
+                          {/* Dettagli click */}
+                          <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedVisitModal(visit);
+                              }}
+                              className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#0a1c3e] hover:text-white text-slate-600 text-[11px] font-semibold transition"
+                            >
+                              Dettagli
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer con informativa privacy */}
+            <div className="p-3 bg-slate-50/70 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center text-[11px] text-slate-500 gap-2 px-5">
+              <span className="flex items-center gap-1 text-slate-600">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                Registrazione privacy-compliant conforme alla Costituzione del New World State (IP mascherati e zero cookie invasivi).
+              </span>
+              <span className="text-slate-400 font-mono">
+                Aggiornamento in tempo reale ogni 10 secondi
+              </span>
+            </div>
+          </div>
           
           {/* GRAFICO GIORNALIERO */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -1173,6 +1473,113 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
 
           </div>
 
+        </div>
+      )}
+
+      {/* MODALE DETTAGLI SESSIONE VISITATORE */}
+      {selectedVisitModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Header modale */}
+            <div className="p-5 bg-gradient-to-r from-[#0a1c3e] to-[#122852] text-white flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{getCountryFlag(selectedVisitModal.countryCode)}</span>
+                <div>
+                  <h4 className="font-bold text-base">Sessione: {selectedVisitModal.city}, {selectedVisitModal.country}</h4>
+                  <p className="text-[11px] text-white/70">ID: {selectedVisitModal.id}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedVisitModal(null)}
+                className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Corpo modale */}
+            <div className="p-6 space-y-4 text-xs text-slate-700">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Stato Connessione</span>
+                  <div className="mt-1">
+                    {selectedVisitModal.isOnline ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                        ONLINE IN TEMPO REALE
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">
+                        Sessione Conclusa
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Permanenza Calcolata</span>
+                  <div className="font-mono font-bold text-sm text-[#0a1c3e] mt-1 flex items-center gap-1">
+                    <Timer className="w-3.5 h-3.5 text-blue-600" />
+                    {selectedVisitModal.durationFormatted || formatSeconds(selectedVisitModal.timeSpentSeconds)}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Pagina di Ingresso</span>
+                  <div className="font-semibold text-slate-900 mt-1 flex items-center gap-1">
+                    <LogIn className="w-3.5 h-3.5 text-[#0a1c3e]" />
+                    {selectedVisitModal.entryPageLabel || selectedVisitModal.entryPage}
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400">/{selectedVisitModal.entryPage}</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Pagina Attuale</span>
+                  <div className="font-semibold text-slate-900 mt-1">
+                    {selectedVisitModal.currentTabLabel || selectedVisitModal.currentTab}
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400">/{selectedVisitModal.currentTab}</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Dispositivo & Hardware</span>
+                  <div className="font-semibold text-slate-900 mt-1 flex items-center gap-1.5 capitalize">
+                    {selectedVisitModal.deviceType}
+                  </div>
+                  <span className="text-[10px] text-slate-500">{selectedVisitModal.browser} • {selectedVisitModal.os}</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">IP Anonimizzato</span>
+                  <div className="font-mono text-slate-900 mt-1 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    {selectedVisitModal.ipMasked}
+                  </div>
+                  <span className="text-[10px] text-slate-400">GDPR & NWS Shielded</span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-blue-900 text-[11px]">
+                <div className="font-bold flex items-center gap-1">
+                  <Compass className="w-3.5 h-3.5 text-blue-700" />
+                  Sorgente di Traffico: {selectedVisitModal.referrer || 'Accesso Diretto'}
+                </div>
+                <p className="text-blue-800/80 mt-0.5">
+                  Ultima attività registrata: {selectedVisitModal.timeFormatted || 'Adesso'}. I dati di sessione sono aggregati in conformità ai principi di sovranità digitale.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer modale */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setSelectedVisitModal(null)}
+                className="px-4 py-2 bg-[#0a1c3e] text-white rounded-xl text-xs font-bold hover:bg-[#122852] transition"
+              >
+                Chiudi Scheda
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

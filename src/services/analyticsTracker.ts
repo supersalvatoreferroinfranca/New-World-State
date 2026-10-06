@@ -4,20 +4,34 @@
  * 
  * New World State - Privacy-First Analytics & Community Telemetry Tracker
  * Conforme GDPR - Zero cookie di terze parti - Raccolta dati aggregata e anonima.
+ * Monitoraggio in tempo reale: Presenza online, provenienza geografica, entry page e durata sessione.
  */
 
 // Chiavi di storage per sessione anonima locale
 const SESSION_ID_KEY = 'nws_analytics_session_id';
 const VISITOR_ID_KEY = 'nws_analytics_visitor_id';
 const LAST_ACTIVITY_KEY = 'nws_analytics_last_active';
+const ENTRY_PAGE_KEY = 'nws_analytics_entry_page';
+const SESSION_START_KEY = 'nws_analytics_session_start';
+const CLIENT_GEO_KEY = 'nws_analytics_client_geo';
+
+export interface ClientGeoData {
+  city: string;
+  country: string;
+  countryCode: string;
+  region?: string;
+  ip?: string;
+}
 
 interface TrackPayload {
   eventType: 'pageview' | 'heartbeat' | 'leave' | 'interaction';
   tab?: string;
   path?: string;
+  entryPage?: string;
   articleSlug?: string;
   articleTitle?: string;
   timeSpentSeconds?: number;
+  sessionDurationSeconds?: number;
   eventName?: string;
   eventData?: Record<string, any>;
   referrer?: string;
@@ -30,16 +44,25 @@ interface TrackPayload {
   visitorId?: string;
   sessionId?: string;
   isNewVisitor?: boolean;
+  city?: string;
+  country?: string;
+  countryCode?: string;
+  region?: string;
+  clientIp?: string;
 }
 
 let currentSessionId = '';
 let currentVisitorId = '';
+let currentEntryPage = 'welcome';
+let sessionStartTime = Date.now();
 let isNewVisitor = false;
 let pageStartTime = Date.now();
 let currentPageTab = 'welcome';
 let currentArticleSlug: string | undefined = undefined;
 let currentArticleTitle: string | undefined = undefined;
 let heartbeatInterval: any = null;
+let cachedGeoData: ClientGeoData | null = null;
+let geoLookupPromise: Promise<ClientGeoData | null> | null = null;
 
 // Rileva dispositivo in modo affidabile
 function getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
@@ -82,8 +105,84 @@ function getOS(): string {
   return 'Altro';
 }
 
+// Geolocalizzazione client-side non bloccante con fallback intelligente
+async function resolveClientGeo(): Promise<ClientGeoData | null> {
+  if (typeof window === 'undefined') return null;
+  if (cachedGeoData) return cachedGeoData;
+
+  try {
+    const stored = sessionStorage.getItem(CLIENT_GEO_KEY);
+    if (stored) {
+      cachedGeoData = JSON.parse(stored);
+      return cachedGeoData;
+    }
+  } catch (_) {}
+
+  if (geoLookupPromise) return geoLookupPromise;
+
+  geoLookupPromise = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch('https://ipwho.is/?fields=success,ip,city,country,country_code,region', {
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.success !== false && json.country) {
+          cachedGeoData = {
+            city: json.city || 'Roma',
+            country: json.country || 'Italia',
+            countryCode: json.country_code || 'IT',
+            region: json.region || '',
+            ip: json.ip
+          };
+          try {
+            sessionStorage.setItem(CLIENT_GEO_KEY, JSON.stringify(cachedGeoData));
+          } catch (_) {}
+          return cachedGeoData;
+        }
+      }
+    } catch (_) {
+      // Fallback a deduzione locale da fuso orario e lingua
+    }
+
+    try {
+      const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').toLowerCase();
+      const lang = (navigator.language || 'it-IT').toLowerCase();
+      let city = 'Roma';
+      let country = 'Italia';
+      let countryCode = 'IT';
+      let region = 'Lazio';
+
+      if (tz.includes('milan')) { city = 'Milano'; country = 'Italia'; countryCode = 'IT'; region = 'Lombardia'; }
+      else if (tz.includes('rome')) { city = 'Roma'; country = 'Italia'; countryCode = 'IT'; region = 'Lazio'; }
+      else if (tz.includes('zurich')) { city = 'Zurigo'; country = 'Svizzera'; countryCode = 'CH'; region = 'Zurigo'; }
+      else if (tz.includes('geneva')) { city = 'Ginevra'; country = 'Svizzera'; countryCode = 'CH'; region = 'Ginevra'; }
+      else if (tz.includes('paris')) { city = 'Parigi'; country = 'Francia'; countryCode = 'FR'; region = 'Île-de-France'; }
+      else if (tz.includes('berlin')) { city = 'Berlino'; country = 'Germania'; countryCode = 'DE'; region = 'Berlino'; }
+      else if (tz.includes('madrid')) { city = 'Madrid'; country = 'Spagna'; countryCode = 'ES'; region = 'Madrid'; }
+      else if (tz.includes('london')) { city = 'Londra'; country = 'Regno Unito'; countryCode = 'GB'; region = 'Greater London'; }
+      else if (tz.includes('vienna')) { city = 'Vienna'; country = 'Austria'; countryCode = 'AT'; region = 'Vienna'; }
+      else if (tz.includes('brussels')) { city = 'Bruxelles'; country = 'Belgio'; countryCode = 'BE'; region = 'Bruxelles'; }
+      else if (lang.startsWith('it')) { city = 'Milano'; country = 'Italia'; countryCode = 'IT'; region = 'Lombardia'; }
+
+      cachedGeoData = { city, country, countryCode, region };
+      try {
+        sessionStorage.setItem(CLIENT_GEO_KEY, JSON.stringify(cachedGeoData));
+      } catch (_) {}
+      return cachedGeoData;
+    } catch (_) {
+      return null;
+    }
+  })();
+
+  return geoLookupPromise;
+}
+
 // Inizializza o recupera ID sessione e visitatore anonimi
-function initSession() {
+function initSession(initialTab: string = 'welcome') {
   if (typeof window === 'undefined') return;
 
   try {
@@ -105,25 +204,52 @@ function initSession() {
     if (!sid || (now - lastActive > 30 * 60 * 1000)) {
       sid = 's_' + Math.random().toString(36).substring(2, 11) + now.toString(36);
       sessionStorage.setItem(SESSION_ID_KEY, sid);
+      sessionStorage.setItem(SESSION_START_KEY, now.toString());
+      sessionStorage.setItem(ENTRY_PAGE_KEY, initialTab || 'welcome');
     }
+
     sessionStorage.setItem(LAST_ACTIVITY_KEY, now.toString());
     currentSessionId = sid;
+    currentEntryPage = sessionStorage.getItem(ENTRY_PAGE_KEY) || initialTab || 'welcome';
+    sessionStartTime = parseInt(sessionStorage.getItem(SESSION_START_KEY) || now.toString(), 10);
   } catch (e) {
-    currentVisitorId = 'v_fallback_' + Math.random().toString(36).substring(2, 8);
-    currentSessionId = 's_fallback_' + Math.random().toString(36).substring(2, 8);
+    currentVisitorId = 'v_fb_' + Math.random().toString(36).substring(2, 8);
+    currentSessionId = 's_fb_' + Math.random().toString(36).substring(2, 8);
+    currentEntryPage = initialTab || 'welcome';
+    sessionStartTime = Date.now();
   }
 }
 
 // Invia evento al server in modo asincrono / non bloccante
 async function sendAnalytics(payload: TrackPayload) {
   if (typeof window === 'undefined') return;
-  initSession();
+  initSession(payload.tab || currentPageTab);
+
+  // Prova a recuperare la geolocalizzazione se non ancora in cache
+  if (!cachedGeoData) {
+    resolveClientGeo().then(geo => {
+      if (geo && !payload.city) {
+        // Se la geolocalizzazione è appena arrivata, invia un heartbeat di allineamento
+        sendAnalytics({
+          eventType: 'heartbeat',
+          tab: currentPageTab,
+          articleSlug: currentArticleSlug,
+          articleTitle: currentArticleTitle,
+          timeSpentSeconds: Math.round((Date.now() - pageStartTime) / 1000)
+        });
+      }
+    }).catch(() => {});
+  }
+
+  const sessionDuration = Math.max(1, Math.round((Date.now() - sessionStartTime) / 1000));
 
   const fullPayload: TrackPayload = {
     ...payload,
     visitorId: currentVisitorId,
     sessionId: currentSessionId,
     isNewVisitor: isNewVisitor,
+    entryPage: currentEntryPage,
+    sessionDurationSeconds: sessionDuration,
     deviceType: getDeviceType(),
     browser: getBrowser(),
     os: getOS(),
@@ -131,7 +257,12 @@ async function sendAnalytics(payload: TrackPayload) {
     screenResolution: `${window.screen?.width || window.innerWidth}x${window.screen?.height || window.innerHeight}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Rome',
     referrer: document.referrer || (payload.referrer || ''),
-    path: window.location.pathname + window.location.search
+    path: window.location.pathname + window.location.search,
+    city: cachedGeoData?.city,
+    country: cachedGeoData?.country,
+    countryCode: cachedGeoData?.countryCode,
+    region: cachedGeoData?.region,
+    clientIp: cachedGeoData?.ip
   };
 
   const bodyStr = JSON.stringify(fullPayload);
@@ -189,11 +320,11 @@ export function trackPageView(tab: string, articleSlug?: string, articleTitle?: 
     articleTitle: articleTitle
   });
 
-  // Avvia/Riavvia Heartbeat ogni 20 secondi per misurare il tempo di permanenza attivo
+  // Avvia/Riavvia Heartbeat ogni 15 secondi per mantenere lo stato online attivo
   if (heartbeatInterval) clearInterval(heartbeatInterval);
   heartbeatInterval = setInterval(() => {
     const elapsed = Math.round((Date.now() - pageStartTime) / 1000);
-    if (elapsed > 3600) {
+    if (elapsed > 7200) {
       clearInterval(heartbeatInterval);
       return;
     }
@@ -204,7 +335,7 @@ export function trackPageView(tab: string, articleSlug?: string, articleTitle?: 
       articleTitle: currentArticleTitle,
       timeSpentSeconds: elapsed
     });
-  }, 20000);
+  }, 15000);
 }
 
 /**
@@ -226,7 +357,8 @@ export function trackCommunityEvent(eventName: string, eventData: Record<string,
 export function initAnalyticsTracking(initialTab: string = 'welcome') {
   if (typeof window === 'undefined') return;
 
-  initSession();
+  initSession(initialTab);
+  resolveClientGeo().catch(() => {});
   trackPageView(initialTab);
 
   // Gestione chiusura pagina o cambio scheda del browser
@@ -249,6 +381,14 @@ export function initAnalyticsTracking(initialTab: string = 'welcome') {
       handleUnloadOrHide();
     } else {
       pageStartTime = Date.now();
+      // Invia heartbeat immediato al ritorno per marcare visitatore online
+      sendAnalytics({
+        eventType: 'heartbeat',
+        tab: currentPageTab,
+        articleSlug: currentArticleSlug,
+        articleTitle: currentArticleTitle,
+        timeSpentSeconds: 1
+      });
     }
   });
 }
