@@ -2955,7 +2955,76 @@ CREATE TABLE citizens (
         });
       }
 
-      // 5. Admin Sitemap Config Endpoint
+      // 5. Sitemap HTML Endpoint
+      if (url.pathname === '/sitemap.html') {
+        const articles = await getWorkerArticles();
+        const updateDate = new Date().toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' });
+        const coreLinks = WORKER_CORE_PAGES.map(p => {
+          const u = p.path ? `${CANONICAL_BASE_URL}/${p.path}` : `${CANONICAL_BASE_URL}/`;
+          return `<li style="margin-bottom:8px;"><a href="${u}" style="color:#0a1c3e;font-weight:600;text-decoration:none;">${p.title}</a> <span style="font-size:11px;color:#64748b;margin-left:6px;">(${p.priority})</span></li>`;
+        }).join('\n');
+
+        const pdfLinks = WORKER_CONSTITUTION_PDFS.map(pdf => {
+          return `<li style="margin-bottom:8px;"><a href="${CANONICAL_BASE_URL}${pdf.path}" target="_blank" style="color:#0a1c3e;font-weight:600;text-decoration:none;">${pdf.flag} ${pdf.name}</a> <span style="font-size:11px;color:#64748b;margin-left:6px;">(PDF Ufficiale)</span></li>`;
+        }).join('\n');
+
+        const articleLinks = articles.map(a => {
+          const slug = a.slug || a.id;
+          const u = `${CANONICAL_BASE_URL}/notizie/${encodeURIComponent(slug)}`;
+          const title = (a.title || 'Notizia').replace(/[<>&'"]/g, '');
+          return `<li style="margin-bottom:8px;"><a href="${u}" style="color:#0a1c3e;font-weight:600;text-decoration:none;">${title}</a></li>`;
+        }).join('\n');
+
+        const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mappa del Sito (Sitemap HTML) | New World State 1.0</title>
+  <meta name="description" content="Indice gerarchico completo del portale New World State 1.0.">
+  <link rel="canonical" href="${CANONICAL_BASE_URL}/sitemap.html">
+  <link rel="sitemap" type="application/xml" title="Sitemap XML" href="${CANONICAL_BASE_URL}/sitemap.xml">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 24px; line-height: 1.6; }
+    .container { max-width: 960px; margin: 0 auto; background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    h1 { color: #0a1c3e; font-size: 28px; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
+    h2 { color: #0a1c3e; font-size: 20px; margin-top: 32px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+    ul { list-style: none; padding-left: 0; }
+    a:hover { text-decoration: underline !important; color: #2563eb !important; }
+    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏛️ Mappa del Sito Ufficiale (Sitemap HTML)</h1>
+    <p>Portale Sovrano di New World State 1.0 • Aggiornato al ${updateDate}</p>
+    
+    <h2>Sezioni Istituzionali e Portale</h2>
+    <ul>${coreLinks}</ul>
+
+    <h2>Testi Costituzionali e Decreti Federali (PDF)</h2>
+    <ul>${pdfLinks}</ul>
+
+    <h2>Archivio Notizie e Comunicati</h2>
+    <ul>${articleLinks}</ul>
+
+    <div class="footer">
+      <p>New World State 1.0 • <a href="${CANONICAL_BASE_URL}/sitemap.xml">Sitemap XML</a> • <a href="${CANONICAL_BASE_URL}/sitemap-news.xml">Google News XML</a> • <a href="${CANONICAL_BASE_URL}/rss.xml">RSS Feed</a></p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+        return new Response(html, {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0'
+          }
+        });
+      }
+
+      // 6. Admin Sitemap Config Endpoint
       if (url.pathname === '/api/admin/sitemap/config') {
         if (request.method === 'GET') {
           const articles = await getWorkerArticles();

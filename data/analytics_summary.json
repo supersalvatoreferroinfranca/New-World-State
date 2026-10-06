@@ -1,14 +1,14 @@
 {
-  "totalPageViews": 1478,
+  "totalPageViews": 1488,
   "uniqueVisitors": 412,
   "totalSessions": 530,
-  "totalTimeSpentSeconds": 216911,
-  "bounceSessions": 128,
+  "totalTimeSpentSeconds": 237750,
+  "bounceSessions": 138,
   "visitors": {},
   "pageViewsByTab": {
     "welcome": {
-      "views": 505,
-      "timeSpent": 94933,
+      "views": 515,
+      "timeSpent": 115772,
       "uniqueVisitors": 360,
       "label": "Benvenuto & Portale Principale"
     },
@@ -93,7 +93,7 @@
   "geoCountries": {
     "IT": {
       "name": "Italia",
-      "views": 1178,
+      "views": 1188,
       "visitors": 330,
       "code": "IT"
     },
@@ -129,7 +129,7 @@
     }
   },
   "geoCities": {
-    "Roma": 286,
+    "Roma": 482,
     "Milano": 221,
     "Napoli": 130,
     "Torino": 95,
@@ -141,7 +141,7 @@
     "Altre Località": 137
   },
   "sources": {
-    "direct": 676,
+    "direct": 686,
     "google": 490,
     "social_telegram": 120,
     "social_x": 85,
@@ -152,20 +152,20 @@
   },
   "devices": {
     "mobile": 753,
-    "desktop": 655,
+    "desktop": 665,
     "tablet": 70
   },
   "browsers": {
     "Chrome": 761,
     "Safari": 390,
-    "Firefox": 201,
+    "Firefox": 211,
     "Edge": 95,
     "Samsung Internet": 30,
     "Safari 18": 1
   },
   "operatingSystems": {
     "Android": 540,
-    "Windows": 537,
+    "Windows": 547,
     "iOS": 291,
     "macOS": 90,
     "Linux": 20
@@ -253,7 +253,7 @@
     },
     {
       "hour": "16:00",
-      "views": 63,
+      "views": 73,
       "visitors": 28
     },
     {
@@ -385,7 +385,7 @@
     },
     {
       "date": "2026-10-06",
-      "views": 13,
+      "views": 23,
       "visitors": 0,
       "avgDuration": 180
     }
@@ -397,6 +397,29 @@
     "id_card_download": 42
   },
   "recentVisits": [
+    {
+      "id": "vis_muwv9ff3_47dr",
+      "sessionId": "s_6h0r7zm7jmuwtdnqe",
+      "visitorId": "v_vloninho0mu57rojo",
+      "timestamp": 1791302505807,
+      "timeFormatted": "Adesso",
+      "city": "Roma",
+      "country": "Italia",
+      "countryCode": "IT",
+      "entryPage": "welcome",
+      "entryPageLabel": "Portale Istituzionale",
+      "currentTab": "welcome",
+      "currentTabLabel": "Portale Istituzionale",
+      "timeSpentSeconds": 1008,
+      "durationFormatted": "16m 48s",
+      "isOnline": true,
+      "deviceType": "desktop",
+      "browser": "Firefox",
+      "os": "Windows",
+      "ipMasked": "93.67.xxx.xxx",
+      "referrer": "direct",
+      "lastActive": 1791304558296
+    },
     {
       "id": "vis_muwv9jx3_1dx3",
       "sessionId": "s_test_real_user_01",
@@ -419,29 +442,6 @@
       "ipMasked": "93.42.xxx.xxx",
       "referrer": "direct",
       "lastActive": 1791302511639
-    },
-    {
-      "id": "vis_muwv9ff3_47dr",
-      "sessionId": "s_6h0r7zm7jmuwtdnqe",
-      "visitorId": "v_vloninho0mu57rojo",
-      "timestamp": 1791302505807,
-      "timeFormatted": "Adesso",
-      "city": "Roma",
-      "country": "Italia",
-      "countryCode": "IT",
-      "entryPage": "welcome",
-      "entryPageLabel": "Portale Istituzionale",
-      "currentTab": "welcome",
-      "currentTabLabel": "Portale Istituzionale",
-      "timeSpentSeconds": 15,
-      "durationFormatted": "15s",
-      "isOnline": true,
-      "deviceType": "desktop",
-      "browser": "Firefox",
-      "os": "Windows",
-      "ipMasked": "93.67.xxx.xxx",
-      "referrer": "direct",
-      "lastActive": 1791302505807
     },
     {
       "id": "vis_live_01",
