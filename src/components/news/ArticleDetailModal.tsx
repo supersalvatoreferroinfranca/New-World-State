@@ -9,6 +9,7 @@ import { splitTextIntoSentenceChunks } from '../../utils/ttsChunker';
 import { globalFallbackTtsPlayer } from '../../utils/fallbackAudioTts';
 import { UI_LOCALIZATIONS, CATEGORY_LOCALIZATIONS, AUTHOR_ROLE_LOCALIZATIONS } from '../../data/newsTranslationsData';
 import SocialShareKit from './SocialShareKit';
+import { trackCommunityEvent } from '../../services/analyticsTracker';
 import { 
   X, 
   Calendar, 
@@ -741,6 +742,7 @@ export default function ArticleDetailModal({
     if (activeLang !== 'it') {
       url += `?lang=${activeLang}`;
     }
+    trackCommunityEvent('article_shared', { slug, title: localizedData.title || activeArticle.title });
     
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {

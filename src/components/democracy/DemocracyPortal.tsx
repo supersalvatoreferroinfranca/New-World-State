@@ -43,6 +43,7 @@ import {
 } from 'recharts';
 import { useI18n } from '../../contexts/I18nContext';
 import { startBackgroundSync, stopBackgroundSync } from '../../services/notifications';
+import { trackCommunityEvent } from '../../services/analyticsTracker';
 import PWANotifierBanner from '../pwa/PWANotifierBanner';
 import { LegislativeTextRenderer } from './LegislativeTextRenderer';
 import { NWSShareWidget } from './NWSShareWidget';
@@ -818,6 +819,7 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
 
       const data = await res.json();
       if (res.ok && data.success) {
+        trackCommunityEvent('vote_cast', { proposalId, value });
         alert('Voto registrato con successo nel database crittografato di democrazia diretta!');
         // Refresh proposals list to reflect vote immediately
         await fetchProposals();

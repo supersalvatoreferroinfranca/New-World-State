@@ -1,6 +1,68 @@
 <!doctype html>
 <html lang="it" prefix="og: http://ogp.me/ns#">
   <head>
+    <script>
+      (function() {
+        if (typeof window !== 'undefined') {
+          // Intercept and virtualize Vite HMR WebSocket connection to prevent connection crashes in sandbox
+          var NativeWS = window.WebSocket;
+          if (NativeWS) {
+            function VirtualHmrWebSocket(url, protocols) {
+              var isViteHmr = false;
+              if (protocols === 'vite-hmr' || (Array.isArray(protocols) && protocols.indexOf('vite-hmr') !== -1)) {
+                isViteHmr = true;
+              } else if (typeof url === 'string' && (url.indexOf('token=') !== -1 || url.indexOf('vite') !== -1)) {
+                isViteHmr = true;
+              }
+
+              if (isViteHmr) {
+                var target = new EventTarget();
+                target.readyState = 1; // WebSocket.OPEN
+                target.url = url;
+                target.protocol = 'vite-hmr';
+                target.extensions = '';
+                target.bufferedAmount = 0;
+                target.binaryType = 'blob';
+                target.send = function() {};
+                target.close = function() {
+                  target.readyState = 3;
+                };
+                setTimeout(function() {
+                  target.dispatchEvent(new Event('open'));
+                }, 0);
+                return target;
+              }
+              return new NativeWS(url, protocols);
+            }
+            VirtualHmrWebSocket.prototype = NativeWS.prototype;
+            VirtualHmrWebSocket.CONNECTING = 0;
+            VirtualHmrWebSocket.OPEN = 1;
+            VirtualHmrWebSocket.CLOSING = 2;
+            VirtualHmrWebSocket.CLOSED = 3;
+            window.WebSocket = VirtualHmrWebSocket;
+          }
+
+          // Global suppression for any deferred WebSocket or @vite/client rejection
+          var isWsError = function(e) {
+            if (!e) return false;
+            var str = (e.message || '') + ' ' + (e.stack || '') + ' ' + String(e);
+            return str.indexOf('WebSocket') !== -1 || str.indexOf('@vite/client') !== -1 || str.indexOf('createWebSocketModuleRunnerTransport') !== -1;
+          };
+          window.addEventListener('unhandledrejection', function(event) {
+            if (isWsError(event && event.reason)) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          }, true);
+          window.addEventListener('error', function(event) {
+            if (isWsError(event && event.error) || isWsError(event && event.message) || (event && event.filename && event.filename.indexOf('@vite/client') !== -1)) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          }, true);
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     

@@ -7,6 +7,7 @@ import L from 'leaflet';
 import { OpenLocationCode } from 'open-location-code';
 import { enhanceLocationDescription, getFormAssistantTips } from '../../services/geminiService';
 import { safeFetch } from '../../services/api';
+import { trackCommunityEvent } from '../../services/analyticsTracker';
 
 // Fix Leaflet marker icon issue
 const DefaultIcon = L.icon({
@@ -1239,6 +1240,7 @@ export default function RegisterForm() {
       }
 
       if (data.success) {
+        trackCommunityEvent('registration_submit', { username: serializableData.username });
         setIsSuccess(true);
       } else {
         setError(data.message || 'Errore durante la registrazione.');

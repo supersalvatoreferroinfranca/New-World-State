@@ -19,6 +19,7 @@ import ArticleDetailModal from './ArticleDetailModal';
 import ModerationPanelModal from './ModerationPanelModal';
 import ReporterCandidacyModal from './ReporterCandidacyModal';
 import { MediaDebuggerModal } from './MediaDebuggerModal';
+import { trackPageView, trackCommunityEvent } from '../../services/analyticsTracker';
 import { 
   Newspaper, 
   Plus, 
@@ -318,6 +319,8 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     incrementArticleViews(art.id);
     setSelectedDetailArticle(art);
     setIsDetailModalOpen(true);
+    trackPageView('news', art.slug || art.id, art.title);
+    trackCommunityEvent('article_read', { slug: art.slug || art.id, title: art.title });
     try {
       if (typeof window !== 'undefined' && window.history && window.history.pushState) {
         const url = new URL(window.location.href);
