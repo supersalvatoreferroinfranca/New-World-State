@@ -4,7 +4,128 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale</loc>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>Le canzoni per la pace che hanno unito il mondo: storia e versi</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>The Peace Songs That United the World: History and Lyrics</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>Les chants pour la paix qui ont uni le monde : histoire et paroles</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>Las canciones por la paz que unieron al mundo: historia y versos</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>As canções pela paz que uniram o mundo: história e versos</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>Песни мира, объединившие мир: история и строки</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>शांति के वे गीत जिन्होंने दुनिया को एकजुट किया: इतिहास और पंक्तियाँ</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>যে শান্তির গানগুলো বিশ্বকে একত্রিত করেছিল: ইতিহাস ও কবিতা</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>凝聚世界的和平之歌：历史与诗篇</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>世界をひとつにした平和の歌：その歴史と詩</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
+            <news:title>أغاني السلام التي وحدت العالم: التاريخ والكلمات</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -15,7 +136,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -26,7 +147,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -37,7 +158,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -48,7 +169,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -59,7 +180,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -70,7 +191,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -81,7 +202,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -92,7 +213,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -103,7 +224,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -114,7 +235,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/lombra-del-riarmo-globale-il-new-world-state-e-la-visione-di-pace-digitale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -125,7 +246,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -136,7 +257,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -147,7 +268,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -158,7 +279,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -169,7 +290,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -180,7 +301,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -191,7 +312,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -202,7 +323,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -213,7 +334,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -224,7 +345,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -235,7 +356,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-la-tua-voce-la-nostra-sovranita-digitale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -246,7 +367,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -257,7 +378,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -268,7 +389,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -279,7 +400,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -290,7 +411,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -301,7 +422,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -312,7 +433,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -323,7 +444,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -334,7 +455,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -345,7 +466,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -356,7 +477,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/il-costo-nascosto-dei-conflitti-limpegno-finanziario-europeo-nelle-crisi-geopolitiche?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -367,7 +488,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -378,7 +499,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -389,7 +510,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -400,7 +521,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -411,7 +532,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -422,7 +543,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -433,7 +554,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -444,7 +565,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -455,7 +576,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -466,7 +587,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -477,7 +598,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/la-visione-di-pace-del-new-world-state-un-esercito-globale-per-la-stabilita-universale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -488,7 +609,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -499,7 +620,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -510,7 +631,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -521,7 +642,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -532,7 +653,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -543,7 +664,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -554,7 +675,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -565,7 +686,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -576,7 +697,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -587,7 +708,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -598,7 +719,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/limpennata-del-costo-dei-carburanti-analisi-profonda-tra-geopolitica-politiche-statali-e-sfide-per-la-sovranita-energetica?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -609,7 +730,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -620,7 +741,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -631,7 +752,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -642,7 +763,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -653,7 +774,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -664,7 +785,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -675,7 +796,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -686,7 +807,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -697,7 +818,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -708,7 +829,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -719,7 +840,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/il-flagello-silente-la-piaga-dello-sfruttamento-minorile-e-limpegno-globale-del-new-world-state?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -730,7 +851,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -741,7 +862,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -752,7 +873,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -763,7 +884,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -774,7 +895,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -785,7 +906,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -796,7 +917,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -807,7 +928,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -818,7 +939,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -829,7 +950,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -840,7 +961,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/il-new-world-state-e-lalba-di-una-nuova-diplomazia-appello-per-la-pace-globale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -851,7 +972,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -862,7 +983,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -873,7 +994,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -884,7 +1005,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -895,7 +1016,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -906,7 +1027,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -917,7 +1038,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -928,7 +1049,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -939,7 +1060,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -950,7 +1071,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -961,7 +1082,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/architetti-del-futuro-stati-innovativi-per-il-benessere-globale-e-la-pace-duratura?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -972,7 +1093,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -983,7 +1104,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -994,7 +1115,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1005,7 +1126,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1016,7 +1137,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1027,7 +1148,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1038,7 +1159,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1049,7 +1170,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1060,7 +1181,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1071,7 +1192,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1082,7 +1203,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/larchitettura-della-liberta-indipendenza-dei-popoli-e-comunita-globale-nel-new-world-state?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1093,7 +1214,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1104,7 +1225,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1115,7 +1236,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1126,7 +1247,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1137,7 +1258,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1148,7 +1269,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1159,7 +1280,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1170,7 +1291,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1181,7 +1302,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1192,7 +1313,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1203,7 +1324,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/il-sentiero-della-fraternita-globale-strategie-per-la-pace-e-la-cooperazione-nellera-del-new-world-state?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1214,7 +1335,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1225,7 +1346,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1236,7 +1357,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1247,7 +1368,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1258,7 +1379,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1269,7 +1390,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1280,7 +1401,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1291,7 +1412,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1302,7 +1423,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1313,7 +1434,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1324,7 +1445,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflictti-attuali?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1335,7 +1456,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1346,7 +1467,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1357,7 +1478,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1368,7 +1489,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1379,7 +1500,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1390,7 +1511,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1401,7 +1522,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1412,7 +1533,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1423,7 +1544,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1434,7 +1555,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1445,7 +1566,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/infrastrutture-decentralizzate-test-nodo-rete-ridondanza?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1456,7 +1577,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1467,7 +1588,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1478,7 +1599,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1489,7 +1610,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1500,7 +1621,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1511,7 +1632,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1522,7 +1643,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1533,7 +1654,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1544,7 +1665,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1555,7 +1676,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1566,7 +1687,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/fondo-sovrano-sostegno-comunitario-finanza-etica-distribuita?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1577,7 +1698,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1588,7 +1709,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1599,7 +1720,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1610,7 +1731,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1621,7 +1742,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1632,7 +1753,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1643,7 +1764,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1654,7 +1775,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1665,7 +1786,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1676,7 +1797,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1687,7 +1808,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1698,7 +1819,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1709,7 +1830,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1720,7 +1841,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1731,7 +1852,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1742,7 +1863,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1753,7 +1874,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1764,7 +1885,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1775,7 +1896,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1786,7 +1907,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1797,7 +1918,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1808,7 +1929,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1819,7 +1940,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1830,7 +1951,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1841,7 +1962,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1852,7 +1973,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1863,7 +1984,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1874,7 +1995,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1885,7 +2006,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1896,7 +2017,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1907,7 +2028,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1918,7 +2039,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1929,7 +2050,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/carta-diritti-digitali-inviolabilita-sovranita-individuale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1940,7 +2061,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1951,7 +2072,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1962,7 +2083,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1973,7 +2094,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1984,7 +2105,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -1995,7 +2116,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2006,7 +2127,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2017,7 +2138,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2028,7 +2149,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2039,7 +2160,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2050,7 +2171,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/economia-circolare-moneta-comunita-superare-usura-bancaria?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2061,7 +2182,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2072,7 +2193,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2083,7 +2204,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2094,7 +2215,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2105,7 +2226,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2116,7 +2237,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2127,7 +2248,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2138,7 +2259,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2149,7 +2270,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2160,7 +2281,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2171,7 +2292,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2182,7 +2303,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2193,7 +2314,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2204,7 +2325,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2215,7 +2336,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2226,7 +2347,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2237,7 +2358,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2248,7 +2369,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2259,7 +2380,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2270,7 +2391,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2281,7 +2402,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2292,7 +2413,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2303,7 +2424,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2314,7 +2435,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2325,7 +2446,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2336,7 +2457,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2347,7 +2468,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2358,7 +2479,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2369,7 +2490,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2380,7 +2501,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2391,7 +2512,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2402,7 +2523,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2413,7 +2534,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/intelligenza-artificiale-etica-sovranita-dati-assemblea-digitale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2424,7 +2545,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2435,7 +2556,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2446,7 +2567,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2457,7 +2578,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2468,7 +2589,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2479,7 +2600,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2490,7 +2611,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2501,7 +2622,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2512,7 +2633,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2523,7 +2644,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2534,7 +2655,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/patrimonio-culturale-mondiale-rete-biblioteche-sovrane-aperte?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2545,7 +2666,128 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali</loc>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>L&#039;Alba di un&#039;Era Energetica Globale: Innovazione e Sovranità del New World State verso un Futuro Sostenibile</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>The Dawn of a Global Energy Era: Innovation and Sovereignty of the New World State Toward a Sustainable Future</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>L&#039;Aube d&#039;une Ère Énergétique Mondiale : Innovation et Souveraineté du New World State vers un Avenir Durable</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>El Amanecer de una Nueva Era Energética Global: Innovación y Soberanía de New World State hacia un Futuro Sostenible</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>A Aurora de uma Era Energética Global: Inovação e Soberania do New World State Rumo a um Futuro Sustentável</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>Рассвет глобальной энергетической эпохи: Инновации и суверенитет New World State на пути к устойчивому будущему</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>वैश्विक ऊर्जा युग का उदय: एक सतत भविष्य की ओर New World State का नवाचार और संप्रभुता</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>একটি বৈশ্বিক শক্তি যুগের উন্মেষ: টেকসই ভবিষ্যতের অভিমুখে New World State-এর উদ্ভাবন ও সার্বভৌমত্ব</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>全球能源新纪元的曙光：New World State 迈向可持续未来的创新与主权</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>世界的エネルギー時代の幕開け：持続可能な未来に向けたNew World Stateの革新と主権</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>فجر عصر طاقة عالمي جديد: الابتكار والسيادة لـ New World State نحو مستقبل مستدام</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2556,7 +2798,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2567,7 +2809,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2578,7 +2820,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2589,7 +2831,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2600,7 +2842,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2611,7 +2853,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2622,7 +2864,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2633,7 +2875,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2644,7 +2886,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2655,7 +2897,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/limpotenza-strategica-analisi-delle-cause-profonde-della-paralisi-onu-nei-conflitti-attuali?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2666,7 +2908,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2677,7 +2919,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2688,7 +2930,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2699,7 +2941,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2710,7 +2952,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2721,7 +2963,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2732,7 +2974,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2743,7 +2985,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2754,7 +2996,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2765,7 +3007,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2776,7 +3018,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2787,7 +3029,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2798,7 +3040,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2809,7 +3051,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2820,7 +3062,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2831,7 +3073,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2842,7 +3084,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2853,7 +3095,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2864,7 +3106,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2875,7 +3117,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2886,7 +3128,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
@@ -2897,7 +3139,7 @@
           </news:news>
         </url>
         <url>
-          <loc>http://localhost:3000/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>

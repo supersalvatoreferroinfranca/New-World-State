@@ -832,6 +832,17 @@ export function deleteCategory(id: string): void {
   saveCategories(filtered);
 }
 
+// Normalizza lo stato dell'articolo in uno dei valori ufficiali del New World State
+export function normalizeArticleStatus(status?: string): ArticleStatus {
+  if (!status) return 'bozza';
+  const s = String(status).toLowerCase().trim();
+  if (s === 'pubblicato' || s === 'published' || s === 'approvato' || s === 'approved') return 'pubblicato';
+  if (s === 'in_moderazione' || s === 'pending' || s === 'in_attesa' || s === 'moderation') return 'in_moderazione';
+  if (s === 'in_revisione' || s === 'revision' || s === 'changes_requested') return 'in_revisione';
+  if (s === 'rifiutato' || s === 'rejected' || s === 'respinto') return 'rifiutato';
+  return 'bozza';
+}
+
 // Articles Management
 export function getArticles(): NewsArticle[] {
   try {
@@ -839,25 +850,35 @@ export function getArticles(): NewsArticle[] {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map((a: NewsArticle) => ({
+          ...a,
+          status: normalizeArticleStatus(a.status)
+        }));
       }
     }
   } catch (e) {
     console.error('[NEWS-SERVICE] Error reading articles:', e);
   }
-  return INITIAL_ARTICLES;
+  return INITIAL_ARTICLES.map(a => ({
+    ...a,
+    status: normalizeArticleStatus(a.status)
+  }));
 }
 
 export function saveArticles(articles: NewsArticle[]): void {
   try {
-    localStorage.setItem(ARTICLES_STORAGE_KEY, JSON.stringify(articles));
+    const normalized = articles.map(a => ({
+      ...a,
+      status: normalizeArticleStatus(a.status)
+    }));
+    localStorage.setItem(ARTICLES_STORAGE_KEY, JSON.stringify(normalized));
     window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
 
     // Asynchronously sync authoritative articles with server for social preview generation & real-time SEO sitemaps
     safeFetch('/api/news/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articles, replaceAll: true })
+      body: JSON.stringify({ articles: normalized, replaceAll: true })
     }).catch(err => console.warn('[NEWS-SERVICE] Server sync error:', err));
   } catch (e) {
     console.error('[NEWS-SERVICE] Error saving articles:', e);
@@ -884,12 +905,12 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.articles) && data.articles.length > 0) {
-          const serverArticles: NewsArticle[] = data.articles;
+          const serverArticles: NewsArticle[] = data.articles.map((a: any) => ({
+            ...a,
+            status: normalizeArticleStatus(a.status)
+          }));
           const currentLocal = getArticles();
 
-          // Strategia di merge intelligente:
-          // Se l'utente ha modificato un articolo localmente, la versione locale (con updatedAt più recente)
-          // non deve essere sovrascritta alla cieca dalla versione statica del server.
           const localMap = new Map<string, NewsArticle>();
           currentLocal.forEach(a => { if (a && a.id) localMap.set(a.id, a); });
 
@@ -903,13 +924,23 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
               merged.push(sArt);
             } else {
               localMap.delete(sArt.id);
+              const sStatus = normalizeArticleStatus(sArt.status);
+              const lStatus = normalizeArticleStatus(lArt.status);
+
+              // REGOLE DI APPROVAZIONE DETERMINISTICA:
+              // 1. Se l'utente o il custode ha approvato localmente (lStatus === 'pubblicato'), NON regredire MAI a bozza/in_moderazione
+              if (lStatus === 'pubblicato' && sStatus !== 'pubblicato') {
+                merged.push({ ...sArt, ...lArt, status: 'pubblicato' });
+                hasLocalNewerChanges = true;
+                continue;
+              }
+
               const serverTime = new Date(sArt.updatedAt || sArt.publishedAt || sArt.createdAt || 0).getTime();
               const localTime = new Date(lArt.updatedAt || lArt.publishedAt || lArt.createdAt || 0).getTime();
 
-              // Se la modifica locale è più recente di oltre 2 secondi rispetto al server, preserva la modifica locale!
-              if (localTime > serverTime + 2000) {
+              if (localTime >= serverTime) {
                 merged.push(lArt);
-                hasLocalNewerChanges = true;
+                if (localTime > serverTime) hasLocalNewerChanges = true;
               } else {
                 merged.push(sArt);
               }
@@ -935,7 +966,7 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
             window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
           }
 
-          // Se sono state preservate modifiche locali più recenti, sincronizzale sul server/database
+          // Se sono state preservate modifiche locali più recenti (o approvazioni), sincronizzale sul server/database
           if (hasLocalNewerChanges) {
             safeFetch('/api/news/sync', {
               method: 'POST',
@@ -960,7 +991,7 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
 
 export function getPublishedArticles(): NewsArticle[] {
   return getArticles()
-    .filter(a => a.status === 'pubblicato')
+    .filter(a => normalizeArticleStatus(a.status) === 'pubblicato')
     .sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
 }
 
@@ -975,7 +1006,10 @@ export function getLatest3Articles(): NewsArticle[] {
 
 export function getArticlesPendingModeration(): NewsArticle[] {
   return getArticles()
-    .filter(a => a.status === 'in_moderazione')
+    .filter(a => {
+      const s = normalizeArticleStatus(a.status);
+      return s === 'in_moderazione' || s === 'bozza' || s === 'in_revisione';
+    })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
@@ -1109,16 +1143,21 @@ export function deleteArticle(id: string): void {
 export function moderateArticle(
   id: string,
   action: 'approve' | 'reject' | 'request_changes' | 'toggle_featured',
-  moderatorNotes?: string
+  moderatorNotes?: string,
+  articleFallback?: NewsArticle
 ): NewsArticle | null {
   const articles = getArticles();
-  let targetArticle = articles.find(a => a.id === id);
+  let targetArticle = articles.find(a => a && (String(a.id) === String(id) || a.slug === id));
+
+  if (!targetArticle && articleFallback) {
+    targetArticle = articleFallback;
+  }
 
   if (!targetArticle) return null;
 
-  let newStatus: ArticleStatus = targetArticle.status;
+  let newStatus: ArticleStatus = normalizeArticleStatus(targetArticle.status);
   let newPublishedAt = targetArticle.publishedAt;
-  let newFeatured = targetArticle.isFeatured;
+  let newFeatured = !!targetArticle.isFeatured;
 
   if (action === 'approve') {
     newStatus = 'pubblicato';
@@ -1140,35 +1179,66 @@ export function moderateArticle(
     updatedAt: new Date().toISOString()
   };
 
-  const updatedList = articles.map(a => a.id === id ? updatedArticle : a);
+  const foundIndex = articles.findIndex(a => a && (String(a.id) === String(id) || a.slug === id));
+  let updatedList: NewsArticle[];
+  if (foundIndex >= 0) {
+    updatedList = articles.map((a, i) => i === foundIndex ? updatedArticle : a);
+  } else {
+    updatedList = [updatedArticle, ...articles];
+  }
   saveArticles(updatedList);
 
-  // Directly send moderation event to server to ensure instant approval & sitemap registration
+  // Directly send moderation event to server with full article payload to guarantee persistence
   safeFetch('/api/news/moderate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, action, moderatorNotes })
-  }).catch(() => {});
+    body: JSON.stringify({
+      id: updatedArticle.id,
+      articleId: updatedArticle.id,
+      action,
+      moderatorNotes,
+      article: updatedArticle
+    })
+  }).catch(err => console.warn('[NEWS-MODERATE-ERR]', err));
+
+  // Send full updated list to /api/news/sync to ensure database permanence
+  safeFetch('/api/news/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ articles: updatedList, replaceAll: true })
+  }).catch(err => console.warn('[NEWS-SYNC-ERR]', err));
 
   if (action === 'approve') {
-    triggerNotification(
-      'Notizia Pubblicata',
-      `L'articolo "${updatedArticle.title}" è stato approvato dai Custodi Digitali ed è ora pubblico.`,
-      'news',
-      `/news?slug=${updatedArticle.slug}`
-    );
+    try {
+      triggerNotification(
+        'Notizia Pubblicata',
+        `L'articolo "${updatedArticle.title}" è stato approvato dai Custodi Digitali ed è ora pubblico.`,
+        'news',
+        `/news?slug=${updatedArticle.slug}`
+      );
+    } catch (nErr) {
+      console.warn('[NOTIF-WARN]', nErr);
+    }
 
-    // All'approvazione dell'articolo, avvia la traduzione automatica in tutte le 11 lingue se non già presente
-    if (!updatedArticle.translations || Object.keys(updatedArticle.translations).length < 5) {
-      triggerBackgroundTranslation(updatedArticle.id);
+    try {
+      // All'approvazione dell'articolo, avvia la traduzione automatica in background se necessario
+      if (!updatedArticle.translations || Object.keys(updatedArticle.translations).length < 5) {
+        triggerBackgroundTranslation(updatedArticle.id);
+      }
+    } catch (trErr) {
+      console.warn('[TRANSLATE-WARN]', trErr);
     }
   } else if (action === 'reject' || action === 'request_changes') {
-    triggerNotification(
-      'Aggiornamento Moderazione Articolo',
-      `I Custodi Digitali hanno inviato un commento sull'articolo "${updatedArticle.title}".`,
-      'news',
-      '/news'
-    );
+    try {
+      triggerNotification(
+        'Aggiornamento Moderazione Articolo',
+        `I Custodi Digitali hanno inviato un commento sull'articolo "${updatedArticle.title}".`,
+        'news',
+        '/news'
+      );
+    } catch (nErr) {
+      console.warn('[NOTIF-WARN]', nErr);
+    }
   }
 
   return updatedArticle;
@@ -1485,12 +1555,17 @@ export async function translateArticleWithAI(articleData: {
   }
 
   const translations = resData.translations || {};
+  if (Object.keys(translations).length === 0) {
+    throw new Error('Nessuna traduzione prodotta dal servizio AI.');
+  }
 
   // Se è stato specificato l'ID articolo, aggiorna anche la copia nel localStorage del client
   if (articleData.id) {
     const articles = getArticles();
+    let found = false;
     const updated = articles.map(art => {
       if (String(art.id) === String(articleData.id) || art.slug === articleData.id) {
+        found = true;
         return {
           ...art,
           translations: {
@@ -1502,7 +1577,9 @@ export async function translateArticleWithAI(articleData: {
       }
       return art;
     });
-    saveArticles(updated);
+    if (found) {
+      saveArticles(updated);
+    }
   }
 
   return translations;
@@ -1622,7 +1699,8 @@ const pendingTranslations = new Set<string>();
  */
 export async function autoTranslateArticleOnDemand(
   articleId: string,
-  lang: Language
+  lang: Language,
+  fallbackArticle?: NewsArticle
 ): Promise<NewsArticle | null> {
   if (lang === 'it') return null;
 
@@ -1630,7 +1708,10 @@ export async function autoTranslateArticleOnDemand(
   if (pendingTranslations.has(key)) return null;
 
   const articles = getArticles();
-  const target = articles.find(a => String(a.id) === String(articleId) || a.slug === articleId);
+  let target = articles.find(a => a && (String(a.id) === String(articleId) || a.slug === articleId));
+  if (!target && fallbackArticle) {
+    target = fallbackArticle;
+  }
   if (!target) return null;
 
   // Già tradotto completamente sia titolo che contenuto esteso
@@ -1650,8 +1731,13 @@ export async function autoTranslateArticleOnDemand(
       targetLangs: [lang]
     });
 
+    if (!translations || !translations[lang as NewsLanguage] || !translations[lang as NewsLanguage].title) {
+      console.warn(`[AutoTranslate] Nessuna traduzione valida ricevuta per lingua ${lang}`);
+      return null;
+    }
+
     const updatedArticles = getArticles();
-    const updatedTarget = updatedArticles.find(a => String(a.id) === String(target.id) || a.slug === target.slug);
+    const updatedTarget = updatedArticles.find(a => a && (String(a.id) === String(target!.id) || a.slug === target!.slug));
     const result: NewsArticle = updatedTarget || {
       ...target,
       translations: {

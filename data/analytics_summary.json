@@ -1,26 +1,26 @@
 {
-  "totalPageViews": 1488,
+  "totalPageViews": 1514,
   "uniqueVisitors": 412,
   "totalSessions": 530,
-  "totalTimeSpentSeconds": 237750,
-  "bounceSessions": 138,
+  "totalTimeSpentSeconds": 321783,
+  "bounceSessions": 159,
   "visitors": {},
   "pageViewsByTab": {
     "welcome": {
-      "views": 515,
-      "timeSpent": 115772,
+      "views": 519,
+      "timeSpent": 115782,
       "uniqueVisitors": 360,
       "label": "Benvenuto & Portale Principale"
     },
     "news": {
-      "views": 421,
-      "timeSpent": 48000,
+      "views": 436,
+      "timeSpent": 101940,
       "uniqueVisitors": 290,
       "label": "Quotidiano Sovrano New World State"
     },
     "democracy": {
-      "views": 222,
-      "timeSpent": 50150,
+      "views": 226,
+      "timeSpent": 64552,
       "uniqueVisitors": 160,
       "label": "Democrazia Diretta & Votazioni"
     },
@@ -65,6 +65,12 @@
       "timeSpent": 7126,
       "uniqueVisitors": 0,
       "label": "projects"
+    },
+    "admin": {
+      "views": 3,
+      "timeSpent": 15681,
+      "uniqueVisitors": 0,
+      "label": "admin"
     }
   },
   "articles": {
@@ -93,7 +99,7 @@
   "geoCountries": {
     "IT": {
       "name": "Italia",
-      "views": 1188,
+      "views": 1214,
       "visitors": 330,
       "code": "IT"
     },
@@ -129,7 +135,7 @@
     }
   },
   "geoCities": {
-    "Roma": 482,
+    "Roma": 490,
     "Milano": 221,
     "Napoli": 130,
     "Torino": 95,
@@ -138,10 +144,11 @@
     "Lugano": 45,
     "Ginevra": 35,
     "Parigi": 28,
-    "Altre Località": 137
+    "Altre Località": 137,
+    "Catania": 504
   },
   "sources": {
-    "direct": 686,
+    "direct": 712,
     "google": 490,
     "social_telegram": 120,
     "social_x": 85,
@@ -151,21 +158,21 @@
     "other_referrer": 2
   },
   "devices": {
-    "mobile": 753,
-    "desktop": 665,
+    "mobile": 755,
+    "desktop": 689,
     "tablet": 70
   },
   "browsers": {
     "Chrome": 761,
     "Safari": 390,
-    "Firefox": 211,
+    "Firefox": 237,
     "Edge": 95,
     "Samsung Internet": 30,
     "Safari 18": 1
   },
   "operatingSystems": {
     "Android": 540,
-    "Windows": 547,
+    "Windows": 573,
     "iOS": 291,
     "macOS": 90,
     "Linux": 20
@@ -218,12 +225,12 @@
     },
     {
       "hour": "09:00",
-      "views": 51,
+      "views": 63,
       "visitors": 36
     },
     {
       "hour": "10:00",
-      "views": 36,
+      "views": 50,
       "visitors": 25
     },
     {
@@ -388,6 +395,12 @@
       "views": 23,
       "visitors": 0,
       "avgDuration": 180
+    },
+    {
+      "date": "2026-10-08",
+      "views": 26,
+      "visitors": 0,
+      "avgDuration": 180
     }
   ],
   "communityEvents": {
@@ -403,22 +416,22 @@
       "visitorId": "v_vloninho0mu57rojo",
       "timestamp": 1791302505807,
       "timeFormatted": "Adesso",
-      "city": "Roma",
+      "city": "Catania",
       "country": "Italia",
       "countryCode": "IT",
       "entryPage": "welcome",
       "entryPageLabel": "Portale Istituzionale",
-      "currentTab": "welcome",
-      "currentTabLabel": "Portale Istituzionale",
-      "timeSpentSeconds": 1008,
-      "durationFormatted": "16m 48s",
+      "currentTab": "news",
+      "currentTabLabel": "Quotidiano Sovrano",
+      "timeSpentSeconds": 4097,
+      "durationFormatted": "1h 8m",
       "isOnline": true,
       "deviceType": "desktop",
       "browser": "Firefox",
       "os": "Windows",
       "ipMasked": "93.67.xxx.xxx",
       "referrer": "direct",
-      "lastActive": 1791304558296
+      "lastActive": 1791457216382
     },
     {
       "id": "vis_muwv9jx3_1dx3",

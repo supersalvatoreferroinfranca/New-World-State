@@ -99,6 +99,7 @@ export default function ArticleDetailModal({
   };
 
   const prevArticleIdRef = useRef<string | null>(null);
+  const prevCurrentLanguageRef = useRef<string | null>(currentLanguage);
 
   const handleLanguageSelect = (langCode: NewsLanguage) => {
     setActiveLang(langCode);
@@ -120,9 +121,10 @@ export default function ArticleDetailModal({
       return;
     }
 
-    if (article.id !== prevArticleIdRef.current) {
+    const articleIdStr = String(article.id);
+    if (articleIdStr !== prevArticleIdRef.current) {
       // New article opened
-      prevArticleIdRef.current = article.id;
+      prevArticleIdRef.current = articleIdStr;
       setCurrentArticle(article);
 
       let initialLang: NewsLanguage = (currentLanguage as NewsLanguage) || 'it';
@@ -134,42 +136,48 @@ export default function ArticleDetailModal({
         }
       }
       setActiveLang(initialLang);
+      prevCurrentLanguageRef.current = currentLanguage;
     } else {
       // Same article updated in background: merge translations smoothly
       setCurrentArticle(prev => {
         if (!prev) return article;
         return {
+          ...prev,
           ...article,
           translations: {
-            ...(article.translations || {}),
-            ...(prev.translations || {})
+            ...(prev.translations || {}),
+            ...(article.translations || {})
           }
         };
       });
-      // Also update activeLang if visitor switched currentLanguage
-      if (currentLanguage && SUPPORTED_LANG_OPTIONS.some(l => l.code === currentLanguage)) {
-        setActiveLang(currentLanguage as NewsLanguage);
+      // Only switch activeLang if user actually changed global language in the top navbar
+      if (currentLanguage !== prevCurrentLanguageRef.current) {
+        prevCurrentLanguageRef.current = currentLanguage;
+        if (currentLanguage && SUPPORTED_LANG_OPTIONS.some(l => l.code === currentLanguage)) {
+          setActiveLang(currentLanguage as NewsLanguage);
+        }
       }
     }
   }, [article?.id, currentLanguage]);
 
   // Derive active article safely: prioritize currentArticle with latest in-memory translations
-  const activeArticle: NewsArticle | null = (currentArticle && (!article || currentArticle.id === article.id) ? currentArticle : article) || null;
+  const activeArticle: NewsArticle | null = (currentArticle && (!article || String(currentArticle.id) === String(article.id)) ? currentArticle : article) || null;
 
   // Listen for background article updates
   useEffect(() => {
     const handleArticleUpdate = () => {
       if (!article?.id) return;
       const all = getArticles();
-      const found = all.find(a => String(a.id) === String(article.id) || a.slug === article.slug);
+      const found = all.find(a => a && (String(a.id) === String(article.id) || a.slug === article.slug));
       if (found) {
         setCurrentArticle(prev => {
           if (!prev) return found;
           return {
+            ...prev,
             ...found,
             translations: {
-              ...(found.translations || {}),
-              ...(prev.translations || {})
+              ...(prev.translations || {}),
+              ...(found.translations || {})
             }
           };
         });
@@ -191,7 +199,10 @@ export default function ArticleDetailModal({
   useEffect(() => {
     if (!activeArticle || activeLang === 'it' || !isOpen) return;
 
-    const hasTrans = (activeArticle.translations?.[activeLang]?.title && activeArticle.translations?.[activeLang]?.content) || localizedData.hasTranslation;
+    const hasTrans = Boolean(
+      (activeArticle.translations?.[activeLang]?.title && activeArticle.translations?.[activeLang]?.content) || 
+      (localizedData.hasTranslation && localizedData.isTranslated)
+    );
     if (hasTrans) return;
 
     // Trigger AI translation
@@ -199,9 +210,13 @@ export default function ArticleDetailModal({
     setIsTranslating(true);
     setTranslationNotice(tText('Translating article with Gemini AI...', 'Traduzione automatica con Gemini AI in corso...'));
 
-    autoTranslateArticleOnDemand(activeArticle.id, activeLang as Language)
+    autoTranslateArticleOnDemand(activeArticle.id, activeLang as Language, activeArticle)
       .then((updated) => {
-        if (!isCancelled && updated) {
+        if (isCancelled) return;
+        const targetTrans = updated?.translations?.[activeLang];
+        const isTranslatedValid = Boolean(targetTrans?.title && targetTrans?.content);
+
+        if (updated && isTranslatedValid) {
           setCurrentArticle(prev => ({
             ...(prev || activeArticle),
             ...updated,
@@ -212,6 +227,9 @@ export default function ArticleDetailModal({
           }));
           setTranslationNotice(tText('Article translated successfully', 'Articolo tradotto con successo'));
           setTimeout(() => setTranslationNotice(null), 3000);
+        } else {
+          setTranslationNotice(tText('Automatic translation temporarily unavailable', 'Traduzione automatica temporaneamente non disponibile'));
+          setTimeout(() => setTranslationNotice(null), 4000);
         }
       })
       .catch((err) => {
@@ -244,6 +262,9 @@ export default function ArticleDetailModal({
         tags: activeArticle.tags,
         targetLangs: [activeLang]
       });
+      if (!transMap || !transMap[activeLang]?.title) {
+        throw new Error('Nessuna traduzione ricevuta');
+      }
       const updatedArticle = {
         ...activeArticle,
         translations: {

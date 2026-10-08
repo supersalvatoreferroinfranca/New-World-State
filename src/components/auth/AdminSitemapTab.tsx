@@ -123,7 +123,14 @@ export default function AdminSitemapTab({ adminPasswordValue, showAlert }: Admin
       if (data.success) {
         const canonicalBase = (data.baseUrl && !data.baseUrl.includes('localhost')) ? data.baseUrl : 'https://newworldstate.cloud';
         setBaseUrl(canonicalBase);
-        setItems(data.items || []);
+        const cleanItems = (data.items || []).map((item: any) => ({
+          ...item,
+          canonicalUrl: (item.canonicalUrl || '')
+            .replace(/http:\/\/localhost:3000/g, canonicalBase)
+            .replace(/http:\/\/localhost/g, canonicalBase)
+            .replace(/localhost:3000/g, 'newworldstate.cloud')
+        }));
+        setItems(cleanItems);
         if (data.automation) setAutomationConfig(data.automation);
         if (data.eventLogs) setEventLogs(data.eventLogs);
         if (data.stats?.lastGeneratedAt) setLastGeneratedAt(data.stats.lastGeneratedAt);

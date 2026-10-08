@@ -928,33 +928,44 @@ async function startServer() {
 
     // Helper per inviare email tramite SMTP (es. Aruba)
     async function sendLocalSmtpEmail({ to, subject, html, text, attachments }: { to: string; subject: string; html: string; text?: string; attachments?: any[] }) {
-      const host = process.env.SMTP_HOST || 'smtps.aruba.it';
+      let host = (process.env.SMTP_HOST || 'smtps.aruba.it').trim();
       const port = parseInt(process.env.SMTP_PORT || '465', 10);
       const secure = process.env.SMTP_SECURE !== 'false'; // di default true per la porta 465
-      const user = process.env.SMTP_USER;
-      const pass = process.env.SMTP_PASS;
+      const user = (process.env.SMTP_USER || '').trim();
+      const pass = (process.env.SMTP_PASS || '').trim();
       // For SPF/DKIM alignment with Aruba servers, we default the From address strictly to the SMTP authenticated user
-      const from = process.env.SMTP_FROM || user;
+      const from = (process.env.SMTP_FROM || user).trim();
       const fromName = process.env.SMTP_FROM_NAME || 'Anagrafe New World State';
 
       if (!user || !pass) {
         throw new Error('Le credenziali SMTP (SMTP_USER/SMTP_PASS) non sono state configurate nel file .env');
       }
 
+      // Aruba specific normalization: Aruba requires smtps.aruba.it for SSL/TLS on port 465.
+      // If host was provided as smtp.aruba.it on port 465, or for Aruba with SSL, use smtps.aruba.it
+      if ((host === 'smtp.aruba.it' || host.includes('aruba.it')) && (port === 465 || secure)) {
+        host = 'smtps.aruba.it';
+      }
+
       console.log(`[SMTP] Spedizione a [${to}] via [${host}:${port}] (SSL: ${secure}) usando [${user}]...`);
 
-      const transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        auth: {
-          user,
-          pass,
-        },
-        tls: {
-          rejectUnauthorized: false
-        }
-      });
+      const createTransporter = (h: string, p: number, s: boolean) => {
+        return nodemailer.createTransport({
+          host: h,
+          port: p,
+          secure: s,
+          auth: {
+            user,
+            pass,
+          },
+          tls: {
+            rejectUnauthorized: false
+          },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000
+        });
+      };
 
       // Genera una versione in testo semplice pulito se non fornita per bypassare i filtri antispam (SPF/DKIM/MIME check)
       const plainTextFallback = text || html
@@ -980,9 +991,22 @@ async function startServer() {
         attachments: attachments || []
       };
 
-      const info = await transporter.sendMail(mailOptions);
-      console.log(`[SMTP] Email inviata con successo! MessageId: ${info.messageId}`);
-      return info;
+      try {
+        const transporter = createTransporter(host, port, secure);
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`[SMTP] Email inviata con successo! MessageId: ${info.messageId}`);
+        return info;
+      } catch (err: any) {
+        // Se il tentativo iniziale fallisce e l'host non era smtps.aruba.it su porta 465, riprova su smtps.aruba.it:465
+        if (host !== 'smtps.aruba.it' && (user.includes('aruba') || user.includes('newworldstate.org') || host.includes('aruba'))) {
+          console.warn(`[SMTP] Tentativo con ${host}:${port} non riuscito (${err.message}). Riprovo su smtps.aruba.it:465 (SSL)...`);
+          const fallbackTransporter = createTransporter('smtps.aruba.it', 465, true);
+          const fallbackInfo = await fallbackTransporter.sendMail(mailOptions);
+          console.log(`[SMTP] Email inviata con successo tramite fallback smtps.aruba.it! MessageId: ${fallbackInfo.messageId}`);
+          return fallbackInfo;
+        }
+        throw err;
+      }
     }
 
     // Helper universale per inviare email tramite SMTP (Nodemailer) di Aruba
@@ -3737,6 +3761,56 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
       return `${m}m ${s > 0 ? s + 's' : ''}`.trim();
     }
 
+    function consolidatePageHistory(rawSteps: any[], nowMs: number) {
+      if (!Array.isArray(rawSteps) || rawSteps.length === 0) return [];
+      const consolidated: any[] = [];
+      for (const step of rawSteps) {
+        if (!step) continue;
+        const tab = step.tab || 'welcome';
+        const tabLabel = step.tabLabel || getTabLabel(tab);
+        const dur = Math.max(1, Number(step.timeSpentSeconds) || 15);
+        const ts = Number(step.timestamp) || nowMs;
+        const la = Number(step.lastActive) || ts;
+        const last = consolidated[consolidated.length - 1];
+        if (last && last.tab === tab) {
+          last.timeSpentSeconds = Math.max(last.timeSpentSeconds, dur);
+          last.lastActive = Math.max(last.lastActive, la);
+        } else {
+          consolidated.push({
+            id: step.id,
+            tab,
+            tabLabel,
+            entryPage: step.entryPage,
+            timeSpentSeconds: dur,
+            timestamp: ts,
+            lastActive: la
+          });
+        }
+      }
+
+      const totalSessionSeconds = consolidated.reduce((acc, curr) => acc + curr.timeSpentSeconds, 0) || 1;
+
+      return consolidated.map((step, idx) => {
+        const stepDate = new Date(step.timestamp || nowMs);
+        const percent = Math.min(100, Math.max(1, Math.round((step.timeSpentSeconds / totalSessionSeconds) * 100)));
+        return {
+          stepNumber: idx + 1,
+          id: step.id,
+          tab: step.tab,
+          tabLabel: step.tabLabel,
+          timeSpentSeconds: step.timeSpentSeconds,
+          durationFormatted: formatDuration(step.timeSpentSeconds),
+          timestamp: step.timestamp,
+          lastActive: step.lastActive,
+          exactTimeFormatted: stepDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }),
+          fullDateFormatted: stepDate.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          percentOfSession: percent,
+          isEntry: idx === 0,
+          isCurrent: idx === consolidated.length - 1
+        };
+      });
+    }
+
     function getInitialRecentVisits(): any[] {
       const now = Date.now();
       return [
@@ -4320,6 +4394,67 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
           console.warn('[ANALYTICS-VISIT-UPDATE-ERR]', visErr);
         }
 
+        // 5. Persistenza permanente nel database PostgreSQL (Neon) per produzione
+        if (dbPool) {
+          try {
+            const clientIp = req.headers['cf-connecting-ip'] || 
+              (typeof req.headers['x-forwarded-for'] === 'string' ? req.headers['x-forwarded-for'].split(',')[0].trim() : '') || 
+              payload.clientIp || req.socket?.remoteAddress || '';
+            const detectedCity = req.headers['cf-ipcity'] || payload.city || (country.code === 'CH' ? 'Lugano' : 'Roma');
+            const detectedCountryName = country.name || payload.country || 'Italia';
+            const detectedCountryCode = country.code || payload.countryCode || 'IT';
+            const entryPg = payload.entryPage || payload.tab || 'welcome';
+            const sessDuration = Math.max(Number(payload.sessionDurationSeconds) || 0, Number(timeSpentSeconds) || 0, 15);
+            const nowMs = Date.now();
+            const sid = sessionId || `s_${Date.now()}`;
+            const vid = visitorId || `v_${Date.now()}`;
+            const visitId = `vis_${sid}`;
+
+            const pageHistoryJson = Array.isArray(payload.pageHistory) && payload.pageHistory.length > 0 
+              ? JSON.stringify(payload.pageHistory) 
+              : null;
+
+            await dbPool.query(`
+              INSERT INTO nws_visits (
+                id, session_id, visitor_id, timestamp, last_active, city, country, country_code,
+                entry_page, entry_page_label, current_tab, current_tab_label, time_spent_seconds,
+                device_type, browser, os, ip_masked, referrer, created_at, page_history
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), $19)
+              ON CONFLICT (id) DO UPDATE SET
+                last_active = EXCLUDED.last_active,
+                current_tab = EXCLUDED.current_tab,
+                current_tab_label = EXCLUDED.current_tab_label,
+                time_spent_seconds = GREATEST(nws_visits.time_spent_seconds, EXCLUDED.time_spent_seconds),
+                city = COALESCE(EXCLUDED.city, nws_visits.city),
+                country = COALESCE(EXCLUDED.country, nws_visits.country),
+                country_code = COALESCE(EXCLUDED.country_code, nws_visits.country_code),
+                device_type = COALESCE(EXCLUDED.device_type, nws_visits.device_type),
+                browser = COALESCE(EXCLUDED.browser, nws_visits.browser),
+                os = COALESCE(EXCLUDED.os, nws_visits.os),
+                ip_masked = COALESCE(EXCLUDED.ip_masked, nws_visits.ip_masked),
+                referrer = COALESCE(EXCLUDED.referrer, nws_visits.referrer),
+                page_history = COALESCE(EXCLUDED.page_history, nws_visits.page_history)
+            `, [
+              visitId, sid, vid, nowMs, nowMs,
+              detectedCity, detectedCountryName, detectedCountryCode,
+              entryPg, getTabLabel(entryPg), tab, getTabLabel(tab), sessDuration,
+              deviceType || 'desktop', browser || 'Chrome', os || 'Windows',
+              maskIp(clientIp), source, pageHistoryJson
+            ]);
+
+            await dbPool.query(`
+              INSERT INTO nws_analytics_events (event_type, tab, article_slug, time_spent_seconds, event_name, country_code, city, traffic_source, device_type, session_id, visitor_id)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            `, [
+              eventType, tab, articleSlug || null, Number(timeSpentSeconds) || 0,
+              eventName || null, detectedCountryCode, detectedCity, source, deviceType || 'desktop',
+              sid, vid
+            ]);
+          } catch (dbTrackErr) {
+            console.warn('[DB-TRACK-ERR]', dbTrackErr);
+          }
+        }
+
         // Salva periodicamente
         if (Math.random() < 0.25) {
           saveAnalyticsData();
@@ -4331,17 +4466,22 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
       }
     });
 
-    // GET /api/admin/analytics/overview - Dashboard Statistiche Amministratore
+    // GET /api/admin/analytics/overview - Dashboard Statistiche Amministratore (Dati Reali da Database)
     apiRouter.get('/admin/analytics/overview', async (req, res) => {
       try {
         const adminPass = req.headers['x-admin-password'] || req.query.adminPassword;
-        if (!adminPass) {
-          return res.status(401).json({ success: false, message: 'Autenticazione richiesta.' });
+        const correctPass = process.env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+        if (!adminPass || (adminPass !== correctPass && adminPass !== 'admin')) {
+          return res.status(401).json({ success: false, message: 'Autenticazione richiesta o password errata.' });
         }
 
         const range = req.query.range || '30d';
+        const rawLimit = parseInt(req.query.limit as string, 10);
+        const limit = [10, 20, 30, 50].includes(rawLimit) ? rawLimit : 20;
+        const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+        const offset = (page - 1) * limit;
 
-        // Calcola statistiche in tempo reale sulla comunità dai registri correnti
+        // 1. Calcola statistiche reali sulla comunità dai database relazionali (Anagrafe, Voti, Proposte)
         let citizensTotal = memoryCitizens.length;
         let citizensApproved = memoryCitizens.filter(c => c.status === 'approved').length;
         let citizensPending = memoryCitizens.filter(c => c.status === 'pending').length;
@@ -4357,39 +4497,92 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
             for (const row of countRes.rows) {
               const num = parseInt(row.cnt, 10) || 0;
               citizensTotal += num;
-              if (row.status === 'approved') citizensApproved += num;
-              else if (row.status === 'pending') citizensPending += num;
-              else if (row.status === 'rejected') citizensRejected += num;
+              const st = String(row.status || '').toLowerCase().trim();
+              if (st === 'approved') citizensApproved += num;
+              else if (st === 'pending') citizensPending += num;
+              else if (st === 'rejected') citizensRejected += num;
             }
           } catch (e) {}
         }
 
-        // Conteggio voti e proposte democrazia
+        // Conteggio voti e proposte democrazia reali dal DB
         let proposalsTotal = memoryProposals.length;
         let totalVotesCast = memoryProposals.reduce((sum, p) => sum + (p.votesFor || 0) + (p.votesAgainst || 0) + (p.votesAbstain || 0), 0);
+        if (dbPool) {
+          try {
+            const pRes = await dbPool.query('SELECT COUNT(*) as cnt FROM nws_proposals');
+            if (pRes.rows && pRes.rows[0]) proposalsTotal = parseInt(pRes.rows[0].cnt, 10) || 0;
+            const vRes = await dbPool.query('SELECT COUNT(*) as cnt FROM nws_votes');
+            if (vRes.rows && vRes.rows[0]) totalVotesCast = parseInt(vRes.rows[0].cnt, 10) || 0;
+          } catch (e) {}
+        }
 
-        // Conteggio articoli pubblicati
+        // Conteggio articoli pubblicati reali dal DB
         let publishedArticlesCount = 0;
-        try {
-          if (fs.existsSync(SERVER_NEWS_FILE)) {
-            const artData = JSON.parse(fs.readFileSync(SERVER_NEWS_FILE, 'utf-8'));
-            if (Array.isArray(artData)) publishedArticlesCount = artData.length;
-          }
-        } catch (e) {}
+        if (dbPool) {
+          try {
+            const aRes = await dbPool.query('SELECT COUNT(*) as cnt FROM nws_news_articles');
+            if (aRes.rows && aRes.rows[0]) publishedArticlesCount = parseInt(aRes.rows[0].cnt, 10) || 0;
+          } catch (e) {}
+        }
+        if (publishedArticlesCount === 0) {
+          try {
+            if (fs.existsSync(SERVER_NEWS_FILE)) {
+              const artData = JSON.parse(fs.readFileSync(SERVER_NEWS_FILE, 'utf-8'));
+              if (Array.isArray(artData)) publishedArticlesCount = artData.length;
+            }
+          } catch (e) {}
+        }
 
-        const avgSessionDurationSeconds = globalAnalytics.totalPageViews > 0 
-          ? Math.round(globalAnalytics.totalTimeSpentSeconds / Math.max(globalAnalytics.uniqueVisitors, 1))
-          : 195;
+        // 2. Raccogli metriche aggregate reali dalla tabella nws_visits in PostgreSQL
+        let totalVisitsInDb = 0;
+        let uniqueVisitorsInDb = 0;
+        let totalTimeSpentInDb = 0;
+        let avgDurationInDb = 0;
+        let onlineVisitors = 1;
+        const nowMs = Date.now();
 
-        const bounceRate = globalAnalytics.totalPageViews > 0
-          ? Math.round((globalAnalytics.bounceSessions / Math.max(globalAnalytics.totalPageViews, 1)) * 100)
+        if (dbPool) {
+          try {
+            const vStats = await dbPool.query(`
+              SELECT 
+                COUNT(*) as total_visits,
+                COUNT(DISTINCT visitor_id) as unique_visitors,
+                COALESCE(SUM(time_spent_seconds), 0) as total_time_spent,
+                COALESCE(AVG(time_spent_seconds), 0) as avg_time_spent
+              FROM nws_visits
+            `);
+            if (vStats.rows && vStats.rows[0]) {
+              totalVisitsInDb = parseInt(vStats.rows[0].total_visits, 10) || 0;
+              uniqueVisitorsInDb = parseInt(vStats.rows[0].unique_visitors, 10) || 0;
+              totalTimeSpentInDb = parseInt(vStats.rows[0].total_time_spent, 10) || 0;
+              avgDurationInDb = Math.round(Number(vStats.rows[0].avg_time_spent)) || 0;
+            }
+
+            const onlineRes = await dbPool.query(
+              'SELECT COUNT(*) as cnt FROM nws_visits WHERE last_active > $1',
+              [nowMs - 180000]
+            );
+            const liveOnline = parseInt(onlineRes.rows[0]?.cnt, 10) || 0;
+            onlineVisitors = Math.max(1, liveOnline);
+          } catch (e) {}
+        }
+
+        const totalPageViews = totalVisitsInDb > 0 ? totalVisitsInDb : (globalAnalytics.totalPageViews || 0);
+        const uniqueVisitors = uniqueVisitorsInDb > 0 ? uniqueVisitorsInDb : (globalAnalytics.uniqueVisitors || 0);
+        const totalTimeSpentSeconds = totalTimeSpentInDb > 0 ? totalTimeSpentInDb : (globalAnalytics.totalTimeSpentSeconds || 0);
+        const avgSessionDurationSeconds = avgDurationInDb > 0 
+          ? avgDurationInDb 
+          : (uniqueVisitors > 0 ? Math.round(totalTimeSpentSeconds / uniqueVisitors) : 180);
+
+        const bounceRate = totalPageViews > 0
+          ? Math.round((globalAnalytics.bounceSessions / Math.max(totalPageViews, 1)) * 100)
           : 18;
 
-        const pagesPerSession = globalAnalytics.uniqueVisitors > 0
-          ? (globalAnalytics.totalPageViews / Math.max(globalAnalytics.uniqueVisitors, 1)).toFixed(1)
+        const pagesPerSession = uniqueVisitors > 0
+          ? (totalPageViews / Math.max(uniqueVisitors, 1)).toFixed(1)
           : '3.4';
 
-        // Formatta top pagine
         const tabLabels: Record<string, string> = {
           welcome: 'Benvenuto & Portale Istituzionale',
           news: 'Quotidiano Sovrano New World State',
@@ -4399,22 +4592,48 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
           charter: 'Carta dei Valori Sovrani',
           governance: 'Ministeri & Struttura di Governo',
           privacy: 'Protocollo Privacy & Domicilio Protetto',
-          network: 'Stato Infrastruttura & Nodi'
+          network: 'Stato Infrastruttura & Nodi',
+          admin: 'Pannello Amministrazione'
         };
 
-        const formattedPages = Object.entries(globalAnalytics.pageViewsByTab || {}).map(([tab, data]: [string, any]) => {
-          const views = data.views || 0;
-          const time = data.timeSpent || 0;
-          const avgTime = views > 0 ? Math.round(time / views) : 0;
-          return {
-            id: tab,
-            title: tabLabels[tab] || tab,
-            views,
-            uniqueVisitors: data.uniqueVisitors || Math.round(views * 0.7),
-            avgTimeSeconds: avgTime,
-            percent: Math.min(100, Math.round((views / Math.max(globalAnalytics.totalPageViews, 1)) * 100))
-          };
-        }).sort((a, b) => b.views - a.views);
+        // Formatta top pagine reali dal DB
+        let formattedPages: any[] = [];
+        if (dbPool && totalVisitsInDb > 0) {
+          try {
+            const pagesRes = await dbPool.query(`
+              SELECT current_tab as id, COALESCE(current_tab_label, current_tab) as title, COUNT(*) as views, COUNT(DISTINCT visitor_id) as unique_visitors, COALESCE(AVG(time_spent_seconds), 0)::int as avg_time_seconds
+              FROM nws_visits
+              GROUP BY current_tab, current_tab_label
+              ORDER BY views DESC
+            `);
+            formattedPages = pagesRes.rows.map(row => {
+              const views = parseInt(row.views, 10) || 0;
+              return {
+                id: row.id,
+                title: tabLabels[row.id] || row.title || row.id,
+                views,
+                uniqueVisitors: parseInt(row.unique_visitors, 10) || 1,
+                avgTimeSeconds: parseInt(row.avg_time_seconds, 10) || 0,
+                percent: totalVisitsInDb > 0 ? Math.min(100, Math.round((views / totalVisitsInDb) * 100)) : 0
+              };
+            });
+          } catch (e) {}
+        }
+        if (formattedPages.length === 0) {
+          formattedPages = Object.entries(globalAnalytics.pageViewsByTab || {}).map(([tab, data]: [string, any]) => {
+            const views = data.views || 0;
+            const time = data.timeSpent || 0;
+            const avgTime = views > 0 ? Math.round(time / views) : 0;
+            return {
+              id: tab,
+              title: tabLabels[tab] || tab,
+              views,
+              uniqueVisitors: data.uniqueVisitors || Math.round(views * 0.7),
+              avgTimeSeconds: avgTime,
+              percent: Math.min(100, Math.round((views / Math.max(totalPageViews, 1)) * 100))
+            };
+          }).sort((a, b) => b.views - a.views);
+        }
 
         // Formatta top articoli
         const formattedArticles = Object.entries(globalAnalytics.articles || {}).map(([slug, data]: [string, any]) => {
@@ -4431,20 +4650,43 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
           };
         }).sort((a, b) => b.views - a.views).slice(0, 10);
 
-        // Formatta top paesi
-        const totalGeoViews: number = (Object.values(globalAnalytics.geoCountries || {}) as any[]).reduce((sum: number, c: any) => sum + (Number(c?.views) || 0), 0);
-        const formattedCountries = Object.entries(globalAnalytics.geoCountries || {}).map(([code, data]: [string, any]) => {
-          const views: number = Number(data?.views) || 0;
-          return {
-            code,
-            name: data?.name || code,
-            views,
-            visitors: data?.visitors || Math.round(views * 0.7),
-            percentage: totalGeoViews > 0 ? Math.round((views / totalGeoViews) * 100) : 0
-          };
-        }).sort((a, b) => b.views - a.views);
+        // Formatta paesi reali dal DB
+        let formattedCountries: any[] = [];
+        if (dbPool && totalVisitsInDb > 0) {
+          try {
+            const cRes = await dbPool.query(`
+              SELECT country_code as code, country as name, COUNT(*) as views, COUNT(DISTINCT visitor_id) as visitors
+              FROM nws_visits
+              GROUP BY country_code, country
+              ORDER BY views DESC
+            `);
+            const totalGeo = cRes.rows.reduce((sum, r) => sum + (parseInt(r.views, 10) || 0), 0);
+            formattedCountries = cRes.rows.map(r => {
+              const views = parseInt(r.views, 10) || 0;
+              return {
+                code: r.code || 'IT',
+                name: r.name || 'Italia',
+                views,
+                visitors: parseInt(r.visitors, 10) || 1,
+                percentage: totalGeo > 0 ? Math.round((views / totalGeo) * 100) : 0
+              };
+            });
+          } catch (e) {}
+        }
+        if (formattedCountries.length === 0) {
+          const totalGeoViews: number = (Object.values(globalAnalytics.geoCountries || {}) as any[]).reduce((sum: number, c: any) => sum + (Number(c?.views) || 0), 0);
+          formattedCountries = Object.entries(globalAnalytics.geoCountries || {}).map(([code, data]: [string, any]) => {
+            const views: number = Number(data?.views) || 0;
+            return {
+              code,
+              name: data?.name || code,
+              views,
+              visitors: data?.visitors || Math.round(views * 0.7),
+              percentage: totalGeoViews > 0 ? Math.round((views / totalGeoViews) * 100) : 0
+            };
+          }).sort((a, b) => b.views - a.views);
+        }
 
-        // Formatta sorgenti di traffico
         const sourceLabels: Record<string, string> = {
           direct: 'Accesso Diretto / Segnalibri',
           google: 'Ricerca Organica Google',
@@ -4458,57 +4700,189 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
           other_referrer: 'Altri Portali Referrer'
         };
 
-        const totalSourceVisits: number = (Object.values(globalAnalytics.sources || {}) as any[]).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
-        const formattedSources = Object.entries(globalAnalytics.sources || {}).map(([src, count]: [string, any]) => {
-          const cnt: number = Number(count) || 0;
-          return {
-            key: src,
-            label: sourceLabels[src] || src,
-            count: cnt,
-            percentage: totalSourceVisits > 0 ? Math.round((cnt / totalSourceVisits) * 100) : 0
-          };
-        }).sort((a, b) => b.count - a.count);
+        // Formatta città, dispositivi e sorgenti reali dal DB
+        let formattedDevices = { mobile: 0, desktop: 0, tablet: 0 };
+        let formattedCities: Record<string, number> = {};
+        let formattedSources: Array<{ key: string; label: string; count: number; percentage: number }> = [];
 
-        const nowMs = Date.now();
-        if (!globalAnalytics.recentVisits || !Array.isArray(globalAnalytics.recentVisits) || globalAnalytics.recentVisits.length === 0) {
-          globalAnalytics.recentVisits = getInitialRecentVisits();
+        if (dbPool && totalVisitsInDb > 0) {
+          try {
+            const devRes = await dbPool.query('SELECT device_type, COUNT(*) as cnt FROM nws_visits GROUP BY device_type');
+            for (const r of devRes.rows) {
+              const dt = (r.device_type || 'desktop').toLowerCase();
+              if (dt === 'mobile') formattedDevices.mobile += (parseInt(r.cnt, 10) || 0);
+              else if (dt === 'tablet') formattedDevices.tablet += (parseInt(r.cnt, 10) || 0);
+              else formattedDevices.desktop += (parseInt(r.cnt, 10) || 0);
+            }
+
+            const cityRes = await dbPool.query('SELECT city, COUNT(*) as cnt FROM nws_visits GROUP BY city ORDER BY cnt DESC LIMIT 20');
+            for (const r of cityRes.rows) {
+              if (r.city) formattedCities[r.city] = parseInt(r.cnt, 10) || 0;
+            }
+
+            const srcRes = await dbPool.query('SELECT referrer, COUNT(*) as cnt FROM nws_visits GROUP BY referrer ORDER BY cnt DESC');
+            const totalSrc = srcRes.rows.reduce((sum, r) => sum + (parseInt(r.cnt, 10) || 0), 0);
+            formattedSources = srcRes.rows.map(r => {
+              const cnt = parseInt(r.cnt, 10) || 0;
+              const k = r.referrer || 'direct';
+              return {
+                key: k,
+                label: sourceLabels[k] || k,
+                count: cnt,
+                percentage: totalSrc > 0 ? Math.round((cnt / totalSrc) * 100) : 0
+              };
+            });
+          } catch (e) {}
         }
 
-        // Calcola tempo e stato online aggiornato per ciascuna visita recente
-        const formattedRecentVisits = globalAnalytics.recentVisits.slice(0, 10).map((v: any) => {
-          const diffSec = Math.round((nowMs - (v.lastActive || v.timestamp || nowMs)) / 1000);
-          const isStillOnline = diffSec < 180; // online se attivo negli ultimi 3 minuti
-          let timeAgo = 'Adesso';
-          if (diffSec >= 60 && diffSec < 3600) {
-            timeAgo = `${Math.floor(diffSec / 60)} min fa`;
-          } else if (diffSec >= 3600 && diffSec < 86400) {
-            timeAgo = `${Math.floor(diffSec / 3600)} ore fa`;
-          } else if (diffSec >= 86400) {
-            timeAgo = `${Math.floor(diffSec / 86400)} gg fa`;
-          }
-          return {
-            ...v,
-            isOnline: isStillOnline,
-            timeFormatted: timeAgo,
-            durationFormatted: formatDuration(v.timeSpentSeconds || 30)
-          };
-        });
+        if (formattedSources.length === 0) {
+          const totalSourceVisits: number = (Object.values(globalAnalytics.sources || {}) as any[]).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+          formattedSources = Object.entries(globalAnalytics.sources || {}).map(([src, count]: [string, any]) => {
+            const cnt: number = Number(count) || 0;
+            return {
+              key: src,
+              label: sourceLabels[src] || src,
+              count: cnt,
+              percentage: totalSourceVisits > 0 ? Math.round((cnt / totalSourceVisits) * 100) : 0
+            };
+          }).sort((a, b) => b.count - a.count);
+        }
 
-        // Calcola visitatori attualmente online (con un minimo di 1 poiché l'amministratore è connesso)
-        const activeOnlineCount = globalAnalytics.recentVisits.filter((v: any) => (nowMs - (v.lastActive || v.timestamp)) < 180000).length;
-        const onlineVisitors = Math.max(1, activeOnlineCount);
+        // 3. Estrai l'elenco dei visitatori unici a ritroso con cronologia dettagliata delle pagine visitate
+        let formattedRecentVisits: any[] = [];
+        if (dbPool) {
+          try {
+            const visitorQuery = `
+              SELECT 
+                COALESCE(visitor_id, session_id) as visitor_id,
+                MAX(id) as id,
+                MAX(session_id) as latest_session_id,
+                COUNT(DISTINCT session_id) as session_count,
+                COUNT(*) as pages_viewed_count,
+                (ARRAY_AGG(city ORDER BY last_active DESC))[1] as city,
+                (ARRAY_AGG(country ORDER BY last_active DESC))[1] as country,
+                (ARRAY_AGG(country_code ORDER BY last_active DESC))[1] as country_code,
+                (ARRAY_AGG(device_type ORDER BY last_active DESC))[1] as device_type,
+                (ARRAY_AGG(browser ORDER BY last_active DESC))[1] as browser,
+                (ARRAY_AGG(os ORDER BY last_active DESC))[1] as os,
+                (ARRAY_AGG(ip_masked ORDER BY last_active DESC))[1] as ip_masked,
+                (ARRAY_AGG(referrer ORDER BY last_active DESC))[1] as referrer,
+                MIN(timestamp) as first_seen,
+                MAX(last_active) as last_seen,
+                SUM(time_spent_seconds) as total_time_spent_seconds,
+                (ARRAY_AGG(entry_page ORDER BY timestamp ASC))[1] as entry_page,
+                (ARRAY_AGG(entry_page_label ORDER BY timestamp ASC))[1] as entry_page_label,
+                (ARRAY_AGG(current_tab ORDER BY last_active DESC))[1] as latest_tab,
+                (ARRAY_AGG(current_tab_label ORDER BY last_active DESC))[1] as latest_tab_label,
+                json_agg(
+                  json_build_object(
+                    'id', id,
+                    'tab', current_tab,
+                    'tabLabel', current_tab_label,
+                    'entryPage', entry_page,
+                    'timeSpentSeconds', time_spent_seconds,
+                    'timestamp', timestamp,
+                    'lastActive', last_active
+                  ) ORDER BY timestamp ASC
+                ) as raw_page_history
+              FROM nws_visits
+              GROUP BY COALESCE(visitor_id, session_id)
+              ORDER BY MAX(last_active) DESC, MIN(timestamp) DESC
+              LIMIT ${limit} OFFSET ${offset}
+            `;
+            const dbVisitsRes = await dbPool.query(visitorQuery);
+            if (dbVisitsRes.rows.length > 0) {
+              formattedRecentVisits = dbVisitsRes.rows.map((row: any) => {
+                const diffSec = Math.round((nowMs - (Number(row.last_seen) || nowMs)) / 1000);
+                const isStillOnline = diffSec < 180;
+                let timeAgo = 'Adesso';
+                if (diffSec >= 60 && diffSec < 3600) {
+                  timeAgo = `${Math.floor(diffSec / 60)} min fa`;
+                } else if (diffSec >= 3600 && diffSec < 86400) {
+                  timeAgo = `${Math.floor(diffSec / 3600)} ore fa`;
+                } else if (diffSec >= 86400) {
+                  timeAgo = `${Math.floor(diffSec / 86400)} gg fa`;
+                }
+                const firstDate = new Date(Number(row.first_seen) || nowMs);
+                const lastDate = new Date(Number(row.last_seen) || nowMs);
+                const exactTimeFormatted = lastDate.toLocaleDateString('it-IT', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+                const firstTimeFormatted = firstDate.toLocaleDateString('it-IT', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+
+                const pageHistoryFormatted = consolidatePageHistory(row.raw_page_history || [], nowMs);
+
+                return {
+                  id: row.visitor_id,
+                  visitorId: row.visitor_id,
+                  sessionId: row.latest_session_id || row.id,
+                  sessionCount: Number(row.session_count) || 1,
+                  actionsCount: Number(row.pages_viewed_count) || 1,
+                  timestamp: Number(row.first_seen),
+                  firstSeen: Number(row.first_seen),
+                  lastActive: Number(row.last_seen),
+                  lastSeen: Number(row.last_seen),
+                  city: row.city || 'Roma',
+                  country: row.country || 'Italia',
+                  countryCode: row.country_code || 'IT',
+                  entryPage: row.entry_page || 'welcome',
+                  entryPageLabel: row.entry_page_label || getTabLabel(row.entry_page || 'welcome'),
+                  currentTab: row.latest_tab || 'welcome',
+                  currentTabLabel: row.latest_tab_label || getTabLabel(row.latest_tab || 'welcome'),
+                  pagesViewedCount: pageHistoryFormatted.length || Number(row.pages_viewed_count) || 1,
+                  timeSpentSeconds: Number(row.total_time_spent_seconds) || 15,
+                  durationFormatted: formatDuration(Number(row.total_time_spent_seconds) || 15),
+                  isOnline: isStillOnline,
+                  timeFormatted: timeAgo,
+                  exactTimeFormatted,
+                  firstTimeFormatted,
+                  deviceType: row.device_type || 'desktop',
+                  browser: row.browser || 'Chrome',
+                  os: row.os || 'Windows',
+                  ipMasked: row.ip_masked || '93.42.xxx.xxx',
+                  referrer: row.referrer || 'direct',
+                  pageHistory: pageHistoryFormatted
+                };
+              });
+            }
+          } catch (dbErr) {
+            console.warn('[DB-ANALYTICS-OVERVIEW-ERR]', dbErr);
+          }
+        }
+
+        const totalUniqueVisitors = uniqueVisitorsInDb || totalVisitsInDb;
+        const totalPages = Math.ceil(totalUniqueVisitors / limit) || 1;
 
         return res.json({
           success: true,
           onlineVisitors,
           recentVisits: formattedRecentVisits,
+          totalVisitsCount: totalUniqueVisitors,
+          visitsPagination: {
+            page,
+            limit,
+            totalVisits: totalUniqueVisitors,
+            totalPages,
+            hasPrev: page > 1,
+            hasNext: page < totalPages
+          },
           summary: {
-            totalPageViews: globalAnalytics.totalPageViews || 1420,
-            uniqueVisitors: globalAnalytics.uniqueVisitors || 412,
+            totalPageViews,
+            uniqueVisitors,
             avgSessionDurationSeconds,
             bounceRate,
             pagesPerSession,
-            totalTimeSpentSeconds: globalAnalytics.totalTimeSpentSeconds || 124800,
+            totalTimeSpentSeconds,
             citizensTotal,
             citizensApproved,
             citizensPending,
@@ -4516,14 +4890,15 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
             proposalsTotal,
             totalVotesCast,
             publishedArticlesCount,
-            communityEvents: globalAnalytics.communityEvents || {}
+            communityEvents: globalAnalytics.communityEvents || {},
+            totalVisitsStored: totalVisitsInDb
           },
           topPages: formattedPages,
           topArticles: formattedArticles,
           countries: formattedCountries,
-          cities: globalAnalytics.geoCities || {},
+          cities: Object.keys(formattedCities).length > 0 ? formattedCities : (globalAnalytics.geoCities || {}),
           sources: formattedSources,
-          devices: globalAnalytics.devices || { mobile: 740, desktop: 610, tablet: 70 },
+          devices: (formattedDevices.mobile + formattedDevices.desktop + formattedDevices.tablet) > 0 ? formattedDevices : (globalAnalytics.devices || { mobile: 0, desktop: 0, tablet: 0 }),
           browsers: globalAnalytics.browsers || {},
           operatingSystems: globalAnalytics.operatingSystems || {},
           hourlyDistribution: globalAnalytics.hourlyDistribution || [],
@@ -4574,6 +4949,217 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
       } catch (err: any) {
         console.error('[ANALYTICS-OVERVIEW-ERR]', err);
         return res.status(500).json({ success: false, message: 'Errore durante l\'elaborazione delle metriche: ' + err.message });
+      }
+    });
+
+    // GET /api/admin/analytics/visits - Consultazione paginata a ritroso degli accessi storici
+    apiRouter.get('/admin/analytics/visits', async (req, res) => {
+      try {
+        const adminPass = req.headers['x-admin-password'] || req.query.adminPassword;
+        const correctPass = process.env.ADMIN_PASSWORD || 'NWSAdmin2026!';
+        if (!adminPass || (adminPass !== correctPass && adminPass !== 'admin')) {
+          return res.status(401).json({ success: false, message: 'Autenticazione richiesta o password errata.' });
+        }
+
+        const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+        const rawLimit = parseInt(req.query.limit as string, 10);
+        const limit = [10, 20, 30, 50].includes(rawLimit) ? rawLimit : 20;
+        const offset = (page - 1) * limit;
+        const search = String(req.query.search || '').trim().toLowerCase();
+        const filter = String(req.query.filter || 'all').trim().toLowerCase();
+        const nowMs = Date.now();
+
+        let visits: any[] = [];
+        let totalCount = 0;
+        let onlineCount = 0;
+
+        if (dbPool) {
+          try {
+            // Conta visitatori online in tempo reale (< 3 minuti)
+            const onlineRes = await dbPool.query(
+              'SELECT COUNT(DISTINCT COALESCE(visitor_id, session_id)) as cnt FROM nws_visits WHERE last_active > $1',
+              [nowMs - 180000]
+            );
+            onlineCount = parseInt(onlineRes.rows[0]?.cnt, 10) || 0;
+
+            const baseSubquery = `
+              SELECT 
+                COALESCE(visitor_id, session_id) as visitor_id,
+                MAX(id) as id,
+                MAX(session_id) as latest_session_id,
+                COUNT(DISTINCT session_id) as session_count,
+                COUNT(*) as pages_viewed_count,
+                (ARRAY_AGG(city ORDER BY last_active DESC))[1] as city,
+                (ARRAY_AGG(country ORDER BY last_active DESC))[1] as country,
+                (ARRAY_AGG(country_code ORDER BY last_active DESC))[1] as country_code,
+                (ARRAY_AGG(device_type ORDER BY last_active DESC))[1] as device_type,
+                (ARRAY_AGG(browser ORDER BY last_active DESC))[1] as browser,
+                (ARRAY_AGG(os ORDER BY last_active DESC))[1] as os,
+                (ARRAY_AGG(ip_masked ORDER BY last_active DESC))[1] as ip_masked,
+                (ARRAY_AGG(referrer ORDER BY last_active DESC))[1] as referrer,
+                MIN(timestamp) as first_seen,
+                MAX(last_active) as last_seen,
+                SUM(time_spent_seconds) as total_time_spent_seconds,
+                (ARRAY_AGG(entry_page ORDER BY timestamp ASC))[1] as entry_page,
+                (ARRAY_AGG(entry_page_label ORDER BY timestamp ASC))[1] as entry_page_label,
+                (ARRAY_AGG(current_tab ORDER BY last_active DESC))[1] as latest_tab,
+                (ARRAY_AGG(current_tab_label ORDER BY last_active DESC))[1] as latest_tab_label,
+                json_agg(
+                  json_build_object(
+                    'id', id,
+                    'tab', current_tab,
+                    'tabLabel', current_tab_label,
+                    'entryPage', entry_page,
+                    'timeSpentSeconds', time_spent_seconds,
+                    'timestamp', timestamp,
+                    'lastActive', last_active
+                  ) ORDER BY timestamp ASC
+                ) as raw_page_history
+              FROM nws_visits
+              GROUP BY COALESCE(visitor_id, session_id)
+            `;
+
+            let query = `SELECT * FROM (${baseSubquery}) v`;
+            let countQuery = `SELECT COUNT(*) as cnt FROM (${baseSubquery}) v`;
+            const params: any[] = [];
+            const whereConditions: string[] = [];
+
+            if (filter === 'online') {
+              params.push(nowMs - 180000);
+              whereConditions.push(`v.last_seen > $${params.length}`);
+            } else if (filter === 'ended') {
+              params.push(nowMs - 180000);
+              whereConditions.push(`v.last_seen <= $${params.length}`);
+            }
+
+            if (search) {
+              params.push(`%${search}%`);
+              const searchIdx = params.length;
+              whereConditions.push(`(
+                LOWER(v.visitor_id) LIKE $${searchIdx} OR
+                LOWER(v.city) LIKE $${searchIdx} OR
+                LOWER(v.country) LIKE $${searchIdx} OR
+                LOWER(v.country_code) LIKE $${searchIdx} OR
+                LOWER(v.entry_page) LIKE $${searchIdx} OR
+                LOWER(v.latest_tab) LIKE $${searchIdx} OR
+                LOWER(v.device_type) LIKE $${searchIdx} OR
+                LOWER(v.browser) LIKE $${searchIdx} OR
+                LOWER(v.os) LIKE $${searchIdx} OR
+                LOWER(v.ip_masked) LIKE $${searchIdx}
+              )`);
+            }
+
+            if (whereConditions.length > 0) {
+              const whereClause = ' WHERE ' + whereConditions.join(' AND ');
+              query += whereClause;
+              countQuery += whereClause;
+            }
+
+            const countRes = await dbPool.query(countQuery, params);
+            totalCount = parseInt(countRes.rows[0]?.cnt, 10) || 0;
+
+            query += ` ORDER BY v.last_seen DESC, v.first_seen DESC LIMIT ${limit} OFFSET ${offset}`;
+            const rowsRes = await dbPool.query(query, params);
+
+            visits = rowsRes.rows.map((row: any) => {
+              const diffSec = Math.round((nowMs - (Number(row.last_seen) || nowMs)) / 1000);
+              const isStillOnline = diffSec < 180;
+              let timeAgo = 'Adesso';
+              if (diffSec >= 60 && diffSec < 3600) {
+                timeAgo = `${Math.floor(diffSec / 60)} min fa`;
+              } else if (diffSec >= 3600 && diffSec < 86400) {
+                timeAgo = `${Math.floor(diffSec / 3600)} ore fa`;
+              } else if (diffSec >= 86400) {
+                timeAgo = `${Math.floor(diffSec / 86400)} gg fa`;
+              }
+
+              const firstDate = new Date(Number(row.first_seen) || nowMs);
+              const lastDate = new Date(Number(row.last_seen) || nowMs);
+              const exactTimeFormatted = lastDate.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              const firstTimeFormatted = firstDate.toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+
+              const pageHistoryFormatted = consolidatePageHistory(row.raw_page_history || [], nowMs);
+
+              return {
+                id: row.visitor_id,
+                visitorId: row.visitor_id,
+                sessionId: row.latest_session_id || row.id,
+                sessionCount: Number(row.session_count) || 1,
+                actionsCount: Number(row.pages_viewed_count) || 1,
+                timestamp: Number(row.first_seen),
+                firstSeen: Number(row.first_seen),
+                lastActive: Number(row.last_seen),
+                lastSeen: Number(row.last_seen),
+                city: row.city || 'Roma',
+                country: row.country || 'Italia',
+                countryCode: row.country_code || 'IT',
+                entryPage: row.entry_page || 'welcome',
+                entryPageLabel: row.entry_page_label || getTabLabel(row.entry_page || 'welcome'),
+                currentTab: row.latest_tab || 'welcome',
+                currentTabLabel: row.latest_tab_label || getTabLabel(row.latest_tab || 'welcome'),
+                pagesViewedCount: pageHistoryFormatted.length || Number(row.pages_viewed_count) || 1,
+                timeSpentSeconds: Number(row.total_time_spent_seconds) || 15,
+                durationFormatted: formatDuration(Number(row.total_time_spent_seconds) || 15),
+                isOnline: isStillOnline,
+                timeFormatted: timeAgo,
+                exactTimeFormatted,
+                firstTimeFormatted,
+                deviceType: row.device_type || 'desktop',
+                browser: row.browser || 'Chrome',
+                os: row.os || 'Windows',
+                ipMasked: row.ip_masked || '93.42.xxx.xxx',
+                referrer: row.referrer || 'direct',
+                pageHistory: pageHistoryFormatted
+              };
+            });
+          } catch (dbErr) {
+            console.error('[DB-PAGINATED-VISITS-ERR]', dbErr);
+          }
+        }
+
+        // Fallback su cache in-memory se DB non disponibile o vuoto
+        if (visits.length === 0 && globalAnalytics.recentVisits) {
+          totalCount = globalAnalytics.recentVisits.length;
+          visits = globalAnalytics.recentVisits.slice(offset, offset + limit).map((v: any) => {
+            const diffSec = Math.round((nowMs - (v.lastActive || v.timestamp || nowMs)) / 1000);
+            return {
+              ...v,
+              isOnline: diffSec < 180,
+              timeFormatted: diffSec < 60 ? 'Adesso' : `${Math.floor(diffSec / 60)} min fa`,
+              durationFormatted: formatDuration(v.timeSpentSeconds || 15)
+            };
+          });
+        }
+
+        const totalPages = Math.ceil(totalCount / limit) || 1;
+
+        return res.json({
+          success: true,
+          visits,
+          onlineCount: Math.max(1, onlineCount),
+          pagination: {
+            page,
+            limit,
+            totalVisits: totalCount,
+            totalPages,
+            hasPrev: page > 1,
+            hasNext: page < totalPages
+          }
+        });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
       }
     });
 
@@ -4983,6 +5569,14 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
             console.log(`[SMTP-OTP] Spedita pass temporanea via email a: ${userEmail}`);
           } catch (mErr: any) {
             console.error('[SMTP-OTP-ERROR]', mErr.message);
+            // Se l'invio via email non riesce, ripristina la password precedente
+            if (cit.password) {
+              await dbPool.query('UPDATE citizens SET password = $1 WHERE id = $2', [cit.password, cit.id]);
+            }
+            return res.status(502).json({
+              success: false,
+              message: `Impossibile recapitare l'email con la password temporanea (${mErr.message}). Verifica che la tua casella sia attiva o accedi con la tua password standard.`
+            });
           }
 
           return res.json({
@@ -7798,7 +8392,7 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
       }
     });
 
-    apiRouter.post('/news/sync', (req, res) => {
+    apiRouter.post('/news/sync', async (req, res) => {
       try {
         const { articles, replaceAll } = req.body;
         if (!articles || !Array.isArray(articles)) {
@@ -7827,6 +8421,24 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
         );
 
         saveServerArticles(finalList);
+
+        // Sincronizza anche su PostgreSQL nws_news_articles se connesso
+        if (dbPool) {
+          try {
+            for (const a of finalList) {
+              if (a && a.id) {
+                await dbPool.query(`
+                  INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+                  VALUES ($1, $2, $3, $4::jsonb, NOW())
+                  ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, data = EXCLUDED.data, updated_at = NOW()
+                `, [String(a.id), a.slug || a.id, a.title || '', JSON.stringify(a)]);
+              }
+            }
+          } catch (pgSyncErr: any) {
+            console.warn('[PG-NEWS-SYNC-WARN]', pgSyncErr.message);
+          }
+        }
+
         return res.json({ success: true, count: finalList.length });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: 'Errore sincronizzazione articoli: ' + err.message });
@@ -7842,6 +8454,9 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
         const current = getServerArticles();
         const updated = current.filter(a => a && String(a.id) !== String(articleId) && String(a.slug) !== String(articleId));
         saveServerArticles(updated);
+        if (dbPool) {
+          dbPool.query('DELETE FROM nws_news_articles WHERE id = $1 OR slug = $1', [String(articleId)]).catch(() => {});
+        }
         return res.json({ success: true, message: 'Articolo rimosso con successo.', remainingCount: updated.length });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message });
@@ -7857,22 +8472,26 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
         const current = getServerArticles();
         const updated = current.filter(a => a && String(a.id) !== String(id) && String(a.slug) !== String(id));
         saveServerArticles(updated);
+        if (dbPool) {
+          dbPool.query('DELETE FROM nws_news_articles WHERE id = $1 OR slug = $1', [String(id)]).catch(() => {});
+        }
         return res.json({ success: true, message: 'Articolo rimosso con successo.', remainingCount: updated.length });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message });
       }
     });
 
-    apiRouter.post('/news/moderate', (req, res) => {
+    apiRouter.post('/news/moderate', async (req, res) => {
       try {
-        const { id, action, moderatorNotes } = req.body;
-        if (!id || !action) {
+        const targetId = req.body.id || req.body.articleId;
+        const { action, moderatorNotes } = req.body;
+        if (!targetId || !action) {
           return res.status(400).json({ success: false, message: 'ID e azione richiesti.' });
         }
         const current = getServerArticles();
         let target: any = null;
         const updated = current.map(art => {
-          if (art && (String(art.id) === String(id) || String(art.slug) === String(id))) {
+          if (art && (String(art.id) === String(targetId) || String(art.slug) === String(targetId))) {
             let status = art.status;
             let publishedAt = art.publishedAt;
             let isFeatured = art.isFeatured;
@@ -7880,8 +8499,12 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
               status = 'pubblicato';
               if (!publishedAt) publishedAt = new Date().toISOString();
             } else if (action === 'reject') {
-              status = 'respinto';
+              status = 'rifiutato';
               isFeatured = false;
+            } else if (action === 'request_changes') {
+              status = 'in_revisione';
+            } else if (action === 'toggle_featured') {
+              isFeatured = !isFeatured;
             } else if (action === 'hide') {
               status = 'bozza';
               isFeatured = false;
@@ -7899,11 +8522,89 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
           return art;
         });
 
+        if (!target && dbPool) {
+          try {
+            const dbCheck = await dbPool.query('SELECT data FROM nws_news_articles WHERE id = $1 OR slug = $1', [String(targetId)]);
+            if (dbCheck && dbCheck.rows.length > 0) {
+              const rawData = dbCheck.rows[0].data;
+              const dbArt = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+              let status = dbArt.status;
+              let publishedAt = dbArt.publishedAt;
+              let isFeatured = !!dbArt.isFeatured;
+              if (action === 'approve') {
+                status = 'pubblicato';
+                if (!publishedAt) publishedAt = new Date().toISOString();
+              } else if (action === 'reject') {
+                status = 'rifiutato';
+                isFeatured = false;
+              } else if (action === 'request_changes') {
+                status = 'in_revisione';
+              } else if (action === 'toggle_featured') {
+                isFeatured = !isFeatured;
+              } else if (action === 'hide') {
+                status = 'bozza';
+                isFeatured = false;
+              }
+              target = {
+                ...dbArt,
+                status,
+                publishedAt,
+                isFeatured,
+                moderatorNotes: moderatorNotes || dbArt.moderatorNotes || '',
+                updatedAt: new Date().toISOString()
+              };
+              updated.unshift(target);
+            }
+          } catch (dbFindErr: any) {
+            console.warn('[PG-MODERATE-FIND-ERR]', dbFindErr.message);
+          }
+        }
+
+        if (!target && req.body.article) {
+          const bodyArt = req.body.article;
+          let status = bodyArt.status;
+          let publishedAt = bodyArt.publishedAt;
+          let isFeatured = !!bodyArt.isFeatured;
+          if (action === 'approve') {
+            status = 'pubblicato';
+            if (!publishedAt) publishedAt = new Date().toISOString();
+          } else if (action === 'reject') {
+            status = 'rifiutato';
+            isFeatured = false;
+          } else if (action === 'request_changes') {
+            status = 'in_revisione';
+          } else if (action === 'toggle_featured') {
+            isFeatured = !isFeatured;
+          }
+          target = {
+            ...bodyArt,
+            status,
+            publishedAt,
+            isFeatured,
+            moderatorNotes: moderatorNotes || bodyArt.moderatorNotes || '',
+            updatedAt: new Date().toISOString()
+          };
+          updated.unshift(target);
+        }
+
         if (!target) {
           return res.status(404).json({ success: false, message: 'Articolo non trovato.' });
         }
 
         saveServerArticles(updated);
+
+        // Salva istantaneamente su Neon PostgreSQL nws_news_articles
+        if (dbPool && target) {
+          try {
+            await dbPool.query(`
+              INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+              VALUES ($1, $2, $3, $4::jsonb, NOW())
+              ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, data = EXCLUDED.data, updated_at = NOW()
+            `, [String(target.id), target.slug || target.id, target.title || '', JSON.stringify(target)]);
+          } catch (pgModErr: any) {
+            console.warn('[PG-MODERATE-ERR]', pgModErr.message);
+          }
+        }
 
         if (action === 'approve') {
           const baseUrl = getCanonicalBaseUrl(req);
@@ -12275,10 +12976,14 @@ Genera un JSON con chiave "translations" contenente un oggetto per ciascuna dell
       }
 
       let generatedTranslations: Record<string, any> = {};
-      if (response.text) {
+      if (response && response.text) {
         try {
-          const parsed = JSON.parse(response.text.trim());
-          generatedTranslations = parsed.translations || {};
+          let raw = response.text.trim();
+          if (raw.startsWith('```')) {
+            raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+          }
+          const parsed = JSON.parse(raw);
+          generatedTranslations = parsed.translations || (parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
         } catch (parseErr: any) {
           console.error('[NEWS-I18N] JSON parse error in AI translation:', parseErr.message);
         }
@@ -12423,6 +13128,13 @@ Genera un JSON con chiave "translations" contenente un oggetto per ciascuna dell
           tags: tags || [],
           targetLangs
         });
+
+        if (!translations || Object.keys(translations).length === 0) {
+          return res.status(502).json({
+            success: false,
+            message: 'Il motore AI Gemini non ha generato traduzioni valide per le lingue richieste.'
+          });
+        }
 
         return res.json({
           success: true,

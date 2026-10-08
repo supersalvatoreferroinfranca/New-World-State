@@ -11,7 +11,8 @@ import {
   deleteArticle,
   getLocalizedArticle,
   generateSlug,
-  getLocalizedCategoryTitle
+  getLocalizedCategoryTitle,
+  normalizeArticleStatus
 } from '../../services/newsService';
 import ArticleFormModal from './ArticleFormModal';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -119,7 +120,15 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
       }
     }).catch(() => {});
 
-    const handleNewsUpdate = () => loadLocalData();
+    const handleNewsUpdate = () => {
+      loadLocalData();
+      setSelectedDetailArticle(prev => {
+        if (!prev) return null;
+        const all = getArticles();
+        const found = all.find(a => a && (String(a.id) === String(prev.id) || a.slug === prev.slug));
+        return found || prev;
+      });
+    };
     window.addEventListener('nws_news_articles_updated', handleNewsUpdate);
     window.addEventListener('nws_news_categories_updated', handleNewsUpdate);
     window.addEventListener('storage', loadCitizen);
@@ -285,8 +294,10 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     }
 
     // Tab view filter
+    const normStatus = normalizeArticleStatus(art.status);
+
     if (!isLoggedIn || viewTab === 'published') {
-      return art.status === 'pubblicato';
+      return normStatus === 'pubblicato';
     } else if (viewTab === 'my_drafts') {
       // If Digital Custodian / Admin chose to view all reporters' articles & drafts:
       if (isCustode && custodianDraftsFilter === 'all_reporters') {
@@ -307,10 +318,10 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
 
       return Boolean(matchesId || matchesName || matchesEmail);
     } else if (viewTab === 'pending_mod') {
-      return art.status === 'in_moderazione';
+      return normStatus === 'in_moderazione' || normStatus === 'bozza' || normStatus === 'in_revisione';
     }
 
-    return isLoggedIn ? true : art.status === 'pubblicato';
+    return normStatus === 'pubblicato';
   }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const featuredArticles = articles.filter(a => a.status === 'pubblicato' && a.isFeatured);
@@ -519,7 +530,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                 </button>
               )}
 
-              {isCustode && (
+              {(isCustode || isCronista) && (
                 <button
                   onClick={() => setViewTab('pending_mod')}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
@@ -875,6 +886,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
           articleToEdit={articleToEdit}
           authorId={citizen?.id || 'demo-author'}
           authorName={currentAuthorName}
+          authorRole={citizen?.operationalRole || (isCustode ? 'Custode Digitale' : isCronista ? 'Cronista Ufficiale' : 'Cronista')}
           onSaved={loadLocalData}
         />
       )}

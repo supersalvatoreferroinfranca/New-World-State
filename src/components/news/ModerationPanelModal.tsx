@@ -4,8 +4,11 @@ import {
   getArticles, 
   getArticlesPendingModeration, 
   moderateArticle, 
-  deleteArticle 
+  deleteArticle,
+  normalizeArticleStatus,
+  syncArticlesWithServer
 } from '../../services/newsService';
+import { safeFetch } from '../../services/api';
 import { useI18n } from '../../contexts/I18nContext';
 import { 
   ShieldCheck, 
@@ -40,6 +43,7 @@ export default function ModerationPanelModal({
 }: ModerationPanelModalProps) {
   const { tText } = useI18n();
   const [tab, setTab] = useState<'pending' | 'all'>('pending');
+  const [pendingFilter, setPendingFilter] = useState<'all_pending' | 'in_moderazione' | 'bozze' | 'revision'>('all_pending');
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -48,10 +52,23 @@ export default function ModerationPanelModal({
   const [modifyingArticle, setModifyingArticle] = useState<NewsArticle | null>(null);
   const [actionType, setActionType] = useState<'reject' | 'request_changes' | null>(null);
   const [notes, setNotes] = useState('');
+  const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const loadData = () => {
     if (tab === 'pending') {
-      setArticles(getArticlesPendingModeration());
+      const allPending = getArticlesPendingModeration();
+      if (pendingFilter === 'in_moderazione') {
+        setArticles(allPending.filter(a => normalizeArticleStatus(a.status) === 'in_moderazione'));
+      } else if (pendingFilter === 'bozze') {
+        setArticles(allPending.filter(a => normalizeArticleStatus(a.status) === 'bozza'));
+      } else if (pendingFilter === 'revision') {
+        setArticles(allPending.filter(a => normalizeArticleStatus(a.status) === 'in_revisione'));
+      } else {
+        setArticles(allPending);
+      }
     } else {
       setArticles(getArticles());
     }
@@ -61,15 +78,58 @@ export default function ModerationPanelModal({
   useEffect(() => {
     if (isOpen) {
       loadData();
+      // Asynchronously sync with PostgreSQL server so newly created articles are immediately present
+      syncArticlesWithServer(true).then((synced) => {
+        if (synced && synced.length > 0) {
+          loadData();
+        }
+      }).catch(() => {});
     }
-  }, [isOpen, tab]);
+  }, [isOpen, tab, pendingFilter]);
 
   if (!isOpen) return null;
 
-  const handleApprove = (art: NewsArticle) => {
-    if (confirm(`${tText('Confirm approval and publication of article', 'Confermi l\'approvazione e la pubblicazione dell\'articolo')} "${art.title}"?`)) {
-      moderateArticle(art.id, 'approve');
+  const handleApprove = async (art: NewsArticle) => {
+    setApprovingId(art.id);
+    try {
+      // 1. Optimistically update local UI state immediately
+      setArticles(prev => prev.map(a => (String(a.id) === String(art.id) || a.slug === art.id) ? {
+        ...a,
+        status: 'pubblicato',
+        publishedAt: new Date().toISOString()
+      } : a));
+
+      // 2. Perform local moderate action with fallback article
+      moderateArticle(art.id, 'approve', undefined, art);
+
+      // 3. Directly await the server moderate endpoint to guarantee PostgreSQL persistence
+      try {
+        await safeFetch('/api/news/moderate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: art.id,
+            articleId: art.id,
+            action: 'approve',
+            article: {
+              ...art,
+              status: 'pubblicato',
+              publishedAt: new Date().toISOString()
+            }
+          })
+        });
+      } catch (srvErr) {
+        console.warn('[MODERATE-SERVER-WARN]', srvErr);
+      }
+
+      setSuccessToast(`L'articolo "${art.title}" è stato approvato e pubblicato ufficialmente!`);
       loadData();
+      onArticlesUpdated?.();
+      setTimeout(() => setSuccessToast(null), 3500);
+    } catch (err: any) {
+      console.error('[HANDLE-APPROVE-ERR]', err);
+    } finally {
+      setApprovingId(null);
     }
   };
 
@@ -94,9 +154,16 @@ export default function ModerationPanelModal({
   };
 
   const handleDelete = (id: string) => {
-    if (confirm(tText('Are you sure you want to permanently delete this article?', 'Sei sicuro di voler eliminare definitivamente questo articolo?'))) {
+    if (deletingId === id) {
       deleteArticle(id);
+      setDeletingId(null);
       loadData();
+      onArticlesUpdated?.();
+      setSuccessToast('Articolo eliminato con successo.');
+      setTimeout(() => setSuccessToast(null), 3000);
+    } else {
+      setDeletingId(id);
+      setTimeout(() => setDeletingId(null), 5000);
     }
   };
 
@@ -129,8 +196,8 @@ export default function ModerationPanelModal({
           </div>
 
           {/* Subheader Navigation */}
-          <div className="bg-slate-100 border-b border-slate-200 px-6 py-3 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2">
+          <div className="bg-slate-100 border-b border-slate-200 px-6 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setTab('pending')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 ${
@@ -155,9 +222,50 @@ export default function ModerationPanelModal({
               </button>
             </div>
 
+            {tab === 'pending' && (
+              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setPendingFilter('all_pending')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                    pendingFilter === 'all_pending' ? 'bg-[#0a1c3e] text-white' : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {tText('All Pending', 'Tutti in Attesa')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingFilter('in_moderazione')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                    pendingFilter === 'in_moderazione' ? 'bg-amber-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {tText('In Moderation', 'Inviati per Revisione')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingFilter('bozze')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                    pendingFilter === 'bozze' ? 'bg-slate-700 text-white' : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {tText('Reporters Drafts', 'Bozze dei Cronisti')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingFilter('revision')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                    pendingFilter === 'revision' ? 'bg-orange-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {tText('Revision Requested', 'Modifiche Richieste')}
+                </button>
+              </div>
+            )}
+
             <button
               onClick={loadData}
-              className="p-2 rounded-lg text-slate-500 hover:text-[#0a1c3e] hover:bg-slate-200 transition cursor-pointer"
+              className="p-2 rounded-lg text-slate-500 hover:text-[#0a1c3e] hover:bg-slate-200 transition cursor-pointer ml-auto"
               title={tText('Refresh List', 'Aggiorna lista')}
             >
               <RefreshCw className="w-4 h-4" />
@@ -166,6 +274,22 @@ export default function ModerationPanelModal({
 
           {/* Content Body */}
           <div className="p-6 overflow-y-auto space-y-4 flex-1">
+            {successToast && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-2xl flex items-center justify-between gap-3 text-xs font-bold animate-fade-in shadow-xs">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{successToast}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSuccessToast(null)}
+                  className="text-emerald-700 hover:text-emerald-900 p-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             {articles.length === 0 ? (
               <div className="text-center py-12 bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-8">
                 <ShieldCheck className="w-12 h-12 text-slate-300 mx-auto mb-3" />
@@ -317,21 +441,41 @@ export default function ModerationPanelModal({
                           <span>{tText('Reject', 'Rifiuta')}</span>
                         </button>
 
-                        <button
-                          onClick={() => handleApprove(art)}
-                          className="px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700 transition cursor-pointer flex items-center gap-1.5 shadow"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                          <span>{tText('Approve & Publish', 'Approva & Pubblica')}</span>
-                        </button>
+                        {normalizeArticleStatus(art.status) === 'pubblicato' ? (
+                          <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 shadow-xs">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{tText('Published', 'Già Pubblicato')}</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={approvingId === art.id}
+                            onClick={() => handleApprove(art)}
+                            className="px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700 transition cursor-pointer flex items-center gap-1.5 shadow disabled:opacity-50"
+                          >
+                            <CheckCircle className={`w-4 h-4 ${approvingId === art.id ? 'animate-spin' : ''}`} />
+                            <span>{approvingId === art.id ? tText('Approving...', 'Approvazione...') : tText('Approve & Publish', 'Approva & Pubblica')}</span>
+                          </button>
+                        )}
 
-                        <button
-                          onClick={() => handleDelete(art.id)}
-                          className="p-1.5 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                          title={tText('Delete', 'Elimina')}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {deletingId === art.id ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(art.id)}
+                            className="px-2.5 py-1 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold transition cursor-pointer shadow-xs animate-pulse"
+                          >
+                            {tText('Confirm Delete?', 'Confermi?')}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(art.id)}
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                            title={tText('Delete', 'Elimina')}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

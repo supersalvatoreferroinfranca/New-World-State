@@ -8,43 +8,35 @@ import fs from 'fs';
 import path from 'path';
 
 const CANONICAL_DOMAIN = 'https://newworldstate.cloud';
-const TARGET_FILES = [
-  'public/sitemap.xml',
-  'public/sitemap-news.xml',
-  'public/sitemap.html',
-  'public/rss.xml',
-  'public/llms.txt',
-  'public/robots.txt',
-  'dist/sitemap.xml',
-  'dist/sitemap-news.xml',
-  'dist/sitemap.html',
-  'dist/rss.xml',
-  'dist/llms.txt',
-  'dist/robots.txt'
-];
 
-let totalReplaced = 0;
-
-for (const relPath of TARGET_FILES) {
-  const fullPath = path.join(process.cwd(), relPath);
-  if (fs.existsSync(fullPath)) {
-    try {
-      let content = fs.readFileSync(fullPath, 'utf8');
-      const matches = content.match(/http:\/\/localhost:3000/g);
-      if (matches && matches.length > 0) {
-        content = content.replace(/http:\/\/localhost:3000/g, CANONICAL_DOMAIN);
-        content = content.replace(/http:\/\/localhost/g, CANONICAL_DOMAIN);
-        content = content.replace(/localhost:3000/g, 'newworldstate.cloud');
-        fs.writeFileSync(fullPath, content, 'utf8');
-        console.log(`[SITEMAP-SANITIZE] Fixed ${matches.length} localhost occurrences in ${relPath}`);
-        totalReplaced += matches.length;
-      } else {
-        console.log(`[SITEMAP-SANITIZE] Verified clean (0 localhost): ${relPath}`);
-      }
-    } catch (err) {
-      console.error(`[SITEMAP-SANITIZE] Error processing ${relPath}:`, err.message);
+function scanAndSanitize(dir) {
+  if (!fs.existsSync(dir)) return 0;
+  let count = 0;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      count += scanAndSanitize(fullPath);
+    } else if (/\.(xml|html|txt|json|webmanifest)$/i.test(entry.name)) {
+      try {
+        let content = fs.readFileSync(fullPath, 'utf8');
+        const matches = content.match(/http:\/\/localhost:3000/g) || content.match(/http:\/\/localhost(?!\w)/g) || content.match(/localhost:3000/g);
+        if (matches && matches.length > 0) {
+          content = content.replace(/http:\/\/localhost:3000/g, CANONICAL_DOMAIN);
+          content = content.replace(/http:\/\/localhost(?!\w)/g, CANONICAL_DOMAIN);
+          content = content.replace(/localhost:3000/g, 'newworldstate.cloud');
+          fs.writeFileSync(fullPath, content, 'utf8');
+          console.log(`[SITEMAP-SANITIZE] Fixed ${matches.length} occurrences in ${path.relative(process.cwd(), fullPath)}`);
+          count += matches.length;
+        }
+      } catch (e) {}
     }
   }
+  return count;
 }
+
+let totalReplaced = 0;
+totalReplaced += scanAndSanitize(path.join(process.cwd(), 'public'));
+totalReplaced += scanAndSanitize(path.join(process.cwd(), 'dist'));
 
 console.log(`[SITEMAP-SANITIZE] Sanitization completed. Total localhost URLs corrected: ${totalReplaced}`);

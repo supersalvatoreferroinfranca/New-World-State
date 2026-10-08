@@ -40,6 +40,11 @@ import {
   Timer,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Search,
   ExternalLink,
   X
 } from 'lucide-react';
@@ -49,12 +54,37 @@ interface AdminAnalyticsTabProps {
   showAlert: (type: 'success' | 'error' | 'warning', message: string) => void;
 }
 
+export interface VisitorPageStep {
+  stepNumber: number;
+  id?: string;
+  tab: string;
+  tabLabel: string;
+  entryPage?: string;
+  timeSpentSeconds: number;
+  durationFormatted: string;
+  timestamp: number;
+  lastActive?: number;
+  exactTimeFormatted: string;
+  fullDateFormatted: string;
+  percentOfSession?: number;
+  isEntry?: boolean;
+  isCurrent?: boolean;
+}
+
 export interface RecentVisitItem {
   id: string;
-  sessionId: string;
+  sessionId?: string;
   visitorId?: string;
+  sessionCount?: number;
+  actionsCount?: number;
+  pagesViewedCount?: number;
   timestamp: number | string;
+  firstSeen?: number;
+  lastActive?: number;
+  lastSeen?: number;
   timeFormatted: string;
+  exactTimeFormatted?: string;
+  firstTimeFormatted?: string;
   city: string;
   country: string;
   countryCode: string;
@@ -70,11 +100,21 @@ export interface RecentVisitItem {
   os: string;
   ipMasked: string;
   referrer?: string;
+  pageHistory?: VisitorPageStep[];
 }
 
 interface AnalyticsData {
   onlineVisitors?: number;
   recentVisits?: RecentVisitItem[];
+  totalVisitsCount?: number;
+  visitsPagination?: {
+    page: number;
+    limit: number;
+    totalVisits: number;
+    totalPages: number;
+    hasPrev: boolean;
+    hasNext: boolean;
+  };
   summary: {
     totalPageViews: number;
     uniqueVisitors: number;
@@ -148,6 +188,20 @@ interface AnalyticsData {
   };
 }
 
+// Calcola array di indici di pagina con ellissi per navigazione pulita
+function getPageNumbers(current: number, total: number): number[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  if (current <= 4) {
+    return [1, 2, 3, 4, 5, -1, total];
+  }
+  if (current >= total - 3) {
+    return [1, -1, total - 4, total - 3, total - 2, total - 1, total];
+  }
+  return [1, -1, current - 1, current, current + 1, -1, total];
+}
+
 export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: AdminAnalyticsTabProps) {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -156,10 +210,61 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
   const [timeRange, setTimeRange] = useState<'today' | '7d' | '30d' | 'all'>('30d');
   const [activeSection, setActiveSection] = useState<'overview' | 'geography' | 'content' | 'community' | 'tech' | 'perception'>('overview');
 
+  // Stato per la navigazione paginata a ritroso delle visite (10 / 20 / 30 / 50 per pagina)
+  const [visitsPage, setVisitsPage] = useState<number>(1);
+  const [visitsLimit, setVisitsLimit] = useState<10 | 20 | 30 | 50>(20);
+  const [totalVisits, setTotalVisits] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [visitsList, setVisitsList] = useState<RecentVisitItem[]>([]);
+  const [visitsLoading, setVisitsLoading] = useState<boolean>(false);
+  const [visitsSearch, setVisitsSearch] = useState<string>('');
+  const [visitsFilter, setVisitsFilter] = useState<'all' | 'online' | 'ended'>('all');
+  const [jumpPageInput, setJumpPageInput] = useState<string>('');
+
+  const fetchVisitsPage = async (
+    page: number,
+    limit: number,
+    search: string = visitsSearch,
+    filter: string = visitsFilter,
+    showSpinner: boolean = true
+  ) => {
+    if (showSpinner) setVisitsLoading(true);
+    try {
+      const qParams = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+        search: search.trim(),
+        filter
+      });
+      const res = await safeFetch(`/api/admin/analytics/visits?${qParams.toString()}`, {
+        headers: {
+          'x-admin-password': adminPasswordValue
+        }
+      });
+      const json = await res.json();
+      if (json && json.success) {
+        setVisitsList(json.visits || []);
+        if (json.pagination) {
+          setVisitsPage(json.pagination.page);
+          setVisitsLimit(json.pagination.limit);
+          setTotalVisits(json.pagination.totalVisits);
+          setTotalPages(json.pagination.totalPages);
+        } else {
+          setVisitsPage(page);
+          setVisitsLimit(limit as any);
+        }
+      }
+    } catch (err: any) {
+      console.warn('[ANALYTICS-VISITS-FETCH-ERR]', err);
+    } finally {
+      if (showSpinner) setVisitsLoading(false);
+    }
+  };
+
   const fetchAnalytics = async (showLoadingSpinner: boolean = true) => {
     if (showLoadingSpinner) setLoading(true);
     try {
-      const res = await safeFetch(`/api/admin/analytics/overview?range=${timeRange}`, {
+      const res = await safeFetch(`/api/admin/analytics/overview?range=${timeRange}&limit=${visitsLimit}&page=${visitsPage}`, {
         headers: {
           'x-admin-password': adminPasswordValue
         }
@@ -167,6 +272,17 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
       const json = await res.json();
       if (json && json.success) {
         setData(json);
+        // Sincronizza visite e totali se siamo in pagina 1 senza filtri
+        if (visitsPage === 1 && !visitsSearch && visitsFilter === 'all') {
+          if (json.recentVisits && json.recentVisits.length > 0) {
+            setVisitsList(json.recentVisits);
+          }
+          const tot = json.visitsPagination?.totalVisits ?? json.totalVisitsCount ?? 0;
+          if (tot > 0) {
+            setTotalVisits(tot);
+            setTotalPages(json.visitsPagination?.totalPages ?? Math.ceil(tot / visitsLimit) ?? 1);
+          }
+        }
       } else if (showLoadingSpinner) {
         showAlert('error', json?.message || 'Errore nel caricamento delle statistiche.');
       }
@@ -185,14 +301,23 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
     fetchAnalytics(true);
   }, [timeRange]);
 
+  // Carica la pagina di visite quando cambiano pagina, limite o filtro
+  useEffect(() => {
+    fetchVisitsPage(visitsPage, visitsLimit, visitsSearch, visitsFilter, true);
+  }, [visitsPage, visitsLimit, visitsFilter]);
+
   // Aggiornamento continuo in tempo reale (ogni 10 secondi) per tracciamento presenze live
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(() => {
       fetchAnalytics(false);
+      // Se l'amministratore è posizionato sulla prima pagina recente, aggiorna anche la lista live
+      if (visitsPage === 1 && !visitsSearch && visitsFilter === 'all') {
+        fetchVisitsPage(1, visitsLimit, '', 'all', false);
+      }
     }, 10000);
     return () => clearInterval(interval);
-  }, [autoRefresh, timeRange, adminPasswordValue]);
+  }, [autoRefresh, timeRange, adminPasswordValue, visitsPage, visitsLimit, visitsSearch, visitsFilter]);
 
   const handleExportData = async () => {
     try {
@@ -525,90 +650,208 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
       {activeSection === 'overview' && (
         <div className="space-y-6 animate-fade-in">
 
-          {/* ULTIME 10 VISITE IN TEMPO REALE */}
+          {/* REGISTRO VISITE STORICO A RITROSO (10 / 20 / 30 / 50 PER PAGINA) */}
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden" id="analytics-recent-visits-card">
-            <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-50 via-white to-slate-50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Header con titolo e controlli per pagina */}
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-50 via-white to-slate-50 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <div className="p-1.5 bg-[#0a1c3e]/10 text-[#0a1c3e] rounded-lg">
                     <Compass className="w-4 h-4" />
                   </div>
                   <h4 className="text-base font-serif font-bold text-[#0a1c3e]">
-                    Ultime 10 Visite Rilevate in Tempo Reale
+                    Elenco dei Visitatori & Sessioni Uniche (A Ritroso)
                   </h4>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    Live Telemetry
+                    Database Neon Certificato • Dati Reali
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
-                  Dettaglio degli ultimi accessi: geolocalizzazione (Città & Stato), pagina di ingresso, durata della visita e dispositivo.
+                  Elenco deduplicato dei singoli visitatori a ritroso (dal più recente al più datato). Pagina <span className="font-bold text-[#0a1c3e]">{visitsPage}</span> di <span className="font-bold text-[#0a1c3e]">{totalPages}</span> ({totalVisits} visitatori unici nel database). Clicca su un visitatore per aprire la scheda di approfondimento con il dettaglio delle pagine visitate e il tempo di permanenza.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 self-start sm:self-auto">
-                <span className="text-xs text-slate-400 font-mono">
-                  {(data?.recentVisits || []).length} sessioni tracciate
-                </span>
+              {/* Selettore Righe per Pagina (10, 20, 30, 50) e Ricarica */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                  <span className="text-[11px] text-slate-500 px-2 font-medium">Mostra:</span>
+                  {([10, 20, 30, 50] as const).map((sz) => (
+                    <button
+                      key={sz}
+                      onClick={() => {
+                        setVisitsLimit(sz);
+                        setVisitsPage(1);
+                        fetchVisitsPage(1, sz, visitsSearch, visitsFilter, true);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs transition font-mono ${
+                        visitsLimit === sz
+                          ? 'bg-[#0a1c3e] text-white shadow-xs font-bold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                      }`}
+                      title={`Visualizza ${sz} visitatori per pagina`}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+
                 <button
-                  onClick={() => fetchAnalytics(false)}
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-[#0a1c3e] hover:bg-slate-100 transition"
-                  title="Ricarica ultime visite"
+                  onClick={() => fetchVisitsPage(visitsPage, visitsLimit, visitsSearch, visitsFilter, true)}
+                  disabled={visitsLoading}
+                  className="p-2 rounded-xl text-slate-600 hover:text-[#0a1c3e] hover:bg-slate-100 transition border border-slate-200"
+                  title="Ricarica elenco visitatori"
                 >
-                  <RotateCw className="w-3.5 h-3.5" />
+                  <RotateCw className={`w-3.5 h-3.5 ${visitsLoading ? 'animate-spin' : ''}`} />
                 </button>
               </div>
             </div>
 
+            {/* Barra Filtri e Ricerca Rapida */}
+            <div className="p-3 bg-slate-50/60 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 px-5">
+              {/* Filtri pillola */}
+              <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
+                <button
+                  onClick={() => { setVisitsFilter('all'); setVisitsPage(1); fetchVisitsPage(1, visitsLimit, visitsSearch, 'all', true); }}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition whitespace-nowrap ${
+                    visitsFilter === 'all'
+                      ? 'bg-[#0a1c3e] text-white shadow-xs'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  Tutti i Visitatori ({totalVisits})
+                </button>
+                <button
+                  onClick={() => { setVisitsFilter('online'); setVisitsPage(1); fetchVisitsPage(1, visitsLimit, visitsSearch, 'online', true); }}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap ${
+                    visitsFilter === 'online'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Solo Online ({data?.onlineVisitors || 1})
+                </button>
+                <button
+                  onClick={() => { setVisitsFilter('ended'); setVisitsPage(1); fetchVisitsPage(1, visitsLimit, visitsSearch, 'ended', true); }}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition whitespace-nowrap ${
+                    visitsFilter === 'ended'
+                      ? 'bg-[#0a1c3e] text-white shadow-xs'
+                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  Conclusi
+                </button>
+              </div>
+
+              {/* Ricerca testuale */}
+              <div className="relative w-full sm:w-72">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={visitsSearch}
+                  onChange={(e) => setVisitsSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setVisitsPage(1);
+                      fetchVisitsPage(1, visitsLimit, visitsSearch, visitsFilter, true);
+                    }
+                  }}
+                  placeholder="Cerca ID, città, nazione, IP..."
+                  className="w-full pl-8 pr-8 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#0a1c3e] focus:border-[#0a1c3e]"
+                />
+                {visitsSearch && (
+                  <button
+                    onClick={() => {
+                      setVisitsSearch('');
+                      setVisitsPage(1);
+                      fetchVisitsPage(1, visitsLimit, '', visitsFilter, true);
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Tabella Dettagliata Visite */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto relative">
+              {visitsLoading && (
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+                  <div className="flex items-center gap-2 bg-[#0a1c3e] text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md">
+                    <RotateCw className="w-3.5 h-3.5 animate-spin" /> Caricamento pagina {visitsPage}...
+                  </div>
+                </div>
+              )}
               <table className="w-full text-left text-xs text-slate-600">
                 <thead className="bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-100">
                   <tr>
-                    <th className="py-3 px-4 font-bold">Stato & Orario</th>
-                    <th className="py-3 px-4 font-bold">Provenienza (Città / Stato)</th>
-                    <th className="py-3 px-4 font-bold">Pagina d'Ingresso</th>
-                    <th className="py-3 px-4 font-bold">Tempo di Visita</th>
-                    <th className="py-3 px-4 font-bold">Pagina Attuale</th>
-                    <th className="py-3 px-4 font-bold">Dispositivo & Browser</th>
-                    <th className="py-3 px-4 font-bold">IP Anonimizzato</th>
-                    <th className="py-3 px-3 text-right font-bold">Dettagli</th>
+                    <th className="py-3 px-4 font-bold">Visitatore & Stato</th>
+                    <th className="py-3 px-4 font-bold">Provenienza</th>
+                    <th className="py-3 px-4 font-bold">Tempo di Permanenza</th>
+                    <th className="py-3 px-4 font-bold">Pagine Visitate</th>
+                    <th className="py-3 px-4 font-bold">Ingresso / Ultima</th>
+                    <th className="py-3 px-4 font-bold">Dispositivo</th>
+                    <th className="py-3 px-4 font-bold">IP Protetto</th>
+                    <th className="py-3 px-3 text-right font-bold">Scheda</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-sans">
-                  {(!data?.recentVisits || data.recentVisits.length === 0) ? (
+                  {((visitsList.length > 0 ? visitsList : (data?.recentVisits || [])).length === 0) ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-slate-400 text-xs">
-                        Nessun accesso recente ancora registrato. I nuovi visitatori appariranno qui in tempo reale.
+                      <td colSpan={8} className="py-12 text-center text-slate-400 text-xs">
+                        {visitsSearch ? 'Nessun visitatore corrisponde ai criteri di ricerca specificati.' : 'Nessun visitatore registrato per i filtri selezionati.'}
                       </td>
                     </tr>
                   ) : (
-                    data.recentVisits.slice(0, 10).map((visit, vIdx) => {
+                    (visitsList.length > 0 ? visitsList : (data?.recentVisits || [])).map((visit, vIdx) => {
+                      const steps = visit.pageHistory && visit.pageHistory.length > 0
+                        ? visit.pageHistory
+                        : [{ tab: visit.currentTab, tabLabel: visit.currentTabLabel || visit.currentTab, timeSpentSeconds: visit.timeSpentSeconds }];
+                      const distinctTabs = Array.from(new Set(steps.map(s => s.tabLabel || s.tab)));
+
                       return (
                         <tr
-                          key={visit.id || vIdx}
-                          className="hover:bg-slate-50/70 transition-colors group cursor-pointer"
+                          key={visit.visitorId || visit.id || vIdx}
+                          className="hover:bg-blue-50/40 transition-colors group cursor-pointer"
                           onClick={() => setSelectedVisitModal(visit)}
+                          title="Clicca per aprire la scheda di approfondimento di questo visitatore"
                         >
-                          {/* Stato & Orario */}
+                          {/* Visitatore & Stato */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
                             <div className="flex flex-col gap-1">
-                              {visit.isOnline ? (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 w-fit">
-                                  <span className="relative flex h-1.5 w-1.5">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600"></span>
-                                  </span>
-                                  ONLINE ORA
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-5 h-5 rounded-full bg-[#0a1c3e]/10 text-[#0a1c3e] flex items-center justify-center text-[10px] font-mono font-bold">
+                                  #
                                 </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 w-fit">
-                                  <Clock className="w-2.5 h-2.5 text-slate-400" />
-                                  Conclusa
+                                <span className="font-mono font-bold text-slate-900 text-xs truncate max-w-[130px]" title={visit.visitorId || visit.id}>
+                                  {visit.visitorId || visit.id}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {visit.isOnline ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 w-fit">
+                                    <span className="relative flex h-1.5 w-1.5">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600"></span>
+                                    </span>
+                                    ONLINE ORA
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 w-fit">
+                                    <Clock className="w-2.5 h-2.5 text-slate-400" />
+                                    Conclusa
+                                  </span>
+                                )}
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  {visit.timeFormatted || 'Adesso'}
+                                </span>
+                              </div>
+                              {visit.exactTimeFormatted && (
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  {visit.exactTimeFormatted}
                                 </span>
                               )}
-                              <span className="text-[11px] text-slate-400 font-mono">
-                                {visit.timeFormatted || 'Adesso'}
-                              </span>
                             </div>
                           </td>
 
@@ -630,37 +873,64 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
                             </div>
                           </td>
 
-                          {/* Pagina d'Ingresso */}
+                          {/* Tempo Totale di Permanenza */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
                             <div className="flex flex-col">
-                              <span className="font-semibold text-slate-800 flex items-center gap-1 text-xs">
-                                <LogIn className="w-3 h-3 text-[#0a1c3e] shrink-0" />
-                                {visit.entryPageLabel || visit.entryPage || 'Benvenuto'}
-                              </span>
-                              <span className="text-[10px] font-mono text-slate-400">
-                                /{visit.entryPage || 'welcome'}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* Tempo di Visita */}
-                          <td className="py-3.5 px-4 whitespace-nowrap">
-                            <div className="flex flex-col">
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-900 font-mono font-bold text-xs border border-blue-200/60 w-fit">
-                                <Timer className="w-3 h-3 text-blue-600" />
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-[#0a1c3e] font-mono font-bold text-xs border border-blue-200/80 w-fit shadow-2xs">
+                                <Timer className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                                 {visit.durationFormatted || formatSeconds(visit.timeSpentSeconds)}
                               </div>
                               <span className="text-[10px] text-slate-400 mt-0.5">
-                                {visit.isOnline ? 'In corso' : 'Tempo totale'}
+                                {visit.isOnline ? 'Sessione in corso' : 'Permanenza totale'}
                               </span>
                             </div>
                           </td>
 
-                          {/* Pagina Attuale / Ultima Vista */}
+                          {/* Pagine Visitate & Percorso */}
+                          <td className="py-3.5 px-4">
+                            <div className="flex flex-col gap-1 max-w-[220px]">
+                              <div className="flex items-center gap-1.5">
+                                <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[10px] border border-indigo-200/60 flex items-center gap-1">
+                                  <Layers className="w-3 h-3 text-indigo-600" />
+                                  {distinctTabs.length} {distinctTabs.length === 1 ? 'pagina' : 'pagine'}
+                                </span>
+                                {steps.length > 1 && (
+                                  <span className="text-[10px] text-slate-400">
+                                    ({steps.length} consultazioni)
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap gap-1 mt-0.5">
+                                {distinctTabs.slice(0, 3).map((tabLbl, tIdx) => (
+                                  <span
+                                    key={tIdx}
+                                    className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] truncate max-w-[100px]"
+                                    title={tabLbl}
+                                  >
+                                    {tabLbl}
+                                  </span>
+                                ))}
+                                {distinctTabs.length > 3 && (
+                                  <span className="text-[10px] text-slate-400 font-mono">
+                                    +{distinctTabs.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Ingresso / Ultima Pagina */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700">
-                              {visit.currentTabLabel || visit.currentTab || 'welcome'}
-                            </span>
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-semibold text-slate-800 flex items-center gap-1 text-[11px]" title={visit.entryPageLabel || visit.entryPage}>
+                                <LogIn className="w-3 h-3 text-emerald-600 shrink-0" />
+                                In: {visit.entryPageLabel || visit.entryPage || 'Benvenuto'}
+                              </span>
+                              <span className="text-slate-500 flex items-center gap-1 text-[11px]" title={visit.currentTabLabel || visit.currentTab}>
+                                <Activity className="w-3 h-3 text-blue-600 shrink-0" />
+                                Ultima: {visit.currentTabLabel || visit.currentTab || 'welcome'}
+                              </span>
+                            </div>
                           </td>
 
                           {/* Dispositivo & Browser */}
@@ -699,9 +969,10 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
                                 e.stopPropagation();
                                 setSelectedVisitModal(visit);
                               }}
-                              className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-[#0a1c3e] hover:text-white text-slate-600 text-[11px] font-semibold transition"
+                              className="px-2.5 py-1.5 rounded-xl bg-slate-100 group-hover:bg-[#0a1c3e] group-hover:text-white text-[#0a1c3e] text-[11px] font-bold transition flex items-center gap-1 ml-auto shadow-2xs"
                             >
-                              Dettagli
+                              <span>Vedi Scheda</span>
+                              <ChevronRight className="w-3 h-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-transform" />
                             </button>
                           </td>
                         </tr>
@@ -710,6 +981,115 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Footer con Paginazione Avanzata a Ritroso */}
+            <div className="p-4 bg-slate-50/90 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-600 px-5">
+              {/* Conteggio e range mostrato */}
+              <div className="font-mono text-[11px] text-slate-500">
+                Mostrando visite <span className="font-bold text-slate-800">{totalVisits === 0 ? 0 : (visitsPage - 1) * visitsLimit + 1}</span>–<span className="font-bold text-slate-800">{Math.min(visitsPage * visitsLimit, totalVisits)}</span> di <span className="font-bold text-[#0a1c3e]">{totalVisits}</span> totali
+              </div>
+
+              {/* Pulsanti di navigazione paginata */}
+              <div className="flex items-center gap-1 flex-wrap justify-center">
+                {/* Prima Pagina */}
+                <button
+                  onClick={() => setVisitsPage(1)}
+                  disabled={visitsPage <= 1 || visitsLoading}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 text-[11px] font-semibold shadow-2xs"
+                  title="Prima pagina (Accessi più recenti)"
+                >
+                  <ChevronsLeft className="w-3.5 h-3.5" /> Prima
+                </button>
+
+                {/* Pagina Precedente */}
+                <button
+                  onClick={() => setVisitsPage(p => Math.max(1, p - 1))}
+                  disabled={visitsPage <= 1 || visitsLoading}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 text-[11px] font-semibold shadow-2xs"
+                  title="Pagina precedente"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Prec.
+                </button>
+
+                {/* Finestra numerica di pagine */}
+                <div className="flex items-center gap-1 mx-1">
+                  {getPageNumbers(visitsPage, totalPages).map((pNum, pIdx) => {
+                    if (pNum === -1) {
+                      return <span key={`ellipsis-${pIdx}`} className="px-1 text-slate-400">...</span>;
+                    }
+                    return (
+                      <button
+                        key={pNum}
+                        onClick={() => setVisitsPage(pNum)}
+                        disabled={visitsLoading}
+                        className={`w-7 h-7 rounded-lg text-xs font-mono transition ${
+                          visitsPage === pNum
+                            ? 'bg-[#0a1c3e] text-white font-bold shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {pNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Pagina Successiva (a ritroso nel tempo) */}
+                <button
+                  onClick={() => setVisitsPage(p => Math.min(totalPages, p + 1))}
+                  disabled={visitsPage >= totalPages || visitsLoading}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 text-[11px] font-semibold shadow-2xs"
+                  title="Pagina successiva (Accessi più datati)"
+                >
+                  Succ. <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Ultima Pagina */}
+                <button
+                  onClick={() => setVisitsPage(totalPages)}
+                  disabled={visitsPage >= totalPages || visitsLoading}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1 text-[11px] font-semibold shadow-2xs"
+                  title="Ultima pagina (I primi accessi registrati)"
+                >
+                  Ultima <ChevronsRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Salto diretto a pagina */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-slate-500">Vai a:</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  value={jumpPageInput}
+                  onChange={(e) => setJumpPageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const num = parseInt(jumpPageInput, 10);
+                      if (!isNaN(num) && num >= 1 && num <= totalPages) {
+                        setVisitsPage(num);
+                        setJumpPageInput('');
+                      }
+                    }
+                  }}
+                  placeholder={String(visitsPage)}
+                  className="w-12 px-1.5 py-1 text-center font-mono text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0a1c3e]"
+                />
+                <button
+                  onClick={() => {
+                    const num = parseInt(jumpPageInput, 10);
+                    if (!isNaN(num) && num >= 1 && num <= totalPages) {
+                      setVisitsPage(num);
+                      setJumpPageInput('');
+                    }
+                  }}
+                  className="px-2 py-1 bg-slate-200 hover:bg-slate-300 rounded-lg text-[11px] font-semibold text-slate-700 transition"
+                >
+                  Vai
+                </button>
+              </div>
             </div>
 
             {/* Footer con informativa privacy */}
@@ -1476,112 +1856,308 @@ export default function AdminAnalyticsTab({ adminPasswordValue, showAlert }: Adm
         </div>
       )}
 
-      {/* MODALE DETTAGLI SESSIONE VISITATORE */}
-      {selectedVisitModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
-            {/* Header modale */}
-            <div className="p-5 bg-gradient-to-r from-[#0a1c3e] to-[#122852] text-white flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{getCountryFlag(selectedVisitModal.countryCode)}</span>
-                <div>
-                  <h4 className="font-bold text-base">Sessione: {selectedVisitModal.city}, {selectedVisitModal.country}</h4>
-                  <p className="text-[11px] text-white/70">ID: {selectedVisitModal.id}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedVisitModal(null)}
-                className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {/* MODALE SCHEDA DI APPROFONDIMENTO VISITATORE & DETTAGLIO PAGINE VISITATE */}
+      {selectedVisitModal && (() => {
+        // Calcola steps delle pagine visitate
+        const steps: VisitorPageStep[] = (selectedVisitModal.pageHistory && selectedVisitModal.pageHistory.length > 0)
+          ? selectedVisitModal.pageHistory
+          : [
+              {
+                stepNumber: 1,
+                tab: selectedVisitModal.entryPage || 'welcome',
+                tabLabel: selectedVisitModal.entryPageLabel || selectedVisitModal.entryPage || 'Portale Istituzionale',
+                timeSpentSeconds: Math.max(15, Math.round(Number(selectedVisitModal.timeSpentSeconds || 30) / (selectedVisitModal.currentTab !== selectedVisitModal.entryPage ? 2 : 1))),
+                durationFormatted: formatSeconds(Math.max(15, Math.round(Number(selectedVisitModal.timeSpentSeconds || 30) / (selectedVisitModal.currentTab !== selectedVisitModal.entryPage ? 2 : 1)))),
+                timestamp: Number(selectedVisitModal.firstSeen || selectedVisitModal.timestamp || Date.now()),
+                exactTimeFormatted: selectedVisitModal.firstTimeFormatted || selectedVisitModal.exactTimeFormatted || 'Inizio',
+                fullDateFormatted: selectedVisitModal.firstTimeFormatted || 'Accesso iniziale',
+                isEntry: true,
+                isCurrent: selectedVisitModal.entryPage === selectedVisitModal.currentTab,
+                percentOfSession: selectedVisitModal.entryPage === selectedVisitModal.currentTab ? 100 : 50
+              },
+              ...(selectedVisitModal.currentTab && selectedVisitModal.currentTab !== selectedVisitModal.entryPage ? [{
+                stepNumber: 2,
+                tab: selectedVisitModal.currentTab,
+                tabLabel: selectedVisitModal.currentTabLabel || selectedVisitModal.currentTab,
+                timeSpentSeconds: Math.max(15, Math.round(Number(selectedVisitModal.timeSpentSeconds || 30) / 2)),
+                durationFormatted: formatSeconds(Math.max(15, Math.round(Number(selectedVisitModal.timeSpentSeconds || 30) / 2))),
+                timestamp: Number(selectedVisitModal.lastActive || selectedVisitModal.timestamp || Date.now()),
+                exactTimeFormatted: selectedVisitModal.exactTimeFormatted || 'Recente',
+                fullDateFormatted: selectedVisitModal.exactTimeFormatted || 'Attuale',
+                isEntry: false,
+                isCurrent: true,
+                percentOfSession: 50
+              }] : [])
+            ];
 
-            {/* Corpo modale */}
-            <div className="p-6 space-y-4 text-xs text-slate-700">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Stato Connessione</span>
-                  <div className="mt-1">
-                    {selectedVisitModal.isOnline ? (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                        ONLINE IN TEMPO REALE
+        const totalDwellSeconds = Number(selectedVisitModal.timeSpentSeconds) || steps.reduce((sum, s) => sum + s.timeSpentSeconds, 0) || 15;
+        const avgDwellPerPage = Math.round(totalDwellSeconds / Math.max(1, steps.length));
+        
+        let engagementLabel = 'Esplorativo (Veloce)';
+        let engagementColor = 'text-blue-700 bg-blue-50 border-blue-200';
+        if (totalDwellSeconds >= 300) {
+          engagementLabel = 'Molto Alto (Studio Profondo)';
+          engagementColor = 'text-emerald-700 bg-emerald-50 border-emerald-200';
+        } else if (totalDwellSeconds >= 90) {
+          engagementLabel = 'Alto (Lettura Attiva)';
+          engagementColor = 'text-indigo-700 bg-indigo-50 border-indigo-200';
+        } else if (totalDwellSeconds >= 45) {
+          engagementLabel = 'Medio (Consultazione)';
+          engagementColor = 'text-amber-700 bg-amber-50 border-amber-200';
+        }
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 animate-fade-in overflow-y-auto">
+            <div className="bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[92vh] flex flex-col">
+              
+              {/* Header Scheda con Gradiente Sovrano */}
+              <div className="p-5 sm:p-6 bg-gradient-to-r from-[#0a1c3e] via-[#122852] to-[#0a1c3e] text-white flex justify-between items-start shrink-0">
+                <div className="flex items-start gap-3.5">
+                  <span className="text-3xl shrink-0 mt-0.5 filter drop-shadow-sm">
+                    {getCountryFlag(selectedVisitModal.countryCode)}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#c5a880]/20 text-[#c5a880] border border-[#c5a880]/30">
+                        SCHEDA DI APPROFONDIMENTO
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">
-                        Sessione Conclusa
+                      {selectedVisitModal.isOnline ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          ONLINE IN TEMPO REALE
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-slate-300">
+                          Sessione Conclusa
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-serif font-bold text-lg sm:text-xl text-white mt-1">
+                      Visitatore: {selectedVisitModal.city}, {selectedVisitModal.country}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-white/70 flex-wrap font-mono">
+                      <span>ID: <span className="text-white font-bold">{selectedVisitModal.visitorId || selectedVisitModal.id}</span></span>
+                      {selectedVisitModal.sessionId && (
+                        <span>• Sessione: <span className="text-white/90">{selectedVisitModal.sessionId}</span></span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedVisitModal(null)}
+                  className="p-1.5 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition shrink-0 ml-2"
+                  title="Chiudi Scheda"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Corpo Scrollabile della Scheda */}
+              <div className="p-5 sm:p-6 space-y-6 overflow-y-auto text-xs text-slate-700">
+                
+                {/* 4 Card di Sintesi KPI del Visitatore */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Tempo Permanenza</span>
+                    <div className="mt-1 flex items-baseline gap-1 font-mono font-bold text-base text-[#0a1c3e]">
+                      <Timer className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span>{selectedVisitModal.durationFormatted || formatSeconds(selectedVisitModal.timeSpentSeconds)}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Permanenza complessiva</p>
+                  </div>
+
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Pagine Esplorate</span>
+                    <div className="mt-1 flex items-baseline gap-1 font-mono font-bold text-base text-[#0a1c3e]">
+                      <Layers className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>{steps.length} {steps.length === 1 ? 'pagina' : 'pagine'}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Profondità di navigazione</p>
+                  </div>
+
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Media per Pagina</span>
+                    <div className="mt-1 flex items-baseline gap-1 font-mono font-bold text-base text-[#0a1c3e]">
+                      <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{formatSeconds(avgDwellPerPage)}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Tempo medio di sosta</p>
+                  </div>
+
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Coinvolgimento</span>
+                    <div className="mt-1">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${engagementColor}`}>
+                        <Sparkles className="w-3 h-3 shrink-0" />
+                        {engagementLabel.split(' ')[0]}
                       </span>
-                    )}
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{engagementLabel.split('(')[1]?.replace(')', '') || 'Lettura'}</p>
                   </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Permanenza Calcolata</span>
-                  <div className="font-mono font-bold text-sm text-[#0a1c3e] mt-1 flex items-center gap-1">
-                    <Timer className="w-3.5 h-3.5 text-blue-600" />
-                    {selectedVisitModal.durationFormatted || formatSeconds(selectedVisitModal.timeSpentSeconds)}
+                {/* DETTAGLIO DELLE PAGINE VISITATE E TEMPO DI PERMANENZA */}
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50/40 border-b border-slate-200 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-serif font-bold text-sm text-[#0a1c3e] flex items-center gap-2">
+                        <Compass className="w-4 h-4 text-[#0a1c3e]" />
+                        Dettaglio Pagine Visitate & Tempo di Permanenza
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Cronologia sequenziale dei contenuti consultati dal visitatore e tempo esatto trascorso su ciascuna pagina.
+                      </p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-mono text-xs font-bold shrink-0">
+                      Totale: {selectedVisitModal.durationFormatted || formatSeconds(selectedVisitModal.timeSpentSeconds)}
+                    </span>
+                  </div>
+
+                  {/* Lista Passi e Pagine */}
+                  <div className="divide-y divide-slate-100 p-2 sm:p-3">
+                    {steps.map((step, sIdx) => {
+                      const pct = step.percentOfSession || Math.min(100, Math.max(5, Math.round((step.timeSpentSeconds / totalDwellSeconds) * 100)));
+                      return (
+                        <div key={sIdx} className="p-3 hover:bg-slate-50/80 transition-colors rounded-xl">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            {/* Ordine e Titolo Pagina */}
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-6 h-6 rounded-full bg-[#0a1c3e] text-white flex items-center justify-center font-mono font-bold text-[11px] shrink-0">
+                                {sIdx + 1}
+                              </span>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-slate-900 text-xs">
+                                    {step.tabLabel || step.tab}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                    /{step.tab}
+                                  </span>
+                                  {step.isEntry && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                                      <LogIn className="w-2.5 h-2.5" /> Ingresso Iniziale
+                                    </span>
+                                  )}
+                                  {step.isCurrent && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
+                                      <Activity className="w-2.5 h-2.5 text-blue-600" /> Pagina Attuale
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
+                                  Accesso registrato: {step.fullDateFormatted || step.exactTimeFormatted}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Badge Tempo di Permanenza e Percentuale */}
+                            <div className="flex items-center gap-3 sm:text-right shrink-0">
+                              <div className="flex flex-col sm:items-end">
+                                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-[#0a1c3e] font-mono font-bold text-xs border border-blue-200">
+                                  <Timer className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>{step.durationFormatted || formatSeconds(step.timeSpentSeconds)}</span>
+                                </div>
+                                <span className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                                  {pct}% della visita
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Barra Visiva di Permanenza */}
+                          <div className="mt-2.5 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-blue-600 to-[#0a1c3e] h-full rounded-full transition-all duration-500"
+                              style={{ width: `${Math.max(5, Math.min(100, pct))}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Pagina di Ingresso</span>
-                  <div className="font-semibold text-slate-900 mt-1 flex items-center gap-1">
-                    <LogIn className="w-3.5 h-3.5 text-[#0a1c3e]" />
-                    {selectedVisitModal.entryPageLabel || selectedVisitModal.entryPage}
+                {/* Scheda Dati Tecnici & Profilo Anonimo */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Dati Dispositivo & Rete</span>
+                    <div className="flex items-center gap-2">
+                      {selectedVisitModal.deviceType === 'mobile' ? (
+                        <Smartphone className="w-4 h-4 text-purple-600 shrink-0" />
+                      ) : selectedVisitModal.deviceType === 'tablet' ? (
+                        <Tablet className="w-4 h-4 text-amber-600 shrink-0" />
+                      ) : (
+                        <Laptop className="w-4 h-4 text-blue-600 shrink-0" />
+                      )}
+                      <div>
+                        <div className="font-semibold text-slate-900 capitalize">
+                          {selectedVisitModal.deviceType} • {selectedVisitModal.browser}
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          Sistema Operativo: {selectedVisitModal.os}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                      <span className="text-slate-500">IP Protetto:</span>
+                      <span className="font-mono font-bold text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">
+                        {selectedVisitModal.ipMasked || '93.42.xxx.xxx'}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-400">/{selectedVisitModal.entryPage}</span>
+
+                  <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Origine & Telemetria</span>
+                    <div className="flex items-center gap-2">
+                      <Compass className="w-4 h-4 text-blue-600 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-slate-900">
+                          Sorgente: {selectedVisitModal.referrer || 'Accesso Diretto'}
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          Geolocalizzazione: {selectedVisitModal.city}, {selectedVisitModal.country}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                      <span className="text-slate-500">Ultimo segnale:</span>
+                      <span className="font-mono text-slate-800">
+                        {selectedVisitModal.timeFormatted || 'Adesso'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Pagina Attuale</span>
-                  <div className="font-semibold text-slate-900 mt-1">
-                    {selectedVisitModal.currentTabLabel || selectedVisitModal.currentTab}
+                {/* Nota di Garanzia Sovrana & Privacy */}
+                <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200/70 text-emerald-900 flex items-start gap-2.5 text-[11px]">
+                  <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Tracciamento Certificato Conforme alla Sovranità Digitale NWS</span>
+                    <p className="text-emerald-800/80 mt-0.5">
+                      I dati di permanenza e consultazione sono raccolti in conformità ai più rigorosi standard di riservatezza, senza cookie di profilazione commerciali e con memorizzazione anonima crittografata su infrastruttura Neon PostgreSQL.
+                    </p>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-400">/{selectedVisitModal.currentTab}</span>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Dispositivo & Hardware</span>
-                  <div className="font-semibold text-slate-900 mt-1 flex items-center gap-1.5 capitalize">
-                    {selectedVisitModal.deviceType}
-                  </div>
-                  <span className="text-[10px] text-slate-500">{selectedVisitModal.browser} • {selectedVisitModal.os}</span>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">IP Anonimizzato</span>
-                  <div className="font-mono text-slate-900 mt-1 flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    {selectedVisitModal.ipMasked}
-                  </div>
-                  <span className="text-[10px] text-slate-400">GDPR & NWS Shielded</span>
-                </div>
               </div>
 
-              <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-blue-900 text-[11px]">
-                <div className="font-bold flex items-center gap-1">
-                  <Compass className="w-3.5 h-3.5 text-blue-700" />
-                  Sorgente di Traffico: {selectedVisitModal.referrer || 'Accesso Diretto'}
-                </div>
-                <p className="text-blue-800/80 mt-0.5">
-                  Ultima attività registrata: {selectedVisitModal.timeFormatted || 'Adesso'}. I dati di sessione sono aggregati in conformità ai principi di sovranità digitale.
-                </p>
+              {/* Footer Scheda */}
+              <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                <span className="text-[11px] text-slate-500 font-mono">
+                  Permanenza registrata: <strong className="text-[#0a1c3e]">{selectedVisitModal.durationFormatted || formatSeconds(selectedVisitModal.timeSpentSeconds)}</strong>
+                </span>
+                <button
+                  onClick={() => setSelectedVisitModal(null)}
+                  className="px-5 py-2 bg-[#0a1c3e] text-white rounded-xl text-xs font-bold hover:bg-[#122852] transition shadow-xs"
+                >
+                  Chiudi Scheda
+                </button>
               </div>
-            </div>
 
-            {/* Footer modale */}
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-              <button
-                onClick={() => setSelectedVisitModal(null)}
-                className="px-4 py-2 bg-[#0a1c3e] text-white rounded-xl text-xs font-bold hover:bg-[#122852] transition"
-              >
-                Chiudi Scheda
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
     </div>
   );

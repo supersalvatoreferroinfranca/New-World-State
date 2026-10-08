@@ -630,7 +630,7 @@ export default function ArticleFormModal({
       return;
     }
 
-    let targetStatus: ArticleStatus = 'bozza';
+    let targetStatus: ArticleStatus = 'in_moderazione';
     if (action === true || action === 'moderation') {
       targetStatus = 'in_moderazione';
     } else if (action === 'publish') {

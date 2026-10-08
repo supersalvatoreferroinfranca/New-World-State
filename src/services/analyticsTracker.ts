@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -14,6 +15,7 @@ const LAST_ACTIVITY_KEY = 'nws_analytics_last_active';
 const ENTRY_PAGE_KEY = 'nws_analytics_entry_page';
 const SESSION_START_KEY = 'nws_analytics_session_start';
 const CLIENT_GEO_KEY = 'nws_analytics_client_geo';
+const PAGE_HISTORY_KEY = 'nws_analytics_page_history_v1';
 
 export interface ClientGeoData {
   city: string;
@@ -23,7 +25,16 @@ export interface ClientGeoData {
   ip?: string;
 }
 
-interface TrackPayload {
+export interface TrackedPageStep {
+  tab: string;
+  tabLabel?: string;
+  articleSlug?: string;
+  articleTitle?: string;
+  enteredAt: number;
+  timeSpentSeconds: number;
+}
+
+export interface TrackPayload {
   eventType: 'pageview' | 'heartbeat' | 'leave' | 'interaction';
   tab?: string;
   path?: string;
@@ -49,6 +60,70 @@ interface TrackPayload {
   countryCode?: string;
   region?: string;
   clientIp?: string;
+  pageHistory?: TrackedPageStep[];
+}
+
+export function getTabLabel(tab: string): string {
+  switch (tab) {
+    case 'welcome': return 'Portale Istituzionale';
+    case 'identity': return 'Anagrafe Protetta & ID';
+    case 'democracy': return 'Democrazia Diretta & Voto';
+    case 'constitution': return 'Costituzione & Diritti';
+    case 'governance': return 'Organi Costituzionali';
+    case 'news': return 'Quotidiano Sovrano';
+    case 'treasury': return 'Tesoro & Finanza';
+    case 'admin': return 'Pannello Amministrazione';
+    default: return tab ? (tab.charAt(0).toUpperCase() + tab.slice(1)) : 'Home';
+  }
+}
+
+// Gestione cronologia locale delle pagine visitate in sessione
+function getLocalPageHistory(): TrackedPageStep[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = sessionStorage.getItem(PAGE_HISTORY_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (_) {}
+  return [];
+}
+
+function saveLocalPageHistory(steps: TrackedPageStep[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(PAGE_HISTORY_KEY, JSON.stringify(steps.slice(-20))); // mantieni ultime 20 tappe
+  } catch (_) {}
+}
+
+function recordPageStep(tab: string, articleSlug?: string, articleTitle?: string) {
+  const steps = getLocalPageHistory();
+  const now = Date.now();
+  const label = getTabLabel(tab);
+
+  // Se l'ultima tappa era la stessa tab, aggiorna solo se opportuno
+  const last = steps[steps.length - 1];
+  if (!last || last.tab !== tab) {
+    steps.push({
+      tab,
+      tabLabel: label,
+      articleSlug,
+      articleTitle,
+      enteredAt: now,
+      timeSpentSeconds: 1
+    });
+  }
+  saveLocalPageHistory(steps);
+}
+
+function updateCurrentPageStepDuration(seconds: number) {
+  const steps = getLocalPageHistory();
+  if (steps.length > 0) {
+    const last = steps[steps.length - 1];
+    last.timeSpentSeconds = Math.max(last.timeSpentSeconds, seconds);
+    saveLocalPageHistory(steps);
+  }
 }
 
 let currentSessionId = '';
@@ -262,7 +337,8 @@ async function sendAnalytics(payload: TrackPayload) {
     country: cachedGeoData?.country,
     countryCode: cachedGeoData?.countryCode,
     region: cachedGeoData?.region,
-    clientIp: cachedGeoData?.ip
+    clientIp: cachedGeoData?.ip,
+    pageHistory: getLocalPageHistory()
   };
 
   const bodyStr = JSON.stringify(fullPayload);
@@ -297,6 +373,7 @@ export function trackPageView(tab: string, articleSlug?: string, articleTitle?: 
   const timeSpentOnPrevPage = Math.round((now - pageStartTime) / 1000);
   
   if (timeSpentOnPrevPage > 1) {
+    updateCurrentPageStepDuration(timeSpentOnPrevPage);
     sendAnalytics({
       eventType: 'leave',
       tab: currentPageTab,
@@ -305,6 +382,9 @@ export function trackPageView(tab: string, articleSlug?: string, articleTitle?: 
       timeSpentSeconds: Math.min(timeSpentOnPrevPage, 3600) // cap a 1 ora
     });
   }
+
+  // Registra nuova pagina nella cronologia locale di sessione
+  recordPageStep(tab, articleSlug, articleTitle);
 
   // Aggiorna stato corrente
   currentPageTab = tab;
@@ -328,6 +408,7 @@ export function trackPageView(tab: string, articleSlug?: string, articleTitle?: 
       clearInterval(heartbeatInterval);
       return;
     }
+    updateCurrentPageStepDuration(elapsed);
     sendAnalytics({
       eventType: 'heartbeat',
       tab: currentPageTab,
