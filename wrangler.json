@@ -6,7 +6,8 @@
     "nodejs_compat"
   ],
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
   },
   "vars": {
     "DATABASE_URL": "postgresql://neondb_owner:npg_wBMp0yNKrTe8@ep-cold-feather-abag43nr.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
