@@ -1647,25 +1647,31 @@ export function getLocalizedArticle(
                         (id && FULL_ARTICLE_TRANSLATIONS[id]?.[lang as NewsLanguage]);
 
   const translation = article.translations?.[lang as NewsLanguage];
+  const origTitleLower = (article.title || '').trim().toLowerCase();
 
-  const title = translation?.title || fallbackTrans?.title || article.title;
-  const intro = translation?.intro || fallbackTrans?.intro || article.intro;
-  const content = translation?.content || fallbackTrans?.content || article.content;
-  const tags = (translation?.tags && translation.tags.length > 0)
+  const isTransValid = Boolean(
+    translation?.title &&
+    translation?.content &&
+    translation.title.trim().toLowerCase() !== origTitleLower
+  );
+
+  const isFallbackValid = Boolean(
+    fallbackTrans?.title &&
+    fallbackTrans?.content &&
+    fallbackTrans.title.trim().toLowerCase() !== origTitleLower
+  );
+
+  const title = (isTransValid ? translation?.title : (isFallbackValid ? fallbackTrans?.title : null)) || translation?.title || fallbackTrans?.title || article.title;
+  const intro = (isTransValid ? translation?.intro : (isFallbackValid ? fallbackTrans?.intro : null)) || translation?.intro || fallbackTrans?.intro || article.intro;
+  const content = (isTransValid ? translation?.content : (isFallbackValid ? fallbackTrans?.content : null)) || translation?.content || fallbackTrans?.content || article.content;
+  const tags = (isTransValid && translation?.tags && translation.tags.length > 0)
     ? translation.tags
-    : (fallbackTrans?.tags && fallbackTrans.tags.length > 0)
+    : (isFallbackValid && fallbackTrans?.tags && fallbackTrans.tags.length > 0)
       ? fallbackTrans.tags
       : (article.tags || []);
 
-  const hasAnyTranslation = !!(
-    (translation && (translation.title || translation.content || translation.intro)) ||
-    (fallbackTrans && (fallbackTrans.title || fallbackTrans.content || fallbackTrans.intro))
-  );
-
-  const isFullyTranslated = !!(
-    (translation?.title || fallbackTrans?.title) &&
-    (translation?.content || fallbackTrans?.content)
-  );
+  const hasAnyTranslation = isTransValid || isFallbackValid;
+  const isFullyTranslated = hasAnyTranslation;
 
   if (hasAnyTranslation) {
     return {
@@ -1714,8 +1720,16 @@ export async function autoTranslateArticleOnDemand(
   }
   if (!target) return null;
 
-  // Già tradotto completamente sia titolo che contenuto esteso
-  if (target.translations?.[lang as NewsLanguage]?.title && target.translations?.[lang as NewsLanguage]?.content) {
+  // Già tradotto completamente sia titolo che contenuto esteso (e non identico all'italiano)
+  const existingTrans = target.translations?.[lang as NewsLanguage];
+  const origTitleLower = (target.title || '').trim().toLowerCase();
+  const isAlreadyTranslated = Boolean(
+    existingTrans?.title &&
+    existingTrans?.content &&
+    existingTrans.title.trim().toLowerCase() !== origTitleLower
+  );
+
+  if (isAlreadyTranslated) {
     return target;
   }
 

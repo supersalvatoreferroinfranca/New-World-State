@@ -199,11 +199,15 @@ export default function ArticleDetailModal({
   useEffect(() => {
     if (!activeArticle || activeLang === 'it' || !isOpen) return;
 
-    const hasTrans = Boolean(
-      (activeArticle.translations?.[activeLang]?.title && activeArticle.translations?.[activeLang]?.content) || 
-      (localizedData.hasTranslation && localizedData.isTranslated)
+    const origTitleLower = (activeArticle.title || '').trim().toLowerCase();
+    const curTrans = activeArticle.translations?.[activeLang];
+    const isAlreadyActuallyTranslated = Boolean(
+      curTrans?.title && 
+      curTrans?.content && 
+      curTrans.title.trim().toLowerCase() !== origTitleLower
     );
-    if (hasTrans) return;
+
+    if (isAlreadyActuallyTranslated || (localizedData.hasTranslation && localizedData.isTranslated)) return;
 
     // Trigger AI translation
     let isCancelled = false;
@@ -214,7 +218,11 @@ export default function ArticleDetailModal({
       .then((updated) => {
         if (isCancelled) return;
         const targetTrans = updated?.translations?.[activeLang];
-        const isTranslatedValid = Boolean(targetTrans?.title && targetTrans?.content);
+        const isTranslatedValid = Boolean(
+          targetTrans?.title && 
+          targetTrans?.content &&
+          targetTrans.title.trim().toLowerCase() !== origTitleLower
+        );
 
         if (updated && isTranslatedValid) {
           setCurrentArticle(prev => ({

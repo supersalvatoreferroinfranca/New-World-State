@@ -187,27 +187,39 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         const targetSlug = searchParams.get('notizia') || searchParams.get('article') || searchParams.get('slug');
         let foundArticle: NewsArticle | undefined;
 
+        const clean = (s: string) => (s || '').toLowerCase().trim();
+
         if (targetSlug) {
-          const decodedTarget = decodeURIComponent(targetSlug).trim();
-          foundArticle = articles.find(a => 
-            a.slug === decodedTarget || 
-            a.id === decodedTarget || 
-            a.slug === targetSlug ||
-            (a.translations && Object.values(a.translations).some((t: any) => t?.title && generateSlug(t.title) === decodedTarget))
-          );
+          const decodedTarget = clean(decodeURIComponent(targetSlug));
+          foundArticle = articles.find(a => {
+            if (!a) return false;
+            const aSlug = clean(a.slug);
+            const aId = clean(String(a.id));
+            if (aSlug === decodedTarget || aId === decodedTarget || clean(encodeURIComponent(a.slug || '')) === decodedTarget) return true;
+            if (a.translations) {
+              for (const t of Object.values(a.translations) as any[]) {
+                if (t?.title && clean(generateSlug(t.title)) === decodedTarget) return true;
+              }
+            }
+            return false;
+          });
         } else if (window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
           const pathParts = window.location.pathname.split('/').filter(Boolean);
           const rawSlug = pathParts[pathParts.length - 1];
           if (rawSlug && rawSlug !== 'notizie' && rawSlug !== 'news') {
-            const decodedPathSlug = decodeURIComponent(rawSlug).trim();
-            foundArticle = articles.find(a => 
-              a.slug === decodedPathSlug || 
-              a.id === decodedPathSlug || 
-              a.slug === rawSlug ||
-              encodeURIComponent(a.slug || '') === rawSlug ||
-              (a.translations && Object.values(a.translations).some((t: any) => t?.title && generateSlug(t.title) === decodedPathSlug)) ||
-              (a.translations && Object.values(a.translations).some((t: any) => t?.title && encodeURIComponent(generateSlug(t.title)) === rawSlug))
-            );
+            const decodedPathSlug = clean(decodeURIComponent(rawSlug));
+            foundArticle = articles.find(a => {
+              if (!a) return false;
+              const aSlug = clean(a.slug);
+              const aId = clean(String(a.id));
+              if (aSlug === decodedPathSlug || aId === decodedPathSlug || clean(encodeURIComponent(a.slug || '')) === decodedPathSlug) return true;
+              if (a.translations) {
+                for (const t of Object.values(a.translations) as any[]) {
+                  if (t?.title && (clean(generateSlug(t.title)) === decodedPathSlug || clean(encodeURIComponent(generateSlug(t.title))) === decodedPathSlug)) return true;
+                }
+              }
+              return false;
+            });
           }
         }
 

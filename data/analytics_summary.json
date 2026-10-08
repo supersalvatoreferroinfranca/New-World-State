@@ -1,9 +1,9 @@
 {
-  "totalPageViews": 1514,
+  "totalPageViews": 1522,
   "uniqueVisitors": 412,
   "totalSessions": 530,
-  "totalTimeSpentSeconds": 321783,
-  "bounceSessions": 159,
+  "totalTimeSpentSeconds": 333599,
+  "bounceSessions": 174,
   "visitors": {},
   "pageViewsByTab": {
     "welcome": {
@@ -13,14 +13,14 @@
       "label": "Benvenuto & Portale Principale"
     },
     "news": {
-      "views": 436,
-      "timeSpent": 101940,
+      "views": 442,
+      "timeSpent": 112950,
       "uniqueVisitors": 290,
       "label": "Quotidiano Sovrano New World State"
     },
     "democracy": {
-      "views": 226,
-      "timeSpent": 64552,
+      "views": 227,
+      "timeSpent": 64558,
       "uniqueVisitors": 160,
       "label": "Democrazia Diretta & Votazioni"
     },
@@ -67,8 +67,8 @@
       "label": "projects"
     },
     "admin": {
-      "views": 3,
-      "timeSpent": 15681,
+      "views": 4,
+      "timeSpent": 16481,
       "uniqueVisitors": 0,
       "label": "admin"
     }
@@ -99,7 +99,7 @@
   "geoCountries": {
     "IT": {
       "name": "Italia",
-      "views": 1214,
+      "views": 1222,
       "visitors": 330,
       "code": "IT"
     },
@@ -145,10 +145,10 @@
     "Ginevra": 35,
     "Parigi": 28,
     "Altre Località": 137,
-    "Catania": 504
+    "Catania": 670
   },
   "sources": {
-    "direct": 712,
+    "direct": 720,
     "google": 490,
     "social_telegram": 120,
     "social_x": 85,
@@ -159,20 +159,20 @@
   },
   "devices": {
     "mobile": 755,
-    "desktop": 689,
+    "desktop": 697,
     "tablet": 70
   },
   "browsers": {
     "Chrome": 761,
     "Safari": 390,
-    "Firefox": 237,
+    "Firefox": 245,
     "Edge": 95,
     "Samsung Internet": 30,
     "Safari 18": 1
   },
   "operatingSystems": {
     "Android": 540,
-    "Windows": 573,
+    "Windows": 581,
     "iOS": 291,
     "macOS": 90,
     "Linux": 20
@@ -235,7 +235,7 @@
     },
     {
       "hour": "11:00",
-      "views": 30,
+      "views": 38,
       "visitors": 21
     },
     {
@@ -398,7 +398,7 @@
     },
     {
       "date": "2026-10-08",
-      "views": 26,
+      "views": 34,
       "visitors": 0,
       "avgDuration": 180
     }
@@ -421,8 +421,8 @@
       "countryCode": "IT",
       "entryPage": "welcome",
       "entryPageLabel": "Portale Istituzionale",
-      "currentTab": "news",
-      "currentTabLabel": "Quotidiano Sovrano",
+      "currentTab": "admin",
+      "currentTabLabel": "Pannello Amministrazione",
       "timeSpentSeconds": 4097,
       "durationFormatted": "1h 8m",
       "isOnline": true,
@@ -431,7 +431,7 @@
       "os": "Windows",
       "ipMasked": "93.67.xxx.xxx",
       "referrer": "direct",
-      "lastActive": 1791457216382
+      "lastActive": 1791458782455
     },
     {
       "id": "vis_muwv9jx3_1dx3",

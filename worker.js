@@ -3506,6 +3506,143 @@ CREATE TABLE citizens (
         return Response.redirect('https://www.newworldstate.org' + url.pathname, 302);
       }
 
+      // 4b. Dynamic News Article & Portal SSR/SPA Router: /notizie/*, /news/*
+      if (url.pathname.startsWith('/notizie/') || url.pathname.startsWith('/news/') || url.pathname === '/notizie' || url.pathname === '/news') {
+        try {
+          const parts = url.pathname.split('/').filter(Boolean);
+          const rawSlug = (parts.length >= 2 && parts[1] !== 'notizie' && parts[1] !== 'news')
+            ? decodeURIComponent(parts[1]).trim()
+            : (url.searchParams.get('notizia') || url.searchParams.get('article') || url.searchParams.get('slug') || '').trim();
+
+          const reqLangRaw = (url.searchParams.get('lang') || url.searchParams.get('hl') || '').toLowerCase().trim();
+          const currentLang = WORKER_SUPPORTED_LANGUAGES.includes(reqLangRaw) ? reqLangRaw : 'it';
+
+          let indexHtml = '';
+          if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+            const indexRes = await env.ASSETS.fetch(new Request(new URL('/', request.url), request)).catch(() => null);
+            if (indexRes && indexRes.ok) {
+              indexHtml = await indexRes.text();
+            }
+          }
+
+          if (rawSlug) {
+            const articles = await getWorkerArticles();
+            const normSlug = rawSlug.toLowerCase();
+            const article = articles.find(a => {
+              if (!a) return false;
+              const aSlug = (a.slug || '').toLowerCase().trim();
+              const aId = (String(a.id) || '').toLowerCase().trim();
+              if (aSlug === normSlug || aId === normSlug) return true;
+              if (encodeURIComponent(aSlug) === normSlug) return true;
+              if (a.translations) {
+                for (const t of Object.values(a.translations)) {
+                  if (t && t.title) {
+                    const tSlug = t.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                    if (tSlug === normSlug) return true;
+                  }
+                }
+              }
+              return false;
+            });
+
+            if (article) {
+              const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+              const slug = article.slug || article.id;
+              const canonicalUrl = `${CANONICAL_BASE_URL}/notizie/${encodeURIComponent(slug)}`;
+              const activeUrl = currentLang === 'it' ? canonicalUrl : `${canonicalUrl}?lang=${currentLang}`;
+
+              let title = article.title || 'Notizia';
+              let intro = article.intro || '';
+              let content = article.content || '';
+              if (article.translations && article.translations[currentLang]) {
+                const tr = article.translations[currentLang];
+                if (tr.title) title = tr.title;
+                if (tr.intro) intro = tr.intro;
+                if (tr.content) content = tr.content;
+              }
+
+              let imageUrl = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80';
+              if (article.images && Array.isArray(article.images) && article.images.length > 0 && article.images[0]?.url) {
+                imageUrl = article.images[0].url;
+              }
+
+              const desc = (intro || content).replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().slice(0, 220);
+              const author = article.authorName || 'Marcus Thorne (Cronista)';
+
+              const metaTags = `
+    <!-- Dynamic Article Meta Tags (SSR Injection for SEO & Social Cards) -->
+    <title>${esc(title)} | New World State News</title>
+    <meta name="title" content="${esc(title)} | New World State News" />
+    <meta name="description" content="${esc(desc)}" />
+    <meta name="author" content="${esc(author)}" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="${esc(activeUrl)}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="New World State News" />
+    <meta property="og:url" content="${esc(activeUrl)}" />
+    <meta property="og:title" content="${esc(title)}" />
+    <meta property="og:description" content="${esc(desc)}" />
+    <meta property="og:image" content="${esc(imageUrl)}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="${esc(activeUrl)}" />
+    <meta name="twitter:title" content="${esc(title)}" />
+    <meta name="twitter:description" content="${esc(desc)}" />
+    <meta name="twitter:image" content="${esc(imageUrl)}" />
+              `;
+
+              const ssrArticleBody = `
+    <noscript>
+      <div style="max-width:800px;margin:40px auto;padding:24px;background:#0d1829;color:#e2e8f0;font-family:system-ui,sans-serif;border-radius:12px;">
+        <h1 style="color:#ffffff;font-size:28px;margin-bottom:16px;">${esc(title)}</h1>
+        <p style="color:#94a3b8;font-size:13px;margin-bottom:20px;">Autore: ${esc(author)} • Data: ${esc(article.publishedAt || article.createdAt || '')}</p>
+        <img src="${esc(imageUrl)}" alt="${esc(title)}" style="width:100%;max-height:400px;object-fit:cover;border-radius:8px;margin-bottom:20px;" />
+        <div style="font-size:16px;line-height:1.7;color:#cbd5e1;">${esc(desc)}</div>
+      </div>
+    </noscript>
+    <script>
+      window.__NWS_INITIAL_ARTICLE__ = ${JSON.stringify(article).replace(/</g, '\\u003c')};
+    </script>
+              `;
+
+              if (indexHtml) {
+                let customHtml = indexHtml
+                  .replace(/<title>[\s\S]*?<\/title>/gi, '')
+                  .replace(/<meta\s+name="title"[\s\S]*?>/gi, '')
+                  .replace(/<meta\s+name="description"[\s\S]*?>/gi, '')
+                  .replace(/<meta\s+property="og:[\s\S]*?>/gi, '')
+                  .replace(/<meta\s+name="twitter:[\s\S]*?>/gi, '')
+                  .replace(/<link\s+rel="canonical"[\s\S]*?>/gi, '');
+
+                customHtml = customHtml.replace('<head>', `<head>\n${metaTags}`);
+                customHtml = customHtml.replace('</body>', `${ssrArticleBody}\n</body>`);
+
+                return new Response(customHtml, {
+                  headers: {
+                    ...corsHeaders,
+                    'Content-Type': 'text/html; charset=utf-8',
+                    'Cache-Control': 'public, max-age=60, s-maxage=300'
+                  }
+                });
+              }
+            }
+          }
+
+          // If no specific article slug or article not found, serve indexHtml (SPA mode)
+          if (indexHtml) {
+            return new Response(indexHtml, {
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'text/html; charset=utf-8'
+              }
+            });
+          }
+        } catch(e) {
+          console.error('[WORKER-NEWS-ROUTE-ERR]', e);
+        }
+      }
+
       // 5. Sitemap HTML Endpoint
       if (url.pathname === '/sitemap.html') {
         const articles = await getWorkerArticles();
@@ -4422,6 +4559,126 @@ CREATE TABLE citizens (
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      // Rotta: Traduzione Automatica Articoli con Gemini AI (e persistenza su Neon PostgreSQL)
+      if ((url.pathname === '/api/news/translate-article' || url.pathname === '/api/news/translate') && request.method === 'POST') {
+        try {
+          const body = await request.json().catch(() => ({}));
+          const { articleId, title, intro, content, tags, targetLangs } = body;
+          if (!title || !content) {
+            return new Response(JSON.stringify({ success: false, message: 'Titolo e contenuto obbligatori.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const allOfficialLangs = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
+          const wantedLangs = (targetLangs && targetLangs.length > 0)
+            ? targetLangs.filter(l => l !== 'it' && allOfficialLangs.includes(l))
+            : allOfficialLangs;
+
+          if (wantedLangs.length === 0) {
+            return new Response(JSON.stringify({ success: true, translations: {}, articleId }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          let generatedTranslations = {};
+
+          if (env.GEMINI_API_KEY) {
+            const langMap = {
+              en: 'English (Inglese)', fr: 'Français (Francese)', es: 'Español (Spagnolo)',
+              pt: 'Português (Portoghese)', ru: 'Русский (Russo)', hi: 'हिन्दी (Hindi)',
+              bn: 'বাংলা (Bengalese)', zh: '中文 (Cinese Semplificato)', ja: '日本語 (Giapponese)', ar: 'العربية (Arabo)'
+            };
+            const langListStr = wantedLangs.map(l => `- "${l}": ${langMap[l] || l}`).join('\n');
+
+            const prompt = `Sei l'Ufficio Traduzioni e Relazioni Internazionali dell'Organo di Stampa Ufficiale di "New World State".
+Traduci con la massima fedeltà giornalistica, solennità, eleganza e precisione l'articolo fornito nelle seguenti lingue:
+${langListStr}
+
+ARTICOLO DA TRADURRE:
+TITOLO:
+${title}
+
+ABSTRACT / INTRODUZIONE:
+${intro || ''}
+
+TESTO COMPLETO IN FORMATO MARKDOWN:
+${content}
+
+TAG ORIGINALI:
+${JSON.stringify(tags || [])}
+
+REGOLE DI TRADUZIONE:
+1. Mantieni rigorosamente tutte le intestazioni Markdown (##, ###), elenchi puntati, citazioni e formattazione.
+2. Non alterare nomi propri e istituzionali come "New World State", "NWS" o nomi di autori.
+3. Adatta e localizza coerentemente gli hashtag e i tag per ciascuna lingua.
+4. Genera traduzioni autorevoli, accurate e complete.
+
+Genera ESCLUSIVAMENTE un JSON valido con chiave "translations" contenente un oggetto per ciascuna delle lingue richieste (${wantedLangs.map(l => `"${l}"`).join(', ')}), ciascuno con le proprietà:
+"title" (stringa tradotta), "intro" (stringa tradotta), "content" (stringa tradotta in formato markdown/html), "tags" (array di stringhe).`;
+
+            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json" }
+              })
+            });
+
+            if (geminiRes.ok) {
+              const gData = await geminiRes.json();
+              const rawText = gData?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (rawText) {
+                try {
+                  const cleaned = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+                  const parsed = JSON.parse(cleaned);
+                  generatedTranslations = parsed.translations || (parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {});
+                } catch(pe) {
+                  console.error('[WORKER-TRANSLATE-JSON-ERR]', pe.message);
+                }
+              }
+            } else {
+              const errTxt = await geminiRes.text();
+              console.warn('[WORKER-GEMINI-TRANSLATE-ERR]', geminiRes.status, errTxt);
+            }
+          }
+
+          // Se abbiamo traduzioni e l'ID dell'articolo, persistiamo nel database Neon nws_news_articles
+          if (articleId && Object.keys(generatedTranslations).length > 0) {
+            try {
+              await queryDb(`
+                UPDATE nws_news_articles
+                SET data = jsonb_set(
+                  data,
+                  '{translations}',
+                  COALESCE(data->'translations', '{}'::jsonb) || $2::jsonb,
+                  true
+                ),
+                updated_at = NOW()
+                WHERE id = $1
+              `, [String(articleId), JSON.stringify(generatedTranslations)]);
+            } catch(dbErr) {
+              console.warn('[WORKER-DB-TRANSLATE-UPDATE-ERR]', dbErr.message);
+            }
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            translations: generatedTranslations,
+            articleId
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch(err) {
           return new Response(JSON.stringify({ success: false, message: err.message }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -6509,7 +6766,23 @@ Genera una risposta in formato JSON con questi due campi:
       }
 
       if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
-        return await env.ASSETS.fetch(request);
+        const assetRes = await env.ASSETS.fetch(request);
+        if (assetRes.status !== 404) {
+          return assetRes;
+        }
+
+        // SPA Fallback for client-side navigation (routes without a file extension)
+        const isStaticFile = /\.[a-zA-Z0-9]{2,5}$/.test(url.pathname);
+        if (!isStaticFile) {
+          const indexRes = await env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+          if (indexRes.ok) {
+            return new Response(await indexRes.text(), {
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+            });
+          }
+        }
+        return assetRes;
       }
 
       return new Response('Not Found', { status: 404, headers: corsHeaders });
