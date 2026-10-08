@@ -5,6 +5,7 @@
 */
 
 import { connect } from 'cloudflare:sockets';
+import { FALLBACK_ARTICLES, FALLBACK_INDEX_HTML } from './worker_assets.js';
 
 export default {
   async fetch(request, env) {
@@ -17,8 +18,8 @@ export default {
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-    // 1. Diagnostica Visiva HTML al percorso "/"
-    if (url.pathname === '/' || url.pathname === '/index.html') {
+    // 1. Diagnostica Visiva HTML al percorso "/diagnostic" o param ?diagnostic=true
+    if (url.pathname === '/diagnostic' || (url.pathname === '/' && url.searchParams.get('diagnostic') === 'true')) {
       try {
         let dbStatus = {
           envConfigured: !!env.DATABASE_URL,
@@ -3387,10 +3388,11 @@ CREATE TABLE citizens (
         try {
           const rows = await queryDb("SELECT data FROM nws_news_articles ORDER BY (data->>'publishedAt') DESC NULLS LAST, updated_at DESC").catch(() => []);
           if (rows && rows.length > 0) {
-            return rows.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data).filter(Boolean);
+            const list = rows.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data).filter(Boolean);
+            if (list.length > 0) return list;
           }
         } catch (e) {}
-        return [];
+        return (typeof FALLBACK_ARTICLES !== 'undefined' && Array.isArray(FALLBACK_ARTICLES)) ? FALLBACK_ARTICLES : [];
       };
 
       // 1. Direct Sitemap XML
@@ -3519,10 +3521,16 @@ CREATE TABLE citizens (
 
           let indexHtml = '';
           if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
-            const indexRes = await env.ASSETS.fetch(new Request(new URL('/', request.url), request)).catch(() => null);
+            let indexRes = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request)).catch(() => null);
+            if (!indexRes || !indexRes.ok) {
+              indexRes = await env.ASSETS.fetch(new Request(new URL('/', request.url), request)).catch(() => null);
+            }
             if (indexRes && indexRes.ok) {
               indexHtml = await indexRes.text();
             }
+          }
+          if (!indexHtml && typeof FALLBACK_INDEX_HTML !== 'undefined') {
+            indexHtml = FALLBACK_INDEX_HTML;
           }
 
           if (rawSlug) {
@@ -3543,7 +3551,12 @@ CREATE TABLE citizens (
                 }
               }
               return false;
-            });
+            }) || (Array.isArray(FALLBACK_ARTICLES) ? FALLBACK_ARTICLES.find(a => {
+              if (!a) return false;
+              const aSlug = (a.slug || '').toLowerCase().trim();
+              const aId = (String(a.id) || '').toLowerCase().trim();
+              return aSlug === normSlug || aId === normSlug;
+            }) : null);
 
             if (article) {
               const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -3606,8 +3619,9 @@ CREATE TABLE citizens (
     </script>
               `;
 
-              if (indexHtml) {
-                let customHtml = indexHtml
+              const baseHtml = indexHtml || (typeof FALLBACK_INDEX_HTML !== 'undefined' ? FALLBACK_INDEX_HTML : '');
+              if (baseHtml) {
+                let customHtml = baseHtml
                   .replace(/<title>[\s\S]*?<\/title>/gi, '')
                   .replace(/<meta\s+name="title"[\s\S]*?>/gi, '')
                   .replace(/<meta\s+name="description"[\s\S]*?>/gi, '')
@@ -3630,16 +3644,22 @@ CREATE TABLE citizens (
           }
 
           // If no specific article slug or article not found, serve indexHtml (SPA mode)
-          if (indexHtml) {
-            return new Response(indexHtml, {
-              headers: {
-                ...corsHeaders,
-                'Content-Type': 'text/html; charset=utf-8'
-              }
-            });
-          }
+          const fallbackHtml = indexHtml || (typeof FALLBACK_INDEX_HTML !== 'undefined' ? FALLBACK_INDEX_HTML : '<!doctype html><html><body><div id="root"></div></body></html>');
+          return new Response(fallbackHtml, {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'text/html; charset=utf-8'
+            }
+          });
         } catch(e) {
           console.error('[WORKER-NEWS-ROUTE-ERR]', e);
+          const safeHtml = typeof FALLBACK_INDEX_HTML !== 'undefined' ? FALLBACK_INDEX_HTML : '<!doctype html><html><body><div id="root"></div></body></html>';
+          return new Response(safeHtml, {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'text/html; charset=utf-8'
+            }
+          });
         }
       }
 
@@ -6774,15 +6794,33 @@ Genera una risposta in formato JSON con questi due campi:
         // SPA Fallback for client-side navigation (routes without a file extension)
         const isStaticFile = /\.[a-zA-Z0-9]{2,5}$/.test(url.pathname);
         if (!isStaticFile) {
-          const indexRes = await env.ASSETS.fetch(new Request(new URL('/', request.url), request));
-          if (indexRes.ok) {
+          let indexRes = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request)).catch(() => null);
+          if (!indexRes || !indexRes.ok) {
+            indexRes = await env.ASSETS.fetch(new Request(new URL('/', request.url), request)).catch(() => null);
+          }
+          if (indexRes && indexRes.ok) {
             return new Response(await indexRes.text(), {
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+            });
+          }
+          if (typeof FALLBACK_INDEX_HTML !== 'undefined') {
+            return new Response(FALLBACK_INDEX_HTML, {
               status: 200,
               headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
             });
           }
         }
         return assetRes;
+      }
+
+      // If env.ASSETS is missing or failed, but it's an HTML/SPA route:
+      const isStaticFile = /\.[a-zA-Z0-9]{2,5}$/.test(url.pathname);
+      if (!isStaticFile && typeof FALLBACK_INDEX_HTML !== 'undefined') {
+        return new Response(FALLBACK_INDEX_HTML, {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'text/html; charset=utf-8' }
+        });
       }
 
       return new Response('Not Found', { status: 404, headers: corsHeaders });
