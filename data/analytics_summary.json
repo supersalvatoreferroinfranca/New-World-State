@@ -1,9 +1,9 @@
 {
-  "totalPageViews": 1522,
+  "totalPageViews": 1526,
   "uniqueVisitors": 412,
   "totalSessions": 530,
-  "totalTimeSpentSeconds": 333599,
-  "bounceSessions": 174,
+  "totalTimeSpentSeconds": 367616,
+  "bounceSessions": 182,
   "visitors": {},
   "pageViewsByTab": {
     "welcome": {
@@ -67,8 +67,8 @@
       "label": "projects"
     },
     "admin": {
-      "views": 4,
-      "timeSpent": 16481,
+      "views": 8,
+      "timeSpent": 50498,
       "uniqueVisitors": 0,
       "label": "admin"
     }
@@ -99,7 +99,7 @@
   "geoCountries": {
     "IT": {
       "name": "Italia",
-      "views": 1222,
+      "views": 1226,
       "visitors": 330,
       "code": "IT"
     },
@@ -135,7 +135,7 @@
     }
   },
   "geoCities": {
-    "Roma": 490,
+    "Roma": 492,
     "Milano": 221,
     "Napoli": 130,
     "Torino": 95,
@@ -145,10 +145,10 @@
     "Ginevra": 35,
     "Parigi": 28,
     "Altre Località": 137,
-    "Catania": 670
+    "Catania": 791
   },
   "sources": {
-    "direct": 720,
+    "direct": 724,
     "google": 490,
     "social_telegram": 120,
     "social_x": 85,
@@ -160,19 +160,19 @@
   "devices": {
     "mobile": 755,
     "desktop": 697,
-    "tablet": 70
+    "tablet": 74
   },
   "browsers": {
     "Chrome": 761,
     "Safari": 390,
-    "Firefox": 245,
+    "Firefox": 249,
     "Edge": 95,
     "Samsung Internet": 30,
     "Safari 18": 1
   },
   "operatingSystems": {
     "Android": 540,
-    "Windows": 581,
+    "Windows": 585,
     "iOS": 291,
     "macOS": 90,
     "Linux": 20
@@ -225,7 +225,7 @@
     },
     {
       "hour": "09:00",
-      "views": 63,
+      "views": 67,
       "visitors": 36
     },
     {
@@ -401,6 +401,12 @@
       "views": 34,
       "visitors": 0,
       "avgDuration": 180
+    },
+    {
+      "date": "2026-10-13",
+      "views": 4,
+      "visitors": 0,
+      "avgDuration": 180
     }
   ],
   "communityEvents": {
@@ -431,7 +437,7 @@
       "os": "Windows",
       "ipMasked": "93.67.xxx.xxx",
       "referrer": "direct",
-      "lastActive": 1791458782455
+      "lastActive": 1791883817238
     },
     {
       "id": "vis_muwv9jx3_1dx3",

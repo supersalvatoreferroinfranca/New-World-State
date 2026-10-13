@@ -898,7 +898,13 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
           articleToEdit={articleToEdit}
           authorId={citizen?.id || 'demo-author'}
           authorName={currentAuthorName}
-          authorRole={citizen?.operationalRole || (isCustode ? 'Custode Digitale' : isCronista ? 'Cronista Ufficiale' : 'Cronista')}
+          authorRole={(() => {
+            const r = citizen?.operationalRole;
+            if (r && (r.trim().startsWith('[') || r.trim().startsWith('{'))) {
+              return isCustode ? 'Custode Digitale' : isCronista ? 'Cronista Ufficiale' : 'Cronista';
+            }
+            return r || (isCustode ? 'Custode Digitale' : isCronista ? 'Cronista Ufficiale' : 'Cronista');
+          })()}
           onSaved={loadLocalData}
         />
       )}

@@ -1352,17 +1352,47 @@ export async function generateArticleWithAI(
   tone?: string,
   sources?: string[]
 ): Promise<AiArticleGenerationResponse> {
-  const response = await safeFetch('/api/news/ai-generate', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ topic, categoryName, tone, sources })
-  });
+  const WORKER_FALLBACK = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev';
+  let resData: any = null;
 
-  const resData = await response.json();
-  if (!response.ok || !resData.success) {
-    throw new Error(resData.message || 'Errore durante la generazione dell\'articolo con AI.');
+  try {
+    const response = await safeFetch('/api/news/ai-generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ topic, categoryName, tone, sources })
+    });
+
+    if (response.ok) {
+      resData = await response.json();
+    }
+  } catch (err) {
+    console.warn('[NEWS-AI] Primary fetch exception, will try fallback worker:', err);
+  }
+
+  // If primary returned empty data, dummy fallback, or error, call worker directly
+  const isDataInvalid = !resData || !resData.success || !resData.data || !resData.data.title || resData.message === 'Fallback OK';
+  if (isDataInvalid) {
+    try {
+      const fbResponse = await fetch(`${WORKER_FALLBACK}/api/news/ai-generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, categoryName, tone, sources })
+      });
+      if (fbResponse.ok) {
+        const fbJson = await fbResponse.json();
+        if (fbJson.success && fbJson.data && fbJson.data.title) {
+          resData = fbJson;
+        }
+      }
+    } catch (fbErr) {
+      console.warn('[NEWS-AI] Worker fallback fetch error:', fbErr);
+    }
+  }
+
+  if (!resData || !resData.success || !resData.data || !resData.data.title) {
+    throw new Error(resData?.message || 'Errore durante la generazione dell\'articolo con AI. Verifica l\'argomento o riprova.');
   }
 
   return resData.data;
@@ -1498,27 +1528,56 @@ export async function searchArticleMedia(
     headers['x-pexels-key'] = effectivePexelsKey;
   }
 
-  const response = await safeFetch('/api/news/search-media', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      query,
-      platform,
-      pexelsApiKey: effectivePexelsKey || undefined
-    })
-  });
+  const WORKER_FALLBACK = 'https://nws-wk.supersalvatoreferroinfranca.workers.dev';
+  let resData: any = null;
 
-  const resData = await response.json();
-  if (!response.ok || !resData.success) {
-    throw new Error(resData.message || 'Impossibile completare la ricerca media.');
+  try {
+    const response = await safeFetch('/api/news/search-media', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        query,
+        platform,
+        pexelsApiKey: effectivePexelsKey || undefined
+      })
+    });
+
+    if (response.ok) {
+      resData = await response.json();
+    }
+  } catch (err) {
+    console.warn('[NEWS-MEDIA] Primary search exception, trying fallback worker:', err);
   }
 
-  const rawResults: MediaSearchResult[] = resData.results || resData.data || [];
+  const isInvalid = !resData || !resData.success || (!resData.results && !resData.data) || resData.message === 'Fallback OK';
+  if (isInvalid) {
+    try {
+      const fbResponse = await fetch(`${WORKER_FALLBACK}/api/news/search-media`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          query,
+          platform,
+          pexelsApiKey: effectivePexelsKey || undefined
+        })
+      });
+      if (fbResponse.ok) {
+        const fbJson = await fbResponse.json();
+        if (fbJson.success && (fbJson.results || fbJson.data)) {
+          resData = fbJson;
+        }
+      }
+    } catch (fbErr) {
+      console.warn('[NEWS-MEDIA] Fallback search error:', fbErr);
+    }
+  }
+
+  const rawResults: MediaSearchResult[] = resData?.results || resData?.data || [];
   const results = rawResults.map(sanitizeMediaPlatform);
 
   return {
     results,
-    debug: resData.debug
+    debug: resData?.debug
   };
 }
 
