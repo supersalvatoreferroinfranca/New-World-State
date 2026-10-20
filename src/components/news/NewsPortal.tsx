@@ -12,7 +12,8 @@ import {
   getLocalizedArticle,
   generateSlug,
   getLocalizedCategoryTitle,
-  normalizeArticleStatus
+  normalizeArticleStatus,
+  moderateArticle
 } from '../../services/newsService';
 import ArticleFormModal from './ArticleFormModal';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -353,6 +354,17 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         window.history.pushState({ articleId: art.id, slug }, '', url.toString());
       }
     } catch (e) {}
+  };
+
+  const handleToggleFeatured = (art: NewsArticle) => {
+    const updated = moderateArticle(art.id, 'toggle_featured');
+    if (updated) {
+      setArticles(prev => prev.map(a => a.id === updated.id ? updated : a));
+      if (selectedDetailArticle && selectedDetailArticle.id === updated.id) {
+        setSelectedDetailArticle(updated);
+      }
+      trackCommunityEvent('article_featured_toggled', { id: art.id, isFeatured: updated.isFeatured });
+    }
   };
 
   const renderStatusBadge = (status: ArticleStatus) => {
@@ -793,6 +805,24 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                             {renderStatusBadge(art.status)}
                           </div>
                           <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+                            {/* Quick Star Toggle Button for Approved/Published Articles */}
+                            {(art.status === 'pubblicato' || art.status === 'approved') && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleFeatured(art);
+                                }}
+                                title={art.isFeatured ? tText('Remove from featured', 'Rimuovi dall\'evidenza') : tText('Feature article', 'Metti in evidenza')}
+                                className={`p-1.5 rounded-full backdrop-blur-md border shadow-md transition-all duration-200 transform hover:scale-110 cursor-pointer ${
+                                  art.isFeatured 
+                                    ? 'bg-amber-500 text-white border-amber-300 ring-2 ring-amber-300/50 shadow-amber-500/30' 
+                                    : 'bg-[#0a1c3e]/85 text-amber-300/80 hover:text-amber-300 border-amber-300/30 hover:bg-[#0a1c3e]'
+                                }`}
+                              >
+                                <Star className={`w-3.5 h-3.5 ${art.isFeatured ? 'fill-current text-white' : 'text-amber-300'}`} />
+                              </button>
+                            )}
                             <span className="text-[10px] bg-[#0a1c3e]/90 text-brand-gold px-2.5 py-1 rounded-full font-tech flex items-center gap-1 backdrop-blur-md border border-brand-gold/40 shadow-md">
                               <Volume2 className="w-3 h-3 text-brand-gold animate-pulse" />
                               <span>TTS</span>
@@ -981,6 +1011,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
             ? handleDeleteArticle
             : undefined
         }
+        onToggleFeatured={handleToggleFeatured}
       />
 
       {/* 5. Reporter Candidacy Modal */}

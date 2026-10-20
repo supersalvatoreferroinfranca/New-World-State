@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { NewsArticle, NewsCategory, NewsLanguage } from '../../types/news';
-import { getCategories, getArticles, incrementArticleViews, getLocalizedArticle, translateArticleWithAI, autoTranslateArticleOnDemand, getLocalizedCategoryTitle } from '../../services/newsService';
+import { getCategories, getArticles, incrementArticleViews, getLocalizedArticle, translateArticleWithAI, autoTranslateArticleOnDemand, getLocalizedCategoryTitle, moderateArticle } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
 import { Language } from '../../constants/translations';
 import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/textFormatter';
@@ -37,6 +37,7 @@ import {
   Languages,
   BookOpen,
   FileText,
+  Star,
   Camera,
   ExternalLink,
   BookmarkCheck,
@@ -50,6 +51,7 @@ interface ArticleDetailModalProps {
   onSelectArticle?: (article: NewsArticle) => void;
   onEditArticle?: (article: NewsArticle) => void;
   onDeleteArticle?: (article: NewsArticle) => void;
+  onToggleFeatured?: (article: NewsArticle) => void;
 }
 
 const SUPPORTED_LANG_OPTIONS: { code: NewsLanguage; label: string; flag: string; nativeName: string }[] = [
@@ -72,7 +74,8 @@ export default function ArticleDetailModal({
   onClose,
   onSelectArticle,
   onEditArticle,
-  onDeleteArticle
+  onDeleteArticle,
+  onToggleFeatured
 }: ArticleDetailModalProps) {
   const { currentLanguage, tText } = useI18n();
   const [currentArticle, setCurrentArticle] = useState<NewsArticle | null>(article);
@@ -828,6 +831,33 @@ export default function ArticleDetailModal({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Quick Star Toggle Button for Featured Status */}
+            {(activeArticle.status === 'pubblicato' || (activeArticle.status as string) === 'approved') && (
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = moderateArticle(activeArticle.id, 'toggle_featured');
+                  if (updated) {
+                    setCurrentArticle(updated);
+                    if (onToggleFeatured) {
+                      onToggleFeatured(updated);
+                    }
+                  }
+                }}
+                className={`px-3 py-2 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 text-xs shadow-md border ${
+                  activeArticle.isFeatured
+                    ? 'bg-amber-500 hover:bg-amber-400 text-white border-amber-300 ring-2 ring-amber-400/50'
+                    : 'bg-white/10 text-slate-200 hover:text-amber-300 hover:bg-white/20 border-white/20'
+                }`}
+                title={activeArticle.isFeatured ? tLang('removeFromFeatured', 'Rimuovi da In Evidenza') : tLang('putInEvidence', 'Metti in Evidenza')}
+              >
+                <Star className={`w-4 h-4 ${activeArticle.isFeatured ? 'fill-current text-white' : 'text-slate-300'}`} />
+                <span className="hidden sm:inline">
+                  {activeArticle.isFeatured ? tText('Featured', 'In Evidenza') : tText('Feature Article', 'Metti in Evidenza')}
+                </span>
+              </button>
+            )}
+
             {onEditArticle && (
               <button
                 onClick={() => {
@@ -1244,16 +1274,31 @@ export default function ArticleDetailModal({
                         const source = typeof rawSource === 'string' 
                           ? { title: rawSource, url: rawSource.startsWith('http') ? rawSource : undefined }
                           : rawSource;
+                        
+                        let domain = (source as any).domain || '';
+                        if (!domain && source.url) {
+                          try {
+                            const u = new URL(source.url);
+                            domain = u.hostname.replace(/^www\./, '');
+                          } catch (e) {}
+                        }
+
                         return (
                           <div 
                             key={sIdx} 
-                            className="bg-white p-3.5 rounded-xl border border-slate-200/90 hover:border-brand-gold/50 transition shadow-xs text-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2.5"
+                            className="bg-white p-4 rounded-xl border border-slate-200 hover:border-brand-gold/60 transition shadow-xs text-xs flex flex-col md:flex-row md:items-center md:justify-between gap-3 group"
                           >
-                            <div className="space-y-1 flex-1 min-w-0">
+                            <div className="space-y-1.5 flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-bold text-[#0a1c3e] text-xs md:text-sm">
+                                <span className="font-bold text-[#0a1c3e] text-xs md:text-sm group-hover:text-[#0a1c3e] transition">
                                   [{sIdx + 1}] {source.title}
                                 </span>
+                                {domain && (
+                                  <span className="inline-flex items-center gap-1 bg-blue-50 text-[#0a1c3e] text-[10px] font-mono px-2 py-0.5 rounded-md border border-blue-200">
+                                    <Globe className="w-2.5 h-2.5 text-blue-600" />
+                                    <span>{domain}</span>
+                                  </span>
+                                )}
                                 {source.publisher && (
                                   <span className="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-slate-200">
                                     {source.publisher}
@@ -1266,8 +1311,13 @@ export default function ArticleDetailModal({
                                 )}
                               </div>
                               {source.notes && (
-                                <p className="text-slate-600 text-[11px] italic">
+                                <p className="text-slate-600 text-[11px] italic leading-relaxed">
                                   {source.notes}
+                                </p>
+                              )}
+                              {source.url && (
+                                <p className="text-[10px] font-mono text-slate-400 truncate max-w-xl">
+                                  URL: {source.url}
                                 </p>
                               )}
                             </div>
@@ -1277,10 +1327,10 @@ export default function ArticleDetailModal({
                                 href={source.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="self-start md:self-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-[#0a1c3e] hover:bg-brand-gold hover:text-[#0a1c3e] font-bold text-[11px] border border-blue-200/80 transition shrink-0"
+                                className="self-start md:self-center inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 text-[#0a1c3e] hover:bg-brand-gold hover:text-[#0a1c3e] font-bold text-xs border border-blue-200/80 transition shrink-0 shadow-xs"
                               >
                                 <span>{tLang('openSourceLink', 'Consulta Fonte')}</span>
-                                <ExternalLink className="w-3 h-3" />
+                                <ExternalLink className="w-3.5 h-3.5" />
                               </a>
                             )}
                           </div>

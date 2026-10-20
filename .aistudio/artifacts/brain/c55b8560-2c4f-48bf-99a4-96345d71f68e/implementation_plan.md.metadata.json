@@ -1,0 +1,6 @@
+{
+  "summary": "Piano di implementazione per la gestione rapida dell'evidenza articoli approvati (pulsante a stella nelle schede notizia e nel dettaglio) e per il ripristino/perfezionamento delle anteprime social (OpenGraph, Twitter Cards, immagini ad alta risoluzione e traduzione automatica multilingue per tutti gli URL condivisi sincronizzati su Cloud DB ed Edge Cache).",
+  "updatedAt": "2026-10-13T10:38:16.518217955Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

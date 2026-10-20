@@ -21,6 +21,7 @@ import FederalChat from './components/chat/FederalChat';
 import NewsPortal from './components/news/NewsPortal';
 import AboutUsPage from './components/about/AboutUsPage';
 import CommunityProjectsPage from './components/projects/CommunityProjectsPage';
+import CrmEmailClient from './components/crm/CrmEmailClient';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp, Cookie, MessageSquare, ArrowRight } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
@@ -32,11 +33,14 @@ import SovereignCustodeDebugWidget from './components/pwa/SovereignCustodeDebugW
 import { initAnalyticsTracking, trackPageView } from './services/analyticsTracker';
 
 function AppContent() {
-  const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects'>(() => {
+  const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects' | 'crm'>(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
       const hasArticleParam = searchParams.has('notizia') || searchParams.has('article') || searchParams.has('slug');
+      if (tabParam === 'crm' || window.location.pathname === '/crm') {
+        return 'crm';
+      }
       if (tabParam === 'news' || hasArticleParam || window.location.pathname === '/news' || window.location.pathname === '/notizie' || window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
         return 'news';
       }
@@ -52,13 +56,13 @@ function AppContent() {
       if (window.location.pathname === '/chat' || window.location.pathname === '/democracy') {
         return 'democracy';
       }
-      if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects'].includes(tabParam)) {
+      if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects', 'crm'].includes(tabParam)) {
         return tabParam as any;
       }
       // Check last visited tab in localStorage
       try {
         const lastTab = localStorage.getItem('nws_last_active_tab');
-        if (lastTab && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'democracy', 'news', 'about', 'projects'].includes(lastTab)) {
+        if (lastTab && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'democracy', 'news', 'about', 'projects', 'crm'].includes(lastTab)) {
           return lastTab as any;
         }
       } catch (e) {}
@@ -77,7 +81,7 @@ function AppContent() {
     return 'welcome';
   });
 
-  const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects') => {
+  const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects' | 'crm') => {
     setActiveTabState(tab);
     trackPageView(tab);
     try {
@@ -143,20 +147,28 @@ function AppContent() {
         newTab = 'projects';
       } else if (tabParam === 'democracy' || tabParam === 'chat' || window.location.pathname === '/democracy' || window.location.pathname === '/chat') {
         newTab = 'democracy';
-      } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects'].includes(tabParam)) {
+      } else if (tabParam === 'crm' || window.location.pathname === '/crm') {
+        newTab = 'crm';
+      } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects', 'crm'].includes(tabParam)) {
         newTab = tabParam;
       }
+      const isVerify = window.location.pathname === '/verify' || 
+                       window.location.pathname.startsWith('/verify') || 
+                       searchParams.get('verify') === 'true' ||
+                       searchParams.get('tab') === 'verify';
+      setIsVerifyPath(isVerify);
       setActiveTabState(newTab);
       trackPageView(newTab);
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-  const [isVerifyPath] = useState<boolean>(() => {
+  const [isVerifyPath, setIsVerifyPath] = useState<boolean>(() => {
     const searchParams = new URLSearchParams(window.location.search);
     return window.location.pathname === '/verify' || 
            window.location.pathname.startsWith('/verify') || 
-           searchParams.get('verify') === 'true';
+           searchParams.get('verify') === 'true' ||
+           searchParams.get('tab') === 'verify';
   });
   const { language, t, tText } = useI18n();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
@@ -416,6 +428,26 @@ function AppContent() {
               <NewsPortal onGoToHome={() => setActiveTab('welcome')} />
             ) : activeTab === 'register' ? (
               <RegisterForm />
+            ) : activeTab === 'crm' ? (
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-serif font-black text-[#0a1c3e] flex items-center gap-2">
+                      <span>🛡️</span> Cancelleria & Client Email Diplomatico
+                    </h1>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Strumento riservato ai Custodi Digitali e Funzionari di New World State
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('admin')}
+                    className="px-4 py-2 bg-[#0a1c3e] hover:bg-[#071530] text-[#f7f5f0] text-xs font-bold rounded-xl transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                  >
+                    <span>←</span> Torna alla Consolle Admin
+                  </button>
+                </div>
+                <CrmEmailClient />
+              </div>
             ) : activeTab === 'admin' ? (
               <AdminDashboard />
             ) : activeTab === 'constitution' ? (

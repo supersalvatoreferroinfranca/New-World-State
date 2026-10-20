@@ -26,16 +26,53 @@ export default function VerifyCitizenPage() {
   const [error, setError] = useState<string | null>(null);
   const [citizen, setCitizen] = useState<CitizenData | null>(null);
 
+  function extractCleanCitizenKey(rawKey: string): string {
+    if (!rawKey) return '';
+    let str = String(rawKey).trim().replace(/^["'\s]+|["'\s]+$/g, '');
+    if (str.includes('verify') || str.includes('http://') || str.includes('https://') || str.includes('?') || str.includes('=')) {
+      try {
+        const parsedUrl = new URL(str.startsWith('http') ? str : `https://newworldstate.cloud/${str.replace(/^\//, '')}`);
+        const paramCode = parsedUrl.searchParams.get('id') || 
+                          parsedUrl.searchParams.get('ID') || 
+                          parsedUrl.searchParams.get('code') || 
+                          parsedUrl.searchParams.get('CODE') || 
+                          parsedUrl.searchParams.get('c') || 
+                          parsedUrl.searchParams.get('C') ||
+                          parsedUrl.searchParams.get('citizenCode') ||
+                          parsedUrl.searchParams.get('citizencode');
+        if (paramCode) return paramCode.trim();
+        const pathParts = parsedUrl.pathname.split('/').filter(Boolean);
+        const verifyIdx = pathParts.indexOf('verify');
+        if (verifyIdx !== -1 && pathParts[verifyIdx + 1]) {
+          return decodeURIComponent(pathParts[verifyIdx + 1]).trim();
+        }
+      } catch {}
+    }
+    const matchId = str.match(/(?:[?&](?:id|ID|code|CODE|c|C|citizenCode|citizencode)=|id=|\/verify\/)([A-Za-z0-9\-]+)/i);
+    if (matchId && matchId[1]) return matchId[1].trim();
+    // Remove query string or slash if present
+    str = str.replace(/[?#].*$/, '').replace(/\/$/, '');
+    return str.trim();
+  }
+
   useEffect(() => {
     // Parse ID or Code from search parameters or pathname
     const params = new URLSearchParams(window.location.search);
-    let idParam = params.get('id') || params.get('code') || params.get('c') || '';
+    let idParam = params.get('id') || 
+                  params.get('ID') || 
+                  params.get('code') || 
+                  params.get('CODE') || 
+                  params.get('c') || 
+                  params.get('C') ||
+                  params.get('citizenCode') ||
+                  params.get('citizencode') || '';
     if (!idParam && window.location.pathname.startsWith('/verify/')) {
       idParam = decodeURIComponent(window.location.pathname.replace(/^\/verify\/?/, '').split('/')[0]).trim();
     }
-    setId(idParam);
+    const cleanId = extractCleanCitizenKey(idParam);
+    setId(cleanId);
 
-    if (!idParam) {
+    if (!cleanId) {
       setLoading(false);
       setError(
         isEn 
@@ -45,20 +82,21 @@ export default function VerifyCitizenPage() {
       return;
     }
 
-    fetchVerification(idParam);
+    fetchVerification(cleanId);
   }, []);
 
   const fetchVerification = async (citizenId: string) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await safeFetch(`/api/verify?id=${encodeURIComponent(citizenId)}`);
+      const cleanKey = extractCleanCitizenKey(citizenId);
+      const res = await safeFetch(`/api/verify?id=${encodeURIComponent(cleanKey)}`);
       if (!res.ok) {
         if (res.status === 404) {
           throw new Error(
             isEn 
-              ? 'Citizen warning: document unregistered or counterfeit' 
-              : 'Avviso di sicurezza: documento non registrato o contraffatto'
+              ? 'Citizen warning: code not registered in central registry' 
+              : 'Avviso di sicurezza: codice non censito o non registrato nell\'Anagrafe Centrale'
           );
         }
         throw new Error(
@@ -162,36 +200,48 @@ export default function VerifyCitizenPage() {
       <div className="bg-white rounded-3xl border border-brand-gold/20 shadow-2xl p-6 md:p-8 space-y-6 relative overflow-hidden">
         
         {/* Verification stamp banner */}
-        <div className="bg-emerald-500/10 border-b border-emerald-500/15 absolute top-0 left-0 right-0 py-2.5 px-4 text-center">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 font-bold animate-pulse inline-flex items-center gap-1.5">
+        <div className={`${isApproved ? 'bg-emerald-500/10 border-b border-emerald-500/15' : 'bg-amber-500/10 border-b border-amber-500/20'} absolute top-0 left-0 right-0 py-2.5 px-4 text-center`}>
+          <span className={`text-[10px] font-mono uppercase tracking-widest ${isApproved ? 'text-emerald-600' : 'text-amber-700'} font-bold inline-flex items-center gap-1.5`}>
             <ShieldCheck className="w-3.5 h-3.5" />
-            {isEn ? 'AUTHENTIC CITIZENSHIP RECORD' : 'REGISTRO CITTADINANZA AUTENTICO'}
+            {isApproved 
+              ? (isEn ? 'AUTHENTIC CITIZENSHIP RECORD • APPROVED' : 'REGISTRO CITTADINANZA AUTENTICO • APPROVATO')
+              : (isEn ? 'AUTHENTIC REGISTRATION • VALIDATION IN PROGRESS' : 'REGISTRAZIONE AUTENTICA • IN FASE DI VALIDAZIONE')}
           </span>
         </div>
 
         {/* Header verification result */}
         <div className="text-center pt-6 space-y-2">
-          <div className="w-14 h-14 bg-emerald-50 text-emerald-500 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
-            ✓
+          <div className={`w-14 h-14 ${isApproved ? 'bg-emerald-50 text-emerald-500 border border-emerald-500/20' : 'bg-amber-50 text-amber-600 border border-amber-500/25'} rounded-full flex items-center justify-center mx-auto text-2xl font-bold`}>
+            {isApproved ? '✓' : '⏳'}
           </div>
           <div>
             <h2 className="text-2xl font-serif text-slate-900 leading-tight">
-              {isEn ? 'Federal Certificate Verified' : 'Anagrafe Federale Validata'}
+              {isApproved 
+                ? (isEn ? 'Federal Certificate Verified' : 'Anagrafe Federale Validata')
+                : (isEn ? 'Registration Under Validation' : 'Registrazione Autentica in Convalida')}
             </h2>
-            <p className="text-[10px] text-brand-gold uppercase tracking-widest font-mono font-bold">
-              {isEn ? 'Status: Active Citizen' : 'Stato: Cittadino Attivo e Registrato'}
+            <p className={`text-[10px] ${isApproved ? 'text-brand-gold' : 'text-amber-600'} uppercase tracking-widest font-mono font-bold`}>
+              {isApproved 
+                ? (isEn ? 'Status: Active & Validated Citizen' : 'Stato: Cittadino Attivo e Convalidato')
+                : (isEn ? 'Status: Registered Member • Pending Final Review' : 'Stato: Membro Registrato • Pratica in Approvazione Finale')}
             </p>
           </div>
         </div>
 
         {/* Context Guidelines */}
-        <div className="bg-brand-parchment/30 rounded-2xl p-4 border border-brand-gold/10 text-xs text-brand-blue/70 leading-relaxed">
-          <strong className="text-brand-blue block mb-1">
-            {isEn ? 'DATA INTEGRITY CHECK' : 'CONFRONTO ANTIFRAUDE:'}
+        <div className={`${isApproved ? 'bg-brand-parchment/30 border-brand-gold/10 text-brand-blue/70' : 'bg-amber-50 border-amber-200 text-amber-900'} rounded-2xl p-4 border text-xs leading-relaxed`}>
+          <strong className={`${isApproved ? 'text-brand-blue' : 'text-amber-900'} block mb-1`}>
+            {isApproved 
+              ? (isEn ? 'DATA INTEGRITY CHECK:' : 'CONFRONTO ANTIFRAUDE:') 
+              : (isEn ? 'AUTHENTIC RECORD NOTICE:' : 'CONFERMA REGISTRAZIONE AUTENTICA:')}
           </strong>
-          {isEn 
-            ? 'Compare physical coordinates on the printed card with real-time variables below. Digital photographs must perfectly correspond to ensure compliance.'
-            : 'Riscontra i dati anagrafici stampati sulla tessera cartacea con le risultanze estratte in tempo reale dal server centrale. Verifica che la fototessera coincida.'}
+          {isApproved 
+            ? (isEn 
+              ? 'Compare physical coordinates on the printed card with real-time variables below. Digital photographs must perfectly correspond to ensure compliance.'
+              : 'Riscontra i dati anagrafici stampati sulla tessera cartacea con le risultanze estratte in tempo reale dal server centrale. Verifica che la fototessera coincida.')
+            : (isEn
+              ? 'This citizen is correctly enrolled in the New World State Central Registry. The document is authentic and currently undergoing final review by Digital Custodians. No counterfeit risk.'
+              : 'Questo cittadino è regolarmente registrato nell\'Anagrafe Centrale di New World State. Il documento è autentico ed è in corso di convalida finale da parte dei Custodi Digitali. Nessun rischio di contraffazione.')}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start pt-2">
@@ -212,12 +262,14 @@ export default function VerifyCitizenPage() {
               ) : (
                 <div className="text-center p-3 text-slate-400">
                   <User className="w-8 h-8 mx-auto opacity-30" />
-                  <span className="text-[8px] text-slate-400/80 font-mono block mt-1">Photo unavailable</span>
+                  <span className="text-[8px] text-slate-400/80 font-mono block mt-1">Photo pending</span>
                 </div>
               )}
             </div>
-            <span className="text-[10px] bg-emerald-500/10 text-emerald-600 py-1 px-3 rounded-full font-mono font-bold tracking-wider uppercase">
-              {isEn ? 'Verified Identity' : 'Identità Verificata'}
+            <span className={`text-[10px] ${isApproved ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-700'} py-1 px-3 rounded-full font-mono font-bold tracking-wider uppercase`}>
+              {isApproved 
+                ? (isEn ? 'Verified Identity' : 'Identità Verificata')
+                : (isEn ? 'Enrolled Member' : 'Membro Registrato')}
             </span>
           </div>
 
