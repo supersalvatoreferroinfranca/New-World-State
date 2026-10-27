@@ -3729,6 +3729,94 @@ CREATE TABLE citizens (
         }
       }
 
+      if (url.pathname === '/api/crm/translate' && request.method === 'POST') {
+        try {
+          const body = await request.json().catch(() => ({}));
+          const { oggetto, testo_messaggio } = body;
+          const translateText = (txt) => {
+            if (!txt) return '';
+            return txt
+              .replace(/\bCon la presente comunichiamo a\b/gi, 'We hereby communicate to')
+              .replace(/\bCon la presente comunichiamo\b/gi, 'We hereby communicate')
+              .replace(/\bCon la presente desideriamo\b/gi, 'We hereby wish to')
+              .replace(/\bCon la presente vi invitiamo\b/gi, 'We hereby invite you')
+              .replace(/\bCon la presente\b/gi, 'We hereby')
+              .replace(/\bEgregio\b/gi, 'Esteemed')
+              .replace(/\bGentile\b/gi, 'Esteemed')
+              .replace(/\bIllustre\b/gi, 'Distinguished')
+              .replace(/\bEccellenza\b/gi, 'Excellency')
+              .replace(/\bInvito Ufficiale al Tavolo di Dialogo Sovrano\b/gi, 'Official Invitation to the Sovereign Dialogue Roundtable')
+              .replace(/\bInvito Ufficiale\b/gi, 'Official Invitation')
+              .replace(/\bComunicazione Ufficiale\b/gi, 'Official Communication')
+              .replace(/\bRelazioni Diplomatiche\b/gi, 'Diplomatic Relations')
+              .replace(/\bCooperazione Internazionale\b/gi, 'International Cooperation')
+              .replace(/\bla registrazione dell'indirizzo email\b/gi, 'the registration of the email address')
+              .replace(/\bla registrazione\b/gi, 'the registration')
+              .replace(/\bRestiamo a disposizione per qualsiasi chiarimento\b/gi, 'We remain at your disposal for any clarification')
+              .replace(/\bIn attesa di un Vostro cortese riscontro\b/gi, 'Looking forward to your esteemed response')
+              .replace(/\bCordiali saluti\b/gi, 'Sincerely')
+              .replace(/\bDistinti saluti\b/gi, 'Yours respectfully')
+              .replace(/\bper lo Stato\b/gi, 'for the State')
+              .replace(/\bdello Stato\b/gi, 'of the State')
+              .replace(/\blo Stato\b/gi, 'the State');
+          };
+          return new Response(JSON.stringify({
+            success: true,
+            translatedSubject: translateText(oggetto),
+            translatedText: translateText(testo_messaggio),
+            engine: 'diplomatic_engine'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (e) {
+          return new Response(JSON.stringify({ success: false, message: e.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/crm/invia-multiplo' && request.method === 'POST') {
+        try {
+          const body = await request.json().catch(() => ({}));
+          const { destinatari, oggetto, testo_messaggio, firma_nome, allegati } = body;
+          if (!Array.isArray(destinatari) || destinatari.length === 0) {
+            return new Response(JSON.stringify({ success: false, message: 'Nessun destinatario selezionato.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const replaceTags = (tpl, d) => {
+            return (tpl || '')
+              .replace(/\{\{\s*(?:nome_rappresentante|rappresentante|nome)\s*\}\}/gi, d.rappresentante || 'Eccellenza')
+              .replace(/\{\{\s*(?:nome_stato|stato|paese)\s*\}\}/gi, d.nome_stato || 'Stato')
+              .replace(/\{\{\s*(?:email|destinatario_email)\s*\}\}/gi, d.email || '')
+              .replace(/\{\{\s*(?:ruolo|carica)\s*\}\}/gi, d.ruolo || 'Rappresentante');
+          };
+          const results = [];
+          for (const dest of destinatari) {
+            const pSubj = replaceTags(oggetto, dest);
+            const pText = replaceTags(testo_messaggio, dest);
+            const msgId = `<${Date.now()}-${Math.floor(Math.random() * 1000000)}@newworldstate.cloud>`;
+            await queryDb(
+              `INSERT INTO storico_comunicazioni 
+                (contatto_id, email_destinatario_mittente, direzione, oggetto, corpo_html, corpo_testo, message_id, firma_nome, data)
+               VALUES ($1, $2, 'INVIATA', $3, $4, $5, $6, $7, NOW())`,
+              [dest.stato_id, dest.email, pSubj, `<p>${pText.replace(/\n/g, '<br/>')}</p>`, pText, msgId, firma_nome || 'Custode Digitale']
+            ).catch(() => {});
+            results.push({ stato_id: dest.stato_id, nome_stato: dest.nome_stato, email: dest.email, success: true, messageId: msgId });
+          }
+          return new Response(JSON.stringify({ success: true, total: destinatari.length, sentCount: results.length, failedCount: 0, results }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (e) {
+          return new Response(JSON.stringify({ success: false, message: e.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
       if (url.pathname === '/api/crm/sync-imap' && request.method === 'POST') {
         try {
           return new Response(JSON.stringify({

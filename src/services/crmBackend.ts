@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
+import { GoogleGenAI } from '@google/genai';
 
 export interface CrmStato {
   id: number;
@@ -39,16 +40,62 @@ export interface StoricoComunicazione {
   nome_stato?: string;
 }
 
+export interface PersonalizationContext {
+  nome_rappresentante?: string | null;
+  nome_stato?: string | null;
+  email?: string | null;
+  ruolo?: string | null;
+}
+
+export interface MultiRecipientItem {
+  stato_id: number;
+  nome_stato: string;
+  email: string;
+  rappresentante?: string | null;
+  ruolo?: string | null;
+}
+
 export interface SendEmailPayload {
   contatto_id: number;
   email_destinatario: string;
   oggetto: string;
   testo_messaggio: string;
   firma_nome?: string;
+  traduci_inglese?: boolean;
+  modalita_lingua?: 'inglese' | 'italiano' | 'bilingue';
   allegati?: Array<{
     filename: string;
     content: string; // base64 string or plain text
     contentType?: string;
+  }>;
+}
+
+export interface SendMultiEmailPayload {
+  destinatari: MultiRecipientItem[];
+  oggetto: string;
+  testo_messaggio: string;
+  firma_nome?: string;
+  traduci_inglese?: boolean;
+  modalita_lingua?: 'inglese' | 'italiano' | 'bilingue';
+  allegati?: Array<{
+    filename: string;
+    content: string; // base64 string or plain text
+    contentType?: string;
+  }>;
+}
+
+export interface MultiSendResult {
+  success: boolean;
+  total: number;
+  sentCount: number;
+  failedCount: number;
+  results: Array<{
+    stato_id: number;
+    nome_stato: string;
+    email: string;
+    success: boolean;
+    messageId?: string;
+    error?: string;
   }>;
 }
 
@@ -216,33 +263,386 @@ Email: noreply@newworldstate.org`;
 }
 
 /**
+ * Sostituisce i segnaposto di personalizzazione con i valori specifici del destinatario.
+ * Supporta varianti comuni: {{nome_rappresentante}}, {{rappresentante}}, {{nome_stato}}, {{stato}}, {{email}}, {{ruolo}}
+ */
+export function replacePersonalizationPlaceholders(template: string, ctx: PersonalizationContext): string {
+  if (!template) return '';
+
+  const rep = ctx.nome_rappresentante && ctx.nome_rappresentante.trim().length > 0
+    ? ctx.nome_rappresentante.trim()
+    : 'Eccellenza';
+  const stato = ctx.nome_stato && ctx.nome_stato.trim().length > 0
+    ? ctx.nome_stato.trim()
+    : 'Stato Sovrano';
+  const mail = ctx.email && ctx.email.trim().length > 0
+    ? ctx.email.trim()
+    : '';
+  const ruolo = ctx.ruolo && ctx.ruolo.trim().length > 0
+    ? ctx.ruolo.trim()
+    : 'Rappresentante Diplomatico';
+
+  return template
+    .replace(/\{\{\s*(?:nome_rappresentante|rappresentante|nome|contact_name)\s*\}\}/gi, rep)
+    .replace(/\{\{\s*(?:nome_stato|stato|paese|country)\s*\}\}/gi, stato)
+    .replace(/\{\{\s*(?:email|destinatario_email|indirizzo_email)\s*\}\}/gi, mail)
+    .replace(/\{\{\s*(?:ruolo|carica|titolo)\s*\}\}/gi, ruolo);
+}
+
+/**
+ * Motore di traduzione diplomatica autonomo (italiano -> inglese).
+ * Utilizzato come fallback robusto o per anteprima immediata preservando al 100% i tag di personalizzazione.
+ */
+export function translateDiplomaticFallback(text: string): string {
+  if (!text) return '';
+
+  const phraseMap: Array<[RegExp, string]> = [
+    // Saluti & formule di cortesia iniziali
+    [/\bCon la presente desideriamo sottoporre alla Vostra cortese attenzione\b/gi, 'We hereby wish to submit to your kind attention'],
+    [/\bCon la presente desideriamo sottoporre alla Vostra attenzione\b/gi, 'We hereby wish to submit to your attention'],
+    [/\bCon la presente desideriamo informarVi che\b/gi, 'We hereby wish to inform you that'],
+    [/\bCon la presente desideriamo informare che\b/gi, 'We hereby wish to inform that'],
+    [/\bCon la presente desideriamo\b/gi, 'We hereby wish to'],
+    [/\bCon la presente comunichiamo a\b/gi, 'We hereby communicate to'],
+    [/\bCon la presente comunichiamo che\b/gi, 'We hereby communicate that'],
+    [/\bCon la presente comunichiamo\b/gi, 'We hereby communicate'],
+    [/\bCon la presente vi invitiamo cordialmente a\b/gi, 'We hereby cordially invite you to'],
+    [/\bCon la presente vi invitiamo\b/gi, 'We hereby invite you'],
+    [/\bCon la presente\b/gi, 'We hereby'],
+    [/\bAlla cortese attenzione del\b/gi, 'To the kind attention of the'],
+    [/\bAlla cortese attenzione della\b/gi, 'To the kind attention of the'],
+    [/\bAlla cortese attenzione di\b/gi, 'To the kind attention of'],
+    [/\bEgregio Ambasciatore\b/gi, 'Esteemed Ambassador'],
+    [/\bEgregio Ministro\b/gi, 'Esteemed Minister'],
+    [/\bEgregio Rappresentante Diplomatico\b/gi, 'Esteemed Diplomatic Representative'],
+    [/\bEgregio Rappresentante\b/gi, 'Esteemed Representative'],
+    [/\bEgregio\b/gi, 'Esteemed'],
+    [/\bGentile Ambasciatore\b/gi, 'Esteemed Ambassador'],
+    [/\bGentile Ministro\b/gi, 'Esteemed Minister'],
+    [/\bGentile Rappresentante Diplomatico\b/gi, 'Esteemed Diplomatic Representative'],
+    [/\bGentile Rappresentante\b/gi, 'Esteemed Representative'],
+    [/\bGentile\b/gi, 'Esteemed'],
+    [/\bIllustre Ambasciatore\b/gi, 'Distinguished Ambassador'],
+    [/\bIllustre Ministro\b/gi, 'Distinguished Minister'],
+    [/\bIllustre\b/gi, 'Distinguished'],
+    [/\bSpettabile Ambasciata\b/gi, 'Honorable Embassy'],
+    [/\bSpettabile Consolato\b/gi, 'Honorable Consulate'],
+    [/\bSpettabile Governo\b/gi, 'Honorable Government'],
+    [/\bSpettabile Ministero\b/gi, 'Honorable Ministry'],
+    [/\bSpettabile\b/gi, 'Honorable'],
+    [/\bSua Eccellenza\b/gi, 'His Excellency'],
+    [/\bEccellenza\b/gi, 'Excellency'],
+
+    // Inviti e relazioni diplomatiche
+    [/\bInvito Ufficiale al Tavolo di Dialogo Sovrano\b/gi, 'Official Invitation to the Sovereign Dialogue Roundtable'],
+    [/\bInvito Ufficiale al Tavolo di Dialogo\b/gi, 'Official Invitation to the Dialogue Roundtable'],
+    [/\bInvito Ufficiale\b/gi, 'Official Invitation'],
+    [/\bComunicazione Ufficiale\b/gi, 'Official Communication'],
+    [/\bTavolo di Dialogo Sovrano\b/gi, 'Sovereign Dialogue Roundtable'],
+    [/\bTavolo di Dialogo\b/gi, 'Dialogue Roundtable'],
+    [/\bRelazioni Diplomatiche Bilaterali\b/gi, 'Bilateral Diplomatic Relations'],
+    [/\bRelazioni Diplomatiche\b/gi, 'Diplomatic Relations'],
+    [/\bRelazioni Bilaterali\b/gi, 'Bilateral Relations'],
+    [/\bRiconoscimento Reciproco Sovrano\b/gi, 'Mutual Sovereign Recognition'],
+    [/\bRiconoscimento Reciproco\b/gi, 'Mutual Recognition'],
+    [/\bCooperazione Internazionale\b/gi, 'International Cooperation'],
+    [/\bTrattato di Pace e Sovranità\b/gi, 'Peace and Sovereignty Treaty'],
+    [/\bTrattato di Pace\b/gi, 'Peace Treaty'],
+    [/\bAccordo Bilaterale\b/gi, 'Bilateral Agreement'],
+    [/\bProtocollo Diplomatico\b/gi, 'Diplomatic Protocol'],
+
+    // Istituzioni e ruoli
+    [/\bFederazione Sovrana di New World State\b/gi, 'Sovereign Federation of New World State'],
+    [/\bFederazione Sovrana\b/gi, 'Sovereign Federation'],
+    [/\bNuovo Stato Mondiale\b/gi, 'New World State'],
+    [/\bCancelleria Diplomatica & Custodia Digitale Sovrana\b/gi, 'Diplomatic Chancellery & Sovereign Digital Custody'],
+    [/\bCancelleria Diplomatica\b/gi, 'Diplomatic Chancellery'],
+    [/\bCustodia Digitale Sovrana\b/gi, 'Sovereign Digital Custody'],
+    [/\bCustode Digitale & Funzionario per le Relazioni Esterne\b/gi, 'Digital Custodian & Foreign Affairs Officer'],
+    [/\bCustode Digitale\b/gi, 'Digital Custodian'],
+    [/\bMinistero degli Affari Esteri e della Cooperazione Internazionale\b/gi, 'Ministry of Foreign Affairs and International Cooperation'],
+    [/\bMinistero degli Affari Esteri e Cooperazione\b/gi, 'Ministry of Foreign Affairs and Cooperation'],
+    [/\bMinistero degli Affari Esteri\b/gi, 'Ministry of Foreign Affairs'],
+    [/\bMinistero degli Esteri\b/gi, 'Ministry of Foreign Affairs'],
+    [/\bUfficio di Rappresentanza in Italia\b/gi, 'Representative Office in Italy'],
+    [/\bUfficio di Rappresentanza\b/gi, 'Representative Office'],
+    [/\bAmministrazione Centrale\b/gi, 'Central Administration'],
+    [/\bGoverno in esilio\b/gi, 'Government in exile'],
+    [/\bAmbasciata\b/gi, 'Embassy'],
+    [/\bConsolato\b/gi, 'Consulate'],
+    [/\bAmbasciatore\b/gi, 'Ambassador'],
+    [/\bConsole\b/gi, 'Consul'],
+    [/\bPresidente\b/gi, 'President'],
+    [/\bPrimo Ministro\b/gi, 'Prime Minister'],
+    [/\bMinistro\b/gi, 'Minister'],
+
+    // Frasi comuni nelle comunicazioni
+    [/\bSiamo lieti di comunicare che\b/gi, 'We are pleased to communicate that'],
+    [/\bSiamo lieti di comunicare\b/gi, 'We are pleased to communicate'],
+    [/\bSiamo onorati di invitare\b/gi, 'We are honored to invite'],
+    [/\bVi invitiamo cordialmente a partecipare a\b/gi, 'We cordially invite you to participate in'],
+    [/\bVi invitiamo cordialmente al\b/gi, 'We cordially invite you to the'],
+    [/\bVi invitiamo cordialmente alla\b/gi, 'We cordially invite you to the'],
+    [/\bVi invitiamo cordialmente\b/gi, 'We cordially invite you'],
+    [/\bVi invitiamo a prendere visione di\b/gi, 'We invite you to examine'],
+    [/\bVi invitiamo a\b/gi, 'We invite you to'],
+    [/\bSi comunica che\b/gi, 'Please be informed that'],
+    [/\bla registrazione dell'indirizzo email\b/gi, 'the registration of the email address'],
+    [/\bla registrazione dell'indirizzo\b/gi, 'the registration of the address'],
+    [/\bla registrazione della email\b/gi, 'the registration of the email'],
+    [/\bla registrazione\b/gi, 'the registration'],
+    [/\bnei nostri registri diplomatici ufficiali\b/gi, 'in our official diplomatic registers'],
+    [/\bnei nostri registri ufficiali\b/gi, 'in our official registers'],
+    [/\bnel registro diplomatico ufficiale\b/gi, 'in the official diplomatic register'],
+    [/\bnei nostri archivi\b/gi, 'in our archives'],
+    [/\bIn merito alla cooperazione internazionale\b/gi, 'Regarding international cooperation'],
+    [/\bIn merito alla\b/gi, 'Regarding the'],
+    [/\bIn merito al\b/gi, 'Regarding the'],
+    [/\bIn merito a\b/gi, 'Regarding'],
+    [/\bRelativamente a\b/gi, 'In relation to'],
+    [/\bIn allegato troverete\b/gi, 'Attached you will find'],
+    [/\bTroverete in allegato\b/gi, 'You will find attached'],
+    [/\bIn allegato\b/gi, 'Attached'],
+    [/\bdocumenti ufficiali allegati\b/gi, 'official documents attached'],
+    [/\bdocumento ufficiale allegato\b/gi, 'official document attached'],
+    [/\bdocumento ufficiale\b/gi, 'official document'],
+    [/\bdocumentazione ufficiale\b/gi, 'official documentation'],
+    [/\bla presente comunicazione costituisce\b/gi, 'this communication constitutes'],
+    [/\batto ufficiale\b/gi, 'official act'],
+
+    // Formule di chiusura e saluti finali
+    [/\bRestiamo a Vostra completa disposizione per qualsiasi chiarimento\b/gi, 'We remain at your full disposal for any further clarification'],
+    [/\bRestiamo a completa disposizione per qualsiasi chiarimento\b/gi, 'We remain at your full disposal for any clarification'],
+    [/\bRestiamo a disposizione per qualsiasi chiarimento\b/gi, 'We remain at your disposal for any clarification'],
+    [/\bRestiamo a Vostra disposizione\b/gi, 'We remain at your disposal'],
+    [/\bRestiamo a disposizione\b/gi, 'We remain at your disposal'],
+    [/\bIn attesa di un Vostro cortese e sollecito riscontro\b/gi, 'Looking forward to your esteemed and prompt response'],
+    [/\bIn attesa di un Vostro cortese riscontro\b/gi, 'Looking forward to your esteemed reply'],
+    [/\bIn attesa di una Vostra cortese risposta\b/gi, 'Looking forward to your kind reply'],
+    [/\bIn attesa di una Vostra risposta\b/gi, 'Looking forward to your response'],
+    [/\bRingraziandoVi per l'attenzione\b/gi, 'Thanking you for your attention'],
+    [/\bRingraziando per l'attenzione\b/gi, 'Thanking you for the attention'],
+    [/\bCon la massima stima e considerazione\b/gi, 'With highest esteem and consideration'],
+    [/\bCon la massima stima\b/gi, 'With highest esteem'],
+    [/\bCon i più cordiali saluti\b/gi, 'With warmest regards'],
+    [/\bCordiali saluti\b/gi, 'Sincerely'],
+    [/\bDistinti saluti\b/gi, 'Yours respectfully'],
+    [/\bCon osservanza\b/gi, 'With highest regards'],
+    [/\bCon ossequio\b/gi, 'Respectfully yours'],
+    [/\bIn fede\b/gi, 'Faithfully yours'],
+
+    // Connettori e termini di uso diplomatico
+    [/\bper conto di\b/gi, 'on behalf of'],
+    [/\bper conto del\b/gi, 'on behalf of the'],
+    [/\ba favore di\b/gi, 'in favor of'],
+    [/\bnel rispetto della\b/gi, 'in respect of the'],
+    [/\bnel rispetto del\b/gi, 'in respect of the'],
+    [/\bper lo Stato\b/gi, 'for the State'],
+    [/\bdello Stato\b/gi, 'of the State'],
+    [/\ballo Stato\b/gi, 'to the State'],
+    [/\blo Stato\b/gi, 'the State'],
+    [/\bdel Governo\b/gi, 'of the Government'],
+    [/\bil Governo\b/gi, 'the Government'],
+    [/\bconferenza di pace\b/gi, 'peace conference'],
+    [/\bsovranità e autodeterminazione\b/gi, 'sovereignty and self-determination'],
+    [/\bdiritti umani e sovranità\b/gi, 'human rights and sovereignty'],
+    [/\bper\b/gi, 'for'],
+    [/\bcon\b/gi, 'with']
+  ];
+
+  let translated = text;
+  for (const [pattern, replacement] of phraseMap) {
+    translated = translated.replace(pattern, replacement);
+  }
+
+  return translated;
+}
+
+/**
+ * Traduce oggetto e corpo di una comunicazione diplomatica dall'italiano all'inglese.
+ * Preserva al 100% i segnaposto di personalizzazione come {{nome_rappresentante}}, {{nome_stato}}, {{email}}, {{ruolo}}.
+ * Prova prima il motore AI Gemini, con fallback immediato ed elegante al motore diplomatico autonomo in caso di quota/errori.
+ */
+export async function translateDiplomaticText(
+  oggetto: string,
+  testoMessaggio: string
+): Promise<{
+  translatedSubject: string;
+  translatedText: string;
+  engine: 'gemini' | 'diplomatic_engine';
+}> {
+  if (!oggetto && !testoMessaggio) {
+    return { translatedSubject: '', translatedText: '', engine: 'diplomatic_engine' };
+  }
+
+  // 1. Isola e protegge tutti i tag {{...}} con identificatori univoci
+  const placeholders: string[] = [];
+  const placeholderRegex = /\{\{\s*[^}]+\s*\}\}/g;
+
+  const protectTags = (str: string) => {
+    return str.replace(placeholderRegex, (match) => {
+      const idx = placeholders.length;
+      placeholders.push(match);
+      return `__NWS_TAG_${idx}__`;
+    });
+  };
+
+  const protectedSubject = protectTags(oggetto || '');
+  const protectedText = protectTags(testoMessaggio || '');
+
+  const restoreTags = (str: string) => {
+    let restored = str;
+    for (let i = 0; i < placeholders.length; i++) {
+      const token = `__NWS_TAG_${i}__`;
+      restored = restored.split(token).join(placeholders[i]);
+    }
+    return restored;
+  };
+
+  // 2. Tentativo con Gemini AI se la chiave API è configurata
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (apiKey) {
+    try {
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+
+      const prompt = `You are the chief diplomatic translator for New World State Sovereign Chancellery.
+Translate the following Italian email subject and body into elegant, high-level diplomatic English suitable for sovereign foreign ministries and state embassies.
+CRITICAL PROTOCOL RULES:
+1. Preserve all placeholder tokens like __NWS_TAG_0__, __NWS_TAG_1__, and {{...}} EXACTLY as they are without translating or modifying them.
+2. Maintain formal diplomatic honorifics, respectful tone, and clear paragraphs.
+3. Return ONLY a valid JSON object matching this schema:
+{
+  "translatedSubject": "string",
+  "translatedText": "string"
+}
+
+Original Subject to translate:
+"${protectedSubject}"
+
+Original Body to translate:
+"${protectedText}"`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      });
+
+      const rawJson = response.text ? response.text.trim() : '';
+      if (rawJson) {
+        const parsed = JSON.parse(rawJson);
+        if (parsed.translatedSubject || parsed.translatedText) {
+          const finalSubj = restoreTags(parsed.translatedSubject || protectedSubject);
+          const finalText = restoreTags(parsed.translatedText || protectedText);
+          return {
+            translatedSubject: finalSubj,
+            translatedText: finalText,
+            engine: 'gemini'
+          };
+        }
+      }
+    } catch (geminiErr: any) {
+      console.warn('[CRM-TRANSLATE] Gemini AI non disponibile o quota esaurita:', geminiErr?.message || geminiErr);
+    }
+  }
+
+  // 3. Fallback al motore diplomatico autonomo NWS
+  const fallbackSubj = restoreTags(translateDiplomaticFallback(protectedSubject));
+  const fallbackText = restoreTags(translateDiplomaticFallback(protectedText));
+
+  return {
+    translatedSubject: fallbackSubj,
+    translatedText: fallbackText,
+    engine: 'diplomatic_engine'
+  };
+}
+
+/**
  * Invia un'email diplomatica tramite SMTP e la salva in `storico_comunicazioni`.
+ * Supporta la sostituzione dinamica dei campi di personalizzazione e la traduzione preventiva.
  */
 export async function sendCrmEmail(
   dbPool: any,
   payload: SendEmailPayload
 ): Promise<{ success: boolean; messageId: string; recordId: number }> {
-  const { contatto_id, email_destinatario, oggetto, testo_messaggio, firma_nome, allegati } = payload;
+  const { 
+    contatto_id, 
+    email_destinatario, 
+    oggetto, 
+    testo_messaggio, 
+    firma_nome, 
+    traduci_inglese, 
+    modalita_lingua, 
+    allegati 
+  } = payload;
 
   if (!contatto_id || !email_destinatario || !oggetto || !testo_messaggio) {
     throw new Error('Campi obbligatori mancanti: contatto_id, email_destinatario, oggetto e testo_messaggio.');
   }
 
-  // Recupera dettagli dello Stato per personalizzare l'intestazione
+  // Recupera dettagli dello Stato per personalizzare intestazione e segnaposto
   let statoNome = '';
+  let rappresentante = '';
+  let ruolo = '';
   if (dbPool) {
     try {
-      const stRes = await dbPool.query('SELECT nome_stato FROM crm_stati WHERE id = $1', [contatto_id]);
+      const stRes = await dbPool.query('SELECT nome_stato, rappresentante, ruolo FROM crm_stati WHERE id = $1', [contatto_id]);
       if (stRes.rows.length > 0) {
-        statoNome = stRes.rows[0].nome_stato;
+        statoNome = stRes.rows[0].nome_stato || '';
+        rappresentante = stRes.rows[0].rappresentante || '';
+        ruolo = stRes.rows[0].ruolo || '';
       }
     } catch (_) {}
   }
 
+  // Eventuale traduzione preventiva se richiesta
+  let baseSubject = oggetto;
+  let baseText = testo_messaggio;
+  const shouldTranslate = traduci_inglese || modalita_lingua === 'inglese' || modalita_lingua === 'bilingue';
+
+  if (shouldTranslate) {
+    try {
+      const trans = await translateDiplomaticText(oggetto, testo_messaggio);
+      if (modalita_lingua === 'bilingue') {
+        baseSubject = `${trans.translatedSubject} / ${oggetto}`;
+        baseText = `${trans.translatedText}\n\n------------------------------------------------------------\n[VERSIONE ITALIANA ORIGINALE]\n------------------------------------------------------------\n\n${testo_messaggio}`;
+      } else {
+        baseSubject = trans.translatedSubject || oggetto;
+        baseText = trans.translatedText || testo_messaggio;
+      }
+    } catch (tErr: any) {
+      console.warn('[CRM-SMTP] Avviso traduzione singola:', tErr?.message);
+    }
+  }
+
+  // Sostituzione dei campi di personalizzazione dinamica
+  const personalizedSubject = replacePersonalizationPlaceholders(baseSubject, {
+    nome_rappresentante: rappresentante,
+    nome_stato: statoNome,
+    email: email_destinatario,
+    ruolo: ruolo
+  });
+
+  const personalizedText = replacePersonalizationPlaceholders(baseText, {
+    nome_rappresentante: rappresentante,
+    nome_stato: statoNome,
+    email: email_destinatario,
+    ruolo: ruolo
+  });
+
   // Genera HTML istituzionale con template CSS inline
   const { html, text } = generateInstitutionalEmailTemplate({
-    oggetto,
-    testoMessaggio: testo_messaggio,
+    oggetto: personalizedSubject,
+    testoMessaggio: personalizedText,
     firmaNome: firma_nome,
     destinatarioStato: statoNome,
     destinatarioEmail: email_destinatario
@@ -314,7 +714,7 @@ export async function sendCrmEmail(
   const mailOptions = {
     from: `"${fromName}" <${from}>`,
     to: email_destinatario,
-    subject: oggetto,
+    subject: personalizedSubject,
     html,
     text,
     messageId: uniqueMessageId,
@@ -341,7 +741,7 @@ export async function sendCrmEmail(
       [
         contatto_id,
         email_destinatario,
-        oggetto,
+        personalizedSubject,
         html,
         text,
         finalMessageId,
@@ -356,6 +756,130 @@ export async function sendCrmEmail(
     success: true,
     messageId: finalMessageId,
     recordId
+  };
+}
+
+/**
+ * Spedizione cumulativa a destinatari multipli (invii multipli) con personalizzazione
+ * automatica per ogni singolo Stato e traduzione preventiva dei contenuti.
+ */
+export async function sendCrmMultiEmail(
+  dbPool: any,
+  payload: SendMultiEmailPayload
+): Promise<MultiSendResult> {
+  const { 
+    destinatari, 
+    oggetto, 
+    testo_messaggio, 
+    firma_nome, 
+    traduci_inglese, 
+    modalita_lingua, 
+    allegati 
+  } = payload;
+
+  if (!Array.isArray(destinatari) || destinatari.length === 0) {
+    throw new Error('Nessun destinatario selezionato per l\'invio multiplo.');
+  }
+  if (!oggetto || !testo_messaggio) {
+    throw new Error('Oggetto e testo del messaggio sono obbligatori.');
+  }
+
+  // 1. Traduzione del template di base (preservando i segnaposto) se richiesta
+  let baseSubject = oggetto;
+  let baseText = testo_messaggio;
+  const shouldTranslate = traduci_inglese || modalita_lingua === 'inglese' || modalita_lingua === 'bilingue';
+
+  if (shouldTranslate) {
+    try {
+      const trans = await translateDiplomaticText(oggetto, testo_messaggio);
+      if (modalita_lingua === 'bilingue') {
+        baseSubject = `${trans.translatedSubject} / ${oggetto}`;
+        baseText = `${trans.translatedText}\n\n------------------------------------------------------------\n[VERSIONE ITALIANA ORIGINALE]\n------------------------------------------------------------\n\n${testo_messaggio}`;
+      } else {
+        baseSubject = trans.translatedSubject || oggetto;
+        baseText = trans.translatedText || testo_messaggio;
+      }
+    } catch (tErr: any) {
+      console.warn('[CRM-MULTI] Errore o timeout traduzione cumulativa:', tErr?.message);
+    }
+  }
+
+  const results: MultiSendResult['results'] = [];
+  let sentCount = 0;
+  let failedCount = 0;
+
+  // 2. Itera sui destinatari personalizzando per ciascuno i segnaposto
+  for (let i = 0; i < destinatari.length; i++) {
+    const dest = destinatari[i];
+    if (!dest.email || !dest.stato_id) {
+      failedCount++;
+      results.push({
+        stato_id: dest.stato_id || 0,
+        nome_stato: dest.nome_stato || 'Sconosciuto',
+        email: dest.email || '',
+        success: false,
+        error: 'Dati destinatario incompleti (email o ID mancante)'
+      });
+      continue;
+    }
+
+    try {
+      // Sostituzione dei segnaposto per questo specifico destinatario
+      const personalizedSubject = replacePersonalizationPlaceholders(baseSubject, {
+        nome_rappresentante: dest.rappresentante,
+        nome_stato: dest.nome_stato,
+        email: dest.email,
+        ruolo: dest.ruolo
+      });
+
+      const personalizedText = replacePersonalizationPlaceholders(baseText, {
+        nome_rappresentante: dest.rappresentante,
+        nome_stato: dest.nome_stato,
+        email: dest.email,
+        ruolo: dest.ruolo
+      });
+
+      const sendRes = await sendCrmEmail(dbPool, {
+        contatto_id: dest.stato_id,
+        email_destinatario: dest.email,
+        oggetto: personalizedSubject,
+        testo_messaggio: personalizedText,
+        firma_nome: firma_nome,
+        allegati: allegati
+      });
+
+      sentCount++;
+      results.push({
+        stato_id: dest.stato_id,
+        nome_stato: dest.nome_stato,
+        email: dest.email,
+        success: true,
+        messageId: sendRes.messageId
+      });
+
+      // Pausa di 250ms tra spedizioni successive per rispetto del server SMTP
+      if (i < destinatari.length - 1) {
+        await new Promise(r => setTimeout(r, 250));
+      }
+    } catch (destErr: any) {
+      failedCount++;
+      results.push({
+        stato_id: dest.stato_id,
+        nome_stato: dest.nome_stato,
+        email: dest.email,
+        success: false,
+        error: destErr.message || 'Errore durante la spedizione'
+      });
+      console.error(`[CRM-MULTI] Fallito invio a ${dest.nome_stato} (${dest.email}):`, destErr.message);
+    }
+  }
+
+  return {
+    success: sentCount > 0,
+    total: destinatari.length,
+    sentCount,
+    failedCount,
+    results
   };
 }
 

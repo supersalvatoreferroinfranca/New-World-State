@@ -2,7 +2,7 @@
   "totalPageViews": 1526,
   "uniqueVisitors": 412,
   "totalSessions": 530,
-  "totalTimeSpentSeconds": 367616,
+  "totalTimeSpentSeconds": 368401,
   "bounceSessions": 182,
   "visitors": {},
   "pageViewsByTab": {
@@ -68,7 +68,7 @@
     },
     "admin": {
       "views": 8,
-      "timeSpent": 50498,
+      "timeSpent": 51283,
       "uniqueVisitors": 0,
       "label": "admin"
     }
@@ -135,7 +135,7 @@
     }
   },
   "geoCities": {
-    "Roma": 492,
+    "Roma": 497,
     "Milano": 221,
     "Napoli": 130,
     "Torino": 95,
@@ -435,9 +435,9 @@
       "deviceType": "desktop",
       "browser": "Firefox",
       "os": "Windows",
-      "ipMasked": "93.67.xxx.xxx",
+      "ipMasked": "93.148.xxx.xxx",
       "referrer": "direct",
-      "lastActive": 1791883817238
+      "lastActive": 1793096497319
     },
     {
       "id": "vis_muwv9jx3_1dx3",

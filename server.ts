@@ -25,6 +25,9 @@ import {
   ensureCrmTables,
   generateInstitutionalEmailTemplate, 
   sendCrmEmail, 
+  sendCrmMultiEmail,
+  translateDiplomaticText,
+  replacePersonalizationPlaceholders,
   syncImapEmails 
 } from './src/services/crmBackend.ts';
 
@@ -1197,16 +1200,70 @@ async function startServer() {
     // POST /api/crm/anteprima: Generazione anteprima HTML del template istituzionale
     apiRouter.post('/crm/anteprima', (req, res) => {
       try {
-        const { oggetto, testo_messaggio, firma_nome, destinatario_stato, email_destinatario } = req.body;
+        const { 
+          oggetto, 
+          testo_messaggio, 
+          firma_nome, 
+          destinatario_stato, 
+          email_destinatario,
+          destinatario_rappresentante,
+          destinatario_ruolo
+        } = req.body;
+
+        const renderedSubj = replacePersonalizationPlaceholders(oggetto || 'Oggetto della Comunicazione Istituzionale', {
+          nome_rappresentante: destinatario_rappresentante,
+          nome_stato: destinatario_stato,
+          email: email_destinatario,
+          ruolo: destinatario_ruolo
+        });
+
+        const renderedBody = replacePersonalizationPlaceholders(testo_messaggio || 'Inserisci qui il corpo della comunicazione diplomatica...', {
+          nome_rappresentante: destinatario_rappresentante,
+          nome_stato: destinatario_stato,
+          email: email_destinatario,
+          ruolo: destinatario_ruolo
+        });
+
         const { html, text } = generateInstitutionalEmailTemplate({
-          oggetto: oggetto || 'Oggetto della Comunicazione Istituzionale',
-          testoMessaggio: testo_messaggio || 'Inserisci qui il corpo della comunicazione diplomatica...',
+          oggetto: renderedSubj,
+          testoMessaggio: renderedBody,
           firmaNome: firma_nome,
           destinatarioStato: destinatario_stato,
           destinatarioEmail: email_destinatario || 'ambasciata@stato.org'
         });
-        return res.json({ success: true, html, text });
+        return res.json({ success: true, html, text, renderedSubject: renderedSubj, renderedText: renderedBody });
       } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // POST /api/crm/translate: Traduzione diplomatica da Italiano a Inglese preservando i segnaposto {{...}}
+    apiRouter.post('/crm/translate', async (req, res) => {
+      try {
+        const { oggetto, testo_messaggio } = req.body;
+        if (!oggetto && !testo_messaggio) {
+          return res.status(400).json({ success: false, message: 'Testo o oggetto da tradurre mancante.' });
+        }
+        const result = await translateDiplomaticText(oggetto || '', testo_messaggio || '');
+        return res.json({
+          success: true,
+          translatedSubject: result.translatedSubject,
+          translatedText: result.translatedText,
+          engine: result.engine
+        });
+      } catch (err: any) {
+        console.error('[CRM-TRANSLATE-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // POST /api/crm/invia-multiplo: Spedizione massiva a più destinatari con personalizzazione dinamica
+    apiRouter.post('/crm/invia-multiplo', async (req, res) => {
+      try {
+        const result = await sendCrmMultiEmail(dbPool, req.body);
+        return res.json(result);
+      } catch (err: any) {
+        console.error('[CRM-MULTI-ERR]', err.message);
         return res.status(500).json({ success: false, message: err.message });
       }
     });
