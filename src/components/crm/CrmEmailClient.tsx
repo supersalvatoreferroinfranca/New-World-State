@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { safeFetch } from '../../services/api';
 import { 
   Mail, 
@@ -139,6 +139,24 @@ export default function CrmEmailClient() {
 
   // Campi di Personalizzazione Dinamica: focus target ('oggetto' | 'testo')
   const [placeholderTarget, setPlaceholderTarget] = useState<'oggetto' | 'testo'>('testo');
+
+  // Refs ed indici cursore per inserimento segnaposto nel punto esatto del cursore
+  const composeOggettoRef = useRef<HTMLInputElement>(null);
+  const composeTestoRef = useRef<HTMLTextAreaElement>(null);
+  const templateOggettoRef = useRef<HTMLInputElement>(null);
+  const templateTestoRef = useRef<HTMLTextAreaElement>(null);
+
+  const composeCursorRef = useRef<{ start: number; end: number; target: 'oggetto' | 'testo' }>({
+    start: 0,
+    end: 0,
+    target: 'testo'
+  });
+
+  const templateCursorRef = useRef<{ start: number; end: number; target: 'oggetto' | 'testo' }>({
+    start: 0,
+    end: 0,
+    target: 'testo'
+  });
 
   // Traduzione Diplomatica & Bilinguismo
   const [translateBeforeSend, setTranslateBeforeSend] = useState<boolean>(true);
@@ -316,11 +334,48 @@ export default function CrmEmailClient() {
 
   const insertPlaceholder = (tag: string, target?: 'oggetto' | 'testo') => {
     const chosen = target || placeholderTarget;
-    if (chosen === 'oggetto') {
-      setComposeOggetto(prev => (prev ? `${prev} ${tag}` : tag));
-    } else {
-      setComposeTesto(prev => (prev ? `${prev} ${tag}` : tag));
+    const isOggetto = chosen === 'oggetto';
+    const inputEl = isOggetto ? composeOggettoRef.current : composeTestoRef.current;
+    const currentVal = isOggetto ? composeOggetto : composeTesto;
+
+    let start = currentVal.length;
+    let end = currentVal.length;
+
+    if (inputEl) {
+      if (typeof inputEl.selectionStart === 'number' && typeof inputEl.selectionEnd === 'number') {
+        start = inputEl.selectionStart;
+        end = inputEl.selectionEnd;
+      } else if (composeCursorRef.current.target === chosen) {
+        start = composeCursorRef.current.start;
+        end = composeCursorRef.current.end;
+      }
+    } else if (composeCursorRef.current.target === chosen) {
+      start = composeCursorRef.current.start;
+      end = composeCursorRef.current.end;
     }
+
+    start = Math.max(0, Math.min(start, currentVal.length));
+    end = Math.max(0, Math.min(end, currentVal.length));
+
+    const before = currentVal.substring(0, start);
+    const after = currentVal.substring(end);
+    const newVal = `${before}${tag}${after}`;
+    const newPos = start + tag.length;
+
+    composeCursorRef.current = { start: newPos, end: newPos, target: chosen };
+
+    if (isOggetto) {
+      setComposeOggetto(newVal);
+    } else {
+      setComposeTesto(newVal);
+    }
+
+    setTimeout(() => {
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.setSelectionRange(newPos, newPos);
+      }
+    }, 0);
   };
 
   const handleTranslateNow = async () => {
@@ -764,17 +819,48 @@ export default function CrmEmailClient() {
 
   const insertTemplatePlaceholder = (tag: string) => {
     if (!editingTemplate) return;
-    if (templatePlaceholderTarget === 'oggetto') {
-      setEditingTemplate(prev => prev ? {
-        ...prev,
-        oggetto: prev.oggetto ? `${prev.oggetto} ${tag}` : tag
-      } : null);
-    } else {
-      setEditingTemplate(prev => prev ? {
-        ...prev,
-        testo_messaggio: prev.testo_messaggio ? `${prev.testo_messaggio} ${tag}` : tag
-      } : null);
+    const target = templatePlaceholderTarget;
+    const isOggetto = target === 'oggetto';
+    const inputEl = isOggetto ? templateOggettoRef.current : templateTestoRef.current;
+    const currentVal = (isOggetto ? editingTemplate.oggetto : editingTemplate.testo_messaggio) || '';
+
+    let start = currentVal.length;
+    let end = currentVal.length;
+
+    if (inputEl) {
+      if (typeof inputEl.selectionStart === 'number' && typeof inputEl.selectionEnd === 'number') {
+        start = inputEl.selectionStart;
+        end = inputEl.selectionEnd;
+      } else if (templateCursorRef.current.target === target) {
+        start = templateCursorRef.current.start;
+        end = templateCursorRef.current.end;
+      }
+    } else if (templateCursorRef.current.target === target) {
+      start = templateCursorRef.current.start;
+      end = templateCursorRef.current.end;
     }
+
+    start = Math.max(0, Math.min(start, currentVal.length));
+    end = Math.max(0, Math.min(end, currentVal.length));
+
+    const before = currentVal.substring(0, start);
+    const after = currentVal.substring(end);
+    const newVal = `${before}${tag}${after}`;
+    const newPos = start + tag.length;
+
+    templateCursorRef.current = { start: newPos, end: newPos, target };
+
+    setEditingTemplate(prev => prev ? {
+      ...prev,
+      [isOggetto ? 'oggetto' : 'testo_messaggio']: newVal
+    } : null);
+
+    setTimeout(() => {
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.setSelectionRange(newPos, newPos);
+      }
+    }, 0);
   };
 
   const filteredStati = stati.filter(s => {
@@ -1768,6 +1854,7 @@ export default function CrmEmailClient() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => insertPlaceholder('{{nome_rappresentante}}')}
                     className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-[#c5a880]/20 border border-slate-700 hover:border-[#c5a880] text-amber-300 font-mono text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
                     title="Viene sostituito con il nome del rappresentante nominale dello Stato destinatario"
@@ -1778,6 +1865,7 @@ export default function CrmEmailClient() {
 
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => insertPlaceholder('{{nome_stato}}')}
                     className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-[#c5a880]/20 border border-slate-700 hover:border-[#c5a880] text-amber-300 font-mono text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
                     title="Viene sostituito con il nome dello Stato destinatario"
@@ -1788,6 +1876,7 @@ export default function CrmEmailClient() {
 
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => insertPlaceholder('{{email}}')}
                     className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-[#c5a880]/20 border border-slate-700 hover:border-[#c5a880] text-amber-300 font-mono text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
                     title="Viene sostituito con l'indirizzo email del destinatario selezionato"
@@ -1798,6 +1887,7 @@ export default function CrmEmailClient() {
 
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => insertPlaceholder('{{ruolo}}')}
                     className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-[#c5a880]/20 border border-slate-700 hover:border-[#c5a880] text-amber-300 font-mono text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition shadow-sm"
                     title="Viene sostituito con il ruolo o l'ufficio di rappresentanza dello Stato"
@@ -1968,6 +2058,7 @@ export default function CrmEmailClient() {
                     </span>
                     <button
                       type="button"
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => insertPlaceholder('{{nome_stato}}', 'oggetto')}
                       className="text-[10px] text-amber-300/80 hover:text-amber-300 font-mono cursor-pointer"
                     >
@@ -1975,10 +2066,31 @@ export default function CrmEmailClient() {
                     </button>
                   </label>
                   <input
+                    ref={composeOggettoRef}
                     type="text"
                     placeholder="Es. Invito Ufficiale al Tavolo di Dialogo Sovrano per {{nome_stato}}"
                     value={composeOggetto}
-                    onChange={(e) => setComposeOggetto(e.target.value)}
+                    onChange={(e) => {
+                      setComposeOggetto(e.target.value);
+                      const el = e.currentTarget;
+                      composeCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'oggetto' };
+                    }}
+                    onFocus={() => {
+                      setPlaceholderTarget('oggetto');
+                      composeCursorRef.current.target = 'oggetto';
+                    }}
+                    onSelect={(e) => {
+                      const el = e.currentTarget;
+                      composeCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'oggetto' };
+                    }}
+                    onKeyUp={(e) => {
+                      const el = e.currentTarget;
+                      composeCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'oggetto' };
+                    }}
+                    onClick={(e) => {
+                      const el = e.currentTarget;
+                      composeCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'oggetto' };
+                    }}
                     required
                     className="w-full bg-[#050e20] border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#c5a880]"
                   />
@@ -2012,10 +2124,31 @@ export default function CrmEmailClient() {
                   <span className="text-[11px] text-slate-500 font-normal">Puoi inserire i tag come {"{{nome_rappresentante}}"} o {"{{nome_stato}}"}</span>
                 </label>
                 <textarea
+                  ref={composeTestoRef}
                   rows={9}
                   placeholder="Egregio {{nome_rappresentante}}, con la presente comunichiamo a {{nome_stato}} che la Vostra casella istituzionale {{email}} è registrata..."
                   value={composeTesto}
-                  onChange={(e) => setComposeTesto(e.target.value)}
+                  onChange={(e) => {
+                    setComposeTesto(e.target.value);
+                    const el = e.currentTarget;
+                    composeCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'testo' };
+                  }}
+                  onFocus={() => {
+                    setPlaceholderTarget('testo');
+                    composeCursorRef.current.target = 'testo';
+                  }}
+                  onSelect={(e) => {
+                    const el = e.currentTarget;
+                    composeCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'testo' };
+                  }}
+                  onKeyUp={(e) => {
+                    const el = e.currentTarget;
+                    composeCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'testo' };
+                  }}
+                  onClick={(e) => {
+                    const el = e.currentTarget;
+                    composeCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'testo' };
+                  }}
                   required
                   className="w-full bg-[#050e20] border border-slate-700 rounded-2xl p-4 text-xs text-slate-200 focus:outline-none focus:border-[#c5a880] leading-relaxed resize-y font-sans"
                 />
@@ -2845,6 +2978,7 @@ export default function CrmEmailClient() {
                     <button
                       key={tag}
                       type="button"
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => insertTemplatePlaceholder(tag)}
                       className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-[#c5a880]/20 border border-slate-700 text-amber-300 text-[11px] font-mono cursor-pointer transition flex items-center gap-1"
                     >
@@ -2859,11 +2993,33 @@ export default function CrmEmailClient() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-300">Oggetto dell'Email *</label>
                 <input
+                  ref={templateOggettoRef}
                   type="text"
                   required
                   placeholder="es. Nota Verbale Ufficiale per {{nome_stato}}"
                   value={editingTemplate.oggetto || ''}
-                  onChange={(e) => setEditingTemplate(prev => prev ? ({ ...prev, oggetto: e.target.value }) : null)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const el = e.currentTarget;
+                    templateCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'oggetto' };
+                    setEditingTemplate(prev => prev ? ({ ...prev, oggetto: val }) : null);
+                  }}
+                  onFocus={() => {
+                    setTemplatePlaceholderTarget('oggetto');
+                    templateCursorRef.current.target = 'oggetto';
+                  }}
+                  onSelect={(e) => {
+                    const el = e.currentTarget;
+                    templateCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'oggetto' };
+                  }}
+                  onKeyUp={(e) => {
+                    const el = e.currentTarget;
+                    templateCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'oggetto' };
+                  }}
+                  onClick={(e) => {
+                    const el = e.currentTarget;
+                    templateCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'oggetto' };
+                  }}
                   className="w-full bg-[#050e20] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c5a880]"
                 />
               </div>
@@ -2872,11 +3028,33 @@ export default function CrmEmailClient() {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-300">Corpo del Messaggio *</label>
                 <textarea
+                  ref={templateTestoRef}
                   rows={9}
                   required
                   placeholder="Scrivi qui il testo istituzionale del modello, usando ad esempio {{nome_rappresentante}}, {{nome_stato}}, {{ruolo}}..."
                   value={editingTemplate.testo_messaggio || ''}
-                  onChange={(e) => setEditingTemplate(prev => prev ? ({ ...prev, testo_messaggio: e.target.value }) : null)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const el = e.currentTarget;
+                    templateCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'testo' };
+                    setEditingTemplate(prev => prev ? ({ ...prev, testo_messaggio: val }) : null);
+                  }}
+                  onFocus={() => {
+                    setTemplatePlaceholderTarget('testo');
+                    templateCursorRef.current.target = 'testo';
+                  }}
+                  onSelect={(e) => {
+                    const el = e.currentTarget;
+                    templateCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'testo' };
+                  }}
+                  onKeyUp={(e) => {
+                    const el = e.currentTarget;
+                    templateCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'testo' };
+                  }}
+                  onClick={(e) => {
+                    const el = e.currentTarget;
+                    templateCursorRef.current = { start: el.selectionStart || 0, end: el.selectionEnd || 0, target: 'testo' };
+                  }}
                   className="w-full bg-[#050e20] border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#c5a880] leading-relaxed resize-y font-sans"
                 />
               </div>
