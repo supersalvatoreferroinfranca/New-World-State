@@ -32,8 +32,26 @@ import {
   Tag,
   Check,
   Copy,
-  RefreshCw
+  RefreshCw,
+  Bookmark,
+  LayoutTemplate,
+  Save,
+  FolderPlus,
+  ExternalLink
 } from 'lucide-react';
+
+export interface CrmTemplateItem {
+  id: number;
+  titolo: string;
+  descrizione: string | null;
+  oggetto: string;
+  testo_messaggio: string;
+  categoria?: string;
+  firma_predefinita?: string | null;
+  lingua_predefinita?: 'italiano' | 'inglese' | 'bilingue';
+  created_at?: string;
+  updated_at?: string;
+}
 
 interface CrmEmail {
   id?: number;
@@ -77,8 +95,8 @@ interface AttachmentFile {
 }
 
 export default function CrmEmailClient() {
-  // Navigation: 'rubrica' | 'scheda' | 'composizione'
-  const [currentView, setCurrentView] = useState<'rubrica' | 'scheda' | 'composizione'>('rubrica');
+  // Navigation: 'rubrica' | 'scheda' | 'composizione' | 'modelli'
+  const [currentView, setCurrentView] = useState<'rubrica' | 'scheda' | 'composizione' | 'modelli'>('rubrica');
   
   // Data State
   const [stati, setStati] = useState<CrmStatoItem[]>([]);
@@ -86,6 +104,17 @@ export default function CrmEmailClient() {
   const [comunicazioni, setComunicazioni] = useState<StoricoItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Modelli Email Predefiniti (Templates)
+  const [templates, setTemplates] = useState<CrmTemplateItem[]>([]);
+  const [isTemplatesLoading, setIsTemplatesLoading] = useState<boolean>(false);
+  const [selectedTemplateCategory, setSelectedTemplateCategory] = useState<string>('all');
+  const [templateSearchQuery, setTemplateSearchQuery] = useState<string>('');
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState<boolean>(false);
+  const [editingTemplate, setEditingTemplate] = useState<Partial<CrmTemplateItem> | null>(null);
+  const [isSavingTemplate, setIsSavingTemplate] = useState<boolean>(false);
+  const [selectedTemplateForApply, setSelectedTemplateForApply] = useState<number | ''>('');
+  const [templatePlaceholderTarget, setTemplatePlaceholderTarget] = useState<'oggetto' | 'testo'>('testo');
 
   // Sincronizzazione IMAP
   const [isSyncingImap, setIsSyncingImap] = useState<boolean>(false);
@@ -152,7 +181,23 @@ export default function CrmEmailClient() {
   // Caricamento Iniziale
   useEffect(() => {
     loadStati();
+    loadTemplates();
   }, []);
+
+  const loadTemplates = async () => {
+    setIsTemplatesLoading(true);
+    try {
+      const res = await safeFetch('/api/crm/templates');
+      const data = await res.json();
+      if (data.success) {
+        setTemplates(data.templates || []);
+      }
+    } catch (err: any) {
+      console.error('[CRM] Errore caricamento modelli:', err);
+    } finally {
+      setIsTemplatesLoading(false);
+    }
+  };
 
   const loadStati = async () => {
     setLoading(true);
@@ -309,56 +354,56 @@ export default function CrmEmailClient() {
     }
   };
 
-  const handleOpenPreview = async () => {
-    // Determina lo Stato campione per l'anteprima
-    let sampleStato = stati.find(s => s.id === Number(composeStatoId));
-    if (!sampleStato && previewSampleId) {
-      sampleStato = stati.find(s => s.id === Number(previewSampleId));
-    }
+  const handleOpenPreview = async (overrideStateId?: number, forcedLangMode?: 'inglese' | 'italiano' | 'bilingue') => {
+    const activeLang = forcedLangMode || languageMode;
+    const targetId = overrideStateId !== undefined 
+      ? overrideStateId 
+      : (previewSampleId || (composeStatoId ? Number(composeStatoId) : (stati[0]?.id || 0)));
+
+    let sampleStato = stati.find(s => s.id === targetId);
     if (!sampleStato && stati.length > 0) {
       sampleStato = stati[0];
     }
 
     const sampleEmail = (sampleStato && customEmails[sampleStato.id]) 
       || (sampleStato && (sampleStato.emails?.find(e => e.is_primary)?.email || sampleStato.emails?.[0]?.email))
-      || composeDestinatarioEmail 
+      || (sampleStato && sampleStato.id === Number(composeStatoId) ? composeDestinatarioEmail : '')
       || 'ambasciata@stato-campione.org';
 
     setPreviewLoading(true);
     setIsPreviewOpen(true);
-
-    let activeSubj = composeOggetto || 'Oggetto della Comunicazione Istituzionale';
-    let activeBody = composeTesto || 'Inserisci qui il testo della comunicazione diplomatica...';
-
-    // Se è attiva l'opzione di invio in inglese o bilingue e la traduzione è già disponibile
-    if (languageMode === 'inglese' && translatedSubject && translatedText) {
-      activeSubj = translatedSubject;
-      activeBody = translatedText;
-    } else if (languageMode === 'bilingue' && translatedSubject && translatedText) {
-      activeSubj = `${translatedSubject} / ${composeOggetto}`;
-      activeBody = `${translatedText}\n\n------------------------------------------------------------\n[VERSIONE ORIGINALE IN ITALIANO]\n------------------------------------------------------------\n\n${composeTesto}`;
-    }
 
     try {
       const res = await safeFetch('/api/crm/anteprima', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          oggetto: activeSubj,
-          testo_messaggio: activeBody,
+          oggetto: composeOggetto || 'Oggetto della Comunicazione Istituzionale',
+          testo_messaggio: composeTesto || 'Inserisci qui il corpo della comunicazione diplomatica...',
           firma_nome: composeFirma,
           destinatario_stato: sampleStato?.nome_stato || 'Stato Sovrano Campione',
           destinatario_rappresentante: sampleStato?.rappresentante || 'Eccellenza',
           destinatario_ruolo: sampleStato?.ruolo || 'Rappresentante Diplomatico',
-          email_destinatario: sampleEmail
+          email_destinatario: sampleEmail,
+          modalita_lingua: activeLang,
+          translated_subject: translatedSubject,
+          translated_text: translatedText
         })
       });
       const data = await res.json();
       if (data.success) {
         setPreviewHtml(data.html);
+        if (data.translatedSubject && !translatedSubject) {
+          setTranslatedSubject(data.translatedSubject);
+        }
+        if (data.translatedText && !translatedText) {
+          setTranslatedText(data.translatedText);
+        }
+      } else {
+        setPreviewHtml(`<p style="color:red; padding: 20px;">Errore anteprima: ${data.message || 'Errore sconosciuto'}</p>`);
       }
     } catch (err: any) {
-      setPreviewHtml(`<p style="color:red;">Errore generazione anteprima: ${err.message}</p>`);
+      setPreviewHtml(`<p style="color:red; padding: 20px;">Errore generazione anteprima: ${err.message}</p>`);
     } finally {
       setPreviewLoading(false);
     }
@@ -606,6 +651,132 @@ export default function CrmEmailClient() {
     }
   };
 
+  const handleApplyTemplate = (tpl: CrmTemplateItem) => {
+    setComposeOggetto(tpl.oggetto);
+    setComposeTesto(tpl.testo_messaggio);
+    if (tpl.firma_predefinita) {
+      setComposeFirma(tpl.firma_predefinita);
+    }
+    if (tpl.lingua_predefinita) {
+      setLanguageMode(tpl.lingua_predefinita);
+    }
+    setTranslatedSubject('');
+    setTranslatedText('');
+    setShowBilingualDrawer(false);
+    setSelectedTemplateForApply(tpl.id);
+    setSendSuccessMessage(`✓ Modello "${tpl.titolo}" applicato alla composizione.`);
+    setTimeout(() => setSendSuccessMessage(null), 4000);
+    setCurrentView('composizione');
+  };
+
+  const handleOpenNewTemplate = () => {
+    setEditingTemplate({
+      titolo: '',
+      descrizione: '',
+      categoria: 'Diplomatica',
+      oggetto: '',
+      testo_messaggio: '',
+      firma_predefinita: composeFirma || 'Custode Digitale',
+      lingua_predefinita: 'italiano'
+    });
+    setTemplatePlaceholderTarget('testo');
+    setIsTemplateModalOpen(true);
+  };
+
+  const handleOpenEditTemplate = (tpl: CrmTemplateItem) => {
+    setEditingTemplate({ ...tpl });
+    setTemplatePlaceholderTarget('testo');
+    setIsTemplateModalOpen(true);
+  };
+
+  const handleOpenSaveCurrentAsTemplate = () => {
+    setEditingTemplate({
+      titolo: composeOggetto ? `Modello: ${composeOggetto.slice(0, 45)}` : 'Nuovo Modello Diplomatico',
+      descrizione: 'Modello salvato dalla schermata di composizione',
+      categoria: 'Diplomatica',
+      oggetto: composeOggetto || '',
+      testo_messaggio: composeTesto || '',
+      firma_predefinita: composeFirma || 'Custode Digitale',
+      lingua_predefinita: languageMode
+    });
+    setTemplatePlaceholderTarget('testo');
+    setIsTemplateModalOpen(true);
+  };
+
+  const handleSaveTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTemplate?.titolo?.trim()) {
+      alert('Il titolo del modello è obbligatorio.');
+      return;
+    }
+    if (!editingTemplate?.oggetto?.trim()) {
+      alert('L\'oggetto del modello è obbligatorio.');
+      return;
+    }
+    if (!editingTemplate?.testo_messaggio?.trim()) {
+      alert('Il corpo del messaggio del modello è obbligatorio.');
+      return;
+    }
+
+    setIsSavingTemplate(true);
+    try {
+      const res = await safeFetch('/api/crm/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingTemplate)
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadTemplates();
+        setIsTemplateModalOpen(false);
+        setEditingTemplate(null);
+        setSendSuccessMessage(`✓ Modello "${data.template?.titolo || 'predefinito'}" salvato con successo!`);
+        setTimeout(() => setSendSuccessMessage(null), 4000);
+      } else {
+        alert(data.message || 'Errore nel salvataggio del modello.');
+      }
+    } catch (err: any) {
+      alert('Errore di connessione: ' + err.message);
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  const handleDeleteTemplate = async (id: number, titolo: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare definitivamente il modello "${titolo}"?`)) {
+      return;
+    }
+    try {
+      const res = await safeFetch(`/api/crm/templates/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        await loadTemplates();
+        if (selectedTemplateForApply === id) setSelectedTemplateForApply('');
+        setSendSuccessMessage(`✓ Modello "${titolo}" eliminato con successo.`);
+        setTimeout(() => setSendSuccessMessage(null), 4000);
+      } else {
+        alert(data.message || 'Errore eliminazione modello.');
+      }
+    } catch (err: any) {
+      alert('Errore eliminazione: ' + err.message);
+    }
+  };
+
+  const insertTemplatePlaceholder = (tag: string) => {
+    if (!editingTemplate) return;
+    if (templatePlaceholderTarget === 'oggetto') {
+      setEditingTemplate(prev => prev ? {
+        ...prev,
+        oggetto: prev.oggetto ? `${prev.oggetto} ${tag}` : tag
+      } : null);
+    } else {
+      setEditingTemplate(prev => prev ? {
+        ...prev,
+        testo_messaggio: prev.testo_messaggio ? `${prev.testo_messaggio} ${tag}` : tag
+      } : null);
+    }
+  };
+
   const filteredStati = stati.filter(s => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
@@ -621,6 +792,20 @@ export default function CrmEmailClient() {
   const filteredComunicazioni = comunicazioni.filter(c => {
     if (timelineFilter === 'all') return true;
     return c.direzione === timelineFilter;
+  });
+
+  const filteredTemplates = templates.filter(t => {
+    const q = templateSearchQuery.toLowerCase().trim();
+    const matchCategory = selectedTemplateCategory === 'all' || t.categoria === selectedTemplateCategory;
+    if (!matchCategory) return false;
+    if (!q) return true;
+    return (
+      t.titolo.toLowerCase().includes(q) ||
+      (t.descrizione && t.descrizione.toLowerCase().includes(q)) ||
+      t.oggetto.toLowerCase().includes(q) ||
+      t.testo_messaggio.toLowerCase().includes(q) ||
+      (t.categoria && t.categoria.toLowerCase().includes(q))
+    );
   });
 
   return (
@@ -739,6 +924,18 @@ export default function CrmEmailClient() {
             <Send className="w-3.5 h-3.5" />
             <span>Composizione Email</span>
           </button>
+
+          <button
+            onClick={() => setCurrentView('modelli')}
+            className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              currentView === 'modelli'
+                ? 'bg-[#c5a880]/20 text-[#e4cbab] border border-[#c5a880]/40'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <LayoutTemplate className="w-3.5 h-3.5 text-[#c5a880]" />
+            <span>Modelli Predefiniti ({templates.length})</span>
+          </button>
         </div>
 
         {currentView === 'rubrica' && (
@@ -751,6 +948,18 @@ export default function CrmEmailClient() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#050e20] border border-slate-700/80 rounded-xl pl-8 pr-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#c5a880]/60"
             />
+          </div>
+        )}
+
+        {currentView === 'modelli' && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleOpenNewTemplate}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-[#c5a880] to-[#e4cbab] text-[#0a1c3e] text-xs font-bold hover:brightness-105 transition cursor-pointer shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Nuovo Modello</span>
+            </button>
           </div>
         )}
       </div>
@@ -1424,6 +1633,107 @@ export default function CrmEmailClient() {
               )}
 
               {/* ============================================================== */}
+              {/* MODELLI PREDEFINITI EMAIL: CARICA O SALVA RAPIDAMENTE */}
+              {/* ============================================================== */}
+              <div className="bg-[#050e20] border border-[#c5a880]/30 rounded-2xl p-4 md:p-5 space-y-3 shadow-inner">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <LayoutTemplate className="w-4 h-4 text-[#c5a880]" />
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Modelli Predefiniti di Email:
+                    </span>
+                    <span className="text-[10px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full border border-slate-700">
+                      {templates.length} disponibili
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleOpenSaveCurrentAsTemplate}
+                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[#c5a880] text-[11px] font-semibold border border-[#c5a880]/40 transition cursor-pointer flex items-center gap-1.5"
+                      title="Salva l'oggetto e il testo attuali come nuovo modello riutilizzabile"
+                    >
+                      <Save className="w-3 h-3 text-[#c5a880]" />
+                      <span>Salva Bozza come Modello</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView('modelli')}
+                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-semibold border border-slate-700 transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <ExternalLink className="w-3 h-3 text-slate-400" />
+                      <span>Libreria Modelli</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Selezione Rapida Modelli */}
+                {templates.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 pt-1">
+                    {templates.slice(0, 4).map((tpl) => (
+                      <div
+                        key={tpl.id}
+                        onClick={() => handleApplyTemplate(tpl)}
+                        className={`p-2.5 rounded-xl bg-[#071630] border transition cursor-pointer group text-left flex flex-col justify-between ${
+                          selectedTemplateForApply === tpl.id 
+                            ? 'border-[#c5a880] bg-[#c5a880]/10 shadow-sm' 
+                            : 'border-slate-800 hover:border-[#c5a880]/60'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1 mb-1">
+                            <span className="text-[10px] font-bold text-[#c5a880] uppercase tracking-wider truncate">
+                              {tpl.categoria || 'Diplomatica'}
+                            </span>
+                            <span className="text-[9px] text-slate-500 font-mono">
+                              {tpl.lingua_predefinita === 'inglese' ? 'EN' : tpl.lingua_predefinita === 'bilingue' ? 'Bilingue' : 'IT'}
+                            </span>
+                          </div>
+                          <div className="text-xs font-bold text-slate-200 group-hover:text-white line-clamp-1 mb-1">
+                            {tpl.titolo}
+                          </div>
+                          <div className="text-[10px] text-slate-400 line-clamp-2">
+                            {tpl.descrizione || tpl.oggetto}
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-amber-400/80 group-hover:text-amber-300 font-medium">
+                          <span>Applica modello</span>
+                          <span>→</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 italic">Nessun modello salvato. Crea il tuo primo modello o usa il pulsante "Salva Bozza come Modello".</p>
+                )}
+
+                {templates.length > 4 && (
+                  <div className="flex items-center justify-between pt-1 text-xs">
+                    <span className="text-[11px] text-slate-400">Altri modelli disponibili:</span>
+                    <select
+                      value={selectedTemplateForApply}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setSelectedTemplateForApply(val);
+                        const found = templates.find(t => t.id === val);
+                        if (found) handleApplyTemplate(found);
+                      }}
+                      className="bg-[#050e20] border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#c5a880]"
+                    >
+                      <option value="">Seleziona un modello da applicare...</option>
+                      {templates.map(t => (
+                        <option key={t.id} value={t.id}>
+                          [{t.categoria || 'Diplomatica'}] {t.titolo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* ============================================================== */}
               {/* BARRA SEGNAPOSTO DI PERSONALIZZAZIONE DINAMICA */}
               {/* ============================================================== */}
               <div className="bg-[#050e20] border border-[#c5a880]/30 rounded-2xl p-4 space-y-2.5 shadow-inner">
@@ -1551,7 +1861,10 @@ export default function CrmEmailClient() {
                       type="radio"
                       name="langMode"
                       checked={languageMode === 'inglese'}
-                      onChange={() => setLanguageMode('inglese')}
+                      onChange={() => {
+                        setLanguageMode('inglese');
+                        if (isPreviewOpen) handleOpenPreview(previewSampleId, 'inglese');
+                      }}
                       className="text-blue-500 cursor-pointer"
                     />
                     <div>
@@ -1569,7 +1882,10 @@ export default function CrmEmailClient() {
                       type="radio"
                       name="langMode"
                       checked={languageMode === 'bilingue'}
-                      onChange={() => setLanguageMode('bilingue')}
+                      onChange={() => {
+                        setLanguageMode('bilingue');
+                        if (isPreviewOpen) handleOpenPreview(previewSampleId, 'bilingue');
+                      }}
                       className="text-[#c5a880] cursor-pointer"
                     />
                     <div>
@@ -1587,7 +1903,10 @@ export default function CrmEmailClient() {
                       type="radio"
                       name="langMode"
                       checked={languageMode === 'italiano'}
-                      onChange={() => setLanguageMode('italiano')}
+                      onChange={() => {
+                        setLanguageMode('italiano');
+                        if (isPreviewOpen) handleOpenPreview(previewSampleId, 'italiano');
+                      }}
                       className="text-emerald-500 cursor-pointer"
                     />
                     <div>
@@ -1761,7 +2080,14 @@ export default function CrmEmailClient() {
                   <span className="text-slate-400 text-[11px]">Anteprima simulata su:</span>
                   <select
                     value={previewSampleId}
-                    onChange={(e) => setPreviewSampleId(Number(e.target.value))}
+                    onChange={(e) => {
+                      const newId = Number(e.target.value);
+                      setPreviewSampleId(newId);
+                      setComposeStatoId(newId);
+                      if (isPreviewOpen) {
+                        handleOpenPreview(newId);
+                      }
+                    }}
                     className="bg-[#050e20] border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#c5a880]"
                   >
                     {stati.map((s) => (
@@ -1773,7 +2099,7 @@ export default function CrmEmailClient() {
 
                   <button
                     type="button"
-                    onClick={handleOpenPreview}
+                    onClick={() => handleOpenPreview(previewSampleId)}
                     className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition cursor-pointer flex items-center gap-1.5"
                   >
                     <Eye className="w-3.5 h-3.5 text-[#c5a880]" />
@@ -1809,6 +2135,181 @@ export default function CrmEmailClient() {
           </div>
         )}
 
+        {/* ============================================================== */}
+        {/* VISTA 4: MODELLI PREDEFINITI EMAIL (TEMPLATES DIPLOMATICI) */}
+        {/* ============================================================== */}
+        {currentView === 'modelli' && (
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <LayoutTemplate className="w-5 h-5 text-[#c5a880]" />
+                  <span>Libreria Modelli Email Istituzionali</span>
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Crea, modifica ed elimina modelli formali con segnaposto dinamici per le comunicazioni agli Stati.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleOpenNewTemplate}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#c5a880] to-[#e4cbab] text-[#0a1c3e] text-xs font-bold hover:brightness-105 shadow-md shadow-amber-500/10 transition cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nuovo Modello Predefinito</span>
+              </button>
+            </div>
+
+            {/* Categorie e Filtri Rapidi */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-[#071630] border border-slate-800 p-3 rounded-2xl">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] text-slate-400 font-medium mr-1">Categoria:</span>
+                {['all', 'Diplomatica', 'Invito', 'Protocollo', 'Cooperazione'].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedTemplateCategory(cat)}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                      selectedTemplateCategory === cat
+                        ? 'bg-[#c5a880] text-[#0a1c3e] shadow-sm font-bold'
+                        : 'bg-[#050e20] text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    {cat === 'all' ? `Tutte (${templates.length})` : cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative w-72 max-w-full">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Cerca per titolo, oggetto o testo..."
+                  value={templateSearchQuery}
+                  onChange={(e) => setTemplateSearchQuery(e.target.value)}
+                  className="w-full bg-[#050e20] border border-slate-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#c5a880]/60"
+                />
+              </div>
+            </div>
+
+            {/* Grid dei Modelli */}
+            {isTemplatesLoading ? (
+              <div className="flex items-center justify-center py-20 text-slate-400 gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-[#c5a880]" />
+                <span className="text-xs">Caricamento modelli predefiniti da Neon DB...</span>
+              </div>
+            ) : filteredTemplates.length === 0 ? (
+              <div className="bg-[#071630] border border-slate-800 rounded-3xl p-12 text-center space-y-4">
+                <Bookmark className="w-12 h-12 text-slate-600 mx-auto" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-200">Nessun modello trovato</h3>
+                  <p className="text-xs text-slate-400 mt-1">Non ci sono modelli corrispondenti ai filtri di ricerca selezionati.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleOpenNewTemplate}
+                  className="px-4 py-2 rounded-xl bg-[#c5a880] text-[#0a1c3e] font-bold text-xs hover:opacity-90 inline-flex items-center gap-1.5 cursor-pointer shadow-md"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Crea il Tuo Primo Modello</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {filteredTemplates.map((tpl) => (
+                  <div
+                    key={tpl.id}
+                    className="bg-[#071630] border border-slate-800 hover:border-[#c5a880]/50 rounded-3xl p-6 transition flex flex-col justify-between shadow-lg group"
+                  >
+                    <div className="space-y-4">
+                      {/* Top Header Card */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-[#c5a880]/15 text-[#e4cbab] border border-[#c5a880]/30 font-mono">
+                              {tpl.categoria || 'Diplomatica'}
+                            </span>
+                            <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                              {tpl.lingua_predefinita === 'inglese' ? 'Solo Inglese' : tpl.lingua_predefinita === 'bilingue' ? 'Bilingue (EN+IT)' : 'Solo Italiano'}
+                            </span>
+                          </div>
+                          <h3 className="text-sm font-bold text-white group-hover:text-[#e4cbab] transition">
+                            {tpl.titolo}
+                          </h3>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditTemplate(tpl)}
+                            className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                            title="Modifica modello"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTemplate(tpl.id, tpl.titolo)}
+                            className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-red-950/60 text-slate-400 hover:text-red-400 transition cursor-pointer"
+                            title="Elimina modello"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {tpl.descrizione && (
+                        <p className="text-xs text-slate-400 italic">
+                          {tpl.descrizione}
+                        </p>
+                      )}
+
+                      {/* Box Oggetto */}
+                      <div className="bg-[#050e20] border border-slate-800 rounded-xl p-3 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Oggetto Predefinito:</span>
+                        <div className="text-xs font-semibold text-slate-200 break-words font-sans">
+                          {tpl.oggetto}
+                        </div>
+                      </div>
+
+                      {/* Box Corpo Messaggio */}
+                      <div className="bg-[#050e20] border border-slate-800 rounded-xl p-3 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Corpo del Messaggio:</span>
+                        <div className="text-xs text-slate-300 font-sans line-clamp-4 leading-relaxed whitespace-pre-wrap">
+                          {tpl.testo_messaggio}
+                        </div>
+                      </div>
+
+                      {tpl.firma_predefinita && (
+                        <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                          <span className="font-semibold text-slate-500">Firma associata:</span>
+                          <span className="text-amber-300/90 font-medium">{tpl.firma_predefinita}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottone di Azione: Applica */}
+                    <div className="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
+                      <span className="text-[10px] text-slate-500">
+                        {tpl.updated_at ? `Aggiornato: ${new Date(tpl.updated_at).toLocaleDateString('it-IT')}` : ''}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyTemplate(tpl)}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#c5a880] to-[#e4cbab] hover:brightness-105 text-[#0a1c3e] font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Usa Questo Modello</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
 
       {/* ============================================================== */}
@@ -1823,29 +2324,78 @@ export default function CrmEmailClient() {
                 <h3 className="font-bold text-sm text-white">Anteprima Template HTML Istituzionale NWS</h3>
               </div>
 
-              {/* Selettore Stato Campione dentro la modale anteprima */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400">Simula per:</span>
-                <select
-                  value={previewSampleId}
-                  onChange={(e) => {
-                    const newId = Number(e.target.value);
-                    setPreviewSampleId(newId);
-                    setComposeStatoId(newId);
-                  }}
-                  className="bg-[#050e20] border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#c5a880]"
-                >
-                  {stati.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nome_stato} ({s.rappresentante || 'Eccellenza'})
-                    </option>
-                  ))}
-                </select>
+              {/* Selettore Stato Campione e Lingua dentro la modale anteprima */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Selettore rapido lingua in anteprima */}
+                <div className="flex items-center bg-[#050e20] p-0.5 rounded-lg border border-slate-700 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLanguageMode('inglese');
+                      handleOpenPreview(previewSampleId, 'inglese');
+                    }}
+                    className={`px-2.5 py-1 rounded cursor-pointer transition font-medium ${
+                      languageMode === 'inglese' 
+                        ? 'bg-blue-600 text-white font-bold shadow-sm' 
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Inglese
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLanguageMode('bilingue');
+                      handleOpenPreview(previewSampleId, 'bilingue');
+                    }}
+                    className={`px-2.5 py-1 rounded cursor-pointer transition font-medium ${
+                      languageMode === 'bilingue' 
+                        ? 'bg-[#c5a880] text-[#0a1c3e] font-bold shadow-sm' 
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Bilingue
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLanguageMode('italiano');
+                      handleOpenPreview(previewSampleId, 'italiano');
+                    }}
+                    className={`px-2.5 py-1 rounded cursor-pointer transition font-medium ${
+                      languageMode === 'italiano' 
+                        ? 'bg-emerald-600 text-white font-bold shadow-sm' 
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Italiano
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-slate-400 font-medium">Stato:</span>
+                  <select
+                    value={previewSampleId}
+                    onChange={(e) => {
+                      const newId = Number(e.target.value);
+                      setPreviewSampleId(newId);
+                      setComposeStatoId(newId);
+                      handleOpenPreview(newId);
+                    }}
+                    className="bg-[#050e20] border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-[#c5a880]"
+                  >
+                    {stati.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nome_stato} ({s.rappresentante || 'Eccellenza'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <button
                   type="button"
-                  onClick={handleOpenPreview}
-                  className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[#c5a880] cursor-pointer"
+                  onClick={() => handleOpenPreview(previewSampleId)}
+                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[#c5a880] cursor-pointer"
                   title="Aggiorna anteprima"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -1853,7 +2403,7 @@ export default function CrmEmailClient() {
 
                 <button
                   onClick={() => setIsPreviewOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer ml-2"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white cursor-pointer ml-1"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -2165,6 +2715,190 @@ export default function CrmEmailClient() {
                   ) : (
                     <span>Salva Stato & Email</span>
                   )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODALE: CREAZIONE / MODIFICA MODELLO PREDEFINITO */}
+      {/* ============================================================== */}
+      {isTemplateModalOpen && editingTemplate && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#071630] border border-[#c5a880]/40 rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <LayoutTemplate className="w-4 h-4 text-[#c5a880]" />
+                <h3 className="font-bold text-sm text-white">
+                  {editingTemplate.id ? `Modifica Modello: ${editingTemplate.titolo}` : 'Nuovo Modello Predefinito per gli Stati'}
+                </h3>
+              </div>
+              <button
+                onClick={() => {
+                  setIsTemplateModalOpen(false);
+                  setEditingTemplate(null);
+                }}
+                className="text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTemplate} className="p-6 overflow-y-auto space-y-4 flex-1">
+              {/* Titolo e Categoria */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-300">Titolo Modello *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="es. Nota Verbale di Riconoscimento Reciproco"
+                    value={editingTemplate.titolo || ''}
+                    onChange={(e) => setEditingTemplate(prev => prev ? ({ ...prev, titolo: e.target.value }) : null)}
+                    className="w-full bg-[#050e20] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c5a880]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-300">Categoria</label>
+                  <input
+                    type="text"
+                    placeholder="es. Diplomatica, Invito, Protocollo"
+                    value={editingTemplate.categoria || 'Diplomatica'}
+                    onChange={(e) => setEditingTemplate(prev => prev ? ({ ...prev, categoria: e.target.value }) : null)}
+                    className="w-full bg-[#050e20] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c5a880]"
+                  />
+                </div>
+              </div>
+
+              {/* Descrizione Breve */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-300">Descrizione / Quando Usarlo (Opzionale)</label>
+                <input
+                  type="text"
+                  placeholder="es. Da inviare in occasione dell'apertura di nuovi canali diplomatici ufficiali"
+                  value={editingTemplate.descrizione || ''}
+                  onChange={(e) => setEditingTemplate(prev => prev ? ({ ...prev, descrizione: e.target.value }) : null)}
+                  className="w-full bg-[#050e20] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c5a880]"
+                />
+              </div>
+
+              {/* Firma e Lingua Predefinita */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-300">Firma Predefinita</label>
+                  <input
+                    type="text"
+                    placeholder="es. Custode Digitale & Cancelleria"
+                    value={editingTemplate.firma_predefinita || ''}
+                    onChange={(e) => setEditingTemplate(prev => prev ? ({ ...prev, firma_predefinita: e.target.value }) : null)}
+                    className="w-full bg-[#050e20] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c5a880]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-300">Lingua Predefinita di Invio</label>
+                  <select
+                    value={editingTemplate.lingua_predefinita || 'italiano'}
+                    onChange={(e) => setEditingTemplate(prev => prev ? ({ ...prev, lingua_predefinita: e.target.value as any }) : null)}
+                    className="w-full bg-[#050e20] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c5a880]"
+                  >
+                    <option value="italiano">Solo Italiano</option>
+                    <option value="inglese">Solo Inglese (Traduzione Diplomatica)</option>
+                    <option value="bilingue">Bilingue (Inglese in primo piano + Italiano in calce)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Segnaposto Rapidi per il Modello */}
+              <div className="bg-[#050e20] border border-amber-500/20 rounded-2xl p-3 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-amber-300 flex items-center gap-1.5 text-[11px]">
+                    <Tag className="w-3.5 h-3.5 text-[#c5a880]" />
+                    <span>Inserisci Segnaposto Dinamico:</span>
+                  </span>
+                  <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                    <span>Destinazione click:</span>
+                    <label className="flex items-center gap-1 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={templatePlaceholderTarget === 'oggetto'}
+                        onChange={() => setTemplatePlaceholderTarget('oggetto')}
+                      />
+                      <span>Oggetto</span>
+                    </label>
+                    <label className="flex items-center gap-1 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={templatePlaceholderTarget === 'testo'}
+                        onChange={() => setTemplatePlaceholderTarget('testo')}
+                      />
+                      <span>Corpo</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {['{{nome_rappresentante}}', '{{nome_stato}}', '{{email}}', '{{ruolo}}'].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => insertTemplatePlaceholder(tag)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-[#c5a880]/20 border border-slate-700 text-amber-300 text-[11px] font-mono cursor-pointer transition flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3 text-[#c5a880]" />
+                      <span>{tag}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Oggetto */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-300">Oggetto dell'Email *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="es. Nota Verbale Ufficiale per {{nome_stato}}"
+                  value={editingTemplate.oggetto || ''}
+                  onChange={(e) => setEditingTemplate(prev => prev ? ({ ...prev, oggetto: e.target.value }) : null)}
+                  className="w-full bg-[#050e20] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c5a880]"
+                />
+              </div>
+
+              {/* Testo / Corpo Messaggio */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-300">Corpo del Messaggio *</label>
+                <textarea
+                  rows={9}
+                  required
+                  placeholder="Scrivi qui il testo istituzionale del modello, usando ad esempio {{nome_rappresentante}}, {{nome_stato}}, {{ruolo}}..."
+                  value={editingTemplate.testo_messaggio || ''}
+                  onChange={(e) => setEditingTemplate(prev => prev ? ({ ...prev, testo_messaggio: e.target.value }) : null)}
+                  className="w-full bg-[#050e20] border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#c5a880] leading-relaxed resize-y font-sans"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTemplateModalOpen(false);
+                    setEditingTemplate(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingTemplate}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#c5a880] to-[#e4cbab] text-[#0a1c3e] font-bold text-xs uppercase tracking-wider hover:brightness-105 transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isSavingTemplate && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{editingTemplate.id ? 'Aggiorna Modello' : 'Salva Modello'}</span>
                 </button>
               </div>
             </form>

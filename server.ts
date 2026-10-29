@@ -28,7 +28,10 @@ import {
   sendCrmMultiEmail,
   translateDiplomaticText,
   replacePersonalizationPlaceholders,
-  syncImapEmails 
+  syncImapEmails,
+  getCrmTemplates,
+  saveCrmTemplate,
+  deleteCrmTemplate
 } from './src/services/crmBackend.ts';
 
 const { Pool } = pg;
@@ -1198,7 +1201,7 @@ async function startServer() {
     });
 
     // POST /api/crm/anteprima: Generazione anteprima HTML del template istituzionale
-    apiRouter.post('/crm/anteprima', (req, res) => {
+    apiRouter.post('/crm/anteprima', async (req, res) => {
       try {
         const { 
           oggetto, 
@@ -1207,17 +1210,51 @@ async function startServer() {
           destinatario_stato, 
           email_destinatario,
           destinatario_rappresentante,
-          destinatario_ruolo
+          destinatario_ruolo,
+          modalita_lingua,
+          translated_subject,
+          translated_text
         } = req.body;
 
-        const renderedSubj = replacePersonalizationPlaceholders(oggetto || 'Oggetto della Comunicazione Istituzionale', {
+        const rawOggetto = (oggetto && oggetto.trim()) ? oggetto : 'Oggetto della Comunicazione Istituzionale';
+        const rawBody = (testo_messaggio && testo_messaggio.trim()) ? testo_messaggio : 'Inserisci qui il corpo della comunicazione diplomatica...';
+
+        let workingSubj = rawOggetto;
+        let workingBody = rawBody;
+        let finalTransSubj = translated_subject || '';
+        let finalTransText = translated_text || '';
+
+        // Se è richiesta lingua inglese o bilingue, assicuriamo la traduzione
+        if (modalita_lingua === 'inglese' || modalita_lingua === 'bilingue') {
+          if (!finalTransSubj || !finalTransText) {
+            try {
+              const trans = await translateDiplomaticText(rawOggetto, rawBody);
+              finalTransSubj = trans.translatedSubject || rawOggetto;
+              finalTransText = trans.translatedText || rawBody;
+            } catch (tErr: any) {
+              console.warn('[CRM-ANTEPRIMA-TRANSLATE-WARN]', tErr?.message);
+              finalTransSubj = rawOggetto;
+              finalTransText = rawBody;
+            }
+          }
+
+          if (modalita_lingua === 'inglese') {
+            workingSubj = finalTransSubj;
+            workingBody = finalTransText;
+          } else if (modalita_lingua === 'bilingue') {
+            workingSubj = `${finalTransSubj} / ${rawOggetto}`;
+            workingBody = `${finalTransText}\n\n------------------------------------------------------------\n[VERSIONE ORIGINALE IN ITALIANO]\n------------------------------------------------------------\n\n${rawBody}`;
+          }
+        }
+
+        const renderedSubj = replacePersonalizationPlaceholders(workingSubj, {
           nome_rappresentante: destinatario_rappresentante,
           nome_stato: destinatario_stato,
           email: email_destinatario,
           ruolo: destinatario_ruolo
         });
 
-        const renderedBody = replacePersonalizationPlaceholders(testo_messaggio || 'Inserisci qui il corpo della comunicazione diplomatica...', {
+        const renderedBody = replacePersonalizationPlaceholders(workingBody, {
           nome_rappresentante: destinatario_rappresentante,
           nome_stato: destinatario_stato,
           email: email_destinatario,
@@ -1231,7 +1268,15 @@ async function startServer() {
           destinatarioStato: destinatario_stato,
           destinatarioEmail: email_destinatario || 'ambasciata@stato.org'
         });
-        return res.json({ success: true, html, text, renderedSubject: renderedSubj, renderedText: renderedBody });
+        return res.json({ 
+          success: true, 
+          html, 
+          text, 
+          renderedSubject: renderedSubj, 
+          renderedText: renderedBody,
+          translatedSubject: finalTransSubj,
+          translatedText: finalTransText
+        });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message });
       }
@@ -1264,6 +1309,47 @@ async function startServer() {
         return res.json(result);
       } catch (err: any) {
         console.error('[CRM-MULTI-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // =========================================================================
+    // MODELLI EMAIL PREDEFINITI CRM (TEMPLATES DIPLOMATICI)
+    // =========================================================================
+
+    // GET /api/crm/templates: Elenco dei modelli email istituzionali predefiniti
+    apiRouter.get('/crm/templates', async (req, res) => {
+      try {
+        const templates = await getCrmTemplates(dbPool);
+        return res.json({ success: true, templates });
+      } catch (err: any) {
+        console.error('[CRM-TEMPLATES-GET-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // POST /api/crm/templates: Creazione o modifica di un modello email predefinito
+    apiRouter.post('/crm/templates', async (req, res) => {
+      try {
+        const template = await saveCrmTemplate(dbPool, req.body);
+        return res.json({ success: true, template, message: 'Modello salvato con successo.' });
+      } catch (err: any) {
+        console.error('[CRM-TEMPLATES-POST-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // DELETE /api/crm/templates/:id: Eliminazione di un modello email
+    apiRouter.delete('/crm/templates/:id', async (req, res) => {
+      try {
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+          return res.status(400).json({ success: false, message: 'ID modello non valido.' });
+        }
+        await deleteCrmTemplate(dbPool, id);
+        return res.json({ success: true, message: 'Modello eliminato con successo.' });
+      } catch (err: any) {
+        console.error('[CRM-TEMPLATES-DELETE-ERR]', err.message);
         return res.status(500).json({ success: false, message: err.message });
       }
     });

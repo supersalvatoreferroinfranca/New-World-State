@@ -99,6 +99,99 @@ export interface MultiSendResult {
   }>;
 }
 
+export interface CrmEmailTemplate {
+  id: number;
+  titolo: string;
+  descrizione: string | null;
+  oggetto: string;
+  testo_messaggio: string;
+  categoria?: string;
+  firma_predefinita?: string | null;
+  lingua_predefinita?: 'italiano' | 'inglese' | 'bilingue';
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const DEFAULT_CRM_EMAIL_TEMPLATES: Array<Omit<CrmEmailTemplate, 'id' | 'created_at' | 'updated_at'>> = [
+  {
+    titolo: 'Nota Verbale Formale di Cooperazione Diplomatica',
+    descrizione: 'Comunicazione ufficiale di apertura relazioni bilaterali, riconoscimento e canali diretti.',
+    categoria: 'Diplomatica',
+    oggetto: 'Nota Verbale: Apertura Canali Diplomatici con {{nome_stato}}',
+    testo_messaggio: `All'attenzione di {{nome_rappresentante}}, {{ruolo}} di {{nome_stato}},
+
+La Cancelleria Centrale e il Custode Digitale della Federazione Sovrana di New World State hanno l'onore di trasmettere alla Vostra attenzione la presente Nota Verbale formale.
+
+Con la presente intendiamo manifestare la nostra ferma volontà di instaurare un canale diplomatico diretto e permanente tra le nostre rispettive rappresentanze, fondato sul mutuo rispetto della sovranità, dell'autodeterminazione dei popoli e della cooperazione pacifica.
+
+Prendiamo atto della registrazione dell'indirizzo ufficiale {{email}} nei nostri registri diplomatici istituzionali.
+
+Restiamo a Vostra completa disposizione per qualsiasi chiarimento e in attesa di un Vostro cortese riscontro.
+
+Con la massima stima e considerazione.`,
+    firma_predefinita: 'Custode Digitale & Funzionario Relazioni Esterne',
+    lingua_predefinita: 'italiano'
+  },
+  {
+    titolo: 'Invito a Conferenza Mondiale per la Pace e Sovranità',
+    descrizione: 'Invito formale per delegati e rappresentanti alla conferenza globale sui diritti e autodeterminazione.',
+    categoria: 'Invito',
+    oggetto: 'Invito Ufficiale: Conferenza Internazionale dei Popoli e Sovranità - Delegazione {{nome_stato}}',
+    testo_messaggio: `Egregio {{nome_rappresentante}}, in qualità di {{ruolo}} per {{nome_stato}},
+
+Siamo lieti ed onorati di invitare formalmente la Vostra Eccellenza e la delegazione ufficiale di {{nome_stato}} alla prossima Conferenza Internazionale per la Pace, i Diritti Umani e l'Autodeterminazione Sovrana.
+
+La conferenza riunirà i rappresentanti di nazioni, governi e popoli per condividere strategie comuni di tutela civile, cittadinanza globale decentralizzata e cooperazione transfrontaliera.
+
+Vi preghiamo di confermare la partecipazione e i nominativi della delegazione rispondendo alla presente comunicazione o contattando il nostro ufficio tramite {{email}}.
+
+In attesa di un Vostro cortese e sollecito riscontro.
+
+Con i più cordiali saluti.`,
+    firma_predefinita: 'Custode Digitale',
+    lingua_predefinita: 'italiano'
+  },
+  {
+    titolo: 'Conferma Registrazione nei Registri Diplomatici NWS',
+    descrizione: 'Notifica istituzionale di censimento e validazione dei recapiti ufficiali della rappresentanza.',
+    categoria: 'Protocollo',
+    oggetto: 'Conferma Registrazione Diplomatica e Canali Istituzionali - {{nome_stato}}',
+    testo_messaggio: `Alla Cancelleria Diplomatica e Ufficio Affari Esteri di {{nome_stato}},
+All'attenzione di: {{nome_rappresentante}} ({{ruolo}}),
+
+Si comunica che l'indirizzo email {{email}} è stato verificato e formalmente registrato nel libro diplomatico delle relazioni esterne di New World State.
+
+Questa linea di comunicazione è ora abilitata alla ricezione e trasmissione di comunicazioni cifrate, atti ufficiali e bollettini della Cancelleria Sovrana.
+
+Qualora vi fossero variazioni nei ruoli o negli indirizzi di contatto, Vi preghiamo di trasmetterle tempestivamente a questo ufficio.
+
+Con osservanza.`,
+    firma_predefinita: 'Cancelleria Diplomatica Centrale',
+    lingua_predefinita: 'italiano'
+  },
+  {
+    titolo: 'Memorandum su Cittadinanza Digitale e Identità Sovrana',
+    descrizione: 'Proposta di accordo per adozione di standard condivisi di identità sovrana e anagrafe decentralizzata.',
+    categoria: 'Cooperazione',
+    oggetto: 'Proposta di Cooperazione: Sistemi di Identità Digitale e Anagrafe Sovrana - {{nome_stato}}',
+    testo_messaggio: `Eccellenza {{nome_rappresentante}},
+
+In riferimento al Vostro mandato di {{ruolo}} a tutela di {{nome_stato}},
+
+New World State propone l'attivazione di un protocollo di intesa per l'adozione condivisa di standard di identità digitale sovrana, crittografia avanzata e anagrafe decentralizzata a tutela dei cittadini residenti ed espatriati.
+
+Tale infrastruttura consente la certificazione immutabile delle identità nel pieno rispetto della privacy e dell'autonomia costituzionale.
+
+In allegato trasmettiamo la bozza preliminare del protocollo tecnico.
+
+Restiamo a Vostra disposizione per organizzare un incontro bilaterale di approfondimento.
+
+Cordiali saluti.`,
+    firma_predefinita: 'Custode Digitale',
+    lingua_predefinita: 'italiano'
+  }
+];
+
 /**
  * Genera il template HTML istituzionale NWS per le comunicazioni diplomatiche.
  * Include CSS inline, logo istituzionale con URL assoluto e contatti nel footer.
@@ -123,7 +216,7 @@ export function generateInstitutionalEmailTemplate({
   const cardBg = '#ffffff';
   const textColor = '#1e293b';
   const mutedText = '#64748b';
-  const logoUrl = 'https://newworldstate.cloud/logo-nws.png';
+  const logoUrl = 'https://www.newworldstate.org/documents/branding_logo/fronte.jpg';
 
   // Converte a capo in paragrafi HTML ben formattati se non è già presente HTML
   let formattedBody = testoMessaggio;
@@ -1092,9 +1185,137 @@ export async function ensureCrmTables(dbPool: any): Promise<void> {
       );
       CREATE INDEX IF NOT EXISTS idx_storico_contatto ON storico_comunicazioni(contatto_id, data DESC);
       CREATE INDEX IF NOT EXISTS idx_storico_message_id ON storico_comunicazioni(message_id);
+
+      CREATE TABLE IF NOT EXISTS crm_email_templates (
+        id SERIAL PRIMARY KEY,
+        titolo VARCHAR(255) NOT NULL,
+        descrizione TEXT,
+        oggetto TEXT NOT NULL,
+        testo_messaggio TEXT NOT NULL,
+        categoria VARCHAR(100) DEFAULT 'Diplomatica',
+        firma_predefinita VARCHAR(255) DEFAULT 'Custode Digitale',
+        lingua_predefinita VARCHAR(50) DEFAULT 'italiano',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_crm_templates_titolo ON crm_email_templates(titolo);
     `);
-    console.log('[CRM] Schema tabelle CRM verificato su Neon DB.');
+
+    // Inizializza i modelli predefiniti se la tabella è vuota
+    const countRes = await dbPool.query('SELECT COUNT(*) as cnt FROM crm_email_templates');
+    if (parseInt(countRes.rows[0].cnt, 10) === 0) {
+      for (const tpl of DEFAULT_CRM_EMAIL_TEMPLATES) {
+        await dbPool.query(`
+          INSERT INTO crm_email_templates (titolo, descrizione, oggetto, testo_messaggio, categoria, firma_predefinita, lingua_predefinita)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `, [tpl.titolo, tpl.descrizione, tpl.oggetto, tpl.testo_messaggio, tpl.categoria || 'Diplomatica', tpl.firma_predefinita || 'Custode Digitale', tpl.lingua_predefinita || 'italiano']);
+      }
+      console.log(`[CRM] Inseriti ${DEFAULT_CRM_EMAIL_TEMPLATES.length} modelli email istituzionali predefiniti.`);
+    }
+
+    console.log('[CRM] Schema tabelle CRM e modelli verificati su Neon DB.');
   } catch (err: any) {
     console.warn('[CRM] Errore verifica schema tabelle CRM:', err.message);
   }
+}
+
+/**
+ * Recupera tutti i modelli di email disponibili nel CRM.
+ */
+export async function getCrmTemplates(dbPool: any): Promise<CrmEmailTemplate[]> {
+  if (dbPool) {
+    try {
+      const res = await dbPool.query(`
+        SELECT id, titolo, descrizione, oggetto, testo_messaggio, categoria, firma_predefinita, lingua_predefinita, created_at, updated_at
+        FROM crm_email_templates
+        ORDER BY categoria ASC, titolo ASC
+      `);
+      if (res.rows.length > 0) {
+        return res.rows;
+      }
+    } catch (e: any) {
+      console.warn('[CRM-TEMPLATES] Fallback a modelli in memoria:', e.message);
+    }
+  }
+
+  // Fallback con ID temporanei se database non risponde
+  return DEFAULT_CRM_EMAIL_TEMPLATES.map((t, idx) => ({
+    id: idx + 1,
+    ...t,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }));
+}
+
+/**
+ * Salva o modifica un modello di email nel CRM.
+ */
+export async function saveCrmTemplate(
+  dbPool: any,
+  data: {
+    id?: number;
+    titolo: string;
+    descrizione?: string;
+    oggetto: string;
+    testo_messaggio: string;
+    categoria?: string;
+    firma_predefinita?: string;
+    lingua_predefinita?: 'italiano' | 'inglese' | 'bilingue';
+  }
+): Promise<CrmEmailTemplate> {
+  if (!data.titolo?.trim()) throw new Error('Il titolo del modello è obbligatorio.');
+  if (!data.oggetto?.trim()) throw new Error('L\'oggetto del modello è obbligatorio.');
+  if (!data.testo_messaggio?.trim()) throw new Error('Il corpo del messaggio del modello è obbligatorio.');
+
+  const titolo = data.titolo.trim();
+  const descrizione = data.descrizione?.trim() || null;
+  const oggetto = data.oggetto.trim();
+  const testo = data.testo_messaggio.trim();
+  const categoria = data.categoria?.trim() || 'Diplomatica';
+  const firma = data.firma_predefinita?.trim() || 'Custode Digitale';
+  const lingua = data.lingua_predefinita || 'italiano';
+
+  if (dbPool) {
+    if (data.id) {
+      const res = await dbPool.query(`
+        UPDATE crm_email_templates
+        SET titolo = $1, descrizione = $2, oggetto = $3, testo_messaggio = $4, categoria = $5, firma_predefinita = $6, lingua_predefinita = $7, updated_at = NOW()
+        WHERE id = $8
+        RETURNING *
+      `, [titolo, descrizione, oggetto, testo, categoria, firma, lingua, data.id]);
+      if (res.rows.length > 0) return res.rows[0];
+    } else {
+      const res = await dbPool.query(`
+        INSERT INTO crm_email_templates (titolo, descrizione, oggetto, testo_messaggio, categoria, firma_predefinita, lingua_predefinita)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+      `, [titolo, descrizione, oggetto, testo, categoria, firma, lingua]);
+      if (res.rows.length > 0) return res.rows[0];
+    }
+  }
+
+  // Fallback in memoria
+  return {
+    id: data.id || Date.now(),
+    titolo,
+    descrizione,
+    oggetto,
+    testo_messaggio: testo,
+    categoria,
+    firma_predefinita: firma,
+    lingua_predefinita: lingua,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+}
+
+/**
+ * Elimina un modello di email dal CRM.
+ */
+export async function deleteCrmTemplate(dbPool: any, id: number): Promise<boolean> {
+  if (dbPool) {
+    await dbPool.query('DELETE FROM crm_email_templates WHERE id = $1', [id]);
+    return true;
+  }
+  return true;
 }
