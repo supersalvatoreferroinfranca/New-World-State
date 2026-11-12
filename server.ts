@@ -40,7 +40,8 @@ import {
   executeMondialTransfer,
   getPublicMondialLedger,
   lookupCitizenByCode,
-  registerReferral
+  registerReferral,
+  getReferralDetails
 } from './src/services/mondialBackend.ts';
 
 const { Pool } = pg;
@@ -1486,6 +1487,21 @@ async function startServer() {
       }
     });
 
+    // GET /api/mondial/my-referrals: Elenco iscritti invitati e avanzamento bonus
+    apiRouter.get('/mondial/my-referrals', async (req, res) => {
+      try {
+        const citizenId = parseInt(req.query.citizenId as string, 10);
+        if (!citizenId || isNaN(citizenId)) {
+          return res.status(400).json({ success: false, message: 'ID cittadino non specificato.' });
+        }
+        const details = await getReferralDetails(dbPool, citizenId);
+        return res.json({ success: true, ...details });
+      } catch (err: any) {
+        console.error('[MONDIAL-MY-REFERRALS-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
     apiRouter.get('/branding', async (req, res) => {
       try {
         // Prevent browser/proxy caching of the branding configuration API response
@@ -2122,6 +2138,20 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
                   console.error('[SMTP] Errore riscontrato durante l\'invio SMTP da Express:', smtpErr.message);
                 }
               }
+
+              // Gestione automatica del Referral Code per il circuito solidale Mondial (+5.000 Ɱ)
+              const refCode = req.body?.referralCode || serializablePayload?.referralCode;
+              if (refCode && data.id) {
+                try {
+                  const referrer = await findCitizenByCodeOrId(String(refCode));
+                  if (referrer && String(referrer.id) !== String(data.id)) {
+                    await registerReferral(dbPool, parseInt(referrer.id, 10), parseInt(data.id, 10));
+                    console.log(`[MONDIAL] Collegato referral con successo da segnalatore #${referrer.id} a nuovo cittadino #${data.id}`);
+                  }
+                } catch (refErr: any) {
+                  console.warn('[MONDIAL] Eccezione collegamento referral:', refErr.message);
+                }
+              }
             }
 
             return res.status(workerRes.status).json(data);
@@ -2368,19 +2398,36 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
       return getCitizenWithArubaUrls(updatedRecord);
     }
 
-    // List all registered citizens
+    // List all registered citizens with Mondial balances & referral stats
     apiRouter.get('/admin/citizens', async (req, res) => {
-      console.log('[API] Processing /api/admin/citizens request - Augmenting with self-healing Aruba URLs');
+      console.log('[API] Processing /api/admin/citizens request - Augmenting with self-healing Aruba URLs & Mondial balances');
       if (dbPool) {
         try {
-          const qRes = await dbPool.query('SELECT * FROM citizens ORDER BY id DESC');
-          const augmented = qRes.rows.map(row => getCitizenWithArubaUrls(row));
+          const qRes = await dbPool.query(`
+            SELECT c.*, 
+                   COALESCE(w.balance, 5000.00)::numeric as "mondialBalance",
+                   COALESCE(w.referral_count, 0)::int as "mondialReferralCount"
+            FROM citizens c
+            LEFT JOIN nws_mondial_wallets w ON (w.citizen_id = c.id OR UPPER(w.citizen_code) = UPPER(c."citizenCode"))
+            ORDER BY c.id DESC
+          `);
+          const augmented = qRes.rows.map(row => {
+            const cit = getCitizenWithArubaUrls(row);
+            cit.mondialBalance = row.mondialBalance !== undefined && row.mondialBalance !== null ? Number(row.mondialBalance) : 5000;
+            cit.mondialReferralCount = row.mondialReferralCount !== undefined && row.mondialReferralCount !== null ? Number(row.mondialReferralCount) : 0;
+            return cit;
+          });
           return res.json({ success: true, count: qRes.rows.length, data: augmented });
         } catch (dbErr: any) {
           console.error('[DB-LOCAL-LIST] SQL direct list error, using memory backup:', dbErr.message);
         }
       }
-      const augmented = memoryCitizens.map(row => getCitizenWithArubaUrls(row));
+      const augmented = memoryCitizens.map(row => {
+        const cit = getCitizenWithArubaUrls(row);
+        cit.mondialBalance = 5000;
+        cit.mondialReferralCount = 0;
+        return cit;
+      });
       return res.json({ success: true, count: memoryCitizens.length, data: augmented });
     });
 

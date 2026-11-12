@@ -389,6 +389,21 @@ export default function RegisterForm() {
   const formTopRef = useRef<HTMLDivElement>(null);
   const addressSectionRef = useRef<HTMLDivElement>(null);
   const [previews, setPreviews] = useState<{ front: string | null, back: string | null, photo: string | null }>({ front: null, back: null, photo: null });
+  const [referralCode, setReferralCode] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref') || params.get('referral');
+        if (ref) {
+          setReferralCode(ref.trim().toUpperCase());
+        }
+      } catch (e) {
+        console.warn('Error reading referral param:', e);
+      }
+    }
+  }, []);
   
   const [photoMode, setPhotoMode] = useState<'camera' | 'upload'>('camera');
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -1213,7 +1228,8 @@ export default function RegisterForm() {
         documentBackData,
         documentBackName,
         documentPhotoData,
-        documentPhotoName
+        documentPhotoName,
+        referralCode: referralCode ? referralCode.trim().toUpperCase() : undefined
       };
       
       console.log('Invio dati di registrazione...', serializableData.username);
@@ -1337,6 +1353,24 @@ export default function RegisterForm() {
               </motion.div>
             )}
           </  AnimatePresence>
+
+          {/* Banner Invito Solidale Mondial */}
+          {referralCode && (
+            <div className="mx-6 mt-4 p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300 flex items-center justify-between gap-3 text-xs shadow-xs">
+              <div className="flex items-center gap-2.5">
+                <span className="text-lg">🤝</span>
+                <div>
+                  <span className="font-bold text-amber-950 block">Invito al Circuito Solidale Mondial Verificato</span>
+                  <span className="text-slate-600 text-[11px]">
+                    Presentato dal Cittadino Sovrano: <strong className="font-mono text-amber-900 bg-white/80 px-1.5 py-0.5 rounded border border-amber-200 select-all">{referralCode}</strong>
+                  </span>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950 whitespace-nowrap shadow-xs">
+                5.000 Ɱ Inclusi
+              </span>
+            </div>
+          )}
 
           <div className="p-8 md:p-12">
         {systemStatus === 'loading' ? (

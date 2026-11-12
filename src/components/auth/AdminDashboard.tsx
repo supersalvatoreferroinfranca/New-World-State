@@ -1292,27 +1292,28 @@ export default function AdminDashboard() {
 
               {/* Elenco Tabella */}
               <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
-                <table className="w-full text-left text-sm border-collapse">
+                <table className="w-full text-left text-sm border-collapse min-w-[1050px]">
                   <thead>
                     <tr className="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 tracking-wider border-b border-slate-100">
-                      <th className="py-4 px-5">Cognome e Nome</th>
-                      <th className="py-4 px-4 font-mono">Codice Cittadino (16 cifre)</th>
-                      <th className="py-4 px-4">Recapiti</th>
-                      <th className="py-4 px-4">Ruoli / Incarichi</th>
-                      <th className="py-4 px-4 text-center">Stato</th>
-                      <th className="py-4 px-5 text-right">Dossier</th>
+                      <th className="py-4 px-4 whitespace-nowrap min-w-[170px]">Cognome e Nome</th>
+                      <th className="py-4 px-4 font-mono whitespace-nowrap min-w-[170px]">Codice Cittadino (16 cifre)</th>
+                      <th className="py-4 px-4 text-center font-mono whitespace-nowrap min-w-[150px]">Saldo Mondial (Ɱ)</th>
+                      <th className="py-4 px-4 whitespace-nowrap min-w-[200px]">Recapiti</th>
+                      <th className="py-4 px-4 whitespace-nowrap min-w-[180px]">Ruoli / Incarichi</th>
+                      <th className="py-4 px-4 text-center whitespace-nowrap min-w-[130px]">Stato</th>
+                      <th className="py-4 px-4 text-right whitespace-nowrap min-w-[90px]">Dossier</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 text-slate-700">
                     {loading && citizens.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-12 px-5 text-center text-slate-400 text-xs">
+                        <td colSpan={7} className="py-12 px-5 text-center text-slate-400 text-xs">
                           <RotateCw className="w-5 h-5 animate-spin mx-auto mb-2 text-slate-300" /> Caricamento in corso...
                         </td>
                       </tr>
                     ) : filteredCitizens.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-12 px-5 text-center text-slate-400 text-xs">
+                        <td colSpan={7} className="py-12 px-5 text-center text-slate-400 text-xs">
                           Nessun cittadino corrisponde ai criteri di ricerca
                         </td>
                       </tr>
@@ -1331,16 +1332,28 @@ export default function AdminDashboard() {
                             className={`hover:bg-slate-50/50 transition cursor-pointer ${selectedCitizen && selectedCitizen.id === cit.id ? 'bg-amber-500/5' : ''}`}
                             onClick={() => setSelectedCitizen(cit)}
                           >
-                            <td className="py-3.5 px-5">
-                              <div className="font-semibold text-slate-900">{cit.surname} {cit.firstName}</div>
+                            <td className="py-3.5 px-4">
+                              <div className="font-semibold text-slate-900 whitespace-nowrap">{cit.surname} {cit.firstName}</div>
                               <div className="text-[10px] text-slate-400 font-mono">ID: #{cit.id}</div>
                             </td>
-                            <td className="py-3.5 px-4 font-mono text-xs font-bold text-brand-gold select-all">
+                            <td className="py-3.5 px-4 font-mono text-xs font-bold text-brand-gold select-all whitespace-nowrap">
                               {cit.citizenCode || 'DA ASSEGNARE'}
                             </td>
+                            <td className="py-3.5 px-4 text-center font-mono">
+                              <div className="inline-flex flex-col items-center">
+                                <span className="font-bold text-slate-900 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-lg text-xs">
+                                  {(cit.mondialBalance !== undefined && cit.mondialBalance !== null ? Number(cit.mondialBalance) : 5000).toLocaleString('it-IT', { minimumFractionDigits: 2 })} Ɱ
+                                </span>
+                                {cit.mondialReferralCount > 0 && (
+                                  <span className="text-[9.5px] text-emerald-700 font-semibold mt-0.5">
+                                    {cit.mondialReferralCount} inviti validi
+                                  </span>
+                                )}
+                              </div>
+                            </td>
                             <td className="py-3.5 px-4 text-xs">
-                              <div className="font-medium text-slate-800">{cit.email || 'Nessuna mail'}</div>
-                              <div className="text-[10px] text-slate-400">{cit.phonePrefix || ''} {cit.phoneNumber || ''}</div>
+                              <div className="font-medium text-slate-800 break-all">{cit.email || 'Nessuna mail'}</div>
+                              <div className="text-[10px] text-slate-400 whitespace-nowrap">{cit.phonePrefix || ''} {cit.phoneNumber || ''}</div>
                             </td>
                             <td className="py-3.5 px-4 text-xs space-y-1">
                               {cit.isAdmin && (
@@ -2078,6 +2091,29 @@ export default function AdminDashboard() {
                   >
                     Chiudi
                   </button>
+                </div>
+
+                {/* Portafoglio Mondial del Cittadino */}
+                <div className="bg-gradient-to-br from-[#0a1c3e] to-[#071530] text-white rounded-2xl p-4 shadow-sm border border-amber-500/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 font-black flex items-center justify-center text-base shadow-xs">
+                        Ɱ
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-amber-200/90 uppercase tracking-wider font-semibold">Circuito Solidale Mondial</div>
+                        <div className="text-xl font-mono font-black text-amber-300">
+                          {(selectedCitizen.mondialBalance !== undefined && selectedCitizen.mondialBalance !== null ? Number(selectedCitizen.mondialBalance) : 5000).toLocaleString('it-IT', { minimumFractionDigits: 2 })} Ɱ
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-slate-300">Inviti Riconosciuti</div>
+                      <div className="text-xs font-mono font-bold text-emerald-400">
+                        {selectedCitizen.mondialReferralCount || 0} / 50
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Info List */}

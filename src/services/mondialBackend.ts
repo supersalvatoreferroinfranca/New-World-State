@@ -729,3 +729,86 @@ export async function registerReferral(
   const count = memoryReferrals.filter(r => r.referrer_id === referrerCitizenId).length;
   return { success: true, referralCount: count, bonusEarned: count >= 50 };
 }
+
+export interface ReferredCitizenDetail {
+  id: number;
+  citizenCode: string;
+  fullName: string;
+  status: string;
+  registeredAt: string;
+}
+
+/**
+ * Recupera l'elenco e lo stato dettagliato dei cittadini iscritti grazie al contributo del segnalatore
+ */
+export async function getReferralDetails(
+  dbPool: any,
+  referrerCitizenId: number
+): Promise<{
+  totalCount: number;
+  target: number;
+  bonusAwarded: boolean;
+  referredCitizens: ReferredCitizenDetail[];
+}> {
+  const target = 50;
+
+  if (dbPool) {
+    try {
+      // 1. Controlla bonus e contatore nel wallet
+      const wRes = await dbPool.query(
+        `SELECT referral_count, referral_bonus_awarded FROM nws_mondial_wallets WHERE citizen_id = $1`,
+        [referrerCitizenId]
+      );
+      const bonusAwarded = !!wRes.rows[0]?.referral_bonus_awarded;
+
+      // 2. Preleva i dettagli di ogni cittadino registrato tramite il referral
+      const refRes = await dbPool.query(
+        `SELECT 
+           c.id, 
+           COALESCE(c."citizenCode", c.username, CONCAT('NWS-CIT-', c.id)) as citizen_code,
+           CONCAT(COALESCE(c."firstName", ''), ' ', COALESCE(c.surname, '')) as full_name,
+           c.status,
+           COALESCE(r.created_at, NOW()) as registered_at
+         FROM nws_citizen_referrals r
+         JOIN citizens c ON c.id = r.referred_citizen_id
+         WHERE r.referrer_citizen_id = $1
+         ORDER BY r.created_at DESC`,
+        [referrerCitizenId]
+      );
+
+      const list: ReferredCitizenDetail[] = refRes.rows.map((row: any) => ({
+        id: row.id,
+        citizenCode: row.citizen_code,
+        fullName: row.full_name?.trim() || 'Cittadino Sovrano',
+        status: row.status || 'pending',
+        registeredAt: row.registered_at
+      }));
+
+      return {
+        totalCount: list.length,
+        target,
+        bonusAwarded,
+        referredCitizens: list
+      };
+    } catch (err: any) {
+      console.warn('[MONDIAL] getReferralDetails DB err:', err.message);
+    }
+  }
+
+  // Fallback in memoria
+  const refs = memoryReferrals.filter(r => r.referrer_id === referrerCitizenId);
+  const memList: ReferredCitizenDetail[] = refs.map((r, idx) => ({
+    id: r.referred_id,
+    citizenCode: `NWS-CIT-${r.referred_id}`,
+    fullName: `Cittadino Registrato #${idx + 1}`,
+    status: 'approved',
+    registeredAt: r.created_at
+  }));
+
+  return {
+    totalCount: memList.length,
+    target,
+    bonusAwarded: memList.length >= target,
+    referredCitizens: memList
+  };
+}
