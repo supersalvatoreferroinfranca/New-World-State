@@ -33,6 +33,15 @@ import {
   saveCrmTemplate,
   deleteCrmTemplate
 } from './src/services/crmBackend.ts';
+import {
+  ensureMondialTables,
+  getOrCreateWallet,
+  setWalletPin,
+  executeMondialTransfer,
+  getPublicMondialLedger,
+  lookupCitizenByCode,
+  registerReferral
+} from './src/services/mondialBackend.ts';
 
 const { Pool } = pg;
 
@@ -520,6 +529,7 @@ async function runMigrations() {
       `);
 
       await ensureCrmTables(dbPool);
+      await ensureMondialTables(dbPool);
 
       console.log('[MIGRATION] PostgreSQL Table checked and updated successfully.');
     } finally {
@@ -1350,6 +1360,128 @@ async function startServer() {
         return res.json({ success: true, message: 'Modello eliminato con successo.' });
       } catch (err: any) {
         console.error('[CRM-TEMPLATES-DELETE-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // =========================================================================
+    // CIRCUITO DI SCAMBIO VALORI MONDIAL (Ɱ) - BARATTO SOLIDALE SOVRANO
+    // =========================================================================
+
+    // GET /api/mondial/wallet: Recupera o inizializza il wallet del cittadino (5.000 Ɱ benvenuto)
+    apiRouter.get('/mondial/wallet', async (req, res) => {
+      try {
+        const citizenId = parseInt(req.query.citizenId as string, 10) || 1;
+        const citizenCode = (req.query.citizenCode as string) || `NWS-CIT-${citizenId}`;
+        const citizenName = (req.query.citizenName as string) || 'Cittadino Sovrano';
+
+        const data = await getOrCreateWallet(dbPool, citizenId, citizenCode, citizenName);
+        return res.json({ success: true, ...data });
+      } catch (err: any) {
+        console.error('[MONDIAL-WALLET-GET-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // POST /api/mondial/set-pin: Imposta o modifica il PIN di sicurezza a 4 cifre
+    apiRouter.post('/mondial/set-pin', async (req, res) => {
+      try {
+        const { citizenId, pin } = req.body || {};
+        if (!citizenId || !pin) {
+          return res.status(400).json({ success: false, message: 'ID cittadino e PIN obbligatori.' });
+        }
+        const result = await setWalletPin(dbPool, parseInt(citizenId, 10), String(pin));
+        return res.json(result);
+      } catch (err: any) {
+        console.error('[MONDIAL-PIN-ERR]', err.message);
+        return res.status(400).json({ success: false, message: err.message });
+      }
+    });
+
+    // POST /api/mondial/transfer: Trasferisce valore in Mondial per beni e servizi
+    apiRouter.post('/mondial/transfer', async (req, res) => {
+      try {
+        const { 
+          senderCitizenId, 
+          senderCode, 
+          senderName, 
+          receiverCode, 
+          amount, 
+          category, 
+          description, 
+          pin 
+        } = req.body || {};
+
+        if (!senderCitizenId || !senderCode || !receiverCode) {
+          return res.status(400).json({ success: false, message: 'Parametri mittente o destinatario mancanti.' });
+        }
+
+        const parsedAmount = parseFloat(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+          return res.status(400).json({ success: false, message: 'Importo non valido: deve essere maggiore di 0 Ɱ.' });
+        }
+
+        if (!description || description.trim().length < 3) {
+          return res.status(400).json({ success: false, message: 'La causale del baratto (descrizione del bene o servizio) è obbligatoria.' });
+        }
+
+        const result = await executeMondialTransfer(dbPool, {
+          senderCitizenId: parseInt(senderCitizenId, 10),
+          senderCode: String(senderCode),
+          senderName: String(senderName || 'Cittadino Mittente'),
+          receiverCode: String(receiverCode),
+          amount: parsedAmount,
+          category,
+          description: String(description),
+          pin: pin ? String(pin) : undefined
+        });
+
+        return res.json(result);
+      } catch (err: any) {
+        console.error('[MONDIAL-TRANSFER-ERR]', err.message);
+        return res.status(400).json({ success: false, message: err.message });
+      }
+    });
+
+    // GET /api/mondial/public-ledger: Registro pubblico trasparente dei baratti solidali (codici mascherati)
+    apiRouter.get('/mondial/public-ledger', async (req, res) => {
+      try {
+        const limit = parseInt(req.query.limit as string, 10) || 50;
+        const ledger = await getPublicMondialLedger(dbPool, limit);
+        return res.json({ success: true, ledger });
+      } catch (err: any) {
+        console.error('[MONDIAL-LEDGER-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // GET /api/mondial/lookup-citizen: Verifica esistenza del cittadino prima di inviare Mondial
+    apiRouter.get('/mondial/lookup-citizen', async (req, res) => {
+      try {
+        const code = (req.query.code as string) || '';
+        const lookup = await lookupCitizenByCode(dbPool, code);
+        return res.json({ success: true, ...lookup });
+      } catch (err: any) {
+        console.error('[MONDIAL-LOOKUP-ERR]', err.message);
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // POST /api/mondial/register-referral: Registra un nuovo invito per avanzamento bonus 5.000 Ɱ
+    apiRouter.post('/mondial/register-referral', async (req, res) => {
+      try {
+        const { referrerCitizenId, referredCitizenId } = req.body || {};
+        if (!referrerCitizenId || !referredCitizenId) {
+          return res.status(400).json({ success: false, message: 'Dati referral mancanti.' });
+        }
+        const result = await registerReferral(
+          dbPool, 
+          parseInt(referrerCitizenId, 10), 
+          parseInt(referredCitizenId, 10)
+        );
+        return res.json(result);
+      } catch (err: any) {
+        console.error('[MONDIAL-REFERRAL-ERR]', err.message);
         return res.status(500).json({ success: false, message: err.message });
       }
     });

@@ -22,6 +22,7 @@ import NewsPortal from './components/news/NewsPortal';
 import AboutUsPage from './components/about/AboutUsPage';
 import CommunityProjectsPage from './components/projects/CommunityProjectsPage';
 import CrmEmailClient from './components/crm/CrmEmailClient';
+import MondialWallet from './components/mondial/MondialWallet';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp, Cookie, MessageSquare, ArrowRight } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
@@ -33,11 +34,14 @@ import SovereignCustodeDebugWidget from './components/pwa/SovereignCustodeDebugW
 import { initAnalyticsTracking, trackPageView } from './services/analyticsTracker';
 
 function AppContent() {
-  const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects' | 'crm'>(() => {
+  const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects' | 'crm' | 'mondial'>(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
       const hasArticleParam = searchParams.has('notizia') || searchParams.has('article') || searchParams.has('slug');
+      if (tabParam === 'mondial' || window.location.pathname === '/mondial' || window.location.pathname === '/baratto') {
+        return 'mondial';
+      }
       if (tabParam === 'crm' || window.location.pathname === '/crm') {
         return 'crm';
       }
@@ -56,13 +60,13 @@ function AppContent() {
       if (window.location.pathname === '/chat' || window.location.pathname === '/democracy') {
         return 'democracy';
       }
-      if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects', 'crm'].includes(tabParam)) {
+      if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects', 'crm', 'mondial'].includes(tabParam)) {
         return tabParam as any;
       }
       // Check last visited tab in localStorage
       try {
         const lastTab = localStorage.getItem('nws_last_active_tab');
-        if (lastTab && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'democracy', 'news', 'about', 'projects', 'crm'].includes(lastTab)) {
+        if (lastTab && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'democracy', 'news', 'about', 'projects', 'crm', 'mondial'].includes(lastTab)) {
           return lastTab as any;
         }
       } catch (e) {}
@@ -81,7 +85,7 @@ function AppContent() {
     return 'welcome';
   });
 
-  const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects' | 'crm') => {
+  const setActiveTab = (tab: 'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects' | 'crm' | 'mondial') => {
     setActiveTabState(tab);
     trackPageView(tab);
     try {
@@ -311,7 +315,7 @@ function AppContent() {
     <div className="min-h-screen bg-brand-parchment font-sans text-brand-blue selection:bg-brand-gold selection:text-brand-blue overflow-x-hidden">
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
       
-      <main className="pt-20 px-4 relative">
+      <main className="pt-20 px-4 relative" style={{ paddingTop: 'calc(5rem + var(--custode-bar-height, 0px))' }}>
         {/* Background Decorative Element */}
         <div className="absolute top-40 -left-20 w-96 h-96 bg-brand-gold/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-80 -right-20 w-64 h-64 bg-brand-blue/5 rounded-full blur-3xl pointer-events-none" />
@@ -350,6 +354,13 @@ function AppContent() {
                   className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'welcome' ? 'bg-[#0a1c3e] text-[#f7f5f0] shadow' : 'text-[#0a1c3e]/75 hover:text-[#0a1c3e]'}`}
                 >
                   🌟 {tText('Start Here/Home', 'Inizia Qui/Home')}
+                </button>
+                <button 
+                  onClick={() => setActiveTab('mondial')}
+                  id="tab-mondial-btn"
+                  className={`px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer ${activeTab === 'mondial' ? 'bg-[#0a1c3e] text-[#c5a880] shadow font-bold' : 'text-[#0a1c3e] font-extrabold hover:text-[#c5a880]'}`}
+                >
+                  Ɱ {tText('Mondial Barter', 'Mondial (Ɱ) Baratto')}
                 </button>
                 <button 
                   onClick={() => setActiveTab('news')}
@@ -448,6 +459,11 @@ function AppContent() {
                 </div>
                 <CrmEmailClient />
               </div>
+            ) : activeTab === 'mondial' ? (
+              <MondialWallet 
+                onGoToRegister={() => setActiveTab('register')} 
+                onGoToDemocracy={() => setActiveTab('democracy')} 
+              />
             ) : activeTab === 'admin' ? (
               <AdminDashboard />
             ) : activeTab === 'constitution' ? (
@@ -506,6 +522,18 @@ function AppContent() {
 
           {/* Primary Sovereign Navigation Links with generous spacing */}
           <nav aria-label="Sovereign Navigation" className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-xs font-tech uppercase tracking-wider font-semibold">
+            <button 
+              onClick={() => { setActiveTab('mondial'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              id="footer-mondial-nav-link"
+              className={`px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer ${
+                activeTab === 'mondial' 
+                  ? 'bg-[#0a1c3e] text-brand-gold font-bold shadow-xs' 
+                  : 'text-[#c5a880] font-extrabold hover:text-[#0a1c3e] hover:bg-[#0a1c3e]/5'
+              }`}
+            >
+              Ɱ Mondial
+            </button>
+
             <button 
               onClick={() => { setActiveTab('about'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               id="footer-about-nav-link"

@@ -1219,6 +1219,14 @@ export async function ensureCrmTables(dbPool: any): Promise<void> {
   }
 }
 
+// Cache in memoria sincronizzata per garantire persistenza e velocità immediata
+let memoryTemplates: CrmEmailTemplate[] = DEFAULT_CRM_EMAIL_TEMPLATES.map((t, idx) => ({
+  id: idx + 1,
+  ...t,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+}));
+
 /**
  * Recupera tutti i modelli di email disponibili nel CRM.
  */
@@ -1230,7 +1238,8 @@ export async function getCrmTemplates(dbPool: any): Promise<CrmEmailTemplate[]> 
         FROM crm_email_templates
         ORDER BY categoria ASC, titolo ASC
       `);
-      if (res.rows.length > 0) {
+      if (res.rows && res.rows.length > 0) {
+        memoryTemplates = res.rows;
         return res.rows;
       }
     } catch (e: any) {
@@ -1238,13 +1247,7 @@ export async function getCrmTemplates(dbPool: any): Promise<CrmEmailTemplate[]> 
     }
   }
 
-  // Fallback con ID temporanei se database non risponde
-  return DEFAULT_CRM_EMAIL_TEMPLATES.map((t, idx) => ({
-    id: idx + 1,
-    ...t,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }));
+  return memoryTemplates;
 }
 
 /**
@@ -1275,38 +1278,81 @@ export async function saveCrmTemplate(
   const firma = data.firma_predefinita?.trim() || 'Custode Digitale';
   const lingua = data.lingua_predefinita || 'italiano';
 
+  let savedItem: CrmEmailTemplate | null = null;
+
   if (dbPool) {
-    if (data.id) {
-      const res = await dbPool.query(`
-        UPDATE crm_email_templates
-        SET titolo = $1, descrizione = $2, oggetto = $3, testo_messaggio = $4, categoria = $5, firma_predefinita = $6, lingua_predefinita = $7, updated_at = NOW()
-        WHERE id = $8
-        RETURNING *
-      `, [titolo, descrizione, oggetto, testo, categoria, firma, lingua, data.id]);
-      if (res.rows.length > 0) return res.rows[0];
-    } else {
-      const res = await dbPool.query(`
-        INSERT INTO crm_email_templates (titolo, descrizione, oggetto, testo_messaggio, categoria, firma_predefinita, lingua_predefinita)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING *
-      `, [titolo, descrizione, oggetto, testo, categoria, firma, lingua]);
-      if (res.rows.length > 0) return res.rows[0];
+    try {
+      if (data.id && typeof data.id === 'number') {
+        const res = await dbPool.query(`
+          UPDATE crm_email_templates
+          SET titolo = $1, descrizione = $2, oggetto = $3, testo_messaggio = $4, categoria = $5, firma_predefinita = $6, lingua_predefinita = $7, updated_at = NOW()
+          WHERE id = $8
+          RETURNING *
+        `, [titolo, descrizione, oggetto, testo, categoria, firma, lingua, data.id]);
+        
+        if (res.rows.length > 0) {
+          savedItem = res.rows[0];
+        }
+      }
+
+      if (!savedItem) {
+        const res = await dbPool.query(`
+          INSERT INTO crm_email_templates (titolo, descrizione, oggetto, testo_messaggio, categoria, firma_predefinita, lingua_predefinita)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          RETURNING *
+        `, [titolo, descrizione, oggetto, testo, categoria, firma, lingua]);
+        if (res.rows.length > 0) {
+          savedItem = res.rows[0];
+        }
+      }
+    } catch (dbErr: any) {
+      console.error('[CRM-TEMPLATES-DB-SAVE-ERR]', dbErr.message);
     }
   }
 
-  // Fallback in memoria
-  return {
-    id: data.id || Date.now(),
-    titolo,
-    descrizione,
-    oggetto,
-    testo_messaggio: testo,
-    categoria,
-    firma_predefinita: firma,
-    lingua_predefinita: lingua,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
+  if (!savedItem) {
+    const existingIdx = data.id ? memoryTemplates.findIndex(t => t.id === data.id) : -1;
+    const nowIso = new Date().toISOString();
+    if (existingIdx >= 0) {
+      savedItem = {
+        ...memoryTemplates[existingIdx],
+        titolo,
+        descrizione,
+        oggetto,
+        testo_messaggio: testo,
+        categoria,
+        firma_predefinita: firma,
+        lingua_predefinita: lingua,
+        updated_at: nowIso
+      };
+      memoryTemplates[existingIdx] = savedItem;
+    } else {
+      const nextId = Math.max(0, ...memoryTemplates.map(t => t.id)) + 1;
+      savedItem = {
+        id: nextId,
+        titolo,
+        descrizione,
+        oggetto,
+        testo_messaggio: testo,
+        categoria,
+        firma_predefinita: firma,
+        lingua_predefinita: lingua,
+        created_at: nowIso,
+        updated_at: nowIso
+      };
+      memoryTemplates.push(savedItem);
+    }
+  } else {
+    // Keep memory in sync with DB item
+    const existingIdx = memoryTemplates.findIndex(t => t.id === savedItem!.id);
+    if (existingIdx >= 0) {
+      memoryTemplates[existingIdx] = savedItem;
+    } else {
+      memoryTemplates.push(savedItem);
+    }
+  }
+
+  return savedItem;
 }
 
 /**
@@ -1314,8 +1360,13 @@ export async function saveCrmTemplate(
  */
 export async function deleteCrmTemplate(dbPool: any, id: number): Promise<boolean> {
   if (dbPool) {
-    await dbPool.query('DELETE FROM crm_email_templates WHERE id = $1', [id]);
-    return true;
+    try {
+      await dbPool.query('DELETE FROM crm_email_templates WHERE id = $1', [id]);
+    } catch (e: any) {
+      console.warn('[CRM-TEMPLATES-DELETE-WARN]', e.message);
+    }
   }
+  memoryTemplates = memoryTemplates.filter(t => t.id !== id);
   return true;
 }
+

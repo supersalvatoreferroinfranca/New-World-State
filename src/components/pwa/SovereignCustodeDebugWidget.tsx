@@ -109,7 +109,15 @@ export default function SovereignCustodeDebugWidget() {
       connection: connectionState,
       isCustode: isCustodeActive
     };
-  }, [activeJurisdiction, connectionState, isCustodeActive]);
+    if (isLoggedIn && isCustodeActive) {
+      document.documentElement.style.setProperty('--custode-bar-height', '24px');
+    } else {
+      document.documentElement.style.setProperty('--custode-bar-height', '0px');
+    }
+    return () => {
+      document.documentElement.style.setProperty('--custode-bar-height', '0px');
+    };
+  }, [activeJurisdiction, connectionState, isCustodeActive, isLoggedIn]);
 
   // MUST be logged in AND have Custode Digitale role
   if (!isLoggedIn || !isCustodeActive) {
