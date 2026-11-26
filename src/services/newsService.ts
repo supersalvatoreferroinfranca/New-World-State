@@ -5,6 +5,7 @@ import { safeFetch } from './api';
 import { FULL_ARTICLE_TRANSLATIONS } from '../data/fullArticleContentTranslations';
 
 const ARTICLES_STORAGE_KEY = 'nws_news_articles_v1';
+const ARTICLES_BACKUP_KEY = 'nws_news_articles_backup_v1';
 const CATEGORIES_STORAGE_KEY = 'nws_news_categories_v1';
 const KNOWN_SERVER_IDS_KEY = 'nws_known_server_article_ids_v1';
 const DELETED_ARTICLE_IDS_KEY = 'nws_deleted_article_ids_v1';
@@ -913,26 +914,98 @@ export function normalizeArticleStatus(status?: string): ArticleStatus {
   return 'bozza';
 }
 
-// Articles Management
-export function getArticles(): NewsArticle[] {
+function getBackupArticles(): NewsArticle[] {
   try {
-    const saved = localStorage.getItem(ARTICLES_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map((a: NewsArticle) => ({
+    const raw = localStorage.getItem(ARTICLES_BACKUP_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(a => a && a.id && !String(a.id).startsWith('art-synth-')).map((a: NewsArticle) => ({
           ...a,
           status: normalizeArticleStatus(a.status)
         }));
       }
     }
+  } catch {}
+  return [];
+}
+
+function saveBackupArticles(articles: NewsArticle[], deletedIdsOverride?: Set<string>): void {
+  try {
+    const deletedIds = deletedIdsOverride || getDeletedArticleIds();
+    const existingBackup = getBackupArticles();
+    const seedIds = new Set(INITIAL_ARTICLES.map(a => String(a.id)));
+    const map = new Map<string, NewsArticle>();
+
+    for (const a of existingBackup) {
+      if (a && a.id && !deletedIds.has(String(a.id)) && !seedIds.has(String(a.id))) {
+        map.set(String(a.id), a);
+      }
+    }
+    for (const a of articles) {
+      if (a && a.id && !deletedIds.has(String(a.id)) && !String(a.id).startsWith('art-synth-')) {
+        if (!seedIds.has(String(a.id))) {
+          map.set(String(a.id), { ...a, status: normalizeArticleStatus(a.status) });
+        }
+      }
+    }
+    const list = Array.from(map.values()).sort(
+      (a, b) => new Date(b.updatedAt || b.publishedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.publishedAt || a.createdAt || 0).getTime()
+    );
+    localStorage.setItem(ARTICLES_BACKUP_KEY, JSON.stringify(list));
+  } catch {
+    // Ignore quota errors on backup snapshot
+  }
+}
+
+function removeArticleFromBackup(id: string): void {
+  try {
+    const targetId = String(id);
+    const filtered = getBackupArticles().filter(a => String(a.id) !== targetId);
+    localStorage.setItem(ARTICLES_BACKUP_KEY, JSON.stringify(filtered));
+  } catch {}
+}
+
+// Articles Management
+export function getArticles(): NewsArticle[] {
+  const deletedIds = getDeletedArticleIds();
+  let primary: NewsArticle[] = [];
+  try {
+    const saved = localStorage.getItem(ARTICLES_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        primary = parsed
+          .filter((a: NewsArticle) => a && a.id && !deletedIds.has(String(a.id)))
+          .map((a: NewsArticle) => ({
+            ...a,
+            status: normalizeArticleStatus(a.status)
+          }));
+      }
+    }
   } catch (e) {
     console.error('[NEWS-SERVICE] Error reading articles:', e);
   }
-  return INITIAL_ARTICLES.map(a => ({
-    ...a,
-    status: normalizeArticleStatus(a.status)
-  }));
+
+  const backup = getBackupArticles().filter(a => !deletedIds.has(String(a.id)));
+  if (primary.length > 0) {
+    if (backup.length > 0) {
+      const existingIds = new Set(primary.map(a => String(a.id)));
+      const recovered = backup.filter(b => !existingIds.has(String(b.id)));
+      if (recovered.length > 0) {
+        return [...recovered, ...primary];
+      }
+    }
+    return primary;
+  }
+
+  const seeds = INITIAL_ARTICLES
+    .filter(a => !deletedIds.has(String(a.id)))
+    .map(a => ({
+      ...a,
+      status: normalizeArticleStatus(a.status)
+    }));
+  return backup.length > 0 ? [...backup, ...seeds] : seeds;
 }
 
 function getKnownServerArticleIds(): Set<string> {
@@ -991,6 +1064,7 @@ export function saveLocalArticlesOnly(articles: NewsArticle[]): NewsArticle[] {
     ...a,
     status: normalizeArticleStatus(a.status)
   }));
+  saveBackupArticles(normalized);
   try {
     localStorage.setItem(ARTICLES_STORAGE_KEY, JSON.stringify(normalized));
     window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
@@ -1011,8 +1085,8 @@ export function saveArticles(articles: NewsArticle[]): void {
 }
 
 export async function upsertArticleToServer(article: NewsArticle): Promise<{ success: boolean; article?: NewsArticle; message?: string }> {
+  removeDeletedArticleId(article.id);
   try {
-    removeDeletedArticleId(article.id);
     const res = await safeFetch('/api/news/article', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1023,7 +1097,22 @@ export async function upsertArticleToServer(article: NewsArticle): Promise<{ suc
       addKnownServerArticleId(article.id);
       return { success: true, article: data.article || article };
     }
-    return { success: false, message: data.message || `HTTP ${res.status}` };
+  } catch {
+    // Fallback to /api/news/sync below
+  }
+
+  try {
+    const syncRes = await safeFetch('/api/news/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articles: [article], replaceAll: false })
+    });
+    const syncData = await syncRes.json().catch(() => ({}));
+    if (syncRes.ok && syncData.success) {
+      addKnownServerArticleId(article.id);
+      return { success: true, article };
+    }
+    return { success: false, message: syncData.message || `HTTP ${syncRes.status}` };
   } catch (err: any) {
     return { success: false, message: err?.message || 'Errore di rete durante il salvataggio sul server.' };
   }
@@ -1082,24 +1171,45 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
           const serverMap = new Map<string, NewsArticle>();
           serverArticles.forEach(a => { if (a && a.id) serverMap.set(String(a.id), a); });
 
-          const currentLocal = getArticles();
-          const knownServerIds = getKnownServerArticleIds();
-          const deletedIds = getDeletedArticleIds();
+          const localDeletedIds = getDeletedArticleIds();
+          const serverDeletedIds = new Set<string>(
+            Array.isArray(data.deletedIds) ? data.deletedIds.map(String) : []
+          );
+          const allDeletedIds = new Set<string>([...localDeletedIds, ...serverDeletedIds]);
 
+          // Sync any server tombstones into local tombstones (unless resurrected on server)
+          if (serverDeletedIds.size > 0) {
+            const nextLocalDeleted = new Set<string>([...localDeletedIds]);
+            serverDeletedIds.forEach(id => {
+              if (!serverMap.has(id)) nextLocalDeleted.add(id);
+            });
+            try {
+              localStorage.setItem(DELETED_ARTICLE_IDS_KEY, JSON.stringify(Array.from(nextLocalDeleted).slice(-500)));
+            } catch {}
+          }
+
+          const currentLocal = getArticles();
           const localMap = new Map<string, NewsArticle>();
           currentLocal.forEach(a => {
-            if (a && a.id && !deletedIds.has(String(a.id))) {
+            if (a && a.id && !allDeletedIds.has(String(a.id))) {
               localMap.set(String(a.id), a);
+            }
+          });
+          // Recover any non-tombstoned items from backup storage if missing from primary storage
+          getBackupArticles().forEach(b => {
+            if (b && b.id && !allDeletedIds.has(String(b.id)) && !localMap.has(String(b.id))) {
+              localMap.set(String(b.id), b);
             }
           });
 
           const articlesToUpload: NewsArticle[] = [];
           const merged: NewsArticle[] = [];
+          const confirmedServerIds = new Set<string>(serverArticles.map(a => String(a.id)));
 
           for (const sArt of serverArticles) {
             if (!sArt || !sArt.id) continue;
             const id = String(sArt.id);
-            if (deletedIds.has(id)) continue;
+            if (localDeletedIds.has(id)) continue;
 
             const lArt = localMap.get(id);
             if (!lArt) {
@@ -1143,53 +1253,53 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
             }
           }
 
-          // Include any locally created articles not yet persisted on DB (and not previously seen/deleted)
+          // CRITICAL SAFEGUARD: NEVER drop a locally created/stored article unless explicitly tombstoned on server or locally!
+          // Keep retrying upload until PostgreSQL explicitly confirms persistence.
           for (const remainingLocal of localMap.values()) {
             const id = String(remainingLocal.id);
-            if (!knownServerIds.has(id) && !deletedIds.has(id)) {
+            if (!id.startsWith('art-synth-') && !allDeletedIds.has(id)) {
               merged.push(remainingLocal);
               articlesToUpload.push(remainingLocal);
             }
           }
 
-          let finalArticles = merged;
-
-          // Push any unsynced local articles/changes up to PostgreSQL and accept authoritative response
-          if (articlesToUpload.length > 0) {
-            try {
-              const syncRes = await safeFetch('/api/news/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ articles: articlesToUpload, replaceAll: false })
-              });
-              if (syncRes.ok) {
-                const syncData = await syncRes.json();
-                if (syncData.success && Array.isArray(syncData.articles) && syncData.articles.length > 0) {
-                  finalArticles = syncData.articles.map((a: any) => ({
-                    ...a,
-                    status: normalizeArticleStatus(a.status)
-                  }));
-                }
-              }
-            } catch (syncErr) {
-              console.warn('[NEWS-SERVICE] Background upload sync error:', syncErr);
+          const finalMap = new Map<string, NewsArticle>();
+          for (const a of merged) {
+            if (a && a.id && !allDeletedIds.has(String(a.id))) {
+              finalMap.set(String(a.id), a);
             }
           }
 
-          finalArticles.sort((a, b) =>
+          // Push any unsynced local articles/changes up to PostgreSQL (individually so large payloads never drop)
+          if (articlesToUpload.length > 0) {
+            for (const unsynced of articlesToUpload) {
+              const upRes = await upsertArticleToServer(unsynced);
+              if (upRes.success && upRes.article) {
+                const savedArt = { ...upRes.article, status: normalizeArticleStatus(upRes.article.status) };
+                confirmedServerIds.add(String(savedArt.id));
+                finalMap.set(String(savedArt.id), savedArt);
+              }
+            }
+          }
+
+          const finalArticles = Array.from(finalMap.values()).sort((a, b) =>
             new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime()
           );
 
-          const nextKnown = new Set<string>(serverArticles.map(a => String(a.id)));
-          finalArticles.forEach(a => nextKnown.add(String(a.id)));
-          setKnownServerArticleIds(Array.from(nextKnown));
+          // ONLY store IDs confirmed returned/saved by server (never unconfirmed uploads)
+          setKnownServerArticleIds(Array.from(confirmedServerIds));
+          saveBackupArticles(finalArticles, allDeletedIds);
 
           const mergedJson = JSON.stringify(finalArticles);
           const currentLocalJson = JSON.stringify(currentLocal);
 
           if (mergedJson !== currentLocalJson) {
-            localStorage.setItem(ARTICLES_STORAGE_KEY, mergedJson);
-            window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
+            try {
+              localStorage.setItem(ARTICLES_STORAGE_KEY, mergedJson);
+              window.dispatchEvent(new CustomEvent('nws_news_articles_updated'));
+            } catch (quotaErr) {
+              console.warn('[NEWS-SERVICE] Quota writing articles:', quotaErr);
+            }
           }
 
           return finalArticles;
@@ -1392,6 +1502,7 @@ export async function updateArticleAsync(id: string, articleData: Partial<NewsAr
 
 export function deleteArticle(id: string): void {
   addDeletedArticleId(id);
+  removeArticleFromBackup(id);
   const articles = getArticles();
   const filtered = articles.filter(a => String(a.id) !== String(id));
   saveLocalArticlesOnly(filtered);
@@ -1405,6 +1516,7 @@ export function deleteArticle(id: string): void {
 
 export async function deleteArticleAsync(id: string): Promise<boolean> {
   addDeletedArticleId(id);
+  removeArticleFromBackup(id);
   const articles = getArticles();
   const filtered = articles.filter(a => String(a.id) !== String(id));
   saveLocalArticlesOnly(filtered);

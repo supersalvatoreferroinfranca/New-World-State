@@ -9196,8 +9196,11 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
-        const articles = await getServerArticlesAsync();
-        return res.json({ success: true, articles });
+        const [articles, deletedIds] = await Promise.all([
+          getServerArticlesAsync(),
+          getDeletedArticleIdsAsync()
+        ]);
+        return res.json({ success: true, articles, deletedIds: Array.from(deletedIds) });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: 'Errore lettura articoli: ' + err.message });
       }
@@ -9212,6 +9215,8 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
           return res.status(400).json({ success: false, message: 'Slug o ID articolo obbligatorio.' });
         }
 
+        const deletedIds = await getDeletedArticleIdsAsync();
+
         // Fast direct lookup in PostgreSQL first
         if (dbPool) {
           try {
@@ -9222,7 +9227,9 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
             if (directRes.rows.length > 0 && directRes.rows[0].data) {
               const raw = directRes.rows[0].data;
               const article = typeof raw === 'string' ? JSON.parse(raw) : raw;
-              return res.json({ success: true, article });
+              if (article && article.id && !deletedIds.has(String(article.id))) {
+                return res.json({ success: true, article });
+              }
             }
           } catch (dbErr: any) {
             console.warn('[NEWS-SINGLE-PG-WARN]', dbErr.message);
@@ -9384,10 +9391,9 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
 
         saveServerArticles(finalList);
 
-        // Persisti su PostgreSQL nws_news_articles
-        if (dbPool) {
-          const itemsToPersist = upsertedItems.length > 0 ? upsertedItems : finalList;
-          for (const a of itemsToPersist) {
+        // Persisti su PostgreSQL nws_news_articles solo gli articoli nuovi/aggiornati (evita timeout su sync grandi)
+        if (dbPool && upsertedItems.length > 0) {
+          for (const a of upsertedItems) {
             if (a && a.id) {
               try {
                 await dbPool.query(`
@@ -9402,7 +9408,13 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
           }
         }
 
-        return res.json({ success: true, count: finalList.length, articles: finalList });
+        return res.json({
+          success: true,
+          count: finalList.length,
+          articles: finalList,
+          deletedIds: Array.from(deletedIds),
+          persistedCount: upsertedItems.length
+        });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: 'Errore sincronizzazione articoli: ' + err.message });
       }

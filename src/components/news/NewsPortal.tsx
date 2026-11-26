@@ -296,7 +296,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
   const filteredArticles = articles.filter((art) => {
     // CRITICAL: Anonymous/Public viewers MUST NEVER see any article that is not published
     if (!isLoggedIn) {
-      if (art.status !== 'pubblicato') {
+      if (normalizeArticleStatus(art.status) !== 'pubblicato') {
         return false;
       }
     }
@@ -349,7 +349,20 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     return normStatus === 'pubblicato';
   }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const featuredArticles = articles.filter(a => a.status === 'pubblicato' && a.isFeatured);
+  const featuredArticles = articles.filter(a => normalizeArticleStatus(a.status) === 'pubblicato' && a.isFeatured);
+
+  const hasOwnArticles = isLoggedIn && articles.some(art => {
+    const currentAuthorId = citizen?.id;
+    const currentAuthorName = `${citizen?.firstName || ''} ${citizen?.surname || ''}`.trim() || citizen?.username;
+    const currentEmail = citizen?.email;
+    const matchesId = currentAuthorId && String(art.authorId) === String(currentAuthorId);
+    const matchesName = currentAuthorName && (
+      art.authorName?.toLowerCase() === currentAuthorName.toLowerCase() ||
+      art.authorName?.toLowerCase().includes(currentAuthorName.toLowerCase())
+    );
+    const matchesEmail = currentEmail && art.authorEmail?.toLowerCase() === currentEmail.toLowerCase();
+    return Boolean(matchesId || matchesName || matchesEmail);
+  });
 
   const handleOpenDetail = (art: NewsArticle) => {
     incrementArticleViews(art.id);
@@ -540,8 +553,8 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
             />
           </div>
 
-          {/* View Tab Switcher - Only shown for Logged-in Cronisti or Custodi */}
-          {isLoggedIn && (isCronista || isCustode) && (
+          {/* View Tab Switcher - Shown for Logged-in Cronisti, Custodi or Authors with saved articles */}
+          {isLoggedIn && (isCronista || isCustode || hasOwnArticles) && (
             <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200">
               <button
                 onClick={() => setViewTab('published')}
@@ -554,7 +567,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                 {tText('Published Articles', 'Articoli Pubblicati')}
               </button>
 
-              {(isCronista || isCustode) && (
+              {(isCronista || isCustode || hasOwnArticles) && (
                 <button
                   onClick={() => setViewTab('my_drafts')}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
@@ -598,11 +611,11 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            {tText('All Categories', 'Tutte le Categorie')} ({articles.filter(a => a.status === 'pubblicato').length})
+            {tText('All Categories', 'Tutte le Categorie')} ({articles.filter(a => normalizeArticleStatus(a.status) === 'pubblicato').length})
           </button>
 
           {categories.map((cat) => {
-            const count = articles.filter(a => a.categoryId === cat.id && a.status === 'pubblicato').length;
+            const count = articles.filter(a => a.categoryId === cat.id && normalizeArticleStatus(a.status) === 'pubblicato').length;
             const isSelected = selectedCategoryId === cat.id;
             return (
               <button
