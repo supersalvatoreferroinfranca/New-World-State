@@ -2,7 +2,7 @@
   "totalPageViews": 1526,
   "uniqueVisitors": 412,
   "totalSessions": 530,
-  "totalTimeSpentSeconds": 368401,
+  "totalTimeSpentSeconds": 369118,
   "bounceSessions": 182,
   "visitors": {},
   "pageViewsByTab": {
@@ -145,7 +145,7 @@
     "Ginevra": 35,
     "Parigi": 28,
     "Altre Località": 137,
-    "Catania": 791
+    "Catania": 803
   },
   "sources": {
     "direct": 724,
@@ -427,17 +427,17 @@
       "countryCode": "IT",
       "entryPage": "welcome",
       "entryPageLabel": "Portale Istituzionale",
-      "currentTab": "admin",
-      "currentTabLabel": "Pannello Amministrazione",
-      "timeSpentSeconds": 4097,
-      "durationFormatted": "1h 8m",
+      "currentTab": "mondial",
+      "currentTabLabel": "Mondial",
+      "timeSpentSeconds": 4704,
+      "durationFormatted": "1h 18m",
       "isOnline": true,
       "deviceType": "desktop",
       "browser": "Firefox",
       "os": "Windows",
       "ipMasked": "93.148.xxx.xxx",
       "referrer": "direct",
-      "lastActive": 1793096497319
+      "lastActive": 1795692056192
     },
     {
       "id": "vis_muwv9jx3_1dx3",

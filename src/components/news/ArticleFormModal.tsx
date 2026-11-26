@@ -18,8 +18,10 @@ import {
   MediaSearchResult, 
   MediaSearchDebugInfo, 
   RELIABLE_NEWS_SOURCES, 
-  AiArticleGenerationResponse 
+  AiArticleGenerationResponse,
+  normalizeArticleStatus
 } from '../../services/newsService';
+import { safeFetch } from '../../services/api';
 import { MediaDebuggerModal } from './MediaDebuggerModal';
 import { VideoPreviewModal } from './VideoPreviewModal';
 import { useI18n } from '../../contexts/I18nContext';
@@ -71,6 +73,7 @@ interface ArticleFormModalProps {
   authorId: number | string;
   authorName: string;
   authorRole?: string;
+  canDirectPublish?: boolean;
   onSaved?: () => void;
 }
 
@@ -114,6 +117,7 @@ export default function ArticleFormModal({
   authorId,
   authorName,
   authorRole = 'Cronista Ufficiale',
+  canDirectPublish = false,
   onSaved
 }: ArticleFormModalProps) {
   const { tText } = useI18n();
@@ -614,6 +618,46 @@ export default function ArticleFormModal({
     setTags(tags.filter(t => t !== tagToRemove));
   };
 
+  const compressImageDataUrl = (rawUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      if (!rawUrl || !rawUrl.startsWith('data:image/') || rawUrl.length < 220000) {
+        resolve(rawUrl);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxDim = 1280;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width >= height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(rawUrl);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.82);
+          resolve(compressed.length < rawUrl.length ? compressed : rawUrl);
+        } catch {
+          resolve(rawUrl);
+        }
+      };
+      img.onerror = () => resolve(rawUrl);
+      img.src = rawUrl;
+    });
+  };
+
   // Image Upload or URL Addition to Aruba Space
   const handleFileUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -627,20 +671,22 @@ export default function ArticleFormModal({
     setIsUploadingMedia(true);
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const dataUrl = event.target?.result as string;
+      const rawDataUrl = event.target?.result as string;
+      const safeDataUrl = await compressImageDataUrl(rawDataUrl);
       try {
-        const res = await fetch('/api/upload-media', {
+        const res = await safeFetch('/api/upload-media', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            fileData: dataUrl,
+            fileData: safeDataUrl,
             fileName: file.name,
             fileType: file.type,
             authorName
           })
         });
-        const data = await res.json();
-        const uploadedUrl = (data.success && data.url) ? data.url : dataUrl;
+        const data = await res.json().catch(() => ({}));
+        const hasRealUploadedUrl = res.ok && data.success && data.url && data.message !== 'Fallback OK';
+        const uploadedUrl = hasRealUploadedUrl ? data.url : safeDataUrl;
 
         setImages(prev => [
           ...prev,
@@ -660,7 +706,7 @@ export default function ArticleFormModal({
           {
             type: 'image',
             source: 'upload',
-            url: dataUrl,
+            url: safeDataUrl,
             fileName: file.name,
             caption: newImageCaption || file.name
           }
@@ -707,7 +753,7 @@ export default function ArticleFormModal({
     reader.onload = async (event) => {
       const dataUrl = event.target?.result as string;
       try {
-        const res = await fetch('/api/upload-media', {
+        const res = await safeFetch('/api/upload-media', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -717,8 +763,9 @@ export default function ArticleFormModal({
             authorName
           })
         });
-        const data = await res.json();
-        const uploadedUrl = (data.success && data.url) ? data.url : dataUrl;
+        const data = await res.json().catch(() => ({}));
+        const hasRealUploadedUrl = res.ok && data.success && data.url && data.message !== 'Fallback OK';
+        const uploadedUrl = hasRealUploadedUrl ? data.url : dataUrl;
 
         setVideos(prev => [
           ...prev,
@@ -882,7 +929,9 @@ export default function ArticleFormModal({
               content: finalContent,
               tags: finalTags
             });
-            await updateArticleAsync(finalArticleId, { translations });
+            if (translations && Object.keys(translations).length > 0) {
+              await updateArticleAsync(finalArticleId, { translations });
+            }
           } catch (e) {
             console.warn('[Auto-Translate] failed', e);
           }
@@ -2631,7 +2680,7 @@ export default function ArticleFormModal({
             )}
 
             {/* Direct Publish for Custodians / Admins or Published articles */}
-            {(authorRole?.toLowerCase().includes('custode') || authorRole?.toLowerCase().includes('admin') || articleToEdit?.status === 'pubblicato') && (
+            {(canDirectPublish || authorRole?.toLowerCase().includes('custode') || authorRole?.toLowerCase().includes('admin') || normalizeArticleStatus(articleToEdit?.status) === 'pubblicato') && (
               <button
                 type="button"
                 disabled={isSaving}

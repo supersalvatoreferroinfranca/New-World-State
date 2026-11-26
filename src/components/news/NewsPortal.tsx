@@ -347,7 +347,12 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     }
 
     return normStatus === 'pubblicato';
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }).sort((a, b) => {
+    if (viewTab === 'published') {
+      return new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime();
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   const featuredArticles = articles.filter(a => normalizeArticleStatus(a.status) === 'pubblicato' && a.isFeatured);
 
@@ -832,7 +837,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
                           </div>
                           <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
                             {/* Quick Star Toggle Button for Approved/Published Articles */}
-                            {(art.status === 'pubblicato' || art.status === 'approved') && (
+                            {normalizeArticleStatus(art.status) === 'pubblicato' && (
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -961,6 +966,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
             }
             return r || (isCustode ? 'Custode Digitale' : isCronista ? 'Cronista Ufficiale' : 'Cronista');
           })()}
+          canDirectPublish={isCustode || !!citizen?.isAdmin}
           onSaved={loadLocalData}
         />
       )}

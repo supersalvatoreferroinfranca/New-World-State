@@ -9408,6 +9408,10 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
           }
         }
 
+        if (upsertedItems.length > 0) {
+          await mirrorArticlesToRemoteSync(upsertedItems).catch(() => {});
+        }
+
         return res.json({
           success: true,
           count: finalList.length,
@@ -11393,6 +11397,60 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
       return 'bozza';
     }
 
+    const REMOTE_NEWS_ORIGINS = [
+      'https://newworldstate.cloud',
+      'https://nws-wk.supersalvatoreferroinfranca.workers.dev'
+    ];
+    let lastRemoteReconcileMs = 0;
+
+    function isInternalTestArticleId(id: string): boolean {
+      const s = String(id || '');
+      return s.startsWith('art-test-') || s.startsWith('art-verify-') || s.startsWith('art-synth-');
+    }
+
+    async function mirrorArticlesToRemoteSync(articlesToSync: any[]): Promise<void> {
+      const realArticles = (articlesToSync || []).filter(a => a && a.id && !isInternalTestArticleId(String(a.id)));
+      if (realArticles.length === 0) return;
+      await Promise.allSettled(
+        REMOTE_NEWS_ORIGINS.map(async (origin) => {
+          try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 4000);
+            const r = await fetch(`${origin}/api/news/sync`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ articles: realArticles, replaceAll: false }),
+              signal: controller.signal
+            });
+            clearTimeout(timer);
+            if (!r.ok) {
+              console.warn(`[NEWS-MIRROR-WARN] ${origin} returned HTTP ${r.status}`);
+            }
+          } catch (e: any) {
+            console.warn(`[NEWS-MIRROR-WARN] ${origin}: ${e?.message || e}`);
+          }
+        })
+      );
+    }
+
+    async function mirrorDeleteToRemoteWorkers(idOrSlug: string): Promise<void> {
+      const target = String(idOrSlug || '');
+      if (!target || isInternalTestArticleId(target)) return;
+      await Promise.allSettled(
+        REMOTE_NEWS_ORIGINS.map(async (origin) => {
+          try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 4000);
+            await fetch(`${origin}/api/news/articles/${encodeURIComponent(target)}`, {
+              method: 'DELETE',
+              signal: controller.signal
+            });
+            clearTimeout(timer);
+          } catch {}
+        })
+      );
+    }
+
     async function getDeletedArticleIdsAsync(): Promise<Set<string>> {
       const deleted = new Set<string>();
       if (dbPool) {
@@ -11434,6 +11492,40 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
             }
           }
 
+          // Periodically reconcile any articles published directly on newworldstate.cloud
+          const nowMs = Date.now();
+          if (nowMs - lastRemoteReconcileMs > 20000) {
+            lastRemoteReconcileMs = nowMs;
+            try {
+              const controller = new AbortController();
+              const timer = setTimeout(() => controller.abort(), 2500);
+              const remoteRes = await fetch('https://newworldstate.cloud/api/news/articles', { signal: controller.signal });
+              clearTimeout(timer);
+              if (remoteRes.ok) {
+                const remoteJson: any = await remoteRes.json().catch(() => null);
+                if (remoteJson && remoteJson.success && Array.isArray(remoteJson.articles)) {
+                  for (const ra of remoteJson.articles) {
+                    if (!ra || !ra.id || deletedSet.has(String(ra.id)) || isInternalTestArticleId(String(ra.id))) continue;
+                    const id = String(ra.id);
+                    const normRemote = { ...ra, id, slug: ra.slug || id, status: normalizeServerStatus(ra.status) };
+                    const localExisting = mergedMap.get(id);
+                    const remoteTime = new Date(normRemote.updatedAt || normRemote.publishedAt || normRemote.createdAt || 0).getTime();
+                    const localTime = localExisting ? new Date(localExisting.updatedAt || localExisting.publishedAt || localExisting.createdAt || 0).getTime() : 0;
+                    if (!localExisting || remoteTime > localTime || (normRemote.status === 'pubblicato' && localExisting.status !== 'pubblicato')) {
+                      mergedMap.set(id, normRemote);
+                      seededMissing = true;
+                      dbPool.query(`
+                        INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+                        VALUES ($1, $2, $3, $4::jsonb, NOW())
+                        ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, data = EXCLUDED.data, updated_at = NOW()
+                      `, [id, normRemote.slug, normRemote.title || '', JSON.stringify(normRemote)]).catch(() => {});
+                    }
+                  }
+                }
+              }
+            } catch {}
+          }
+
           const result = Array.from(mergedMap.values()).sort((a, b) =>
             new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime()
           );
@@ -11472,6 +11564,7 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
         new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime()
       );
       saveServerArticles(updated);
+      await mirrorArticlesToRemoteSync([article]).catch(() => {});
       return { savedToDb, articles: updated };
     }
 
@@ -11492,6 +11585,10 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
           console.warn('[SERVER-NEWS-DELETE-PG-WARN]', dbErr.message);
         }
       }
+      for (const m of matched) {
+        await mirrorDeleteToRemoteWorkers(String(m.id)).catch(() => {});
+      }
+      await mirrorDeleteToRemoteWorkers(target).catch(() => {});
       return updated;
     }
 

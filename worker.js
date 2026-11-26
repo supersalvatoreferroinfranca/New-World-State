@@ -4459,6 +4459,20 @@ CREATE TABLE citizens (
       // Rotta: Moderazione Notizie
       if (url.pathname === '/api/news/moderate' && request.method === 'POST') {
         try {
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_news_articles (
+              id VARCHAR(255) PRIMARY KEY,
+              data JSONB NOT NULL,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_news_deleted (
+              id VARCHAR(255) PRIMARY KEY,
+              deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+
           const body = await request.json().catch(() => ({}));
           const articleId = body.id || body.articleId;
           const { action, rejectionReason, moderatorNotes } = body;
@@ -4473,7 +4487,7 @@ CREATE TABLE citizens (
           if (rows && rows.length > 0) {
             article = typeof rows[0].data === 'string' ? JSON.parse(rows[0].data) : rows[0].data;
           } else if (body.article) {
-            article = body.article;
+            article = { ...body.article };
           }
 
           if (!article) {
@@ -4482,11 +4496,15 @@ CREATE TABLE citizens (
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
           }
+          article.id = String(article.id || articleId);
+          if (!article.slug) article.slug = article.id;
+
           if (action === 'approve') {
             article.status = 'pubblicato';
             if (!article.publishedAt) article.publishedAt = new Date().toISOString();
           } else if (action === 'reject') {
             article.status = 'rifiutato';
+            article.isFeatured = false;
             article.rejectionReason = rejectionReason || moderatorNotes || 'Non conforme';
           } else if (action === 'request_changes') {
             article.status = 'in_revisione';
@@ -4495,9 +4513,13 @@ CREATE TABLE citizens (
             article.isFeatured = action === 'toggle_featured' ? !article.isFeatured : true;
           } else if (action === 'unfeature') {
             article.isFeatured = false;
+          } else if (action === 'hide') {
+            article.status = 'bozza';
+            article.isFeatured = false;
           } else if (action === 'delete') {
+            await queryDb('INSERT INTO nws_news_deleted (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [String(articleId)]);
             await queryDb('DELETE FROM nws_news_articles WHERE id = $1', [String(articleId)]);
-            return new Response(JSON.stringify({ success: true, message: 'Articolo eliminato con successo.' }), {
+            return new Response(JSON.stringify({ success: true, savedToDb: true, message: 'Articolo eliminato con successo.' }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
           }
@@ -4505,8 +4527,13 @@ CREATE TABLE citizens (
             article.moderatorNotes = moderatorNotes;
           }
           article.updatedAt = new Date().toISOString();
-          await queryDb('UPDATE nws_news_articles SET data = $1::jsonb, updated_at = NOW() WHERE id = $2', [JSON.stringify(article), String(articleId)]);
-          return new Response(JSON.stringify({ success: true, article, message: `Articolo aggiornato con azione: ${action}` }), {
+          await queryDb('DELETE FROM nws_news_deleted WHERE id = $1', [String(article.id)]);
+          await queryDb(`
+            INSERT INTO nws_news_articles (id, data, updated_at)
+            VALUES ($1, $2::jsonb, NOW())
+            ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+          `, [String(article.id), JSON.stringify(article)]);
+          return new Response(JSON.stringify({ success: true, savedToDb: true, article, message: `Articolo aggiornato con azione: ${action}` }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (err) {
@@ -5252,16 +5279,140 @@ CREATE TABLE citizens (
               updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
           `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_news_deleted (
+              id VARCHAR(255) PRIMARY KEY,
+              deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
 
-          const rows = await queryDb("SELECT data FROM nws_news_articles ORDER BY (data->>'publishedAt') DESC NULLS LAST, updated_at DESC");
-          if (rows && rows.length > 0) {
-            const articles = rows.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data);
-            return new Response(JSON.stringify({ success: true, articles }), {
+          const [rows, deletedRows] = await Promise.all([
+            queryDb("SELECT data FROM nws_news_articles ORDER BY (data->>'publishedAt') DESC NULLS LAST, updated_at DESC"),
+            queryDb('SELECT id FROM nws_news_deleted').catch(() => [])
+          ]);
+          const deletedIds = (deletedRows || []).map(r => String(r.id)).filter(Boolean);
+          const deletedSet = new Set(deletedIds);
+          const articles = (rows || [])
+            .map(r => (typeof r.data === 'string' ? JSON.parse(r.data) : r.data))
+            .filter(a => a && a.id && !deletedSet.has(String(a.id)));
+
+          return new Response(JSON.stringify({ success: true, articles, deletedIds }), {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store, no-cache, must-revalidate'
+            }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname.startsWith('/api/news/articles/') && request.method === 'GET') {
+        try {
+          const slugOrId = decodeURIComponent(url.pathname.slice('/api/news/articles/'.length)).trim();
+          if (!slugOrId) {
+            return new Response(JSON.stringify({ success: false, message: 'Slug o ID articolo obbligatorio.' }), {
+              status: 400,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
           }
-          // Se la tabella è ancora vuota, restituisce array vuoto
-          return new Response(JSON.stringify({ success: true, articles: [] }), {
+
+          const deletedRows = await queryDb('SELECT id FROM nws_news_deleted').catch(() => []);
+          const deletedSet = new Set((deletedRows || []).map(r => String(r.id)).filter(Boolean));
+          if (deletedSet.has(slugOrId)) {
+            return new Response(JSON.stringify({ success: false, message: 'Articolo non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const rows = await queryDb(
+            "SELECT data FROM nws_news_articles WHERE id = $1 OR data->>'slug' = $1 LIMIT 1",
+            [slugOrId]
+          ).catch(() => []);
+
+          let article = null;
+          if (rows && rows.length > 0 && rows[0].data) {
+            article = typeof rows[0].data === 'string' ? JSON.parse(rows[0].data) : rows[0].data;
+          } else {
+            const allRows = await queryDb('SELECT data FROM nws_news_articles').catch(() => []);
+            const targetLower = slugOrId.toLowerCase();
+            for (const r of (allRows || [])) {
+              const candidate = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+              if (!candidate || !candidate.id) continue;
+              if (String(candidate.id).toLowerCase() === targetLower || String(candidate.slug || '').toLowerCase() === targetLower) {
+                article = candidate;
+                break;
+              }
+            }
+          }
+
+          if (!article || deletedSet.has(String(article.id))) {
+            return new Response(JSON.stringify({ success: false, message: 'Articolo non trovato.' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          return new Response(JSON.stringify({ success: true, article }), {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store, no-cache, must-revalidate'
+            }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/news/article' && request.method === 'POST') {
+        try {
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_news_articles (
+              id VARCHAR(255) PRIMARY KEY,
+              data JSONB NOT NULL,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_news_deleted (
+              id VARCHAR(255) PRIMARY KEY,
+              deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+
+          const body = await request.json().catch(() => ({}));
+          const incoming = body.article || body;
+          if (!incoming || !incoming.id || !incoming.title) {
+            return new Response(JSON.stringify({ success: false, message: 'Dati articolo incompleti (id e title obbligatori).' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const normalizedArticle = {
+            ...incoming,
+            id: String(incoming.id),
+            slug: incoming.slug || String(incoming.id),
+            updatedAt: incoming.updatedAt || new Date().toISOString()
+          };
+
+          await queryDb('DELETE FROM nws_news_deleted WHERE id = $1', [normalizedArticle.id]);
+          await queryDb(`
+            INSERT INTO nws_news_articles (id, data, updated_at)
+            VALUES ($1, $2::jsonb, NOW())
+            ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+          `, [normalizedArticle.id, JSON.stringify(normalizedArticle)]);
+
+          return new Response(JSON.stringify({ success: true, savedToDb: true, article: normalizedArticle }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (err) {
@@ -5281,29 +5432,74 @@ CREATE TABLE citizens (
               updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
           `);
+          await queryDb(`
+            CREATE TABLE IF NOT EXISTS nws_news_deleted (
+              id VARCHAR(255) PRIMARY KEY,
+              deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
 
           const body = await request.json().catch(() => ({}));
-          const articles = body.articles || [];
+          const articles = Array.isArray(body.articles) ? body.articles : [];
+          const [existingRows, deletedRows] = await Promise.all([
+            queryDb('SELECT data FROM nws_news_articles').catch(() => []),
+            queryDb('SELECT id FROM nws_news_deleted').catch(() => [])
+          ]);
+
+          const deletedIds = (deletedRows || []).map(r => String(r.id)).filter(Boolean);
+          const deletedSet = new Set(deletedIds);
+          const mergedMap = new Map();
+          for (const r of (existingRows || [])) {
+            const art = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+            if (art && art.id && !deletedSet.has(String(art.id))) {
+              mergedMap.set(String(art.id), art);
+            }
+          }
+
           let savedCount = 0;
           for (const a of articles) {
             if (!a || !a.id) continue;
+            const id = String(a.id);
+            if (deletedSet.has(id)) continue;
+
+            const existing = mergedMap.get(id);
+            let chosen = { ...a, id, slug: a.slug || id };
+            if (existing) {
+              const existingTime = new Date(existing.updatedAt || existing.publishedAt || existing.createdAt || 0).getTime();
+              const incomingTime = new Date(chosen.updatedAt || chosen.publishedAt || chosen.createdAt || 0).getTime();
+              if (existing.status === 'pubblicato' && chosen.status !== 'pubblicato' && existingTime >= incomingTime) {
+                chosen = { ...chosen, ...existing, status: 'pubblicato' };
+              } else if (existingTime > incomingTime && !(chosen.status === 'pubblicato' && existing.status !== 'pubblicato')) {
+                chosen = { ...chosen, ...existing };
+              } else {
+                chosen = { ...existing, ...chosen };
+              }
+            }
+
             try {
               await queryDb(`
                 INSERT INTO nws_news_articles (id, data, updated_at)
                 VALUES ($1, $2::jsonb, NOW())
                 ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
-              `, [String(a.id), JSON.stringify(a)]);
+              `, [id, JSON.stringify(chosen)]);
+              mergedMap.set(id, chosen);
               savedCount++;
             } catch (itemErr) {
               console.warn('[NEWS-SYNC-ITEM-WARN]', itemErr.message);
             }
           }
-          return new Response(JSON.stringify({ success: true, count: savedCount }), {
+
+          const finalList = Array.from(mergedMap.values()).sort((x, y) =>
+            new Date(y.publishedAt || y.createdAt || 0).getTime() - new Date(x.publishedAt || x.createdAt || 0).getTime()
+          );
+
+          return new Response(JSON.stringify({ success: true, count: savedCount, articles: finalList, deletedIds }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (err) {
           console.error('[NEWS-SYNC-ERR]', err.message);
-          return new Response(JSON.stringify({ success: true, count: 0, warning: err.message }), {
+          return new Response(JSON.stringify({ success: false, count: 0, message: err.message }), {
+            status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
@@ -5311,8 +5507,42 @@ CREATE TABLE citizens (
 
       if ((url.pathname.startsWith('/api/news/articles/') || url.pathname.startsWith('/api/news/delete/')) && request.method === 'DELETE') {
         try {
-          const id = decodeURIComponent(url.pathname.split('/').pop());
-          await queryDb('DELETE FROM nws_news_articles WHERE id = $1', [String(id)]);
+          const id = decodeURIComponent(url.pathname.split('/').pop() || '');
+          await queryDb('CREATE TABLE IF NOT EXISTS nws_news_deleted (id VARCHAR(255) PRIMARY KEY, deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP)');
+          const matched = await queryDb("SELECT id FROM nws_news_articles WHERE id = $1 OR data->>'slug' = $1", [String(id)]).catch(() => []);
+          for (const m of (matched || [])) {
+            await queryDb('INSERT INTO nws_news_deleted (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [String(m.id)]);
+          }
+          await queryDb('INSERT INTO nws_news_deleted (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [String(id)]);
+          await queryDb("DELETE FROM nws_news_articles WHERE id = $1 OR data->>'slug' = $1", [String(id)]);
+          return new Response(JSON.stringify({ success: true, id }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, message: err.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      if (url.pathname === '/api/news/delete' && request.method === 'POST') {
+        try {
+          const body = await request.json().catch(() => ({}));
+          const id = body.id;
+          if (!id) {
+            return new Response(JSON.stringify({ success: false, message: 'ID articolo obbligatorio.' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          await queryDb('CREATE TABLE IF NOT EXISTS nws_news_deleted (id VARCHAR(255) PRIMARY KEY, deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP)');
+          const matched = await queryDb("SELECT id FROM nws_news_articles WHERE id = $1 OR data->>'slug' = $1", [String(id)]).catch(() => []);
+          for (const m of (matched || [])) {
+            await queryDb('INSERT INTO nws_news_deleted (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [String(m.id)]);
+          }
+          await queryDb('INSERT INTO nws_news_deleted (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [String(id)]);
+          await queryDb("DELETE FROM nws_news_articles WHERE id = $1 OR data->>'slug' = $1", [String(id)]);
           return new Response(JSON.stringify({ success: true, id }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });

@@ -13,7 +13,7 @@
     "autoTranslateBeforeSitemap": true,
     "notifyWebhookUrl": ""
   },
-  "lastGeneratedAt": "2026-11-26T11:03:59.614Z",
+  "lastGeneratedAt": "2026-11-26T11:27:14.960Z",
   "lastGeneratedStats": {
     "totalCandidates": 62,
     "includedCount": 62,
@@ -22,7 +22,7 @@
     "articlesCount": 26,
     "pdfCount": 11,
     "customCount": 0,
-    "durationMs": 51
+    "durationMs": 37
   },
   "eventLogs": [
     {

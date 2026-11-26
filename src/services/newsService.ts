@@ -1084,18 +1084,34 @@ export function saveArticles(articles: NewsArticle[]): void {
   }).catch(err => console.warn('[NEWS-SERVICE] Server sync error:', err));
 }
 
+function isRealApiResponse(data: any): boolean {
+  if (!data || !data.success) return false;
+  if (typeof data.message === 'string' && data.message.trim().toLowerCase() === 'fallback ok') {
+    return false;
+  }
+  return true;
+}
+
 export async function upsertArticleToServer(article: NewsArticle): Promise<{ success: boolean; article?: NewsArticle; message?: string }> {
   removeDeletedArticleId(article.id);
+  const cleanArticle: NewsArticle = {
+    ...article,
+    id: String(article.id),
+    slug: article.slug || generateSlug(article.title) || String(article.id),
+    status: normalizeArticleStatus(article.status),
+    updatedAt: article.updatedAt || new Date().toISOString()
+  };
+
   try {
     const res = await safeFetch('/api/news/article', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ article })
+      body: JSON.stringify({ article: cleanArticle })
     });
     const data = await res.json().catch(() => ({}));
-    if (res.ok && data.success) {
-      addKnownServerArticleId(article.id);
-      return { success: true, article: data.article || article };
+    if (res.ok && isRealApiResponse(data) && (data.savedToDb === true || (data.article && String(data.article.id) === String(cleanArticle.id)))) {
+      addKnownServerArticleId(cleanArticle.id);
+      return { success: true, article: data.article || cleanArticle };
     }
   } catch {
     // Fallback to /api/news/sync below
@@ -1105,14 +1121,23 @@ export async function upsertArticleToServer(article: NewsArticle): Promise<{ suc
     const syncRes = await safeFetch('/api/news/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articles: [article], replaceAll: false })
+      body: JSON.stringify({ articles: [cleanArticle], replaceAll: false })
     });
     const syncData = await syncRes.json().catch(() => ({}));
-    if (syncRes.ok && syncData.success) {
-      addKnownServerArticleId(article.id);
-      return { success: true, article };
+    const confirmedInArray = Array.isArray(syncData.articles) && syncData.articles.some((a: any) => String(a?.id) === String(cleanArticle.id));
+    const confirmedCount = Number(syncData.count) > 0 && !syncData.warning;
+
+    if (syncRes.ok && isRealApiResponse(syncData) && (confirmedInArray || confirmedCount)) {
+      addKnownServerArticleId(cleanArticle.id);
+      const returnedArt = Array.isArray(syncData.articles)
+        ? syncData.articles.find((a: any) => String(a?.id) === String(cleanArticle.id))
+        : undefined;
+      return { success: true, article: returnedArt || cleanArticle };
     }
-    return { success: false, message: syncData.message || `HTTP ${syncRes.status}` };
+    return {
+      success: false,
+      message: syncData.warning || syncData.message || `Salvataggio non confermato dal database (HTTP ${syncRes.status})`
+    };
   } catch (err: any) {
     return { success: false, message: err?.message || 'Errore di rete durante il salvataggio sul server.' };
   }
@@ -1122,26 +1147,42 @@ export async function fetchSingleArticleFromServer(slugOrId: string): Promise<Ne
   if (!slugOrId) return null;
   try {
     const res = await safeFetch(`/api/news/articles/${encodeURIComponent(slugOrId)}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.success && data.article && data.article.id) {
-      const serverArt: NewsArticle = {
-        ...data.article,
-        status: normalizeArticleStatus(data.article.status)
-      };
-      addKnownServerArticleId(serverArt.id);
-      const current = getArticles();
-      const idx = current.findIndex(a => a && String(a.id) === String(serverArt.id));
-      const updated = idx >= 0
-        ? current.map((a, i) => (i === idx ? serverArt : a))
-        : [serverArt, ...current];
-      saveLocalArticlesOnly(updated);
-      return serverArt;
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (isRealApiResponse(data) && data.article && data.article.id) {
+        const serverArt: NewsArticle = {
+          ...data.article,
+          status: normalizeArticleStatus(data.article.status)
+        };
+        addKnownServerArticleId(serverArt.id);
+        const current = getArticles();
+        const idx = current.findIndex(a => a && String(a.id) === String(serverArt.id));
+        const updated = idx >= 0
+          ? current.map((a, i) => (i === idx ? serverArt : a))
+          : [serverArt, ...current];
+        saveLocalArticlesOnly(updated);
+        return serverArt;
+      }
     }
   } catch (err) {
     console.warn('[NEWS-SERVICE] Single article fetch failed:', err);
   }
-  return null;
+
+  // Fallback for workers that expose GET /api/news/articles without /:slugOrId
+  try {
+    const all = await syncArticlesWithServer(true);
+    const target = decodeURIComponent(String(slugOrId)).toLowerCase().trim();
+    const matched = all.find(a =>
+      a && (
+        String(a.id).toLowerCase().trim() === target ||
+        String(a.slug || '').toLowerCase().trim() === target ||
+        generateSlug(a.title || '').toLowerCase().trim() === target
+      )
+    );
+    return matched || null;
+  } catch {
+    return null;
+  }
 }
 
 let inFlightSync: Promise<NewsArticle[]> | null = null;
@@ -1162,8 +1203,8 @@ export async function syncArticlesWithServer(force = false): Promise<NewsArticle
       lastSyncTimestamp = Date.now();
       const res = await safeFetch('/api/news/articles');
       if (res.ok) {
-        const data = await res.json();
-        if (data.success && Array.isArray(data.articles)) {
+        const data = await res.json().catch(() => ({}));
+        if (isRealApiResponse(data) && Array.isArray(data.articles)) {
           const serverArticles: NewsArticle[] = data.articles.map((a: any) => ({
             ...a,
             status: normalizeArticleStatus(a.status)
@@ -1635,7 +1676,8 @@ export function moderateArticle(
       article: updatedArticle
     })
   }).then(async (res) => {
-    if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !isRealApiResponse(data) || data.savedToDb !== true) {
       await upsertArticleToServer(updatedArticle);
     } else {
       addKnownServerArticleId(updatedArticle.id);
@@ -1668,16 +1710,18 @@ export async function moderateArticleAsync(
         article: updatedArticle
       })
     });
-    if (res.ok) {
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && isRealApiResponse(data) && data.savedToDb === true) {
       addKnownServerArticleId(updatedArticle.id);
-      return { article: updatedArticle, synced: true };
+      return { article: data.article || updatedArticle, synced: true };
     }
   } catch (err) {
     console.warn('[NEWS-MODERATE-ERR]', err);
   }
 
+  // Always guarantee persistence via upsert/sync fallback (handles older worker / UPDATE-only routes)
   const fallbackRes = await upsertArticleToServer(updatedArticle);
-  return { article: updatedArticle, synced: fallbackRes.success };
+  return { article: fallbackRes.article || updatedArticle, synced: fallbackRes.success };
 }
 
 export function incrementArticleViews(id: string): void {

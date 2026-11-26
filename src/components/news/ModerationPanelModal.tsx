@@ -51,7 +51,7 @@ export default function ModerationPanelModal({
   const [modifyingArticle, setModifyingArticle] = useState<NewsArticle | null>(null);
   const [actionType, setActionType] = useState<'reject' | 'request_changes' | null>(null);
   const [notes, setNotes] = useState('');
-  const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [feedbackToast, setFeedbackToast] = useState<{ text: string; isError?: boolean } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [approvingId, setApprovingId] = useState<string | null>(null);
@@ -98,23 +98,28 @@ export default function ModerationPanelModal({
       } : a));
 
       const res = await moderateArticleAsync(art.id, 'approve', undefined, art);
-      setSuccessToast(
+      setFeedbackToast(
         res.synced
-          ? `L'articolo "${art.title}" è stato approvato e pubblicato ufficialmente sul database!`
-          : `L'articolo "${art.title}" è stato approvato localmente, ma la sincronizzazione remota richiede un nuovo tentativo.`
+          ? { text: `L'articolo "${art.title}" è stato approvato e pubblicato ufficialmente sul database!` }
+          : { text: `L'articolo "${art.title}" è stato approvato localmente, ma la sincronizzazione remota richiede un nuovo tentativo.`, isError: true }
       );
       loadData();
       onArticlesUpdated?.();
-      setTimeout(() => setSuccessToast(null), 3500);
+      setTimeout(() => setFeedbackToast(null), 4500);
     } catch (err: any) {
       console.error('[HANDLE-APPROVE-ERR]', err);
+      setFeedbackToast({ text: 'Errore durante la pubblicazione sul server.', isError: true });
     } finally {
       setApprovingId(null);
     }
   };
 
   const handleToggleFeatured = async (art: NewsArticle) => {
-    await moderateArticleAsync(art.id, 'toggle_featured', undefined, art);
+    const res = await moderateArticleAsync(art.id, 'toggle_featured', undefined, art);
+    if (!res.synced) {
+      setFeedbackToast({ text: 'Impossibile aggiornare lo stato in evidenza sul database remoto.', isError: true });
+      setTimeout(() => setFeedbackToast(null), 4000);
+    }
     loadData();
   };
 
@@ -126,7 +131,11 @@ export default function ModerationPanelModal({
 
   const handleSubmitNotes = async () => {
     if (!modifyingArticle || !actionType) return;
-    await moderateArticleAsync(modifyingArticle.id, actionType, notes.trim(), modifyingArticle);
+    const res = await moderateArticleAsync(modifyingArticle.id, actionType, notes.trim(), modifyingArticle);
+    if (!res.synced) {
+      setFeedbackToast({ text: 'Modifica salvata localmente, ma la sincronizzazione remota non è riuscita.', isError: true });
+      setTimeout(() => setFeedbackToast(null), 4000);
+    }
     setModifyingArticle(null);
     setActionType(null);
     setNotes('');
@@ -139,8 +148,8 @@ export default function ModerationPanelModal({
       setDeletingId(null);
       loadData();
       onArticlesUpdated?.();
-      setSuccessToast('Articolo eliminato definitivamente anche dal database.');
-      setTimeout(() => setSuccessToast(null), 3000);
+      setFeedbackToast({ text: 'Articolo eliminato definitivamente anche dal database.' });
+      setTimeout(() => setFeedbackToast(null), 3000);
     } else {
       setDeletingId(id);
       setTimeout(() => setDeletingId(null), 5000);
@@ -254,16 +263,24 @@ export default function ModerationPanelModal({
 
           {/* Content Body */}
           <div className="p-6 overflow-y-auto space-y-4 flex-1">
-            {successToast && (
-              <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-2xl flex items-center justify-between gap-3 text-xs font-bold animate-fade-in shadow-xs">
+            {feedbackToast && (
+              <div className={`p-3.5 rounded-2xl flex items-center justify-between gap-3 text-xs font-bold animate-fade-in shadow-xs border ${
+                feedbackToast.isError
+                  ? 'bg-amber-50 border-amber-300 text-amber-900'
+                  : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+              }`}>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{successToast}</span>
+                  {feedbackToast.isError ? (
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  )}
+                  <span>{feedbackToast.text}</span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSuccessToast(null)}
-                  className="text-emerald-700 hover:text-emerald-900 p-1"
+                  onClick={() => setFeedbackToast(null)}
+                  className={feedbackToast.isError ? 'text-amber-700 hover:text-amber-900 p-1' : 'text-emerald-700 hover:text-emerald-900 p-1'}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -284,13 +301,15 @@ export default function ModerationPanelModal({
               </div>
             ) : (
               <div className="space-y-4">
-                {articles.map((art) => (
+                {articles.map((art) => {
+                  const normStatus = normalizeArticleStatus(art.status);
+                  return (
                   <div
                     key={art.id}
                     className={`bg-white border rounded-2xl p-5 shadow-sm space-y-3 transition ${
-                      art.status === 'in_moderazione'
+                      normStatus === 'in_moderazione'
                         ? 'border-amber-300 bg-amber-50/20'
-                        : art.status === 'pubblicato'
+                        : normStatus === 'pubblicato'
                         ? 'border-emerald-200'
                         : 'border-slate-200'
                     }`}
@@ -300,20 +319,20 @@ export default function ModerationPanelModal({
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span
                             className={`text-[9px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full text-white ${
-                              art.status === 'pubblicato'
+                              normStatus === 'pubblicato'
                                 ? 'bg-emerald-600'
-                                : art.status === 'in_moderazione'
+                                : normStatus === 'in_moderazione'
                                 ? 'bg-amber-600'
-                                : art.status === 'rifiutato'
+                                : normStatus === 'rifiutato'
                                 ? 'bg-red-600'
                                 : 'bg-slate-600'
                             }`}
                           >
-                            {art.status === 'in_moderazione'
+                            {normStatus === 'in_moderazione'
                               ? tText('Pending Moderation', 'In Moderazione')
-                              : art.status === 'pubblicato'
+                              : normStatus === 'pubblicato'
                               ? tText('Published', 'Pubblicato')
-                              : art.status === 'rifiutato'
+                              : normStatus === 'rifiutato'
                               ? tText('Rejected', 'Rifiutato')
                               : tText('Draft / Revision', 'Bozza / Revisione')}
                           </span>
@@ -459,7 +478,8 @@ export default function ModerationPanelModal({
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
