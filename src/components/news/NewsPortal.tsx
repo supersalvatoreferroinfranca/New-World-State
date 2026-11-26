@@ -23,6 +23,7 @@ import ArticleDetailModal from './ArticleDetailModal';
 import ModerationPanelModal from './ModerationPanelModal';
 import ReporterCandidacyModal from './ReporterCandidacyModal';
 import { MediaDebuggerModal } from './MediaDebuggerModal';
+import { NewsSyncDiagnosticModal } from './NewsSyncDiagnosticModal';
 import { trackPageView, trackCommunityEvent } from '../../services/analyticsTracker';
 import { 
   Newspaper, 
@@ -46,7 +47,8 @@ import {
   Trash2,
   Layers,
   Volume2,
-  Bug
+  Bug,
+  Activity
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 
@@ -88,6 +90,7 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCandidacyModalOpen, setIsCandidacyModalOpen] = useState(false);
   const [isDebuggerModalOpen, setIsDebuggerModalOpen] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   // Load User Citizen
   const loadCitizen = () => {
@@ -491,6 +494,16 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
               >
                 <Bug className="w-4 h-4 text-sky-200 animate-pulse" />
                 <span>{tText('Media Debugger', '🛠️ Debugger Media')}</span>
+              </button>
+
+              {/* DB Sync Diagnostic Console Button */}
+              <button
+                onClick={() => setIsSyncModalOpen(true)}
+                className="px-4 py-3 rounded-2xl bg-indigo-600/90 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 border border-indigo-400/50 shadow-lg shrink-0"
+                title="Apri la Console Diagnostica di Sincronizzazione Database Notizie"
+              >
+                <Activity className="w-4 h-4 text-amber-300 animate-pulse" />
+                <span>{tText('Sync Diagnostics', '🛠️ Diagnostica Sync DB')}</span>
               </button>
 
               {/* Gestione Categorie (Reserved for Cronisti / Custodi) */}
@@ -1059,6 +1072,13 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         isOpen={isDebuggerModalOpen}
         onClose={() => setIsDebuggerModalOpen(false)}
         initialQuery="roma"
+      />
+
+      {/* 7. News Sync & Database Diagnostic Console Modal */}
+      <NewsSyncDiagnosticModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+        onArticlesUpdated={loadLocalData}
       />
     </div>
   );

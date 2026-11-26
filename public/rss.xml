@@ -8,7 +8,7 @@
     <link>https://newworldstate.cloud/?tab=news</link>
     <description>Notizie ufficiali, reportage indipendenti e inchieste etiche di New World State 1.0 in tutte le lingue supportate.</description>
     <language>it-IT</language>
-    <lastBuildDate>Thu, 26 Nov 2026 12:24:40 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 26 Nov 2026 12:40:06 GMT</lastBuildDate>
     <atom:link href="https://newworldstate.cloud/rss.xml" rel="self" type="application/rss+xml" />
     <image>
       <url>https://www.newworldstate.org/documents/branding_logo/fronte.jpg</url>
@@ -16,28 +16,6 @@
       <link>https://newworldstate.cloud/?tab=news</link>
     </image>
     
-        <item>
-          <title><![CDATA[Test Fallback Mode]]></title>
-          <link>https://newworldstate.cloud/notizie/test-fallback-mode</link>
-          <guid isPermaLink="true">https://newworldstate.cloud/notizie/test-fallback-mode</guid>
-          <pubDate>Thu, 26 Nov 2026 12:24:40 GMT</pubDate>
-          <dc:creator><![CDATA[Admin]]></dc:creator>
-          <description><![CDATA[Intro test]]></description>
-          <content:encoded><![CDATA[Body]]></content:encoded>
-          <enclosure url="https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy" length="0" type="image/jpeg" />
-          <category><![CDATA[Politica & Sovranità]]></category>
-        </item>
-        <item>
-          <title><![CDATA[Test Fix HTTP 500]]></title>
-          <link>https://newworldstate.cloud/notizie/test-fix-http-500</link>
-          <guid isPermaLink="true">https://newworldstate.cloud/notizie/test-fix-http-500</guid>
-          <pubDate>Thu, 26 Nov 2026 12:19:06 GMT</pubDate>
-          <dc:creator><![CDATA[Admin]]></dc:creator>
-          <description><![CDATA[Intro test]]></description>
-          <content:encoded><![CDATA[Body test]]></content:encoded>
-          <enclosure url="https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy" length="0" type="image/jpeg" />
-          <category><![CDATA[Politica & Sovranità]]></category>
-        </item>
         <item>
           <title><![CDATA[Le canzoni per la pace che hanno unito il mondo: storia e versi]]></title>
           <link>https://newworldstate.cloud/notizie/le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi</link>
