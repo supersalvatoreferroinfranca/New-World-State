@@ -13,16 +13,16 @@
     "autoTranslateBeforeSitemap": true,
     "notifyWebhookUrl": ""
   },
-  "lastGeneratedAt": "2026-11-26T11:27:14.960Z",
+  "lastGeneratedAt": "2026-11-26T12:19:06.626Z",
   "lastGeneratedStats": {
-    "totalCandidates": 62,
-    "includedCount": 62,
+    "totalCandidates": 63,
+    "includedCount": 63,
     "excludedCount": 0,
     "staticCount": 25,
-    "articlesCount": 26,
+    "articlesCount": 27,
     "pdfCount": 11,
     "customCount": 0,
-    "durationMs": 37
+    "durationMs": 35
   },
   "eventLogs": [
     {

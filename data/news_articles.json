@@ -1,5 +1,18 @@
 [
   {
+    "id": "art-test-fix-1795695546470",
+    "title": "Test Fix HTTP 500",
+    "slug": "test-fix-http-500",
+    "categoryId": "cat-politica",
+    "intro": "Intro test",
+    "content": "<p>Body test</p>",
+    "status": "pubblicato",
+    "authorId": 1,
+    "authorName": "Admin",
+    "createdAt": "2026-11-26T12:19:06.470Z",
+    "updatedAt": "2026-11-26T12:19:06.497Z"
+  },
+  {
     "id": "art-1791453944063-619",
     "slug": "le-canzoni-per-la-pace-che-hanno-unito-il-mondo-storia-e-versi",
     "tags": [

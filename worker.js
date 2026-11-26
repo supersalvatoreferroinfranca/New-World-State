@@ -4465,13 +4465,13 @@ CREATE TABLE citizens (
               data JSONB NOT NULL,
               updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-          `);
+          `).catch(() => {});
           await queryDb(`
             CREATE TABLE IF NOT EXISTS nws_news_deleted (
               id VARCHAR(255) PRIMARY KEY,
               deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-          `);
+          `).catch(() => {});
 
           const body = await request.json().catch(() => ({}));
           const articleId = body.id || body.articleId;
@@ -5278,13 +5278,13 @@ CREATE TABLE citizens (
               data JSONB NOT NULL,
               updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-          `);
+          `).catch(() => {});
           await queryDb(`
             CREATE TABLE IF NOT EXISTS nws_news_deleted (
               id VARCHAR(255) PRIMARY KEY,
               deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-          `);
+          `).catch(() => {});
 
           const [rows, deletedRows] = await Promise.all([
             queryDb("SELECT data FROM nws_news_articles ORDER BY (data->>'publishedAt') DESC NULLS LAST, updated_at DESC"),
@@ -5381,13 +5381,13 @@ CREATE TABLE citizens (
               data JSONB NOT NULL,
               updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-          `);
+          `).catch(() => {});
           await queryDb(`
             CREATE TABLE IF NOT EXISTS nws_news_deleted (
               id VARCHAR(255) PRIMARY KEY,
               deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-          `);
+          `).catch(() => {});
 
           const body = await request.json().catch(() => ({}));
           const incoming = body.article || body;
@@ -5431,13 +5431,13 @@ CREATE TABLE citizens (
               data JSONB NOT NULL,
               updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-          `);
+          `).catch(() => {});
           await queryDb(`
             CREATE TABLE IF NOT EXISTS nws_news_deleted (
               id VARCHAR(255) PRIMARY KEY,
               deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-          `);
+          `).catch(() => {});
 
           const body = await request.json().catch(() => ({}));
           const articles = Array.isArray(body.articles) ? body.articles : [];
