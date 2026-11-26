@@ -4,6 +4,127 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
         <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-11-26T12:24:40.615Z</news:publication_date>
+            <news:title>Test Fallback Mode</news:title>
+          </news:news>
+        </url>
+        <url>
           <loc>https://newworldstate.cloud/notizie/test-fix-http-500</loc>
           <news:news>
             <news:publication>

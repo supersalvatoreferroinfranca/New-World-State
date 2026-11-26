@@ -5270,6 +5270,259 @@
         </url>
 
         <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=en</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=es</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar</loc>
+          <lastmod>2026-11-26</lastmod>
+          <changefreq>daily</changefreq>
+          <priority>0.95</priority>
+          <xhtml:link rel="alternate" hreflang="it" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <xhtml:link rel="alternate" hreflang="en" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=en" />
+          <xhtml:link rel="alternate" hreflang="fr" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=fr" />
+          <xhtml:link rel="alternate" hreflang="es" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=es" />
+          <xhtml:link rel="alternate" hreflang="pt" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=pt" />
+          <xhtml:link rel="alternate" hreflang="ru" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ru" />
+          <xhtml:link rel="alternate" hreflang="hi" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=hi" />
+          <xhtml:link rel="alternate" hreflang="bn" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=bn" />
+          <xhtml:link rel="alternate" hreflang="zh" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=zh" />
+          <xhtml:link rel="alternate" hreflang="ja" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ja" />
+          <xhtml:link rel="alternate" hreflang="ar" href="https://newworldstate.cloud/notizie/test-fallback-mode?lang=ar" />
+          <xhtml:link rel="alternate" hreflang="x-default" href="https://newworldstate.cloud/notizie/test-fallback-mode" />
+          <image:image>
+            <image:loc>https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&amp;fit=crop&amp;w=1200&amp;q=85&amp;h=630&amp;crop=faces%2Cedges%2Centropy</image:loc>
+            <image:title>Test Fallback Mode</image:title>
+            <image:caption>Test Fallback Mode</image:caption>
+          </image:image>
+        </url>
+        <url>
           <loc>https://newworldstate.cloud/notizie/test-fix-http-500</loc>
           <lastmod>2026-11-26</lastmod>
           <changefreq>daily</changefreq>

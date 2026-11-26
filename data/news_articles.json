@@ -1,5 +1,18 @@
 [
   {
+    "id": "art-test-fallback-1795695880615",
+    "title": "Test Fallback Mode",
+    "slug": "test-fallback-mode",
+    "categoryId": "cat-politica",
+    "intro": "Intro test",
+    "content": "<p>Body</p>",
+    "status": "pubblicato",
+    "authorId": 1,
+    "authorName": "Admin",
+    "createdAt": "2026-11-26T12:24:40.615Z",
+    "updatedAt": "2026-11-26T12:24:40.669Z"
+  },
+  {
     "id": "art-test-fix-1795695546470",
     "title": "Test Fix HTTP 500",
     "slug": "test-fix-http-500",

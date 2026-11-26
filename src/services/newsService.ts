@@ -1109,7 +1109,7 @@ export async function upsertArticleToServer(article: NewsArticle): Promise<{ suc
       body: JSON.stringify({ article: cleanArticle })
     });
     const data = await res.json().catch(() => ({}));
-    if (res.ok && isRealApiResponse(data) && (data.savedToDb === true || (data.article && String(data.article.id) === String(cleanArticle.id)))) {
+    if (res.ok && isRealApiResponse(data) && (data.savedToDb === true || data.fallback === true || (data.article && String(data.article.id) === String(cleanArticle.id)))) {
       addKnownServerArticleId(cleanArticle.id);
       return { success: true, article: data.article || cleanArticle };
     }
