@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NewsArticle, NewsCategory } from '../../types/news';
-import { getLatest3Articles, getCategories, incrementArticleViews, getLocalizedArticle } from '../../services/newsService';
+import { getLatest3Articles, getCategories, incrementArticleViews, getLocalizedArticle, syncArticlesWithServer, syncCategoriesWithServer } from '../../services/newsService';
 import ArticleDetailModal from './ArticleDetailModal';
 import { Newspaper, ArrowRight, Calendar, User, Eye, Video, Star, Sparkles, Globe } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
@@ -24,6 +24,8 @@ export default function HomepageNewsSection({ onGoToNews }: HomepageNewsSectionP
 
   useEffect(() => {
     loadData();
+    syncArticlesWithServer(true).then(() => loadData()).catch(() => {});
+    syncCategoriesWithServer(true).then(() => loadData()).catch(() => {});
     window.addEventListener('nws_news_articles_updated', loadData);
     window.addEventListener('nws_news_categories_updated', loadData);
     return () => {

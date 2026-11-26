@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NewsCategory } from '../../types/news';
-import { getCategories, addCategory, updateCategory, deleteCategory } from '../../services/newsService';
+import { getCategories, addCategory, updateCategory, deleteCategory, syncCategoriesWithServer } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
 import { X, Plus, Edit2, Trash2, FolderPlus, ShieldCheck, Tag, Check, AlertCircle } from 'lucide-react';
 
@@ -18,6 +18,17 @@ export default function CategoryManagerModal({ isOpen, onClose, onCategoriesUpda
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('#0a1c3e');
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setCategories(getCategories());
+    syncCategoriesWithServer(true).then(cats => {
+      if (cats && cats.length > 0) setCategories(cats);
+    }).catch(() => {});
+    const onCatUpdate = () => setCategories(getCategories());
+    window.addEventListener('nws_news_categories_updated', onCatUpdate);
+    return () => window.removeEventListener('nws_news_categories_updated', onCatUpdate);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

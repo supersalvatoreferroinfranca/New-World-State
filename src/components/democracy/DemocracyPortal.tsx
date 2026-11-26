@@ -47,6 +47,7 @@ import { trackCommunityEvent } from '../../services/analyticsTracker';
 import PWANotifierBanner from '../pwa/PWANotifierBanner';
 import { LegislativeTextRenderer } from './LegislativeTextRenderer';
 import { NWSShareWidget } from './NWSShareWidget';
+import ReferralProgramPanel from '../mondial/ReferralProgramPanel';
 import FederalChat from '../chat/FederalChat';
 import { Language } from '../../constants/translations';
 
@@ -1772,6 +1773,9 @@ I cittadini della nazione possono discuterne e raffinarla direttamente nel forum
             {/* SUBTAB: SHARE & INVITE */}
             {subTab === 'share' && (
               <div className="max-w-4xl mx-auto space-y-6 text-left animate-fade-in" id="share-invite-pane">
+                {citizen && (
+                  <ReferralProgramPanel citizen={citizen} compact />
+                )}
                 <NWSShareWidget />
               </div>
             )}

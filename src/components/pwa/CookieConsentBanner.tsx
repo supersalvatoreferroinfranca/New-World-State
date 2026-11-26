@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 import { Language } from '../../constants/translations';
+import { safeFetch } from '../../services/api';
 
 interface CookieConsentBannerProps {
   onOpenPrivacy: () => void;
@@ -335,6 +336,13 @@ const logConsentEvent = (type: string, currentPrefs: CookiePreferences) => {
     const updatedLogs = [newLog, ...logs].slice(0, 150);
     localStorage.setItem('nws_consent_logs', JSON.stringify(updatedLogs));
     
+    // Persist consent log to PostgreSQL database
+    safeFetch('/api/legal/consent-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newLog)
+    }).catch(() => {});
+
     // Dispatch event to refresh any listening Admin panels immediately
     window.dispatchEvent(new Event('nws_consent_logs_updated'));
   } catch (e) {

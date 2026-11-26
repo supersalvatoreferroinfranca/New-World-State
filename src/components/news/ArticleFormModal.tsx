@@ -5,7 +5,9 @@ import {
   getCategories, 
   getArticles, 
   createArticle, 
+  createArticleAsync,
   updateArticle, 
+  updateArticleAsync,
   generateSlug, 
   generateArticleWithAI, 
   translateArticleWithAI, 
@@ -142,6 +144,7 @@ export default function ArticleFormModal({
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [allArticles, setAllArticles] = useState<NewsArticle[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
 
   // Sources & References State
@@ -778,7 +781,8 @@ export default function ArticleFormModal({
   };
 
   // Submit Handler
-  const handleSubmit = (action: 'draft' | 'moderation' | 'publish' | 'save' | boolean) => {
+  const handleSubmit = async (action: 'draft' | 'moderation' | 'publish' | 'save' | boolean) => {
+    if (isSaving) return;
     if (!title.trim()) {
       setError(tText('Article title is required.', 'Il titolo dell\'articolo è obbligatorio.'));
       return;
@@ -796,87 +800,109 @@ export default function ArticleFormModal({
       return;
     }
 
-    let targetStatus: ArticleStatus = 'in_moderazione';
-    if (action === true || action === 'moderation') {
-      targetStatus = 'in_moderazione';
-    } else if (action === 'publish') {
-      targetStatus = 'pubblicato';
-    } else if (action === 'save' && articleToEdit) {
-      targetStatus = articleToEdit.status;
-    } else if (action === 'draft' || action === false) {
-      targetStatus = 'bozza';
+    setError(null);
+    setIsSaving(true);
+
+    try {
+      let targetStatus: ArticleStatus = 'in_moderazione';
+      if (action === true || action === 'moderation') {
+        targetStatus = 'in_moderazione';
+      } else if (action === 'publish') {
+        targetStatus = 'pubblicato';
+      } else if (action === 'save' && articleToEdit) {
+        targetStatus = articleToEdit.status;
+      } else if (action === 'draft' || action === false) {
+        targetStatus = 'bozza';
+      }
+
+      let finalArticleId = '';
+      const finalTitle = title.trim();
+      const finalIntro = intro.trim();
+      const finalContent = content.trim();
+      const finalTags = tags;
+      let syncSuccess = false;
+      let syncMessage: string | undefined;
+
+      if (articleToEdit) {
+        finalArticleId = articleToEdit.id;
+        const res = await updateArticleAsync(articleToEdit.id, {
+          title: finalTitle,
+          slug: slug.trim() || generateSlug(title),
+          categoryId,
+          intro: finalIntro,
+          content: finalContent,
+          images,
+          videos,
+          tags: finalTags,
+          relatedArticleIds: relatedIds,
+          sources,
+          referenceNotes: referenceNotes.trim() || undefined,
+          photoCredits: photoCredits.trim() || undefined,
+          status: targetStatus,
+          publishedAt: targetStatus === 'pubblicato' ? (articleToEdit.publishedAt || new Date().toISOString()) : articleToEdit.publishedAt,
+          authorId: articleToEdit.authorId || authorId,
+          authorName: articleToEdit.authorName || authorName,
+          authorRole: articleToEdit.authorRole || authorRole
+        });
+        syncSuccess = res.synced;
+        syncMessage = res.message;
+      } else {
+        const res = await createArticleAsync({
+          title: finalTitle,
+          slug: slug.trim() || generateSlug(title),
+          categoryId,
+          intro: finalIntro,
+          content: finalContent,
+          images,
+          videos,
+          tags: finalTags,
+          relatedArticleIds: relatedIds,
+          sources,
+          referenceNotes: referenceNotes.trim() || undefined,
+          photoCredits: photoCredits.trim() || undefined,
+          authorId,
+          authorName,
+          authorRole,
+          submitForModeration: targetStatus === 'in_moderazione',
+          status: targetStatus,
+          publishedAt: targetStatus === 'pubblicato' ? new Date().toISOString() : undefined
+        });
+        finalArticleId = res.article.id;
+        syncSuccess = res.synced;
+        syncMessage = res.message;
+      }
+
+      if (targetStatus === 'pubblicato') {
+        setTimeout(async () => {
+          try {
+            const translations = await translateArticleWithAI({
+              id: finalArticleId,
+              title: finalTitle,
+              intro: finalIntro,
+              content: finalContent,
+              tags: finalTags
+            });
+            await updateArticleAsync(finalArticleId, { translations });
+          } catch (e) {
+            console.warn('[Auto-Translate] failed', e);
+          }
+        }, 500);
+      }
+
+      onSaved?.();
+
+      if (!syncSuccess) {
+        setError(tText(
+          `Saved locally, but server database sync failed (${syncMessage || 'connection error'}). Click again to retry.`,
+          `Articolo salvato sul dispositivo, ma la sincronizzazione sul database remoto non è riuscita (${syncMessage || 'errore di rete'}). Riprova prima di chiudere.`
+        ));
+        return;
+      }
+
+      onClose();
+    } finally {
+      setIsSaving(false);
     }
-
-    let finalArticleId = '';
-    let finalTitle = title.trim();
-    let finalIntro = intro.trim();
-    let finalContent = content.trim();
-    let finalTags = tags;
-
-    if (articleToEdit) {
-      finalArticleId = articleToEdit.id;
-      updateArticle(articleToEdit.id, {
-        title: finalTitle,
-        slug: slug.trim() || generateSlug(title),
-        categoryId,
-        intro: finalIntro,
-        content: finalContent,
-        images,
-        videos,
-        tags: finalTags,
-        relatedArticleIds: relatedIds,
-        sources,
-        referenceNotes: referenceNotes.trim() || undefined,
-        photoCredits: photoCredits.trim() || undefined,
-        status: targetStatus,
-        publishedAt: targetStatus === 'pubblicato' ? (articleToEdit.publishedAt || new Date().toISOString()) : articleToEdit.publishedAt,
-        authorId: articleToEdit.authorId || authorId,
-        authorName: articleToEdit.authorName || authorName,
-        authorRole: articleToEdit.authorRole || authorRole
-      });
-    } else {
-      const created = createArticle({
-        title: finalTitle,
-        slug: slug.trim() || generateSlug(title),
-        categoryId,
-        intro: finalIntro,
-        content: finalContent,
-        images,
-        videos,
-        tags: finalTags,
-        relatedArticleIds: relatedIds,
-        sources,
-        referenceNotes: referenceNotes.trim() || undefined,
-        photoCredits: photoCredits.trim() || undefined,
-        authorId,
-        authorName,
-        authorRole,
-        submitForModeration: targetStatus === 'in_moderazione',
-        status: targetStatus,
-        publishedAt: targetStatus === 'pubblicato' ? new Date().toISOString() : undefined
-      });
-      finalArticleId = created.id;
-    }
-
-    if (targetStatus === 'pubblicato') {
-      setTimeout(async () => {
-        try {
-          const translations = await translateArticleWithAI({
-            id: finalArticleId,
-            title: finalTitle,
-            intro: finalIntro,
-            content: finalContent,
-            tags: finalTags
-          });
-          updateArticle(finalArticleId, { translations });
-        } catch (e) {
-          console.warn('[Auto-Translate] failed', e);
-        }
-      }, 500);
-    }
-
-    onSaved?.();
-    onClose();
   };
 
   return (
@@ -2572,8 +2598,9 @@ export default function ArticleFormModal({
         <div className="bg-slate-100 border-t border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <button
             type="button"
+            disabled={isSaving}
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
+            className="px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer disabled:opacity-50"
           >
             {tText('Cancel', 'Annulla')}
           </button>
@@ -2582,10 +2609,11 @@ export default function ArticleFormModal({
             {/* Save Draft */}
             <button
               type="button"
+              disabled={isSaving}
               onClick={() => handleSubmit('draft')}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-200 text-slate-700 hover:bg-slate-300 transition cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-slate-200 text-slate-700 hover:bg-slate-300 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Save className="w-4 h-4" />
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>{tText('Save Draft', 'Salva Bozza')}</span>
             </button>
 
@@ -2593,10 +2621,11 @@ export default function ArticleFormModal({
             {articleToEdit && (
               <button
                 type="button"
+                disabled={isSaving}
                 onClick={() => handleSubmit('save')}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-amber-500 text-[#0a1c3e] hover:bg-amber-400 transition cursor-pointer flex items-center gap-1.5 shadow"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-amber-500 text-[#0a1c3e] hover:bg-amber-400 transition cursor-pointer flex items-center gap-1.5 shadow disabled:opacity-50"
               >
-                <Check className="w-4 h-4" />
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 <span>{tText('Save Changes', 'Salva Modifiche')}</span>
               </button>
             )}
@@ -2605,22 +2634,24 @@ export default function ArticleFormModal({
             {(authorRole?.toLowerCase().includes('custode') || authorRole?.toLowerCase().includes('admin') || articleToEdit?.status === 'pubblicato') && (
               <button
                 type="button"
+                disabled={isSaving}
                 onClick={() => handleSubmit('publish')}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700 transition cursor-pointer flex items-center gap-1.5 shadow"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-600 text-white hover:bg-emerald-700 transition cursor-pointer flex items-center gap-1.5 shadow disabled:opacity-50"
               >
-                <CheckSquare className="w-4 h-4" />
-                <span>{tText('Publish Article', 'Pubblica Articolo')}</span>
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckSquare className="w-4 h-4" />}
+                <span>{isSaving ? tText('Publishing...', 'Pubblicazione...') : tText('Publish Article', 'Pubblica Articolo')}</span>
               </button>
             )}
 
             {/* Submit to Moderation (Custodi Digitali) */}
             <button
               type="button"
+              disabled={isSaving}
               onClick={() => handleSubmit('moderation')}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#0a1c3e] text-white hover:bg-brand-gold hover:text-[#0a1c3e] transition cursor-pointer flex items-center gap-1.5 shadow-lg"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#0a1c3e] text-white hover:bg-brand-gold hover:text-[#0a1c3e] transition cursor-pointer flex items-center gap-1.5 shadow-lg disabled:opacity-50"
             >
-              <Send className="w-4 h-4" />
-              <span>{tText('Submit for Moderation', 'Invia a Moderazione')}</span>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span>{isSaving ? tText('Sending...', 'Salvataggio...') : tText('Submit for Moderation', 'Invia a Moderazione')}</span>
             </button>
           </div>
         </div>

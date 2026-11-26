@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { NewsArticle, NewsCategory, NewsLanguage } from '../../types/news';
-import { getCategories, getArticles, incrementArticleViews, getLocalizedArticle, translateArticleWithAI, autoTranslateArticleOnDemand, getLocalizedCategoryTitle, moderateArticle } from '../../services/newsService';
+import { getCategories, getArticles, incrementArticleViews, getLocalizedArticle, translateArticleWithAI, autoTranslateArticleOnDemand, getLocalizedCategoryTitle, moderateArticleAsync } from '../../services/newsService';
 import { useI18n } from '../../contexts/I18nContext';
 import { Language } from '../../constants/translations';
 import { formatArticleContentToHtml, stripFormattingSymbols } from '../../utils/textFormatter';
@@ -835,12 +835,12 @@ export default function ArticleDetailModal({
             {(activeArticle.status === 'pubblicato' || (activeArticle.status as string) === 'approved') && (
               <button
                 type="button"
-                onClick={() => {
-                  const updated = moderateArticle(activeArticle.id, 'toggle_featured');
-                  if (updated) {
-                    setCurrentArticle(updated);
+                onClick={async () => {
+                  const res = await moderateArticleAsync(activeArticle.id, 'toggle_featured', undefined, activeArticle);
+                  if (res.article) {
+                    setCurrentArticle(res.article);
                     if (onToggleFeatured) {
-                      onToggleFeatured(updated);
+                      onToggleFeatured(res.article);
                     }
                   }
                 }}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NewsArticle, NewsCategory, ArticleStatus } from '../../types/news';
 import { stripFormattingSymbols } from '../../utils/textFormatter';
 import { 
@@ -8,12 +8,14 @@ import {
   getArticlesPendingModeration,
   incrementArticleViews,
   syncArticlesWithServer,
-  deleteArticle,
+  syncCategoriesWithServer,
+  fetchSingleArticleFromServer,
+  deleteArticleAsync,
   getLocalizedArticle,
   generateSlug,
   getLocalizedCategoryTitle,
   normalizeArticleStatus,
-  moderateArticle
+  moderateArticleAsync
 } from '../../services/newsService';
 import ArticleFormModal from './ArticleFormModal';
 import CategoryManagerModal from './CategoryManagerModal';
@@ -110,14 +112,23 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     setArticles(getArticles());
   };
 
+  const fetchedSlugRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     loadCitizen();
     loadLocalData();
 
-    // Perform an initial background sync once on mount
-    syncArticlesWithServer().then(synced => {
+    // Force authoritative PostgreSQL sync on mount so all published articles & custom categories are fresh
+    syncArticlesWithServer(true).then(synced => {
       if (synced && synced.length > 0) {
         setArticles(synced);
+        setPendingCount(getArticlesPendingModeration().length);
+      }
+    }).catch(() => {});
+
+    syncCategoriesWithServer(true).then(cats => {
+      if (cats && cats.length > 0) {
+        setCategories(cats);
       }
     }).catch(() => {});
 
@@ -168,13 +179,15 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
   // Auto-open article if URL parameter or route specifies a noticia/article slug
   useEffect(() => {
     if (!selectedDetailArticle) {
-      // Check initial article from server-side hydration if available
+      // Check initial article from server-side hydration if available (never accept synthetic placeholders)
       if (typeof window !== 'undefined' && (window as any).__NWS_INITIAL_ARTICLE__) {
-        const initialArt = (window as any).__NWS_INITIAL_ARTICLE__ as NewsArticle;
-        if (initialArt && initialArt.id) {
+        const initialArt = (window as any).__NWS_INITIAL_ARTICLE__ as NewsArticle & { isSynthetic?: boolean };
+        const isReal = initialArt && initialArt.id && !initialArt.isSynthetic && !String(initialArt.id).startsWith('art-synth-');
+        if (isReal) {
           const isOwner = citizen && (String(initialArt.authorId) === String(citizen.id));
           const canViewUnpublished = isLoggedIn && (isCustode || isOwner);
-          if (initialArt.status === 'pubblicato' || canViewUnpublished) {
+          if (normalizeArticleStatus(initialArt.status) === 'pubblicato' || canViewUnpublished) {
+            delete (window as any).__NWS_INITIAL_ARTICLE__;
             setSelectedDetailArticle(initialArt);
             setIsDetailModalOpen(true);
             incrementArticleViews(initialArt.id);
@@ -183,59 +196,58 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
         }
       }
 
-      if (articles.length > 0) {
-        const searchParams = new URLSearchParams(window.location.search);
-        const targetSlug = searchParams.get('notizia') || searchParams.get('article') || searchParams.get('slug');
-        let foundArticle: NewsArticle | undefined;
-
-        const clean = (s: string) => (s || '').toLowerCase().trim();
-
-        if (targetSlug) {
-          const decodedTarget = clean(decodeURIComponent(targetSlug));
-          foundArticle = articles.find(a => {
-            if (!a) return false;
-            const aSlug = clean(a.slug);
-            const aId = clean(String(a.id));
-            if (aSlug === decodedTarget || aId === decodedTarget || clean(encodeURIComponent(a.slug || '')) === decodedTarget) return true;
-            if (a.translations) {
-              for (const t of Object.values(a.translations) as any[]) {
-                if (t?.title && clean(generateSlug(t.title)) === decodedTarget) return true;
-              }
-            }
-            return false;
-          });
-        } else if (window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/')) {
-          const pathParts = window.location.pathname.split('/').filter(Boolean);
-          const rawSlug = pathParts[pathParts.length - 1];
-          if (rawSlug && rawSlug !== 'notizie' && rawSlug !== 'news') {
-            const decodedPathSlug = clean(decodeURIComponent(rawSlug));
-            foundArticle = articles.find(a => {
-              if (!a) return false;
-              const aSlug = clean(a.slug);
-              const aId = clean(String(a.id));
-              if (aSlug === decodedPathSlug || aId === decodedPathSlug || clean(encodeURIComponent(a.slug || '')) === decodedPathSlug) return true;
-              if (a.translations) {
-                for (const t of Object.values(a.translations) as any[]) {
-                  if (t?.title && (clean(generateSlug(t.title)) === decodedPathSlug || clean(encodeURIComponent(generateSlug(t.title))) === decodedPathSlug)) return true;
-                }
-              }
-              return false;
-            });
-          }
-        }
-
-        if (foundArticle) {
-          const isOwner = citizen && (String(foundArticle.authorId) === String(citizen.id));
-          const canViewUnpublished = isLoggedIn && (isCustode || isOwner);
-          if (foundArticle.status === 'pubblicato' || canViewUnpublished) {
-            setSelectedDetailArticle(foundArticle);
-            setIsDetailModalOpen(true);
-            incrementArticleViews(foundArticle.id);
-          }
+      const searchParams = new URLSearchParams(window.location.search);
+      let requestedSlug = searchParams.get('notizia') || searchParams.get('article') || searchParams.get('slug') || '';
+      if (!requestedSlug && (window.location.pathname.startsWith('/notizie/') || window.location.pathname.startsWith('/news/'))) {
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const rawSlug = pathParts[pathParts.length - 1];
+        if (rawSlug && rawSlug !== 'notizie' && rawSlug !== 'news') {
+          requestedSlug = rawSlug;
         }
       }
+
+      if (!requestedSlug) return;
+
+      const clean = (s: string) => (s || '').toLowerCase().trim();
+      const decodedTarget = clean(decodeURIComponent(requestedSlug));
+      const foundArticle = articles.find(a => {
+        if (!a) return false;
+        const aSlug = clean(a.slug);
+        const aId = clean(String(a.id));
+        if (aSlug === decodedTarget || aId === decodedTarget || clean(encodeURIComponent(a.slug || '')) === decodedTarget) return true;
+        if (a.translations) {
+          for (const t of Object.values(a.translations) as any[]) {
+            if (t?.title && (clean(generateSlug(t.title)) === decodedTarget || clean(encodeURIComponent(generateSlug(t.title))) === decodedTarget)) return true;
+          }
+        }
+        return false;
+      });
+
+      if (foundArticle) {
+        const isOwner = citizen && (String(foundArticle.authorId) === String(citizen.id));
+        const canViewUnpublished = isLoggedIn && (isCustode || isOwner);
+        if (normalizeArticleStatus(foundArticle.status) === 'pubblicato' || canViewUnpublished) {
+          setSelectedDetailArticle(foundArticle);
+          setIsDetailModalOpen(true);
+          incrementArticleViews(foundArticle.id);
+        }
+      } else if (!fetchedSlugRef.current.has(decodedTarget)) {
+        // Fallback: fetch directly from PostgreSQL by slug or ID
+        fetchedSlugRef.current.add(decodedTarget);
+        fetchSingleArticleFromServer(decodeURIComponent(requestedSlug)).then(serverArt => {
+          if (serverArt) {
+            const isOwner = citizen && (String(serverArt.authorId) === String(citizen.id));
+            const canViewUnpublished = isLoggedIn && (isCustode || isOwner);
+            if (normalizeArticleStatus(serverArt.status) === 'pubblicato' || canViewUnpublished) {
+              setSelectedDetailArticle(serverArt);
+              setIsDetailModalOpen(true);
+              incrementArticleViews(serverArt.id);
+            }
+          }
+        }).catch(() => {});
+      }
     }
-  }, [articles, isLoggedIn, isCustode, citizen]);
+  }, [articles, isLoggedIn, isCustode, citizen, selectedDetailArticle]);
 
   const canEditArticle = (art: NewsArticle) => {
     if (!isLoggedIn) return false;
@@ -257,9 +269,9 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     return false;
   };
 
-  const handleDeleteArticle = (art: NewsArticle) => {
+  const handleDeleteArticle = async (art: NewsArticle) => {
     if (window.confirm(tText(`Are you sure you want to permanently delete the article "${art.title}"?`, `Sei sicuro di voler eliminare definitivamente l'articolo "${art.title}"?`))) {
-      deleteArticle(art.id);
+      await deleteArticleAsync(art.id);
       loadLocalData();
       if (selectedDetailArticle?.id === art.id) {
         setIsDetailModalOpen(false);
@@ -356,9 +368,10 @@ export default function NewsPortal({ onGoToHome }: NewsPortalProps) {
     } catch (e) {}
   };
 
-  const handleToggleFeatured = (art: NewsArticle) => {
-    const updated = moderateArticle(art.id, 'toggle_featured');
-    if (updated) {
+  const handleToggleFeatured = async (art: NewsArticle) => {
+    const res = await moderateArticleAsync(art.id, 'toggle_featured');
+    if (res.article) {
+      const updated = res.article;
       setArticles(prev => prev.map(a => a.id === updated.id ? updated : a));
       if (selectedDetailArticle && selectedDetailArticle.id === updated.id) {
         setSelectedDetailArticle(updated);

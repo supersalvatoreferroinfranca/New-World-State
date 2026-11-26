@@ -26,7 +26,7 @@ import MondialWallet from './components/mondial/MondialWallet';
 import { I18nProvider, useI18n } from './contexts/I18nContext';
 import { ArrowUp, Cookie, MessageSquare, ArrowRight } from 'lucide-react';
 import { startBackgroundSync } from './services/notifications';
-import { syncArticlesWithServer } from './services/newsService';
+import { syncArticlesWithServer, syncCategoriesWithServer } from './services/newsService';
 import LegalComplianceModal from './components/pwa/LegalComplianceModal';
 import AccessibilityWidget from './components/pwa/AccessibilityWidget';
 import CookieConsentBanner from './components/pwa/CookieConsentBanner';
@@ -37,6 +37,12 @@ function AppContent() {
   const [activeTab, setActiveTabState] = useState<'welcome' | 'register' | 'admin' | 'constitution' | 'charter' | 'governance' | 'privacy' | 'network' | 'democracy' | 'chat' | 'news' | 'about' | 'projects' | 'crm' | 'mondial'>(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
+      const refParam = searchParams.get('ref') || searchParams.get('referral');
+      if (refParam) {
+        try {
+          sessionStorage.setItem('nws_pending_ref', refParam.trim().toUpperCase());
+        } catch (e) {}
+      }
       const tabParam = searchParams.get('tab');
       const hasArticleParam = searchParams.has('notizia') || searchParams.has('article') || searchParams.has('slug');
       if (tabParam === 'mondial' || window.location.pathname === '/mondial' || window.location.pathname === '/baratto') {
@@ -153,7 +159,7 @@ function AppContent() {
         newTab = 'democracy';
       } else if (tabParam === 'crm' || window.location.pathname === '/crm') {
         newTab = 'crm';
-      } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects', 'crm'].includes(tabParam)) {
+      } else if (tabParam && ['welcome', 'register', 'admin', 'constitution', 'charter', 'governance', 'privacy', 'network', 'about', 'projects', 'crm', 'mondial'].includes(tabParam)) {
         newTab = tabParam;
       }
       const isVerify = window.location.pathname === '/verify' || 
@@ -229,12 +235,15 @@ function AppContent() {
     // Avvia la sincronizzazione globale per le notifiche
     startBackgroundSync(citizenId);
 
-    // Sincronizza articoli con il backend/DB
+    // Sincronizza articoli e categorie con il backend/DB
     syncArticlesWithServer().catch(() => {});
+    syncCategoriesWithServer().catch(() => {});
 
     // Forza check istantaneo quando la finestra riprende il focus
     const handleFocus = () => {
       startBackgroundSync(citizenId);
+      syncArticlesWithServer().catch(() => {});
+      syncCategoriesWithServer().catch(() => {});
     };
     window.addEventListener('focus', handleFocus);
 

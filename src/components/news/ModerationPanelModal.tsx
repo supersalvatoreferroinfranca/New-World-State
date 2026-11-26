@@ -3,12 +3,11 @@ import { NewsArticle } from '../../types/news';
 import { 
   getArticles, 
   getArticlesPendingModeration, 
-  moderateArticle, 
-  deleteArticle,
+  moderateArticleAsync, 
+  deleteArticleAsync,
   normalizeArticleStatus,
   syncArticlesWithServer
 } from '../../services/newsService';
-import { safeFetch } from '../../services/api';
 import { useI18n } from '../../contexts/I18nContext';
 import { 
   ShieldCheck, 
@@ -92,37 +91,18 @@ export default function ModerationPanelModal({
   const handleApprove = async (art: NewsArticle) => {
     setApprovingId(art.id);
     try {
-      // 1. Optimistically update local UI state immediately
       setArticles(prev => prev.map(a => (String(a.id) === String(art.id) || a.slug === art.id) ? {
         ...a,
         status: 'pubblicato',
         publishedAt: new Date().toISOString()
       } : a));
 
-      // 2. Perform local moderate action with fallback article
-      moderateArticle(art.id, 'approve', undefined, art);
-
-      // 3. Directly await the server moderate endpoint to guarantee PostgreSQL persistence
-      try {
-        await safeFetch('/api/news/moderate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: art.id,
-            articleId: art.id,
-            action: 'approve',
-            article: {
-              ...art,
-              status: 'pubblicato',
-              publishedAt: new Date().toISOString()
-            }
-          })
-        });
-      } catch (srvErr) {
-        console.warn('[MODERATE-SERVER-WARN]', srvErr);
-      }
-
-      setSuccessToast(`L'articolo "${art.title}" è stato approvato e pubblicato ufficialmente!`);
+      const res = await moderateArticleAsync(art.id, 'approve', undefined, art);
+      setSuccessToast(
+        res.synced
+          ? `L'articolo "${art.title}" è stato approvato e pubblicato ufficialmente sul database!`
+          : `L'articolo "${art.title}" è stato approvato localmente, ma la sincronizzazione remota richiede un nuovo tentativo.`
+      );
       loadData();
       onArticlesUpdated?.();
       setTimeout(() => setSuccessToast(null), 3500);
@@ -133,8 +113,8 @@ export default function ModerationPanelModal({
     }
   };
 
-  const handleToggleFeatured = (art: NewsArticle) => {
-    moderateArticle(art.id, 'toggle_featured');
+  const handleToggleFeatured = async (art: NewsArticle) => {
+    await moderateArticleAsync(art.id, 'toggle_featured', undefined, art);
     loadData();
   };
 
@@ -144,22 +124,22 @@ export default function ModerationPanelModal({
     setNotes('');
   };
 
-  const handleSubmitNotes = () => {
+  const handleSubmitNotes = async () => {
     if (!modifyingArticle || !actionType) return;
-    moderateArticle(modifyingArticle.id, actionType, notes.trim());
+    await moderateArticleAsync(modifyingArticle.id, actionType, notes.trim(), modifyingArticle);
     setModifyingArticle(null);
     setActionType(null);
     setNotes('');
     loadData();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (deletingId === id) {
-      deleteArticle(id);
+      await deleteArticleAsync(id);
       setDeletingId(null);
       loadData();
       onArticlesUpdated?.();
-      setSuccessToast('Articolo eliminato con successo.');
+      setSuccessToast('Articolo eliminato definitivamente anche dal database.');
       setTimeout(() => setSuccessToast(null), 3000);
     } else {
       setDeletingId(id);

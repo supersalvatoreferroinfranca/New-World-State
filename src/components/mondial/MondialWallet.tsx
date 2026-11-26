@@ -26,9 +26,12 @@ import {
   CheckCircle2,
   ExternalLink,
   Share2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  LogOut
 } from 'lucide-react';
 import { BARTER_CATEGORIES, BarterCategory } from '../../services/mondialBackend';
+import MondialPresentationDemo from './MondialPresentationDemo';
+import ReferralProgramPanel from './ReferralProgramPanel';
 
 interface MondialWalletProps {
   onGoToRegister?: () => void;
@@ -144,21 +147,63 @@ export default function MondialWallet({ onGoToRegister, onGoToDemocracy }: Mondi
 
   // Filter for personal transactions
   const [txFilter, setTxFilter] = useState<'all' | 'received' | 'sent'>('all');
+  const [walletAccessDenied, setWalletAccessDenied] = useState<boolean>(false);
 
-  // Load wallet data
+  // Sync citizen session across tabs / Custode simulator / Democracy portal
+  useEffect(() => {
+    const syncCitizen = () => {
+      try {
+        const saved = localStorage.getItem('nws_democracy_citizen') || sessionStorage.getItem('nws_democracy_citizen');
+        setCitizen(saved ? JSON.parse(saved) : null);
+        setWalletAccessDenied(false);
+      } catch {
+        setCitizen(null);
+      }
+    };
+    window.addEventListener('storage', syncCitizen);
+    window.addEventListener('nws_citizen_updated', syncCitizen);
+    return () => {
+      window.removeEventListener('storage', syncCitizen);
+      window.removeEventListener('nws_citizen_updated', syncCitizen);
+    };
+  }, []);
+
+  const isCitizenAuthorized = Boolean(
+    citizen &&
+    citizen.id &&
+    !walletAccessDenied &&
+    (!citizen.status || citizen.status === 'approved')
+  );
+
+  // Load wallet data (ONLY when authenticated as approved citizen)
   const loadWalletData = async (silent = false) => {
+    if (!citizen || !citizen.id || (citizen.status && citizen.status !== 'approved')) {
+      setWallet(null);
+      setTransactions([]);
+      setIsLoading(false);
+      setIsRefreshing(false);
+      return;
+    }
+
     if (!silent) setIsLoading(true);
     else setIsRefreshing(true);
     setErrorMsg(null);
 
-    const currentCitizenId = citizen?.id || 1;
-    const currentCitizenCode = citizen?.citizenCode || citizen?.username || `NWS-SOV-001`;
-    const currentCitizenName = citizen ? `${citizen.firstName || ''} ${citizen.surname || ''}`.trim() || citizen.username || 'Cittadino Sovrano' : 'Cittadino Sovrano';
+    const currentCitizenId = citizen.id;
+    const currentCitizenCode = citizen.citizenCode || citizen.username || `NWS-CIT-${citizen.id}`;
+    const currentCitizenName = `${citizen.firstName || ''} ${citizen.surname || ''}`.trim() || citizen.username || 'Cittadino Sovrano';
 
     try {
       const res = await fetch(`/api/mondial/wallet?citizenId=${encodeURIComponent(currentCitizenId)}&citizenCode=${encodeURIComponent(currentCitizenCode)}&citizenName=${encodeURIComponent(currentCitizenName)}`);
       const data = await res.json();
+      if (res.status === 401 || res.status === 403) {
+        setWalletAccessDenied(true);
+        setWallet(null);
+        setTransactions([]);
+        return;
+      }
       if (data.success) {
+        setWalletAccessDenied(false);
         setWallet(data.wallet);
         setTransactions(data.transactions || []);
       } else {
@@ -192,7 +237,9 @@ export default function MondialWallet({ onGoToRegister, onGoToDemocracy }: Mondi
 
   // Generate QR Code for receiving value
   useEffect(() => {
-    const activeCode = wallet?.citizen_code || citizen?.citizenCode || 'NWS-SOV-001';
+    if (!isCitizenAuthorized) return;
+    const activeCode = wallet?.citizen_code || citizen?.citizenCode || '';
+    if (!activeCode) return;
     const payload = JSON.stringify({
       nws_mondial: true,
       code: activeCode,
@@ -455,6 +502,8 @@ export default function MondialWallet({ onGoToRegister, onGoToDemocracy }: Mondi
         localStorage.setItem('nws_democracy_citizen', JSON.stringify(data.citizen));
         sessionStorage.setItem('nws_democracy_citizen', JSON.stringify(data.citizen));
         setCitizen(data.citizen);
+        setWalletAccessDenied(false);
+        window.dispatchEvent(new Event('nws_citizen_updated'));
         setIsLoginModalOpen(false);
         setLoginCodeOrUser('');
         setLoginPassword('');
@@ -466,6 +515,16 @@ export default function MondialWallet({ onGoToRegister, onGoToDemocracy }: Mondi
     } finally {
       setIsLoggingIn(false);
     }
+  };
+
+  const handleCitizenLogout = () => {
+    localStorage.removeItem('nws_democracy_citizen');
+    sessionStorage.removeItem('nws_democracy_citizen');
+    setCitizen(null);
+    setWallet(null);
+    setTransactions([]);
+    setWalletAccessDenied(false);
+    window.dispatchEvent(new Event('nws_citizen_updated'));
   };
 
   // Filtered transactions
@@ -483,6 +542,91 @@ export default function MondialWallet({ onGoToRegister, onGoToDemocracy }: Mondi
   const referralTarget = 50;
   const currentReferrals = wallet?.referral_count || 0;
   const referralPercent = Math.min(100, Math.round((currentReferrals / referralTarget) * 100));
+
+  const loginModalNode = isLoginModalOpen ? (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-center space-y-4">
+        <div className="w-12 h-12 rounded-2xl bg-[#0a1c3e] text-[#c5a880] flex items-center justify-center mx-auto">
+          <Lock className="w-6 h-6" />
+        </div>
+
+        <div className="space-y-1">
+          <h3 className="text-base font-bold text-slate-900">Accedi con la tua Cittadinanza</h3>
+          <p className="text-xs text-slate-500">
+            Inserisci le tue credenziali per collegare il tuo portafoglio istituzionale Mondial.
+          </p>
+        </div>
+
+        {loginError && (
+          <div className="p-2.5 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200 text-left">
+            {loginError}
+          </div>
+        )}
+
+        <form onSubmit={handleCitizenLogin} className="space-y-3 text-left">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+              Codice Cittadino / Username / Email
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="es. NWS-IT-2025-0012"
+              value={loginCodeOrUser}
+              onChange={(e) => setLoginCodeOrUser(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-[#0a1c3e]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-[#0a1c3e]"
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsLoginModalOpen(false)}
+              className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+            >
+              Annulla
+            </button>
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className="flex-1 py-2.5 rounded-xl bg-[#0a1c3e] hover:bg-[#142d5c] text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isLoggingIn ? 'Accesso in corso...' : 'Accedi'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  ) : null;
+
+  if (!isCitizenAuthorized) {
+    return (
+      <>
+        <MondialPresentationDemo
+          citizen={citizen}
+          publicLedger={publicLedger}
+          onRefreshLedger={loadPublicLedger}
+          onOpenLogin={() => setIsLoginModalOpen(true)}
+          onLogout={handleCitizenLogout}
+          onGoToRegister={onGoToRegister}
+        />
+        {loginModalNode}
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f4f6fa] text-slate-800 pb-24 pt-4 md:pt-8 font-sans selection:bg-[#c5a880]/30 selection:text-[#0a1c3e]">
@@ -527,7 +671,14 @@ export default function MondialWallet({ onGoToRegister, onGoToDemocracy }: Mondi
               onClick={() => setIsLoginModalOpen(true)}
               className="text-[11px] font-medium text-[#0a1c3e] hover:text-[#c5a880] px-2 py-1 rounded-lg hover:bg-slate-50 transition-colors ml-1 cursor-pointer border border-slate-200"
             >
-              {citizen ? 'Cambia' : 'Accedi'}
+              Cambia
+            </button>
+            <button
+              onClick={handleCitizenLogout}
+              title="Esci"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -1161,83 +1312,16 @@ export default function MondialWallet({ onGoToRegister, onGoToDemocracy }: Mondi
         )}
 
         {/* TAB 5: REFERRALS / INVITATIONS */}
-        {activeTab === 'referrals' && (
-          <div className="max-w-xl mx-auto space-y-6">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
-              <div className="text-center space-y-2">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center mx-auto shadow-2xs">
-                  <Users className="w-7 h-7" />
-                </div>
-                <h2 className="text-xl font-bold text-[#0a1c3e]">Programma Solidale +5.000 Ɱ</h2>
-                <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
-                  La forza del circuito Mondial si basa sulla nostra comunità. Fai iscrivere <strong>50 persone</strong> al New World State per ricevere un ulteriore accredito immediato di <strong>5.000 Mondial (Ɱ)</strong>.
-                </p>
-              </div>
-
-              {/* PROGRESS STATUS CARD */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50/40 border border-indigo-100 space-y-3">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-slate-800">Progresso Attuale:</span>
-                  <span className="font-mono font-bold text-indigo-900 text-sm">
-                    {currentReferrals} / {referralTarget} Cittadini
-                  </span>
-                </div>
-
-                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                  <div 
-                    className="bg-indigo-600 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${referralPercent}%` }}
-                  />
-                </div>
-
-                <div className="flex justify-between items-center text-[11px] text-slate-500">
-                  <span>Inizio: 0</span>
-                  <span>Traguardo: 50 iscritti (+5.000 Ɱ)</span>
-                </div>
-              </div>
-
-              {/* INVITATION LINK COPY */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Il Tuo Codice Invito Personale
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={wallet?.citizen_code || 'NWS-SOV-001'}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 font-mono text-sm bg-slate-50 text-slate-800 font-bold"
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(wallet?.citizen_code || 'NWS-SOV-001');
-                      setCopiedLink(true);
-                      setTimeout(() => setCopiedLink(false), 2000);
-                    }}
-                    className="px-5 py-3 rounded-xl bg-[#0a1c3e] hover:bg-[#142d5c] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-                  >
-                    {copiedLink ? <Check className="w-4 h-4 text-[#c5a880]" /> : <Copy className="w-4 h-4" />}
-                    <span>{copiedLink ? 'Copiato' : 'Copia'}</span>
-                  </button>
-                </div>
-                <p className="text-[11px] text-slate-500">
-                  Comunica questo codice al nuovo iscritto: inserendolo durante la registrazione all'Anagrafe del New World State, il sistema collegherà automaticamente l'invito al tuo portafoglio.
-                </p>
-              </div>
-
-              {onGoToRegister && (
-                <div className="pt-2 border-t border-slate-100 flex justify-center">
-                  <button
-                    onClick={onGoToRegister}
-                    className="text-xs font-bold text-[#0a1c3e] hover:text-[#c5a880] flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <span>Vai al modulo di registrazione cittadinanza</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+        {activeTab === 'referrals' && citizen && (
+          <ReferralProgramPanel
+            citizen={{
+              ...citizen,
+              citizenCode: wallet?.citizen_code || citizen.citizenCode
+            }}
+            walletReferralCount={wallet?.referral_count}
+            walletBonusAwarded={wallet?.referral_bonus_awarded}
+            onGoToRegister={onGoToRegister}
+          />
         )}
 
       </div>
@@ -1420,74 +1504,7 @@ export default function MondialWallet({ onGoToRegister, onGoToDemocracy }: Mondi
       )}
 
       {/* MODAL: QUICK CITIZEN LOGIN */}
-      {isLoginModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#0a1c3e] text-[#c5a880] flex items-center justify-center mx-auto">
-              <Lock className="w-6 h-6" />
-            </div>
-
-            <div className="space-y-1">
-              <h3 className="text-base font-bold text-slate-900">Accedi con la tua Cittadinanza</h3>
-              <p className="text-xs text-slate-500">
-                Inserisci le tue credenziali per collegare il tuo portafoglio istituzionale Mondial.
-              </p>
-            </div>
-
-            {loginError && (
-              <div className="p-2.5 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200 text-left">
-                {loginError}
-              </div>
-            )}
-
-            <form onSubmit={handleCitizenLogin} className="space-y-3 text-left">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                  Codice Cittadino / Username / Email
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="es. NWS-IT-2025-0012"
-                  value={loginCodeOrUser}
-                  onChange={(e) => setLoginCodeOrUser(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-[#0a1c3e]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-[#0a1c3e]"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsLoginModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
-                >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoggingIn}
-                  className="flex-1 py-2.5 rounded-xl bg-[#0a1c3e] hover:bg-[#142d5c] text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  {isLoggingIn ? 'Accesso in corso...' : 'Accedi'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {loginModalNode}
 
     </div>
   );

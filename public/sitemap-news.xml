@@ -22,7 +22,7 @@
               <news:language>en</news:language>
             </news:publication>
             <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
-            <news:title>The Peace Songs That United the World: History and Lyrics</news:title>
+            <news:title>Songs for Peace That United the World: History and Verses</news:title>
           </news:news>
         </url>
         <url>
@@ -33,7 +33,7 @@
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
-            <news:title>Les chants pour la paix qui ont uni le monde : histoire et paroles</news:title>
+            <news:title>Les chansons pour la paix qui ont uni le monde : histoire et paroles</news:title>
           </news:news>
         </url>
         <url>
@@ -44,7 +44,7 @@
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
-            <news:title>Las canciones por la paz que unieron al mundo: historia y versos</news:title>
+            <news:title>Las canciones por la paz que unieron el mundo: historia y versos</news:title>
           </news:news>
         </url>
         <url>
@@ -121,7 +121,128 @@
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-10-08T10:43:21.383Z</news:publication_date>
-            <news:title>أغاني السلام التي وحدت العالم: التاريخ والكلمات</news:title>
+            <news:title>أغاني السلام التي وحّدت العالم: تاريخ وكلمات</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>L&#039;Alba di un&#039;Era Energetica Globale: Innovazione e Sovranità del New World State verso un Futuro Sostenibile</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>The Dawn of a Global Energy Era: Innovation and Sovereignty of the New World State Toward a Sustainable Future</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>L&#039;Aube d&#039;une Ère Énergétique Mondiale : Innovation et Souveraineté du New World State vers un Avenir Durable</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>El Amanecer de una Nueva Era Energética Global: Innovación y Soberanía de New World State hacia un Futuro Sostenible</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>A Aurora de uma Era Energética Global: Inovação e Soberania do New World State Rumo a um Futuro Sustentável</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>Рассвет глобальной энергетической эпохи: Инновации и суверенитет New World State на пути к устойчивому будущему</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>वैश्विक ऊर्जा युग का उदय: एक सतत भविष्य की ओर New World State का नवाचार और संप्रभुता</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>একটি বৈশ্বিক শক্তি যুগের উন্মেষ: টেকসই ভবিষ্যতের অভিমুখে New World State-এর উদ্ভাবন ও সার্বভৌমত্ব</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>全球能源新纪元的曙光：New World State 迈向可持续未来的创新与主权</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>世界的エネルギー時代の幕開け：持続可能な未来に向けたNew World Stateの革新と主権</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
+            <news:title>فجر عصر طاقة عالمي جديد: الابتكار والسيادة لـ New World State نحو مستقبل مستدام</news:title>
           </news:news>
         </url>
         <url>
@@ -319,7 +440,7 @@
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
-            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+            <news:title>न्यू वर्ल्ड स्टेट: आपकी आवाज़, हमारी डिजिटल संप्रभुता</news:title>
           </news:news>
         </url>
         <url>
@@ -330,7 +451,7 @@
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
-            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+            <news:title>নিউ ওয়ার্ল্ড স্টেট: আপনার কণ্ঠস্বর, আমাদের ডিজিটাল সার্বভৌমত্ব</news:title>
           </news:news>
         </url>
         <url>
@@ -341,7 +462,7 @@
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
-            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+            <news:title>新世界国度：您的心声，我们的数字主权</news:title>
           </news:news>
         </url>
         <url>
@@ -352,7 +473,7 @@
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
-            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+            <news:title>New World State：あなたの声、私たちのデジタル主権</news:title>
           </news:news>
         </url>
         <url>
@@ -363,7 +484,7 @@
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-09-15T11:04:04.657Z</news:publication_date>
-            <news:title>Il New World State: La Tua Voce, La Nostra Sovranità Digitale</news:title>
+            <news:title>New World State: صوتك، سيادتنا الرقمية</news:title>
           </news:news>
         </url>
         <url>
@@ -506,7 +627,7 @@
               <news:language>en</news:language>
             </news:publication>
             <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
-            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+            <news:title>The New World State&#039;s Vision of Peace: A Global Army for Universal Stability</news:title>
           </news:news>
         </url>
         <url>
@@ -517,7 +638,7 @@
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
-            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+            <news:title>La Vision de Paix du New World State : Une Armée Mondiale pour la Stabilité Universelle</news:title>
           </news:news>
         </url>
         <url>
@@ -528,7 +649,7 @@
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
-            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+            <news:title>La Visión de Paz del New World State: Un Ejército Global para la Estabilidad Universal</news:title>
           </news:news>
         </url>
         <url>
@@ -539,7 +660,7 @@
               <news:language>pt</news:language>
             </news:publication>
             <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
-            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+            <news:title>A Visão de Paz do New World State: Um Exército Global para a Estabilidade Universal</news:title>
           </news:news>
         </url>
         <url>
@@ -561,7 +682,7 @@
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
-            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+            <news:title>The New World State की शांति दृष्टि: सार्वभौमिक स्थिरता के लिए एक वैश्विक सेना</news:title>
           </news:news>
         </url>
         <url>
@@ -572,7 +693,7 @@
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
-            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+            <news:title>নিউ ওয়ার্ল্ড স্টেটের শান্তি অন্বেষণ: সার্বজনীন স্থিতিশীলতার জন্য একটি বৈশ্বিক সেনাবাহিনী</news:title>
           </news:news>
         </url>
         <url>
@@ -583,7 +704,7 @@
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
-            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+            <news:title>New World State 的和平愿景：一支维护普遍稳定的全球军队</news:title>
           </news:news>
         </url>
         <url>
@@ -594,7 +715,7 @@
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
-            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+            <news:title>新世界国家の平和のビジョン：普遍的安定のための地球規模軍</news:title>
           </news:news>
         </url>
         <url>
@@ -605,7 +726,7 @@
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-09-10T11:14:49.460Z</news:publication_date>
-            <news:title>La Visione di Pace del New World State: Un Esercito Globale per la Stabilità Universale</news:title>
+            <news:title>رؤية السلام للدولة العالمية الجديدة: جيش عالمي للاستقرار الشامل</news:title>
           </news:news>
         </url>
         <url>
@@ -1001,7 +1122,7 @@
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
-            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
+            <news:title>Architectes de l&#039;Avenir : États Innovants pour le Bien-être Mondial et une Paix Durable</news:title>
           </news:news>
         </url>
         <url>
@@ -1012,7 +1133,7 @@
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
-            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
+            <news:title>Arquitectos del Futuro: Estados Innovadores para el Bienestar Global y la Paz Duradera</news:title>
           </news:news>
         </url>
         <url>
@@ -1045,7 +1166,7 @@
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
-            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
+            <news:title>भविष्य के वास्तुकार: वैश्विक कल्याण और स्थायी शांति के लिए अभिनव राष्ट्र</news:title>
           </news:news>
         </url>
         <url>
@@ -1056,7 +1177,7 @@
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
-            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
+            <news:title>ভবিষ্যতের স্থপতিরা: বৈশ্বিক কল্যাণ ও দীর্ঘস্থায়ী শান্তির জন্য উদ্ভাবনী রাষ্ট্রসমূহ</news:title>
           </news:news>
         </url>
         <url>
@@ -1067,7 +1188,7 @@
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
-            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
+            <news:title>未来建筑师：促进全球福祉与持久和平的创新型国家</news:title>
           </news:news>
         </url>
         <url>
@@ -1078,7 +1199,7 @@
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
-            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
+            <news:title>未来の設計者たち：地球規模の幸福と永続的な平和のための革新的国家</news:title>
           </news:news>
         </url>
         <url>
@@ -1089,7 +1210,7 @@
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-09-03T10:02:22.167Z</news:publication_date>
-            <news:title>Architetti del Futuro: Stati Innovativi per il Benessere Globale e la Pace Duratura</news:title>
+            <news:title>مهندسو المستقبل: دول مبتكرة لرفاهية عالمية وسلام دائم</news:title>
           </news:news>
         </url>
         <url>
@@ -1133,7 +1254,7 @@
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
-            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+            <news:title>La Arquitectura de la Libertad: Independencia de los Pueblos y Comunidad Global en el New World State</news:title>
           </news:news>
         </url>
         <url>
@@ -1144,7 +1265,7 @@
               <news:language>pt</news:language>
             </news:publication>
             <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
-            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+            <news:title>A Arquitetura da Liberdade: Independência dos Povos e Comunidade Global no New World State</news:title>
           </news:news>
         </url>
         <url>
@@ -1155,7 +1276,7 @@
               <news:language>ru</news:language>
             </news:publication>
             <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
-            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+            <news:title>Архитектура Свободы: Независимость Народов и Глобальное Сообщество в New World State</news:title>
           </news:news>
         </url>
         <url>
@@ -1166,7 +1287,7 @@
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
-            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+            <news:title>स्वतंत्रता की वास्तुकला: न्यू वर्ल्ड स्टेट में लोगों की स्वतंत्रता और वैश्विक समुदाय</news:title>
           </news:news>
         </url>
         <url>
@@ -1177,7 +1298,7 @@
               <news:language>bn</news:language>
             </news:publication>
             <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
-            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+            <news:title>স্বাধীনতার স্থাপত্য: জনগণের স্বাধীনতা ও বৈশ্বিক সম্প্রদায় নিউ ওয়ার্ল্ড স্টেটে</news:title>
           </news:news>
         </url>
         <url>
@@ -1188,7 +1309,7 @@
               <news:language>zh</news:language>
             </news:publication>
             <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
-            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+            <news:title>自由之构：New World State 中的民族独立与全球共同体</news:title>
           </news:news>
         </url>
         <url>
@@ -1199,7 +1320,7 @@
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
-            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+            <news:title>自由のアーキテクチャ：ニュー・ワールド・ステートにおける人民の独立とグローバル共同体</news:title>
           </news:news>
         </url>
         <url>
@@ -1210,7 +1331,7 @@
               <news:language>ar</news:language>
             </news:publication>
             <news:publication_date>2026-09-01T09:41:19.660Z</news:publication_date>
-            <news:title>L&#039;Architettura della Libertà: Indipendenza dei Popoli e Comunità Globale nel New World State</news:title>
+            <news:title>هندسة الحرية: استقلال الشعوب والمجتمع العالمي في الدولة العالمية الجديدة</news:title>
           </news:news>
         </url>
         <url>
@@ -1232,7 +1353,7 @@
               <news:language>en</news:language>
             </news:publication>
             <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
-            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+            <news:title>The Path of Global Fraternity: Strategies for Peace and Cooperation in the Era of the New World State</news:title>
           </news:news>
         </url>
         <url>
@@ -1243,7 +1364,7 @@
               <news:language>fr</news:language>
             </news:publication>
             <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
-            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+            <news:title>Le Sentier de la Fraternité Mondiale : Stratégies pour la Paix et la Coopération à l&#039;Ère du New World State</news:title>
           </news:news>
         </url>
         <url>
@@ -1254,7 +1375,7 @@
               <news:language>es</news:language>
             </news:publication>
             <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
-            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+            <news:title>El Sendero de la Fraternidad Global: Estrategias para la Paz y la Cooperación en la Era del New World State</news:title>
           </news:news>
         </url>
         <url>
@@ -1265,7 +1386,7 @@
               <news:language>pt</news:language>
             </news:publication>
             <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
-            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+            <news:title>O Caminho da Fraternidade Global: Estratégias para a Paz e Cooperação na Era do New World State</news:title>
           </news:news>
         </url>
         <url>
@@ -1287,7 +1408,7 @@
               <news:language>hi</news:language>
             </news:publication>
             <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
-            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+            <news:title>वैश्विक भाईचारे का मार्ग: New World State के युग में शांति और सहयोग के लिए रणनीतियाँ</news:title>
           </news:news>
         </url>
         <url>
@@ -1320,7 +1441,7 @@
               <news:language>ja</news:language>
             </news:publication>
             <news:publication_date>2026-08-28T09:40:59.404Z</news:publication_date>
-            <news:title>Il Sentiero della Fraternità Globale: Strategie per la Pace e la Cooperazione nell&#039;Era del New World State</news:title>
+            <news:title>地球規模の友愛への道：New World State時代における平和と協力のための戦略</news:title>
           </news:news>
         </url>
         <url>
@@ -1698,127 +1819,6 @@
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>it</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=en</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>en</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Academy of Custodians and Natural Law: Universal Educational Program</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=fr</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>fr</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Académie des Gardiens et Droit Naturel : Programme Éducatif Universel</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=es</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>es</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Academia de los Custodios y Derecho Natural: Programa Educativo Universal</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=pt</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>pt</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Academia dos Guardiões e Direito Natural: Programa Educativo Universal</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ru</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ru</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>Академия хранителей и естественное право: универсальная образовательная программа</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=hi</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>hi</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>संरक्षकों की अकादमी और प्राकृतिक कानून: सार्वभौमिक शैक्षिक कार्यक्रम</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=bn</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>bn</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>অভিভাবকদের একাডেমি এবং প্রাকৃতিক আইন: সর্বজনীন শিক্ষামূলক কর্মসূচি</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=zh</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>zh</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>守护者学院与自然法则：普遍教育课程计划</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ja</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ja</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>守護者アカデミーと自然法：普遍的教育プログラム</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ar</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ar</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
-            <news:title>أكاديمية الحراس والقانون الطبيعي: برنامج تعليمي شامل</news:title>
-          </news:news>
-        </url>
-        <url>
           <loc>https://newworldstate.cloud/notizie/protocollo-trasparenza-finanziaria-tutela-privacy</loc>
           <news:news>
             <news:publication>
@@ -1937,6 +1937,127 @@
             </news:publication>
             <news:publication_date>2026-08-23T10:41:54.614Z</news:publication_date>
             <news:title>بروتوكول الشفافية المالية وحماية خصوصية المواطنين</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>Accademia dei Custodi e Diritto Naturale: Programma Educativo Universale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>Academy of Custodians and Natural Law: Universal Educational Program</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>Académie des Gardiens et Droit Naturel : Programme Éducatif Universel</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>Academia de los Custodios y Derecho Natural: Programa Educativo Universal</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>Academia dos Guardiões e Direito Natural: Programa Educativo Universal</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>Академия хранителей и естественное право: универсальная образовательная программа</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>संरक्षकों की अकादमी और प्राकृतिक कानून: सार्वभौमिक शैक्षिक कार्यक्रम</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>অভিভাবকদের একাডেমি এবং প্রাকৃতিক আইন: সর্বজনীন শিক্ষামূলক কর্মসূচি</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>守护者学院与自然法则：普遍教育课程计划</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>守護者アカデミーと自然法：普遍的教育プログラム</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/accademia-dei-custodi-diritto-naturale-programma-educativo-universale?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-23T10:00:00.000Z</news:publication_date>
+            <news:title>أكاديمية الحراس والقانون الطبيعي: برنامج تعليمي شامل</news:title>
           </news:news>
         </url>
         <url>
@@ -2182,127 +2303,6 @@
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>it</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=en</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>en</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=fr</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>fr</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=es</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>es</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=pt</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>pt</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ru</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ru</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=hi</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>hi</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=bn</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>bn</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=zh</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>zh</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ja</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ja</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ar</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ar</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
-            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
-          </news:news>
-        </url>
-        <url>
           <loc>https://newworldstate.cloud/notizie/inaugurazione-registro-globale-democrazia-diretta-10</loc>
           <news:news>
             <news:publication>
@@ -2421,6 +2421,248 @@
             </news:publication>
             <news:publication_date>2026-08-21T10:41:54.614Z</news:publication_date>
             <news:title>تدشين السجل العالمي للديمقراطية المباشرة 1.0</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Digital Diplomacy and Dialogue: The New World State&#039;s Strategies for Global Peace</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomatie Numérique et Dialogue : Les Stratégies du New World State pour la Paix Mondiale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomacia Digital y Diálogo: Las Estrategias del New World State para la Paz Global</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomacia Digital e Diálogo: As Estratégias do New World State para a Paz Global</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Цифровая дипломатия и диалог: Стратегии New World State для глобального мира</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>डिजिटल कूटनीति और संवाद: वैश्विक शांति हेतु न्यू वर्ल्ड स्टेट की रणनीतियाँ</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>ডিজিটাল কূটনীতি ও সংলাপ: বৈশ্বিক শান্তির জন্য নিউ ওয়ার্ল্ড স্টেটের কৌশল</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>Diplomazia Digitale e Dialogo: Le Strategie del New World State per la Pace Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>デジタル外交と対話：新世界国家のグローバル平和戦略</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/diplomazia-digitale-e-dialogo-le-strategie-del-new-world-state-per-la-pace-globale?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T11:39:26.822Z</news:publication_date>
+            <news:title>الدبلوماسية الرقمية والحوار: استراتيجيات &quot;نيو وورلد ستيت&quot; لتحقيق السلام العالمي</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>it</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=en</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>en</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Unrelenting Tensions: An Analysis of the USA-Iran and Palestine-Israel Conflicts in the Global Landscape</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=fr</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>fr</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensions Incessantes : Analyse des Conflits États-Unis-Iran et Palestine-Israël dans le Panorama Mondial</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=es</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>es</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensiones Incesantes: Análisis de los Conflictos entre EE. UU. e Irán y Palestina-Israel en el Panorama Global</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=pt</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>pt</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Tensão Incessante: Análise dos Conflitos EUA-Irão e Palestina-Israel no Panorama Global</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ru</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ru</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>Неослабевающая Напряженность: Анализ Конфликтов США-Иран и Палестина-Израиль в Глобальном Ландшафте</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=hi</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>hi</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>लगातार तनाव: वैश्विक परिदृश्य में अमेरिका-ईरान और फिलिस्तीन-इजरायल संघर्षों का विश्लेषण</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=bn</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>bn</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>অবিরাম উত্তেজনা: বৈশ্বিক প্রেক্ষাপটে মার্কিন যুক্তরাষ্ট্র-ইরান এবং ফিলিস্তিন-ইসরায়েল সংঘাতের বিশ্লেষণ</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=zh</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>zh</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>全球格局下的持续紧张：美伊与巴以冲突分析</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ja</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ja</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>絶え間ない緊張：世界情勢における米国とイラン、パレスチナとイスラエルの紛争分析</news:title>
+          </news:news>
+        </url>
+        <url>
+          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ar</loc>
+          <news:news>
+            <news:publication>
+              <news:name>New World State News Authority</news:name>
+              <news:language>ar</news:language>
+            </news:publication>
+            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
+            <news:title>التوترات المستمرة: تحليل صراعات الولايات المتحدة وإيران وفلسطين وإسرائيل في المشهد العالمي</news:title>
           </news:news>
         </url>
         <url>
@@ -2666,124 +2908,124 @@
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>it</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>L&#039;Alba di un&#039;Era Energetica Globale: Innovazione e Sovranità del New World State verso un Futuro Sostenibile</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=en</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=en</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>en</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>The Dawn of a Global Energy Era: Innovation and Sovereignty of the New World State Toward a Sustainable Future</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=fr</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=fr</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>fr</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>L&#039;Aube d&#039;une Ère Énergétique Mondiale : Innovation et Souveraineté du New World State vers un Avenir Durable</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Équilibre Précaire au Moyen-Orient : Les Voix du Vatican sur les Développements de la Confrontation USA-Iran</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=es</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=es</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>es</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>El Amanecer de una Nueva Era Energética Global: Innovación y Soberanía de New World State hacia un Futuro Sostenible</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario en Oriente Medio: Las Voces del Vaticano sobre los Desarrollos del Enfrentamiento entre EE. UU. e Irán</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=pt</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=pt</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>pt</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>A Aurora de uma Era Energética Global: Inovação e Soberania do New World State Rumo a um Futuro Sustentável</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilíbrio Precário no Médio Oriente: As Vozes do Vaticano sobre os Desenvolvimentos do Confronto EUA-Irão</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=ru</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ru</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ru</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>Рассвет глобальной энергетической эпохи: Инновации и суверенитет New World State на пути к устойчивому будущему</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Хрупкое равновесие на Ближнем Востоке: Голоса Ватикана о развитии американо-иранского противостояния</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=hi</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=hi</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>hi</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>वैश्विक ऊर्जा युग का उदय: एक सतत भविष्य की ओर New World State का नवाचार और संप्रभुता</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>मध्य पूर्व में नाजुक संतुलन: अमेरिका-ईरान टकराव के घटनाक्रम पर वेटिकन की आवाज़ें</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=bn</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=bn</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>bn</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>একটি বৈশ্বিক শক্তি যুগের উন্মেষ: টেকসই ভবিষ্যতের অভিমুখে New World State-এর উদ্ভাবন ও সার্বভৌমত্ব</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=zh</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=zh</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>zh</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>全球能源新纪元的曙光：New World State 迈向可持续未来的创新与主权</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>中东脆弱的平衡：梵蒂冈对美伊对抗进展的看法</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=ja</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ja</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ja</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>世界的エネルギー時代の幕開け：持続可能な未来に向けたNew World Stateの革新と主権</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>中東における不安定な均衡：米国・イラン対立の進展に関するバチカンの声</news:title>
           </news:news>
         </url>
         <url>
-          <loc>https://newworldstate.cloud/notizie/lalba-di-unera-energetica-globale-innovazione-e-sovranita-del-new-world-state-verso-un-futuro-sostenibile?lang=ar</loc>
+          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ar</loc>
           <news:news>
             <news:publication>
               <news:name>New World State News Authority</news:name>
               <news:language>ar</news:language>
             </news:publication>
-            <news:publication_date>2026-10-08T10:35:51.461Z</news:publication_date>
-            <news:title>فجر عصر طاقة عالمي جديد: الابتكار والسيادة لـ New World State نحو مستقبل مستدام</news:title>
+            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
+            <news:title>توازن هش في الشرق الأوسط: أصوات الفاتيكان حول تطورات المواجهة الأمريكية الإيرانية</news:title>
           </news:news>
         </url>
         <url>
@@ -2905,248 +3147,6 @@
             </news:publication>
             <news:publication_date>2026-08-11T11:32:06.975Z</news:publication_date>
             <news:title>العجز الاستراتيجي: تحليل عميق للأسباب الجذرية لشلل الأمم المتحدة في الصراعات الحالية</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>it</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=en</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>en</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=fr</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>fr</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=es</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>es</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=pt</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>pt</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ru</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ru</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=hi</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>hi</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=bn</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>bn</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=zh</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>zh</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ja</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ja</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/equilibrio-precario-in-medio-oriente-le-voci-del-vaticano-sugli-sviluppi-del-confronto-usa-iran?lang=ar</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ar</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-13T09:09:03.373Z</news:publication_date>
-            <news:title>Equilibrio Precario in Medio Oriente: Le Voci del Vaticano sugli Sviluppi del Confronto USA-Iran</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>it</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=en</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>en</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=fr</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>fr</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=es</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>es</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=pt</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>pt</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ru</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ru</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=hi</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>hi</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=bn</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>bn</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=zh</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>zh</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ja</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ja</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
-          </news:news>
-        </url>
-        <url>
-          <loc>https://newworldstate.cloud/notizie/tensioni-incessanti-analisi-dei-conflitti-usa-iran-e-palestina-israele-nel-panorama-globale?lang=ar</loc>
-          <news:news>
-            <news:publication>
-              <news:name>New World State News Authority</news:name>
-              <news:language>ar</news:language>
-            </news:publication>
-            <news:publication_date>2026-08-20T10:16:24.856Z</news:publication_date>
-            <news:title>Tensioni Incessanti: Analisi dei Conflitti USA-Iran e Palestina-Israele nel Panorama Globale</news:title>
           </news:news>
         </url>
 </urlset>

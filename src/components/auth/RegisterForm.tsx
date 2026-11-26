@@ -395,9 +395,11 @@ export default function RegisterForm() {
     if (typeof window !== 'undefined') {
       try {
         const params = new URLSearchParams(window.location.search);
-        const ref = params.get('ref') || params.get('referral');
+        const ref = params.get('ref') || params.get('referral') || sessionStorage.getItem('nws_pending_ref');
         if (ref) {
-          setReferralCode(ref.trim().toUpperCase());
+          const cleanRef = ref.trim().toUpperCase();
+          setReferralCode(cleanRef);
+          sessionStorage.setItem('nws_pending_ref', cleanRef);
         }
       } catch (e) {
         console.warn('Error reading referral param:', e);

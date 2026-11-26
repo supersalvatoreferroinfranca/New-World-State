@@ -707,7 +707,17 @@ export async function registerReferral(
             [newCount, referrerCitizenId]
           );
           bonusEarned = true;
+        } else {
+          await dbPool.query(
+            `UPDATE nws_mondial_wallets SET referral_count = $1, updated_at = NOW() WHERE citizen_id = $2`,
+            [newCount, referrerCitizenId]
+          );
         }
+      } else {
+        await dbPool.query(
+          `UPDATE nws_mondial_wallets SET referral_count = $1, updated_at = NOW() WHERE citizen_id = $2`,
+          [newCount, referrerCitizenId]
+        );
       }
 
       return { success: true, referralCount: newCount, bonusEarned };

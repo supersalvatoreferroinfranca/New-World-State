@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLegal, LegalConfig } from '../../hooks/useLegal';
+import { safeFetch } from '../../services/api';
 import { 
   Shield, 
   FileText, 
@@ -43,53 +44,51 @@ export default function AdminLegalTab({ adminPasswordValue, showAlert }: AdminLe
   const [filterAction, setFilterAction] = useState<'all' | 'Accept All' | 'Accept Essential Only' | 'Custom Preferences Saved'>('all');
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
   
-  const loadConsentLogs = () => {
+  const loadConsentLogs = async () => {
+    let localLogs: any[] = [];
     try {
       const logsString = localStorage.getItem('nws_consent_logs');
       if (logsString) {
-        setConsentLogs(JSON.parse(logsString));
-      } else {
-        // Seed some realistic initial logs so the registry is instantly demonstrative and beautiful
-        const mockLogs = [
-          {
-            id: 'CON-1719875191021',
-            timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-            ip: '151.38.12.94 (GDPR Masked)',
-            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-            action: 'Accept All',
-            preferences: true,
-            analytics: true,
-            essential: true,
-            origin: window.location.origin
-          },
-          {
-            id: 'CON-1719875142104',
-            timestamp: new Date(Date.now() - 3600000 * 24).toISOString(),
-            ip: '93.41.222.15 (GDPR Masked)',
-            userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
-            action: 'Accept Essential Only',
-            preferences: false,
-            analytics: false,
-            essential: true,
-            origin: window.location.origin
-          },
-          {
-            id: 'CON-1719875089302',
-            timestamp: new Date(Date.now() - 3600000 * 48).toISOString(),
-            ip: '79.12.180.44 (GDPR Masked)',
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
-            action: 'Custom Preferences Saved',
-            preferences: true,
-            analytics: false,
-            essential: true,
-            origin: window.location.origin
+        const parsed = JSON.parse(logsString);
+        if (Array.isArray(parsed)) localLogs = parsed;
+      }
+    } catch {}
+
+    if (localLogs.length > 0) {
+      setConsentLogs(localLogs);
+    }
+
+    try {
+      const res = await safeFetch('/api/legal/consent-logs');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.logs)) {
+          const mergedMap = new Map<string, any>();
+          data.logs.forEach((l: any) => { if (l && l.id) mergedMap.set(l.id, l); });
+          for (const ll of localLogs) {
+            if (ll && ll.id && !mergedMap.has(ll.id)) {
+              mergedMap.set(ll.id, ll);
+              safeFetch('/api/legal/consent-logs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ll)
+              }).catch(() => {});
+            }
           }
-        ];
-        localStorage.setItem('nws_consent_logs', JSON.stringify(mockLogs));
-        setConsentLogs(mockLogs);
+          const merged = Array.from(mergedMap.values()).sort(
+            (a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
+          );
+          localStorage.setItem('nws_consent_logs', JSON.stringify(merged));
+          setConsentLogs(merged);
+          return;
+        }
       }
     } catch (e) {
-      console.error('Failed to load consent logs:', e);
+      console.warn('Failed to fetch remote consent logs:', e);
+    }
+
+    if (localLogs.length === 0) {
+      setConsentLogs([]);
     }
   };
 
@@ -99,11 +98,16 @@ export default function AdminLegalTab({ adminPasswordValue, showAlert }: AdminLe
     return () => window.removeEventListener('nws_consent_logs_updated', loadConsentLogs);
   }, []);
 
-  const handleClearLogs = () => {
+  const handleClearLogs = async () => {
     if (confirm('Sei sicuro di voler svuotare l\'intero registro delle prove di consenso? Questa azione è irreversibile.')) {
       localStorage.setItem('nws_consent_logs', JSON.stringify([]));
       setConsentLogs([]);
-      showAlert('Registro Svuotato', 'Tutte le prove di consenso registrate localmente sono state cancellate.');
+      try {
+        await safeFetch('/api/legal/consent-logs', { method: 'DELETE' });
+      } catch (e) {
+        console.warn('Failed to delete remote consent logs:', e);
+      }
+      showAlert('Registro Svuotato', 'Tutte le prove di consenso registrate sul database sono state cancellate.');
     }
   };
 

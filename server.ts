@@ -532,6 +532,96 @@ async function runMigrations() {
       await ensureCrmTables(dbPool);
       await ensureMondialTables(dbPool);
 
+      // Ensure authoritative News Articles, Tombstones, Categories & Consent Logs tables exist
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_news_articles (
+          id VARCHAR(255) PRIMARY KEY,
+          slug TEXT,
+          title TEXT,
+          data JSONB NOT NULL,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await client.query(`ALTER TABLE nws_news_articles ADD COLUMN IF NOT EXISTS slug TEXT`);
+      await client.query(`ALTER TABLE nws_news_articles ADD COLUMN IF NOT EXISTS title TEXT`);
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_news_deleted (
+          id VARCHAR(255) PRIMARY KEY,
+          deleted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_news_categories (
+          id VARCHAR(255) PRIMARY KEY,
+          slug TEXT NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          color VARCHAR(32) DEFAULT '#0a1c3e',
+          is_system BOOLEAN DEFAULT FALSE,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS nws_consent_logs (
+          id VARCHAR(255) PRIMARY KEY,
+          timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          ip TEXT,
+          user_agent TEXT,
+          action TEXT,
+          preferences BOOLEAN DEFAULT FALSE,
+          analytics BOOLEAN DEFAULT FALSE,
+          essential BOOLEAN DEFAULT TRUE,
+          origin TEXT
+        )
+      `);
+
+      // Seed default news categories if empty
+      const catCountRes = await client.query('SELECT COUNT(*) FROM nws_news_categories');
+      if (parseInt(catCountRes.rows[0].count, 10) === 0) {
+        const defaultCategories = [
+          { id: 'cat-politica', slug: 'politica-sovranita', name: 'Politica & Sovranità', description: 'Analisi istituzionali, riforme costituzionali e atti parlamentari.', color: '#0a1c3e', isSystem: true },
+          { id: 'cat-economia', slug: 'economia-finanza', name: 'Economia & Finanza', description: 'Finanza etica, credito sovrano e sostenibilità economica.', color: '#b45309', isSystem: true },
+          { id: 'cat-diritti', slug: 'diritti-costituzione', name: 'Diritti & Costituzione', description: 'Tutela dei diritti fondamentali e garanzia costituzionale.', color: '#065f46', isSystem: true },
+          { id: 'cat-tecnologia', slug: 'tecnologia-innovazione', name: 'Tecnologia & Innovazione', description: 'Infrastrutture digitali, AI etica e sicurezza crittografica.', color: '#1d4ed8', isSystem: true },
+          { id: 'cat-cultura', slug: 'cultura-societa', name: 'Cultura & Società', description: 'Patrimonio culturale, educazione e iniziative comunitarie.', color: '#6b21a8', isSystem: true }
+        ];
+        for (const cat of defaultCategories) {
+          await client.query(`
+            INSERT INTO nws_news_categories (id, slug, name, description, color, is_system)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (id) DO NOTHING
+          `, [cat.id, cat.slug, cat.name, cat.description, cat.color, cat.isSystem]);
+        }
+      }
+
+      // Seed nws_news_articles from local FS / initial articles if missing and not deleted
+      try {
+        const deletedRes = await client.query('SELECT id FROM nws_news_deleted');
+        const deletedSet = new Set(deletedRes.rows.map((r: any) => String(r.id)));
+        const fsSeedPath = path.join(process.cwd(), 'data', 'news_articles.json');
+        let seedArticles: any[] = [];
+        if (fs.existsSync(fsSeedPath)) {
+          try {
+            const parsed = JSON.parse(fs.readFileSync(fsSeedPath, 'utf-8'));
+            if (Array.isArray(parsed)) seedArticles = parsed;
+          } catch (_) {}
+        }
+        for (const a of seedArticles) {
+          if (a && a.id && !deletedSet.has(String(a.id))) {
+            await client.query(`
+              INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+              VALUES ($1, $2, $3, $4::jsonb, COALESCE($5::timestamptz, NOW()))
+              ON CONFLICT (id) DO NOTHING
+            `, [String(a.id), a.slug || String(a.id), a.title || '', JSON.stringify(a), a.updatedAt || a.publishedAt || a.createdAt || null]);
+          }
+        }
+      } catch (seedNewsErr: any) {
+        console.warn('[DB] Seed warning per news articles:', seedNewsErr.message);
+      }
+
       console.log('[MIGRATION] PostgreSQL Table checked and updated successfully.');
     } finally {
       client.release();
@@ -875,7 +965,8 @@ async function startServer() {
       next();
     });
 
-    app.use(express.json({ limit: '10mb' }));
+    app.use(express.json({ limit: '50mb' }));
+    app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
     // TTS (Text-To-Speech) Audio Proxy Endpoint for multi-language speech fallback
     app.get('/api/tts', async (req, res) => {
@@ -1369,12 +1460,24 @@ async function startServer() {
     // CIRCUITO DI SCAMBIO VALORI MONDIAL (Ɱ) - BARATTO SOLIDALE SOVRANO
     // =========================================================================
 
-    // GET /api/mondial/wallet: Recupera o inizializza il wallet del cittadino (5.000 Ɱ benvenuto)
+    // GET /api/mondial/wallet: Recupera o inizializza il wallet del cittadino approvato (5.000 Ɱ benvenuto)
     apiRouter.get('/mondial/wallet', async (req, res) => {
       try {
-        const citizenId = parseInt(req.query.citizenId as string, 10) || 1;
-        const citizenCode = (req.query.citizenCode as string) || `NWS-CIT-${citizenId}`;
-        const citizenName = (req.query.citizenName as string) || 'Cittadino Sovrano';
+        const citizenId = parseInt(req.query.citizenId as string, 10);
+        if (!citizenId || isNaN(citizenId)) {
+          return res.status(401).json({ success: false, message: 'Accesso al circuito Mondial consentito solo ai cittadini censiti ed autenticati.' });
+        }
+
+        const citizenRecord = await findCitizenById(citizenId);
+        if (!citizenRecord || citizenRecord.status !== 'approved') {
+          return res.status(403).json({
+            success: false,
+            message: 'Solo i cittadini censiti e approvati nell\'Anagrafe Sovrana possono accedere al portafoglio Mondial.'
+          });
+        }
+
+        const citizenCode = citizenRecord.citizenCode || (req.query.citizenCode as string) || `NWS-CIT-${citizenId}`;
+        const citizenName = `${citizenRecord.firstName || ''} ${citizenRecord.surname || ''}`.trim() || citizenRecord.username || (req.query.citizenName as string) || 'Cittadino Sovrano';
 
         const data = await getOrCreateWallet(dbPool, citizenId, citizenCode, citizenName);
         return res.json({ success: true, ...data });
@@ -1390,6 +1493,10 @@ async function startServer() {
         const { citizenId, pin } = req.body || {};
         if (!citizenId || !pin) {
           return res.status(400).json({ success: false, message: 'ID cittadino e PIN obbligatori.' });
+        }
+        const citizenRecord = await findCitizenById(citizenId);
+        if (!citizenRecord || citizenRecord.status !== 'approved') {
+          return res.status(403).json({ success: false, message: 'Accesso riservato ai cittadini approvati.' });
         }
         const result = await setWalletPin(dbPool, parseInt(citizenId, 10), String(pin));
         return res.json(result);
@@ -1417,6 +1524,11 @@ async function startServer() {
           return res.status(400).json({ success: false, message: 'Parametri mittente o destinatario mancanti.' });
         }
 
+        const senderRecord = await findCitizenById(senderCitizenId);
+        if (!senderRecord || senderRecord.status !== 'approved') {
+          return res.status(403).json({ success: false, message: 'Solo i cittadini censiti e approvati possono scambiare Mondial.' });
+        }
+
         const parsedAmount = parseFloat(amount);
         if (isNaN(parsedAmount) || parsedAmount <= 0) {
           return res.status(400).json({ success: false, message: 'Importo non valido: deve essere maggiore di 0 Ɱ.' });
@@ -1428,8 +1540,8 @@ async function startServer() {
 
         const result = await executeMondialTransfer(dbPool, {
           senderCitizenId: parseInt(senderCitizenId, 10),
-          senderCode: String(senderCode),
-          senderName: String(senderName || 'Cittadino Mittente'),
+          senderCode: String(senderRecord.citizenCode || senderCode),
+          senderName: String(`${senderRecord.firstName || ''} ${senderRecord.surname || ''}`.trim() || senderName || 'Cittadino Mittente'),
           receiverCode: String(receiverCode),
           amount: parsedAmount,
           category,
@@ -6199,6 +6311,7 @@ Ufficio dell'Anagrafe Federale del New World State / Federal Civil Registry Depa
             username: cit.username,
             email: cit.email,
             citizenCode: cit.citizenCode || cit.citizencode || cit.citizen_code,
+            status: cit.status || 'approved',
             isAmbassador: !!(cit.isAmbassador || cit.isambassador),
             isPeacekeeper: !!(cit.isPeacekeeper || cit.ispeacekeeper),
             operationalRole: cit.operationalRole || cit.operationalrole || null,
@@ -6371,7 +6484,7 @@ Restituisci solo ed esclusivamente l'oggetto JSON richiesto.`;
       let targetTags = tags || [];
 
       if (articleId && (!targetTitle || !targetContent)) {
-        const currentList = getServerArticles();
+        const currentList = await getServerArticlesAsync();
         const found = currentList.find(a => a && (String(a.id) === String(articleId) || String(a.slug) === String(articleId)));
         if (found) {
           targetTitle = found.title;
@@ -6514,12 +6627,13 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
         const parsed = JSON.parse(jsonText.trim());
         const translations = parsed.translations || {};
 
-        // If articleId is given, automatically update the article on server
+        // If articleId is given, automatically update the article on server AND PostgreSQL
         if (articleId) {
-          const currentArticles = getServerArticles();
+          const currentArticles = await getServerArticlesAsync();
+          let updatedTarget: any = null;
           const updated = currentArticles.map(a => {
             if (a && (String(a.id) === String(articleId) || String(a.slug) === String(articleId))) {
-              return {
+              updatedTarget = {
                 ...a,
                 translations: {
                   ...(a.translations || {}),
@@ -6527,10 +6641,22 @@ Genera una risposta in formato JSON contenente la chiave "translations". Ciascun
                 },
                 updatedAt: new Date().toISOString()
               };
+              return updatedTarget;
             }
             return a;
           });
           saveServerArticles(updated);
+          if (updatedTarget && dbPool) {
+            try {
+              await dbPool.query(`
+                INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+                VALUES ($1, $2, $3, $4::jsonb, NOW())
+                ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, data = EXCLUDED.data, updated_at = NOW()
+              `, [String(updatedTarget.id), updatedTarget.slug || String(updatedTarget.id), updatedTarget.title || '', JSON.stringify(updatedTarget)]);
+            } catch (pgErr: any) {
+              console.warn('[PG-TRANSLATE-SAVE-WARN]', pgErr.message);
+            }
+          }
         }
 
         return res.json({ success: true, translations });
@@ -9063,102 +9189,246 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
     });
 
     // =========================================================================
-    // NEWS API ENDPOINTS
+    // NEWS API ENDPOINTS (PostgreSQL Authoritative + FS Fallback)
     // =========================================================================
-    apiRouter.get('/news/articles', (req, res) => {
+    apiRouter.get('/news/articles', async (req, res) => {
       try {
-        res.setHeader('Cache-Control', 'public, max-age=15, s-maxage=30, stale-while-revalidate=60');
-        const articles = getServerArticles();
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        const articles = await getServerArticlesAsync();
         return res.json({ success: true, articles });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: 'Errore lettura articoli: ' + err.message });
       }
     });
 
-    apiRouter.post('/news/sync', async (req, res) => {
+    apiRouter.get('/news/articles/:slugOrId', async (req, res) => {
       try {
-        const { articles, replaceAll } = req.body;
-        if (!articles || !Array.isArray(articles)) {
-          return res.status(400).json({ success: false, message: 'Elenco articoli non fornito o formato non valido.' });
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        const slugOrId = decodeURIComponent(String(req.params.slugOrId || '')).trim();
+        if (!slugOrId) {
+          return res.status(400).json({ success: false, message: 'Slug o ID articolo obbligatorio.' });
         }
 
-        let finalList: any[] = [];
-        if (replaceAll) {
-          const seen = new Set<string>();
-          for (const a of articles) {
-            if (a && a.id && !seen.has(String(a.id))) {
-              seen.add(String(a.id));
-              finalList.push(a);
-            }
-          }
-        } else {
-          const current = getServerArticles();
-          const map = new Map<string, any>();
-          current.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
-          articles.forEach(a => { if (a && a.id) map.set(String(a.id), a); });
-          finalList = Array.from(map.values());
-        }
-
-        finalList.sort((a, b) =>
-          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-        );
-
-        saveServerArticles(finalList);
-
-        // Sincronizza anche su PostgreSQL nws_news_articles se connesso
+        // Fast direct lookup in PostgreSQL first
         if (dbPool) {
           try {
-            for (const a of finalList) {
-              if (a && a.id) {
-                await dbPool.query(`
-                  INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
-                  VALUES ($1, $2, $3, $4::jsonb, NOW())
-                  ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, data = EXCLUDED.data, updated_at = NOW()
-                `, [String(a.id), a.slug || a.id, a.title || '', JSON.stringify(a)]);
-              }
+            const directRes = await dbPool.query(
+              `SELECT data FROM nws_news_articles WHERE id = $1 OR slug = $1 OR data->>'slug' = $1 LIMIT 1`,
+              [slugOrId]
+            );
+            if (directRes.rows.length > 0 && directRes.rows[0].data) {
+              const raw = directRes.rows[0].data;
+              const article = typeof raw === 'string' ? JSON.parse(raw) : raw;
+              return res.json({ success: true, article });
             }
-          } catch (pgSyncErr: any) {
-            console.warn('[PG-NEWS-SYNC-WARN]', pgSyncErr.message);
+          } catch (dbErr: any) {
+            console.warn('[NEWS-SINGLE-PG-WARN]', dbErr.message);
           }
         }
 
-        return res.json({ success: true, count: finalList.length });
+        const articles = await getServerArticlesAsync();
+        const found = findArticleBySlugOrId(slugOrId, articles, false);
+        if (!found) {
+          return res.status(404).json({ success: false, message: 'Articolo non trovato.' });
+        }
+        return res.json({ success: true, article: found });
       } catch (err: any) {
-        return res.status(500).json({ success: false, message: 'Errore sincronizzazione articoli: ' + err.message });
+        return res.status(500).json({ success: false, message: 'Errore caricamento articolo: ' + err.message });
       }
     });
 
-    apiRouter.delete(['/news/articles/:id', '/news/delete/:id'], (req, res) => {
+    apiRouter.post('/news/article', async (req, res) => {
       try {
-        const articleId = req.params.id;
-        if (!articleId) {
-          return res.status(400).json({ success: false, message: 'ID articolo obbligatorio.' });
+        const incoming = req.body?.article || req.body;
+        if (!incoming || !incoming.id || !incoming.title) {
+          return res.status(400).json({ success: false, message: 'Dati articolo incompleti (id e title obbligatori).' });
         }
-        const current = getServerArticles();
-        const updated = current.filter(a => a && String(a.id) !== String(articleId) && String(a.slug) !== String(articleId));
-        saveServerArticles(updated);
-        if (dbPool) {
-          dbPool.query('DELETE FROM nws_news_articles WHERE id = $1 OR slug = $1', [String(articleId)]).catch(() => {});
+
+        const normalizedArticle = {
+          ...incoming,
+          id: String(incoming.id),
+          slug: incoming.slug || String(incoming.id),
+          status: normalizeServerStatus(incoming.status),
+          updatedAt: incoming.updatedAt || new Date().toISOString()
+        };
+
+        const { savedToDb, articles } = await upsertSingleArticleToDbAndFs(normalizedArticle);
+
+        if (normalizedArticle.status === 'pubblicato') {
+          const baseUrl = getCanonicalBaseUrl(req);
+          try {
+            const sitemapCfg = loadSitemapConfig();
+            if (sitemapCfg.automation?.autoRegenerateOnNewsPublish) {
+              if (sitemapCfg.automation?.autoIncludeNewArticles) {
+                const artId = `article-${normalizedArticle.slug || normalizedArticle.id}`;
+                sitemapCfg.excludedIds = (sitemapCfg.excludedIds || []).filter((id: string) => id !== artId && id !== `notizie/${normalizedArticle.slug || normalizedArticle.id}`);
+                saveSitemapConfig(sitemapCfg);
+              }
+              syncStaticSitemapFiles(articles, true, normalizedArticle);
+            }
+          } catch (smErr: any) {
+            console.warn('[SITEMAP-AUTO-ERR]', smErr.message);
+          }
+          runBackgroundAutoTranslationAndIndexing(normalizedArticle, baseUrl).catch(console.error);
         }
-        return res.json({ success: true, message: 'Articolo rimosso con successo.', remainingCount: updated.length });
+
+        return res.json({ success: true, article: normalizedArticle, savedToDb, totalArticles: articles.length });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: 'Errore salvataggio articolo: ' + err.message });
+      }
+    });
+
+    apiRouter.post('/news/view', async (req, res) => {
+      try {
+        const { id } = req.body || {};
+        if (!id) return res.status(400).json({ success: false, message: 'ID articolo mancante.' });
+        const targetId = String(id);
+        const current = await getServerArticlesAsync();
+        let updatedTarget: any = null;
+        const updatedList = current.map(a => {
+          if (a && (String(a.id) === targetId || String(a.slug) === targetId)) {
+            updatedTarget = { ...a, viewsCount: (Number(a.viewsCount) || 0) + 1 };
+            return updatedTarget;
+          }
+          return a;
+        });
+
+        if (updatedTarget) {
+          saveServerArticles(updatedList);
+          if (dbPool) {
+            dbPool.query(`
+              INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+              VALUES ($1, $2, $3, $4::jsonb, NOW())
+              ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+            `, [String(updatedTarget.id), updatedTarget.slug || String(updatedTarget.id), updatedTarget.title || '', JSON.stringify(updatedTarget)]).catch(() => {});
+          }
+        }
+        return res.json({ success: true, viewsCount: updatedTarget?.viewsCount || 0 });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message });
       }
     });
 
-    apiRouter.post('/news/delete', (req, res) => {
+    apiRouter.post('/news/sync', async (req, res) => {
+      try {
+        const { articles } = req.body;
+        if (!articles || !Array.isArray(articles)) {
+          return res.status(400).json({ success: false, message: 'Elenco articoli non fornito o formato non valido.' });
+        }
+
+        const deletedIds = await getDeletedArticleIdsAsync();
+        const current = await getServerArticlesAsync();
+        const mergedMap = new Map<string, any>();
+
+        for (const a of current) {
+          if (a && a.id && !deletedIds.has(String(a.id))) {
+            mergedMap.set(String(a.id), { ...a, status: normalizeServerStatus(a.status) });
+          }
+        }
+
+        const upsertedItems: any[] = [];
+        for (const incoming of articles) {
+          if (!incoming || !incoming.id) continue;
+          const id = String(incoming.id);
+          if (deletedIds.has(id)) continue;
+
+          const normIncoming = {
+            ...incoming,
+            id,
+            slug: incoming.slug || id,
+            status: normalizeServerStatus(incoming.status)
+          };
+
+          const existing = mergedMap.get(id);
+          if (!existing) {
+            mergedMap.set(id, normIncoming);
+            upsertedItems.push(normIncoming);
+          } else {
+            const existingTime = new Date(existing.updatedAt || existing.publishedAt || existing.createdAt || 0).getTime();
+            const incomingTime = new Date(normIncoming.updatedAt || normIncoming.publishedAt || normIncoming.createdAt || 0).getTime();
+
+            const mergedTranslations = {
+              ...(existing.translations || {}),
+              ...(normIncoming.translations || {})
+            };
+
+            // Preserve published status if either has it unless explicitly newer moderation change
+            let chosen: any;
+            if (normIncoming.status === 'pubblicato' && existing.status !== 'pubblicato' && incomingTime >= existingTime - 5000) {
+              chosen = { ...existing, ...normIncoming, status: 'pubblicato', translations: mergedTranslations };
+            } else if (existing.status === 'pubblicato' && normIncoming.status !== 'pubblicato' && existingTime >= incomingTime) {
+              chosen = { ...normIncoming, ...existing, status: 'pubblicato', translations: mergedTranslations };
+            } else if (incomingTime > existingTime) {
+              chosen = { ...existing, ...normIncoming, translations: mergedTranslations };
+            } else {
+              chosen = {
+                ...normIncoming,
+                ...existing,
+                viewsCount: Math.max(Number(existing.viewsCount) || 0, Number(normIncoming.viewsCount) || 0),
+                translations: mergedTranslations
+              };
+            }
+            mergedMap.set(id, chosen);
+            if (incomingTime > existingTime || (chosen.status === 'pubblicato' && existing.status !== 'pubblicato')) {
+              upsertedItems.push(chosen);
+            }
+          }
+        }
+
+        const finalList = Array.from(mergedMap.values()).sort((a, b) =>
+          new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime()
+        );
+
+        saveServerArticles(finalList);
+
+        // Persisti su PostgreSQL nws_news_articles
+        if (dbPool) {
+          const itemsToPersist = upsertedItems.length > 0 ? upsertedItems : finalList;
+          for (const a of itemsToPersist) {
+            if (a && a.id) {
+              try {
+                await dbPool.query(`
+                  INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+                  VALUES ($1, $2, $3, $4::jsonb, NOW())
+                  ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, data = EXCLUDED.data, updated_at = NOW()
+                `, [String(a.id), a.slug || String(a.id), a.title || '', JSON.stringify(a)]);
+              } catch (pgSyncErr: any) {
+                console.warn('[PG-NEWS-SYNC-WARN]', pgSyncErr.message);
+              }
+            }
+          }
+        }
+
+        return res.json({ success: true, count: finalList.length, articles: finalList });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: 'Errore sincronizzazione articoli: ' + err.message });
+      }
+    });
+
+    apiRouter.delete(['/news/articles/:id', '/news/delete/:id'], async (req, res) => {
+      try {
+        const articleId = req.params.id;
+        if (!articleId) {
+          return res.status(400).json({ success: false, message: 'ID articolo obbligatorio.' });
+        }
+        const remaining = await deleteServerArticleByIdAsync(String(articleId));
+        return res.json({ success: true, message: 'Articolo rimosso con successo.', remainingCount: remaining.length });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/news/delete', async (req, res) => {
       try {
         const { id } = req.body;
         if (!id) {
           return res.status(400).json({ success: false, message: 'ID articolo obbligatorio.' });
         }
-        const current = getServerArticles();
-        const updated = current.filter(a => a && String(a.id) !== String(id) && String(a.slug) !== String(id));
-        saveServerArticles(updated);
-        if (dbPool) {
-          dbPool.query('DELETE FROM nws_news_articles WHERE id = $1 OR slug = $1', [String(id)]).catch(() => {});
-        }
-        return res.json({ success: true, message: 'Articolo rimosso con successo.', remainingCount: updated.length });
+        const remaining = await deleteServerArticleByIdAsync(String(id));
+        return res.json({ success: true, message: 'Articolo rimosso con successo.', remainingCount: remaining.length });
       } catch (err: any) {
         return res.status(500).json({ success: false, message: err.message });
       }
@@ -9171,11 +9441,11 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
         if (!targetId || !action) {
           return res.status(400).json({ success: false, message: 'ID e azione richiesti.' });
         }
-        const current = getServerArticles();
+        const current = await getServerArticlesAsync();
         let target: any = null;
         const updated = current.map(art => {
           if (art && (String(art.id) === String(targetId) || String(art.slug) === String(targetId))) {
-            let status = art.status;
+            let status = normalizeServerStatus(art.status);
             let publishedAt = art.publishedAt;
             let isFeatured = art.isFeatured;
             if (action === 'approve') {
@@ -9205,47 +9475,9 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
           return art;
         });
 
-        if (!target && dbPool) {
-          try {
-            const dbCheck = await dbPool.query('SELECT data FROM nws_news_articles WHERE id = $1 OR slug = $1', [String(targetId)]);
-            if (dbCheck && dbCheck.rows.length > 0) {
-              const rawData = dbCheck.rows[0].data;
-              const dbArt = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-              let status = dbArt.status;
-              let publishedAt = dbArt.publishedAt;
-              let isFeatured = !!dbArt.isFeatured;
-              if (action === 'approve') {
-                status = 'pubblicato';
-                if (!publishedAt) publishedAt = new Date().toISOString();
-              } else if (action === 'reject') {
-                status = 'rifiutato';
-                isFeatured = false;
-              } else if (action === 'request_changes') {
-                status = 'in_revisione';
-              } else if (action === 'toggle_featured') {
-                isFeatured = !isFeatured;
-              } else if (action === 'hide') {
-                status = 'bozza';
-                isFeatured = false;
-              }
-              target = {
-                ...dbArt,
-                status,
-                publishedAt,
-                isFeatured,
-                moderatorNotes: moderatorNotes || dbArt.moderatorNotes || '',
-                updatedAt: new Date().toISOString()
-              };
-              updated.unshift(target);
-            }
-          } catch (dbFindErr: any) {
-            console.warn('[PG-MODERATE-FIND-ERR]', dbFindErr.message);
-          }
-        }
-
         if (!target && req.body.article) {
           const bodyArt = req.body.article;
-          let status = bodyArt.status;
+          let status = normalizeServerStatus(bodyArt.status);
           let publishedAt = bodyArt.publishedAt;
           let isFeatured = !!bodyArt.isFeatured;
           if (action === 'approve') {
@@ -9274,20 +9506,7 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
           return res.status(404).json({ success: false, message: 'Articolo non trovato.' });
         }
 
-        saveServerArticles(updated);
-
-        // Salva istantaneamente su Neon PostgreSQL nws_news_articles
-        if (dbPool && target) {
-          try {
-            await dbPool.query(`
-              INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
-              VALUES ($1, $2, $3, $4::jsonb, NOW())
-              ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, data = EXCLUDED.data, updated_at = NOW()
-            `, [String(target.id), target.slug || target.id, target.title || '', JSON.stringify(target)]);
-          } catch (pgModErr: any) {
-            console.warn('[PG-MODERATE-ERR]', pgModErr.message);
-          }
-        }
+        await upsertSingleArticleToDbAndFs(target);
 
         if (action === 'approve') {
           const baseUrl = getCanonicalBaseUrl(req);
@@ -9314,6 +9533,120 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
       }
     });
 
+    // News Categories Endpoints (PostgreSQL)
+    apiRouter.get('/news/categories', async (req, res) => {
+      try {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        if (dbPool) {
+          const rows = await dbPool.query('SELECT id, slug, name, description, color, is_system FROM nws_news_categories ORDER BY is_system DESC, updated_at DESC');
+          if (rows.rows.length > 0) {
+            return res.json({
+              success: true,
+              categories: rows.rows.map((r: any) => ({
+                id: r.id,
+                slug: r.slug,
+                name: r.name,
+                description: r.description || '',
+                color: r.color || '#0a1c3e',
+                isSystem: Boolean(r.is_system)
+              }))
+            });
+          }
+        }
+        return res.json({ success: true, categories: [] });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/news/categories/sync', async (req, res) => {
+      try {
+        const { categories } = req.body || {};
+        if (!Array.isArray(categories)) {
+          return res.status(400).json({ success: false, message: 'Array categorie non valido.' });
+        }
+        if (dbPool) {
+          const ids: string[] = [];
+          for (const cat of categories) {
+            if (!cat || !cat.id || !cat.name) continue;
+            ids.push(String(cat.id));
+            await dbPool.query(`
+              INSERT INTO nws_news_categories (id, slug, name, description, color, is_system, updated_at)
+              VALUES ($1, $2, $3, $4, $5, $6, NOW())
+              ON CONFLICT (id) DO UPDATE SET
+                slug = EXCLUDED.slug,
+                name = EXCLUDED.name,
+                description = EXCLUDED.description,
+                color = EXCLUDED.color,
+                is_system = EXCLUDED.is_system,
+                updated_at = NOW()
+            `, [String(cat.id), cat.slug || String(cat.id), cat.name, cat.description || '', cat.color || '#0a1c3e', Boolean(cat.isSystem)]);
+          }
+          // Delete custom categories removed by user
+          if (ids.length > 0) {
+            await dbPool.query(`DELETE FROM nws_news_categories WHERE is_system = FALSE AND NOT (id = ANY($1::text[]))`, [ids]);
+          }
+        }
+        return res.json({ success: true, count: categories.length });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    // Legal Cookie Consent Logs Endpoints (PostgreSQL)
+    apiRouter.get('/legal/consent-logs', async (req, res) => {
+      try {
+        if (dbPool) {
+          const qRes = await dbPool.query('SELECT * FROM nws_consent_logs ORDER BY timestamp DESC LIMIT 200');
+          return res.json({
+            success: true,
+            logs: qRes.rows.map((r: any) => ({
+              id: r.id,
+              timestamp: r.timestamp,
+              ip: r.ip,
+              userAgent: r.user_agent,
+              action: r.action,
+              preferences: Boolean(r.preferences),
+              analytics: Boolean(r.analytics),
+              essential: Boolean(r.essential),
+              origin: r.origin
+            }))
+          });
+        }
+        return res.json({ success: true, logs: [] });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.post('/legal/consent-logs', async (req, res) => {
+      try {
+        const log = req.body;
+        if (!log || !log.id) return res.status(400).json({ success: false, message: 'Dati log non validi.' });
+        if (dbPool) {
+          await dbPool.query(`
+            INSERT INTO nws_consent_logs (id, timestamp, ip, user_agent, action, preferences, analytics, essential, origin)
+            VALUES ($1, COALESCE($2::timestamptz, NOW()), $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (id) DO NOTHING
+          `, [String(log.id), log.timestamp || null, log.ip || '', log.userAgent || '', log.action || '', Boolean(log.preferences), Boolean(log.analytics), log.essential !== false, log.origin || '']);
+        }
+        return res.json({ success: true });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
+    apiRouter.delete('/legal/consent-logs', async (req, res) => {
+      try {
+        if (dbPool) {
+          await dbPool.query('DELETE FROM nws_consent_logs');
+        }
+        return res.json({ success: true });
+      } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+    });
+
     apiRouter.all(['/news/audit-translations', '/news/audit'], (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
       auditAndTranslateAllServerArticles(baseUrl).catch(console.error);
@@ -9329,11 +9662,11 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
     // =========================================================================
 
     // GET /api/admin/sitemap/config
-    apiRouter.get('/admin/sitemap/config', (req, res) => {
+    apiRouter.get('/admin/sitemap/config', async (req, res) => {
       try {
         const baseUrl = getCanonicalBaseUrl(req);
         const sitemapConfig = loadSitemapConfig();
-        const articles = getDeduplicatedArticles(getServerArticles());
+        const articles = getDeduplicatedArticles(await getServerArticlesAsync());
         const today = new Date().toISOString().split('T')[0];
 
         const candidateItems: any[] = [];
@@ -9467,7 +9800,7 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
     });
 
     // POST /api/admin/sitemap/config
-    apiRouter.post('/admin/sitemap/config', (req, res) => {
+    apiRouter.post('/admin/sitemap/config', async (req, res) => {
       try {
         const { excludedIds, itemOverrides, customItems, automation } = req.body;
         const sitemapConfig = loadSitemapConfig();
@@ -9498,7 +9831,7 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
         });
 
         // Regenerate static sitemap files immediately
-        syncStaticSitemapFiles(getServerArticles());
+        syncStaticSitemapFiles(await getServerArticlesAsync());
 
         return res.json({ success: true, message: 'Configurazione sitemap aggiornata con successo!' });
       } catch (err: any) {
@@ -9507,10 +9840,10 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
     });
 
     // POST /api/admin/sitemap/check-links
-    apiRouter.post('/admin/sitemap/check-links', (req, res) => {
+    apiRouter.post('/admin/sitemap/check-links', async (req, res) => {
       try {
         const startTime = Date.now();
-        const articles = getDeduplicatedArticles(getServerArticles());
+        const articles = getDeduplicatedArticles(await getServerArticlesAsync());
         const results: Record<string, any> = {};
 
         let validCount = 0;
@@ -9592,7 +9925,7 @@ Esegui la ricerca con massima precisione dei fatti e genera l'articolo verificat
       try {
         const startTime = Date.now();
         const baseUrl = getCanonicalBaseUrl(req);
-        const articles = getServerArticles();
+        const articles = await getServerArticlesAsync();
         const sitemapConfig = loadSitemapConfig();
 
         // 1. Generate XML, News XML, RSS, HTML
@@ -11038,21 +11371,116 @@ La cultura è un bene comune inalienabile della famiglia umana e come tale viene
       return null;
     }
 
-    async function getServerArticlesAsync(): Promise<any[]> {
+    function normalizeServerStatus(status?: string): string {
+      if (!status) return 'bozza';
+      const s = String(status).toLowerCase().trim();
+      if (s === 'pubblicato' || s === 'published' || s === 'approvato' || s === 'approved') return 'pubblicato';
+      if (s === 'in_moderazione' || s === 'pending' || s === 'in_attesa' || s === 'moderation') return 'in_moderazione';
+      if (s === 'in_revisione' || s === 'revision' || s === 'changes_requested') return 'in_revisione';
+      if (s === 'rifiutato' || s === 'rejected' || s === 'respinto') return 'rifiutato';
+      return 'bozza';
+    }
+
+    async function getDeletedArticleIdsAsync(): Promise<Set<string>> {
+      const deleted = new Set<string>();
       if (dbPool) {
         try {
+          const res = await dbPool.query('SELECT id FROM nws_news_deleted');
+          res.rows.forEach((r: any) => { if (r.id) deleted.add(String(r.id)); });
+        } catch (e: any) {}
+      }
+      return deleted;
+    }
+
+    async function getServerArticlesAsync(): Promise<any[]> {
+      const fsArticles = getServerArticles();
+      if (dbPool) {
+        try {
+          const deletedSet = await getDeletedArticleIdsAsync();
           const res = await dbPool.query("SELECT data FROM nws_news_articles ORDER BY (data->>'publishedAt') DESC NULLS LAST, updated_at DESC");
-          if (res.rows.length > 0) {
-            const list = res.rows.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data).filter(Boolean);
-            if (list.length > 0) {
-              return list;
+          const dbList = res.rows.map(r => typeof r.data === 'string' ? JSON.parse(r.data) : r.data).filter(Boolean);
+
+          const mergedMap = new Map<string, any>();
+          for (const a of dbList) {
+            if (a && a.id && !deletedSet.has(String(a.id))) {
+              mergedMap.set(String(a.id), { ...a, status: normalizeServerStatus(a.status) });
             }
+          }
+
+          // Merge any baseline FS articles not yet seeded in PostgreSQL
+          let seededMissing = false;
+          for (const fa of fsArticles) {
+            if (fa && fa.id && !deletedSet.has(String(fa.id)) && !mergedMap.has(String(fa.id))) {
+              const norm = { ...fa, status: normalizeServerStatus(fa.status) };
+              mergedMap.set(String(fa.id), norm);
+              seededMissing = true;
+              dbPool.query(`
+                INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+                VALUES ($1, $2, $3, $4::jsonb, NOW())
+                ON CONFLICT (id) DO NOTHING
+              `, [String(norm.id), norm.slug || String(norm.id), norm.title || '', JSON.stringify(norm)]).catch(() => {});
+            }
+          }
+
+          const result = Array.from(mergedMap.values()).sort((a, b) =>
+            new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime()
+          );
+          if (result.length > 0) {
+            if (seededMissing || dbList.length !== fsArticles.length) {
+              saveServerArticles(result);
+            }
+            return result;
           }
         } catch (e: any) {
           console.warn('[SERVER-NEWS-ASYNC] DB fetch fallback to file:', e.message);
         }
       }
-      return getServerArticles();
+      return fsArticles;
+    }
+
+    async function upsertSingleArticleToDbAndFs(article: any): Promise<{ savedToDb: boolean; articles: any[] }> {
+      let savedToDb = false;
+      const targetId = String(article.id);
+      if (dbPool) {
+        try {
+          await dbPool.query('DELETE FROM nws_news_deleted WHERE id = $1', [targetId]);
+          await dbPool.query(`
+            INSERT INTO nws_news_articles (id, slug, title, data, updated_at)
+            VALUES ($1, $2, $3, $4::jsonb, NOW())
+            ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug, title = EXCLUDED.title, data = EXCLUDED.data, updated_at = NOW()
+          `, [targetId, article.slug || targetId, article.title || '', JSON.stringify(article)]);
+          savedToDb = true;
+        } catch (pgErr: any) {
+          console.error('[SERVER-NEWS-UPSERT-DB-ERR]', pgErr.message);
+        }
+      }
+      const current = getServerArticles();
+      const filtered = current.filter(a => a && String(a.id) !== targetId);
+      const updated = [article, ...filtered].sort((a, b) =>
+        new Date(b.publishedAt || b.createdAt || 0).getTime() - new Date(a.publishedAt || a.createdAt || 0).getTime()
+      );
+      saveServerArticles(updated);
+      return { savedToDb, articles: updated };
+    }
+
+    async function deleteServerArticleByIdAsync(idOrSlug: string): Promise<any[]> {
+      const target = String(idOrSlug);
+      const current = await getServerArticlesAsync();
+      const matched = current.filter(a => a && (String(a.id) === target || String(a.slug) === target));
+      const updated = current.filter(a => a && String(a.id) !== target && String(a.slug) !== target);
+      saveServerArticles(updated);
+      if (dbPool) {
+        try {
+          for (const m of matched) {
+            await dbPool.query('INSERT INTO nws_news_deleted (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [String(m.id)]);
+          }
+          await dbPool.query('INSERT INTO nws_news_deleted (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [target]);
+          await dbPool.query('DELETE FROM nws_news_articles WHERE id = $1 OR slug = $1', [target]);
+        } catch (dbErr: any) {
+          console.warn('[SERVER-NEWS-DELETE-PG-WARN]', dbErr.message);
+        }
+      }
+      return updated;
     }
 
     const SITE_SUPPORTED_LANGUAGES = ['it', 'en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
@@ -12913,14 +13341,15 @@ ${newsItems}
       return formattedWords.join(' ');
     }
 
-    function findArticleBySlugOrId(slugOrId: string, articles: any[]): any | null {
+    function findArticleBySlugOrId(slugOrId: string, articles: any[], allowSynthetic: boolean = true): any | null {
       if (!slugOrId) return null;
-      const target = slugOrId.trim();
+      let target = slugOrId.trim();
+      try { target = decodeURIComponent(target).trim(); } catch {}
       const normTarget = normalizeSlug(target);
 
       if (Array.isArray(articles)) {
         // 1. Exact ID match
-        let found = articles.find(a => a && a.id === target);
+        let found = articles.find(a => a && String(a.id) === target);
         if (found) return found;
 
         // 2. Exact slug match
@@ -12970,12 +13399,13 @@ ${newsItems}
         if (found) return found;
       }
 
-      // 6. Synthetic fallback article generated from slug words
-      if (normTarget.length >= 3) {
+      // 6. Synthetic fallback article generated from slug words (only for crawler meta tags, never for SPA initial hydration)
+      if (allowSynthetic && normTarget.length >= 3) {
         const readableTitle = formatSlugToTitle(target);
         const thematicImgUrl = getThematicImageForSlug(target, readableTitle);
 
         return {
+          isSynthetic: true,
           id: `art-synth-${normTarget.slice(0, 30)}`,
           title: readableTitle,
           slug: target,
@@ -13352,7 +13782,7 @@ ${newsItems}
         }, null, 2)}
         </script>
         <script>
-          window.__NWS_INITIAL_ARTICLE__ = ${JSON.stringify(article)};
+          ${!article.isSynthetic ? `window.__NWS_INITIAL_ARTICLE__ = ${JSON.stringify(article).replace(/</g, '\\u003c')};` : ''}
           window.__NWS_ACTIVE_TAB__ = 'news';
           window.__NWS_ACTIVE_LANG__ = '${currentLang}';
           window.__NWS_TARGET_LANG__ = '${currentLang}';
@@ -13714,9 +14144,9 @@ ${newsItems}
     let viteServer: any = null;
 
     // Dynamic Sitemap XML Endpoint with Multilingual & Image Extensions for Google Search & AI Crawlers
-    app.get('/sitemap.xml', (req, res) => {
+    app.get('/sitemap.xml', async (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
-      const articles = getServerArticles();
+      const articles = await getServerArticlesAsync();
       const xml = generateComprehensiveSitemapXml(baseUrl, articles);
       res.setHeader('Content-Type', 'application/xml; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -13726,9 +14156,9 @@ ${newsItems}
     });
 
     // Dedicated Google News Sitemap XML Endpoint in all supported languages
-    app.get('/sitemap-news.xml', (req, res) => {
+    app.get('/sitemap-news.xml', async (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
-      const articles = getServerArticles();
+      const articles = await getServerArticlesAsync();
       const xml = generateComprehensiveNewsSitemapXml(baseUrl, articles);
       res.setHeader('Content-Type', 'application/xml; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -13738,9 +14168,9 @@ ${newsItems}
     });
 
     // Dedicated HTML Sitemap Endpoint for human navigation, search engines & assistive devices
-    app.get('/sitemap.html', (req, res) => {
+    app.get('/sitemap.html', async (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
-      const articles = getServerArticles();
+      const articles = await getServerArticlesAsync();
       const html = generateComprehensiveSitemapHtml(baseUrl, articles);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -13757,9 +14187,9 @@ ${newsItems}
     });
 
     // Official RSS 2.0 / Atom Feed for News Aggregators, Google News & AI Agents
-    app.get(['/rss.xml', '/feed.xml', '/notizie/rss'], (req, res) => {
+    app.get(['/rss.xml', '/feed.xml', '/notizie/rss'], async (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
-      const articles = getServerArticles();
+      const articles = await getServerArticlesAsync();
       const rss = generateComprehensiveRssXml(baseUrl, articles);
       res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
@@ -13769,9 +14199,9 @@ ${newsItems}
     });
 
     // Emerging Standard /llms.txt and /llms-full.txt for LLM agents (ChatGPT, Perplexity, Gemini, Claude)
-    app.get('/llms.txt', (req, res) => {
+    app.get('/llms.txt', async (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
-      const publishedArticles = getDeduplicatedArticles(getServerArticles()).slice(0, 30);
+      const publishedArticles = getDeduplicatedArticles(await getServerArticlesAsync()).slice(0, 30);
 
       const articleList = publishedArticles.map(a => {
         const slug = a.slug || a.id;
@@ -13799,9 +14229,9 @@ ${articleList}
       return res.send(content);
     });
 
-    app.get('/llms-full.txt', (req, res) => {
+    app.get('/llms-full.txt', async (req, res) => {
       const baseUrl = getCanonicalBaseUrl(req);
-      const publishedArticles = getDeduplicatedArticles(getServerArticles());
+      const publishedArticles = getDeduplicatedArticles(await getServerArticlesAsync());
 
       const articleFull = publishedArticles.map((a, idx) => {
         const slug = a.slug || a.id;
@@ -13934,25 +14364,23 @@ Genera un JSON con chiave "translations" contenente un oggetto per ciascuna dell
         }
       }
 
-      // Se specificato l'ID articolo, salva immediatamente le traduzioni nel JSON persistente
+      // Se specificato l'ID articolo, salva immediatamente le traduzioni nel JSON persistente e su PostgreSQL
       if (articleData.articleId && Object.keys(generatedTranslations).length > 0) {
-        const currentArticles = getServerArticles();
-        let found = false;
-        const updated = currentArticles.map(a => {
+        const currentArticles = await getServerArticlesAsync();
+        let foundArt: any = null;
+        currentArticles.forEach(a => {
           if (a && (String(a.id) === String(articleData.articleId) || String(a.slug) === String(articleData.articleId))) {
-            found = true;
-            return {
+            foundArt = {
               ...a,
               translations: { ...(a.translations || {}), ...generatedTranslations },
               updatedAt: new Date().toISOString()
             };
           }
-          return a;
         });
 
-        if (found) {
-          saveServerArticles(updated);
-          console.log(`[NEWS-I18N] Salvate traduzioni per ${articleData.articleId} nelle lingue: ${Object.keys(generatedTranslations).join(', ')}`);
+        if (foundArt) {
+          await upsertSingleArticleToDbAndFs(foundArt);
+          console.log(`[NEWS-I18N] Salvate traduzioni su DB e FS per ${articleData.articleId} nelle lingue: ${Object.keys(generatedTranslations).join(', ')}`);
         }
       }
 
@@ -14006,7 +14434,7 @@ Genera un JSON con chiave "translations" contenente un oggetto per ciascuna dell
 
       try {
         const allOfficialLangs = ['en', 'fr', 'es', 'pt', 'ru', 'hi', 'bn', 'zh', 'ja', 'ar'];
-        const articles = getServerArticles();
+        const articles = await getServerArticlesAsync();
         let translatedCount = 0;
 
         for (const article of articles) {
@@ -14158,11 +14586,12 @@ Genera un JSON con chiave "translations" contenente un oggetto per ciascuna dell
           }
 
           if (slugToFind) {
-            const articles = getServerArticles();
-            const foundArticle = findArticleBySlugOrId(slugToFind, articles);
+            const articles = await getServerArticlesAsync();
+            const foundArticle = findArticleBySlugOrId(slugToFind, articles, true);
             if (foundArticle) {
               const customHtml = injectArticleMetaTags(html, foundArticle, req);
               res.setHeader('Content-Type', 'text/html; charset=utf-8');
+              res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
               return res.send(customHtml);
             }
           }
